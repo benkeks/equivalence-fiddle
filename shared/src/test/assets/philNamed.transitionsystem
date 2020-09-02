@@ -1,0 +1,30 @@
+P_g(x=225, y=45)
+g_BC(x=300, y=121)
+g_A(x=137, y=113)
+A(x=130, y=186)
+C(x=353, y=240)
+B(x=256, y=211)
+P_o(x=214, y=362)
+P_t(x=81, y=283)
+Troll(x=69, y=198)
+
+P_g |-tau-> g_A
+P_g |-tau-> g_BC
+g_A |-tau-> A
+g_BC |-tau-> B
+g_BC |-tau-> C
+A |-aEats-> A
+B |-bEats-> B
+C |-cEats-> C
+
+P_o |-tau-> A
+P_o |-tau-> B
+P_o |-tau-> C
+
+P_t |-tau-> A
+P_t |-tau-> B
+P_t |-tau-> C
+P_t |-tau-> Troll
+
+@c "P_o == P_g coupled sim but not weak bisim" 
+@c "P_o == P_t weak sim but not coupled sim" 
