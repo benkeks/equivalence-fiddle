@@ -39,12 +39,13 @@ class GraphRenderer(val main: Control)
   registerEditingBehavior("es-graph-rename", new GraphEditNode(this))
   registerEditingBehavior("es-graph-delete", new GraphDeleteNodeOrLink(this))
   registerEditingBehavior("es-graph-connect-stepto", new GraphConnectStepTo(this))
+  registerEditingBehavior("es-graph-examine", new GraphExamineNodes(this))
   
   behaviors.foreach{ case (n: String, b: GraphEditBehavior) =>
     d3.select("#"+n).on("click", {_: EventTarget => setEditingBehavior(n)})
   }
   
-  setEditingBehavior("es-graph-move")
+  setEditingBehavior("es-graph-examine")
   
   val force = d3.layout.force[GraphNode, NodeLink] ()
       .charge(-300.0)

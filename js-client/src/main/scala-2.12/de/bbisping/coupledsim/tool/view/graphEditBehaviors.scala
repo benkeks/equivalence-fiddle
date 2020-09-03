@@ -299,3 +299,16 @@ class GraphDeleteNodeOrLink(renderer: GraphEditing) extends GraphEditBehavior {
     updateView()
   }
 }
+
+class GraphExamineNodes(renderer: GraphEditing) extends GraphEditBehavior {
+  
+  override def onSelectionChange() {
+    val selectedNodes = renderer.getSelectedNodes()
+    
+    if (selectedNodes.length == 2) {
+      val names = selectedNodes.map(_.nameId)
+      Console.out.println(names.mkString(","))
+      renderer.triggerAction(Structure.StructureExamineEquivalences(names(0), names(1)))
+    }
+  }
+}

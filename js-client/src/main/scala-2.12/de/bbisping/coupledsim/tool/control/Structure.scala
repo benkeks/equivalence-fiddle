@@ -14,6 +14,7 @@ import de.bbisping.coupledsim.util.Relation
 import de.bbisping.coupledsim.util.LabeledRelation
 import de.bbisping.coupledsim.ts.DivergenceInformation
 import de.bbisping.coupledsim.algo.AlgorithmLogging
+import de.bbisping.coupledsim.algo.cs.HMLGamePlayer
 
 class Structure(val main: Control) extends ModelComponent {
 
@@ -268,6 +269,26 @@ object Structure {
         o applyOperation structure
       }
       op.isDefined
+    }
+  }
+
+  case class StructureExamineEquivalences(n1: NodeID, n2: NodeID, resetReplay: Boolean = true) extends StructureAction {
+
+    override def implementStructure(structure: Structure) = {
+      if (resetReplay) {
+        structure.setReplay(List())
+      }
+      
+      if (structure.structure.nodes(n1) && structure.structure.nodes(n2)) {
+
+        Console.out.println(n1 + ", " + n2)
+
+        new HMLGamePlayer(structure.structure, List(n1, n2)).compute()
+
+        true
+      } else {
+        false
+      }
     }
   }
 

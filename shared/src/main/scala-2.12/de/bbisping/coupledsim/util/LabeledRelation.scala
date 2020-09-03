@@ -76,6 +76,26 @@ class LabeledRelation[E, L](val rep: Map[E, Map[L, Set[E]]]) {
   def toRelation = 
     new Relation(tupleSet map { case (e1, l, e2) => (e1, e2) })
   
+  def determinize(pick: Iterable[(L, E)] => (L, E)): LabeledRelation[E, L] = {
+    val pickedTuples = for {
+      (e1, lee2) <- rep
+    } yield {
+      val succs = for {
+        (l, ee2) <-lee2.to
+        e2 <- ee2
+      } yield (l, e2)
+      val (lP, e2P) = pick(succs)
+
+      (e1, lP, e2P)
+    }
+
+    new LabeledRelation[E, L](pickedTuples.toSet)
+  }
+  
+  def peekPath(e: E): List[E] = {
+    rep.get(e).flatMap(_.headOption.flatMap{ case (l, ee2) => ee2.headOption.map(e :: peekPath(_)) }).getOrElse(List())
+  }
+
 /*  def removeKeys(toRemove: Set[E]) = {
     new Relation(tupleSet.filterNot {
       case  (l, r) => (toRemove contains l) || (toRemove contains r)

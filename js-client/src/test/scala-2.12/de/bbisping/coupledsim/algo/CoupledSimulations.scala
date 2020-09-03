@@ -22,7 +22,6 @@ object CoupledSimulations extends TestSuite {
   
   val simulationAlgos = List[StructureOperation.StructureRelationAnalyzer](
       new StructureOperation.FixedPointCoupledSimilarityAnalyzer,
-      new StructureOperation.BasicSACoupledSimilarityAnalyzer,
       new StructureOperation.GameCoupledSimilarityAnalyzer,
       new StructureOperation.GameCoupledSimilarityPlainAnalyzer
   )
