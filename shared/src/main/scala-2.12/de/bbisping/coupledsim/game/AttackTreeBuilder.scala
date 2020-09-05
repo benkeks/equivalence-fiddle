@@ -1,18 +1,18 @@
 package de.bbisping.coupledsim.game
 
-import de.bbisping.coupledsim.util.LabeledRelation
+import de.bbisping.coupledsim.util.Relation
 import de.bbisping.coupledsim.game.SimpleGame.GameNode
 
-class AttackTreeBuilder[L](weighting: (GameNode, GameNode) => L) {
+class AttackTreeBuilder[L] {
 
   def buildAttackTree(
       game: SimpleGame,
       win: Set[GameNode],
       node: GameNode):
-    LabeledRelation[GameNode, L] = {
+    Relation[GameNode] = {
 
     val visited = collection.mutable.Set[GameNode]()
-    val edges = collection.mutable.Queue[(GameNode, L, GameNode)]()
+    val edges = collection.mutable.Queue[(GameNode, GameNode)]()
 
     def buildAttackTreeEdges(
       game: SimpleGame,
@@ -29,7 +29,7 @@ class AttackTreeBuilder[L](weighting: (GameNode, GameNode) => L) {
         val directEdges = for {
           t <- winningMoves
           if node != t
-        } yield (node, weighting(node, t), t)
+        } yield (node, t)
 
         for {
           t <- winningMoves
@@ -43,33 +43,32 @@ class AttackTreeBuilder[L](weighting: (GameNode, GameNode) => L) {
 
     buildAttackTreeEdges(game, win, node)
 
-    new LabeledRelation(edges.toSet)
+    new Relation(edges.toSet)
   }
 
   def accumulatePrices(
-      tree: LabeledRelation[GameNode, L],
-      priceAdd: (L, L) => L,
-      pricePick: Iterable[L] => L,
-      initialPrice: L,
+      tree: Relation[GameNode],
+      priceCons: (GameNode, GameNode, L) => L,
+      pricePick: (GameNode, Iterable[L]) => L,
+      finishingPrice: L,
       supPrice: L,
       node: GameNode,
       targetRegion: Set[GameNode]): Map[GameNode, L] = {
     
     val prices = collection.mutable.Map[GameNode, L]()
     
-    prices ++= targetRegion map ((_, initialPrice))
+    prices ++= targetRegion map ((_, finishingPrice))
 
     def updatePrice(n: GameNode): Unit = {
       if (!prices.isDefinedAt(n)) {
         prices(n) = supPrice
         val succPrices = for {
-          (l, ss) <- tree.rep.getOrElse(n, Map())
-          s <- ss
+          s <- tree.rep.getOrElse(n, Set())
         } yield {
           updatePrice(s)
-          priceAdd(l, prices(s))
+          priceCons(n, s, prices(s))
         }
-        prices(n) = pricePick(succPrices)
+        prices(n) = pricePick(n, succPrices)
       }
     }
 

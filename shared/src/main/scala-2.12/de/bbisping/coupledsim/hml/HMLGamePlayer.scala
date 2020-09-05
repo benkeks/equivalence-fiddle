@@ -61,20 +61,59 @@ class HMLGamePlayer[S, A, L] (
 
   def buildHML(game: HMLGame, win: Set[GameNode], node: GameNode) = {
 
-    val localEdges = recordedMoveEdges.toMap
+    //val localEdges = recordedMoveEdges.toMap
     //def pickMin(edges: Iterable[MoveKind]) = edges.head
 
-    val attackTreeBuilder = new AttackTreeBuilder(localEdges(_, _))
+    val attackTreeBuilder = new AttackTreeBuilder[Set[HennessyMilnerLogic.Formula[A]]]()
 
     // (TODO: this shouldnt need to be a tree at this point...)
     val attackTree = attackTreeBuilder.buildAttackTree(game, win, node)
 
     println("Attack Tree:" + attackTree)
 
-    val defenderDefeats = attackTree.rhs.collect { case n if !attackTree.rep.isDefinedAt(n) || attackTree.rep(n).isEmpty => n }
+    val defenderDefeats = attackTree.rhs.collect {
+      case emptyDef @ DefenderConjunction(_, conjs) if conjs.isEmpty => emptyDef.asInstanceOf[GameNode]
+    }
+
+    println(defenderDefeats)
+
+    def moveToHML(n1: GameNode, n2: GameNode, ff: Set[HennessyMilnerLogic.Formula[A]]): Set[HennessyMilnerLogic.Formula[A]] = {
+      val kind = recordedMoveEdges(n1, n2)
+
+      kind match {
+        case ConjunctMove() =>
+          ff//HennessyMilnerLogic.And(ff.toList)
+        case ObservationMove(a) =>
+          ff.map(HennessyMilnerLogic.Observe(a, _))
+        case DefenderMove() =>
+          ff
+      }
+    }
+    
+    def mergeMoves(node: GameNode, possibleMoves: Iterable[Set[HennessyMilnerLogic.Formula[A]]]): Set[HennessyMilnerLogic.Formula[A]] = node match {
+      case DefenderConjunction(_, _) =>
+        val productMoves =
+          possibleMoves.foldLeft(Seq(Seq[HennessyMilnerLogic.Formula[A]]()))(
+            (b, a) => b.flatMap(i => a.map(j => i ++ Seq(j))))
+        productMoves.map(mv => HennessyMilnerLogic.And(mv.toList).asInstanceOf[HennessyMilnerLogic.Formula[A]]).toSet
+      case _ =>
+        possibleMoves.flatten.toSet
+    }
+
+    val accumulatedPrices = attackTreeBuilder.accumulatePrices(
+      tree = attackTree,
+      priceCons = moveToHML _,
+      pricePick = mergeMoves _,
+      finishingPrice = Set(HennessyMilnerLogic.And(List())),
+      supPrice = Set(),
+      node = node,
+      targetRegion = defenderDefeats
+    )
 
     /*
-    
+    attackTree,
+      ((a,b) => a), pickMin _, ConjunctMove(), ConjunctMove(), node, defenderDefeats.toSet)
+
 
     println(defenderDefeats)
 
@@ -92,28 +131,29 @@ class HMLGamePlayer[S, A, L] (
     println(bestAttacks)
     */
 
-    def attackToHML(node: GameNode): HennessyMilnerLogic.Formula[A] = {
-      val (l, succs) = attackTree.rep(node).last
+    // def attackToHML(node: GameNode): HennessyMilnerLogic.Formula[A] = {
+    //   val (l, succs) = attackTree.rep(node).last
       
-      l match {
-        case ConjunctMove() =>
-          // a Conjunct move should always reach a defender node that then has a set of following attacker nodes 
-          val conjuncts = for {
-            defNode <- succs
-            followingAttack <- attackTree.values(defNode, DefenderMove())
-          } yield {
-            attackToHML(followingAttack)
-          }
-          HennessyMilnerLogic.And(conjuncts.toList)
-        case ObservationMove(a) =>
-          HennessyMilnerLogic.Observe(a, attackToHML(succs.head))
-        case DefenderMove() =>
-          throw(new Exception("Reached defender move.."))
-      }
+    //   l match {
+    //     case ConjunctMove() =>
+    //       // a Conjunct move should always reach a defender node that then has a set of following attacker nodes 
+    //       val conjuncts = for {
+    //         defNode <- succs
+    //         followingAttack <- attackTree.values(defNode, DefenderMove())
+    //       } yield {
+    //         attackToHML(followingAttack)
+    //       }
+    //       HennessyMilnerLogic.And(conjuncts.toList)
+    //     case ObservationMove(a) =>
+    //       HennessyMilnerLogic.Observe(a, attackToHML(succs.head))
+    //     case DefenderMove() =>
+    //       throw(new Exception("Reached defender move.."))
+    //   }
 
-    }
+    // }
 
-    attackToHML(node)
+    // attackToHML(node)
+    accumulatedPrices(node)
   }
 
   def compute() = {
