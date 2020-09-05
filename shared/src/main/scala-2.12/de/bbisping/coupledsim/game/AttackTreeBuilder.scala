@@ -22,7 +22,9 @@ class AttackTreeBuilder[L](weighting: (GameNode, GameNode) => L) {
       if (!visited(node)) {
         visited += node
 
-        val winningMoves = game.successors(node).filter(win)
+        //TODO: Change such that nodes can be discovered more than once, but visited only once.
+        // (prevent circles and still allow to find alternative routes!)
+        val winningMoves = game.successors(node).filter(n => win(n) && !visited(n))
 
         val directEdges = for {
           t <- winningMoves
