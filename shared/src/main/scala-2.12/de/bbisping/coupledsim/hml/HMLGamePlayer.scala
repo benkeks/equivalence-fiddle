@@ -20,12 +20,14 @@ class HMLGamePlayer[S, A, L] (
   abstract sealed class MoveKind
   case class ObservationMove(a: A) extends MoveKind
   case class ConjunctMove() extends MoveKind
+  case class NegationMove() extends MoveKind
   case class DefenderMove() extends MoveKind
 
   val recordedMoveEdges = collection.mutable.Map[(GameNode, GameNode), MoveKind]()
 
   case class AttackerObservation(p: S, qq: Set[S]) extends SimpleGame.AttackerNode
   case class DefenderConjunction(p: S, qq: Set[S]) extends SimpleGame.DefenderNode
+  case class DefenderNegation(p: S, qq: Set[S]) extends SimpleGame.DefenderNode
 
   class HMLGame
     extends SimpleGame with GameDiscovery with WinningRegionComputation {
@@ -47,11 +49,26 @@ class HMLGamePlayer[S, A, L] (
         }
         val conj = DefenderConjunction(p0, qq0)
         recordedMoveEdges((gn, conj)) = ConjunctMove()
-        dn ++ List(conj)
+        if (qq0.nonEmpty) {
+          // only add negation moves if the defender hasn't trivially lost already (in order to have unique finishing moves with Conj for the attacker)
+          val neg = DefenderNegation(p0, qq0)
+          recordedMoveEdges((gn, neg)) = NegationMove()
+          dn ++ List(conj, neg)
+        } else {
+          dn ++ List(conj)
+        }
       case DefenderConjunction(p0, qq0) =>
         for {
           q0 <- qq0
           obs = AttackerObservation(p0, Set(q0))
+        } yield {
+          recordedMoveEdges((gn, obs)) = DefenderMove()
+          obs
+        }
+      case DefenderNegation(p0, qq0) =>
+        for {
+          q0 <- qq0
+          obs = AttackerObservation(q0, Set(p0))
         } yield {
           recordedMoveEdges((gn, obs)) = DefenderMove()
           obs
@@ -83,6 +100,8 @@ class HMLGamePlayer[S, A, L] (
       kind match {
         case ConjunctMove() =>
           ff//HennessyMilnerLogic.And(ff.toList)
+        case NegationMove() =>
+          ff//TODO: Is this correct? 2020-09-28
         case ObservationMove(a) =>
           ff.map(HennessyMilnerLogic.Observe(a, _))
         case DefenderMove() =>
@@ -96,6 +115,21 @@ class HMLGamePlayer[S, A, L] (
           possibleMoves.foldLeft(Seq(Seq[HennessyMilnerLogic.Formula[A]]()))(
             (b, a) => b.flatMap(i => a.map(j => i ++ Seq(j))))
         productMoves.map(mv => HennessyMilnerLogic.And(mv.toList).asInstanceOf[HennessyMilnerLogic.Formula[A]]).toSet
+      
+      case DefenderNegation(_, _) =>
+        val productMoves =
+          possibleMoves.foldLeft(Seq(Seq[HennessyMilnerLogic.Formula[A]]()))(
+            (b, a) => b.flatMap(i => a.map(j => i ++ Seq(j))))
+        
+        productMoves.map { mv =>
+          val inner = if (mv.size == 1) {
+            mv.head
+          } else {
+            HennessyMilnerLogic.And(mv.toList).asInstanceOf[HennessyMilnerLogic.Formula[A]]
+          }
+          HennessyMilnerLogic.Negate(inner)
+        }.toSet
+
       case _ =>
         possibleMoves.flatten.toSet
     }
