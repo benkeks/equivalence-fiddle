@@ -110,49 +110,6 @@ class HMLGamePlayer[S, A, L] (
       targetRegion = defenderDefeats
     )
 
-    /*
-    attackTree,
-      ((a,b) => a), pickMin _, ConjunctMove(), ConjunctMove(), node, defenderDefeats.toSet)
-
-
-    println(defenderDefeats)
-
-    val accumulatedPrices = attackTreeBuilder.accumulatePrices(attackTree, ((a,b) => a), pickMin _, ConjunctMove(), ConjunctMove(), node, defenderDefeats.toSet)
-
-    println(accumulatedPrices)
-
-    val bestAttacks = attackTree.determinize { succs =>
-      succs.reduceLeft[(MoveKind, GameNode)] { case (p1n1@(p1, n1), p2n2@(p2, n2)) =>
-        //if (accumulatedPrices(n1) <= accumulatedPrices(n2)) p1n1 else p2n2
-        p1n1
-      }
-    }
-
-    println(bestAttacks)
-    */
-
-    // def attackToHML(node: GameNode): HennessyMilnerLogic.Formula[A] = {
-    //   val (l, succs) = attackTree.rep(node).last
-      
-    //   l match {
-    //     case ConjunctMove() =>
-    //       // a Conjunct move should always reach a defender node that then has a set of following attacker nodes 
-    //       val conjuncts = for {
-    //         defNode <- succs
-    //         followingAttack <- attackTree.values(defNode, DefenderMove())
-    //       } yield {
-    //         attackToHML(followingAttack)
-    //       }
-    //       HennessyMilnerLogic.And(conjuncts.toList)
-    //     case ObservationMove(a) =>
-    //       HennessyMilnerLogic.Observe(a, attackToHML(succs.head))
-    //     case DefenderMove() =>
-    //       throw(new Exception("Reached defender move.."))
-    //   }
-
-    // }
-
-    // attackToHML(node)
     accumulatedPrices(node)
   }
 
@@ -164,12 +121,21 @@ class HMLGamePlayer[S, A, L] (
 
     val attackerWin = hmlGame.computeWinningRegion()
 
-    val a1 = AttackerObservation(nodes(0), Set(nodes(1)))
+    val aLR = AttackerObservation(nodes(0), Set(nodes(1)))
+    val aRL = AttackerObservation(nodes(1), Set(nodes(0)))
 
-    println("lr:" + attackerWin.contains(a1))
-    println("rl:" + attackerWin.contains(AttackerObservation(nodes(1), Set(nodes(0)))))
-    
-    println(buildHML(hmlGame, attackerWin, a1))//.peekPath(a1))
+    println("left simBy right:" + !attackerWin.contains(aLR))
+
+    if (attackerWin.contains(aLR)) {
+      val formulas = buildHML(hmlGame, attackerWin, aLR)
+      formulas.foreach {f => println("Distinguished under " + f.classifyFormula() + " preorder by " + f.toString())}
+    }
+
+    println("right simBy left:" + !attackerWin.contains(aRL))
+    if (attackerWin.contains(aRL)) {
+      val formulas = buildHML(hmlGame, attackerWin, aRL)
+      formulas.foreach {f => println("Distinguished under " + f.classifyFormula() + " preorder by " + f.toString())}
+    }
 
     true
   }
