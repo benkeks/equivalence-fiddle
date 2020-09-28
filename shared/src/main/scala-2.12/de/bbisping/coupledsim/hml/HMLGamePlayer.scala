@@ -69,13 +69,13 @@ class HMLGamePlayer[S, A, L] (
     // (TODO: this shouldnt need to be a tree at this point...)
     val attackTree = attackTreeBuilder.buildAttackTree(game, win, node)
 
-    println("Attack Tree:" + attackTree)
+    println("Attack Tree: " + attackTree)
 
     val defenderDefeats = attackTree.rhs.collect {
       case emptyDef @ DefenderConjunction(_, conjs) if conjs.isEmpty => emptyDef.asInstanceOf[GameNode]
     }
 
-    println(defenderDefeats)
+    println("Defender Defeats: " + defenderDefeats.mkString("{", ",", "}"))
 
     def moveToHML(n1: GameNode, n2: GameNode, ff: Set[HennessyMilnerLogic.Formula[A]]): Set[HennessyMilnerLogic.Formula[A]] = {
       val kind = recordedMoveEdges(n1, n2)

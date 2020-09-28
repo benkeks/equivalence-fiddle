@@ -68,7 +68,9 @@ class AttackTreeBuilder[L] {
           updatePrice(s)
           priceCons(n, s, prices(s))
         }
-        prices(n) = pricePick(n, succPrices)
+        if (succPrices.nonEmpty) {
+          prices(n) = pricePick(n, succPrices)
+        }
       }
     }
 
