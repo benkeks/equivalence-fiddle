@@ -31,7 +31,7 @@ object HennessyMilnerLogic {
         } else {
           "simulation"
         } 
-      } else if (negationLevels == 1 && conjunctionLevels == 1) {
+      } else if (negationLevels == 1 && conjunctionLevels <= 1) {
         if (highestNegation == 1 && highestConjunction <= 1) {
           if (mixedConjunctions) {
             "ready"
