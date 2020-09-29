@@ -52,13 +52,13 @@ object HennessyMilnerLogic {
             "impossible-futures"
           }
         } else {
-          "1-nested-simulation"
+          "2-nested-simulation"
         }
       } else {
         if (negationLevels == 1 && highestNegation <= 1) {
           "ready-simulation"
         } else {
-          negationLevels + "-nested-simulation"
+          (negationLevels+1) + "-nested-simulation"
         }
       }
     }
