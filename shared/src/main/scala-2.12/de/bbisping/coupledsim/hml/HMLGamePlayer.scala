@@ -122,12 +122,11 @@ class HMLGamePlayer[S, A, L] (
             (b, a) => b.flatMap(i => a.map(j => i ++ Seq(j))))
         
         productMoves.map { mv =>
-          val inner = if (mv.size == 1) {
-            mv.head
+          if (mv.size == 1) {
+            HennessyMilnerLogic.Negate(mv.head)
           } else {
-            HennessyMilnerLogic.And(mv.toList).asInstanceOf[HennessyMilnerLogic.Formula[A]]
+            HennessyMilnerLogic.And(mv.toList.map(HennessyMilnerLogic.Negate(_))).asInstanceOf[HennessyMilnerLogic.Formula[A]]
           }
-          HennessyMilnerLogic.Negate(inner)
         }.toSet
 
       case _ =>
