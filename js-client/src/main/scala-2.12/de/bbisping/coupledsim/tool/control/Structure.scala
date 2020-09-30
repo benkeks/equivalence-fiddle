@@ -5,8 +5,8 @@ import scala.scalajs.js.Date
 import de.bbisping.coupledsim.tool.arch.Action
 import de.bbisping.coupledsim.tool.arch.Control
 import de.bbisping.coupledsim.tool.model.NodeID
-import de.bbisping.coupledsim.ts.Interpreter
-import de.bbisping.coupledsim.ts.Syntax
+import de.bbisping.coupledsim.ccs.Interpreter
+import de.bbisping.coupledsim.ccs.Syntax
 import de.bbisping.coupledsim.ts.WeakTransitionSystem
 import de.bbisping.coupledsim.util.Coloring
 import de.bbisping.coupledsim.util.Interpreting

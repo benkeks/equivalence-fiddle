@@ -4,8 +4,8 @@ import scala.scalajs.js.Date
 import scala.util.Try
 import de.bbisping.coupledsim.tool.arch.Action
 import de.bbisping.coupledsim.tool.arch.Control
-import de.bbisping.coupledsim.ts.Syntax
-import de.bbisping.coupledsim.ts
+import de.bbisping.coupledsim.ccs.Syntax
+import de.bbisping.coupledsim.ccs
 import de.bbisping.coupledsim.tool.control.Structure.NodeLabel
 import de.bbisping.coupledsim.util.Parsing
 
@@ -15,7 +15,7 @@ class Source(val main: Control) extends ModelComponent {
   private var ast: Syntax.Definition = null
   private var problems: List[Source.Problem] = List()
   
-  private val samples = Samples.namedSamples
+  private val samples = CCSSamples.namedSamples
   
   def init() {
     broadcast(Source.ExamplesChange(samples))
@@ -26,13 +26,13 @@ class Source(val main: Control) extends ModelComponent {
     problems = List()
     
     val beginParse = Date.now
-    val parser = new ts.Parser(code)
+    val parser = new ccs.Parser(code)
     
     parser.parse match {
-      case parser.ParseSuccess(esDef, _) =>
+      case parser.ParseSuccess(ccsDef, _) =>
         println("Parsing took: " + (Date.now - beginParse) + "ms.")
         broadcast(Source.ProblemChange(source, List()))
-        setAst(esDef, updateSource = false)
+        setAst(ccsDef, updateSource = false)
         
       case fail @ parser.ParseFail(msg, rest) =>
         val idx = fail.position
@@ -98,7 +98,7 @@ class Source(val main: Control) extends ModelComponent {
   def setAst(newAst: Syntax.Definition, updateSource: Boolean = true) {
     ast = newAst
     if (updateSource) {
-      source = new ts.PrettyPrinter().showDefinition(newAst).toString
+      source = new ccs.PrettyPrinter().showDefinition(newAst).toString
     }
     broadcast(Source.SourceChange(source, ast))
   }

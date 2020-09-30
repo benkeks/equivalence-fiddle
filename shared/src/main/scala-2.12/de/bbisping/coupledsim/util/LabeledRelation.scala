@@ -127,6 +127,33 @@ class LabeledRelation[E, L](val rep: Map[E, Map[L, Set[E]]]) {
   def isSymmetric = tupleSet.forall {
     case (e1, l, e2) => tupleSet contains (e2, l, e1)
   }
+
+  def getReachablePart(startingSet: Iterable[E]) = {
+    val visited = collection.mutable.Set[E]()
+    val queue = collection.mutable.Queue[E]()
+    queue ++= startingSet
+
+    while (queue.nonEmpty) {
+      val e = queue.dequeue()
+
+      if (!visited(e)) {
+        visited += e
+      
+        for (lee2 <- rep.get(e); ee2 <- lee2.values) {
+          queue ++= ee2
+        }
+      }
+    }
+
+    visited.toSet
+  }
+
+  def filterReachable(startingSet: Iterable[E]) = {
+    val reachable = getReachablePart(startingSet)
+    filter {
+      case (e1, _, _) => reachable(e1)
+    }
+  }
   
   def isReflexiveSomewhere = tupleSet.exists{case (e1, _, e2) => e1 == e2}
   

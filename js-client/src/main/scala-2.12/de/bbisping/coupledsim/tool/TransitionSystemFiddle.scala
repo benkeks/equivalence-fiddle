@@ -5,7 +5,7 @@ import scala.scalajs.js.annotation.JSExportTopLevel
 import de.bbisping.coupledsim.tool.arch.Action
 import de.bbisping.coupledsim.tool.arch.ActionDispatcher
 import de.bbisping.coupledsim.tool.arch.Control
-import de.bbisping.coupledsim.tool.control.Samples
+import de.bbisping.coupledsim.tool.control.CCSSamples
 import de.bbisping.coupledsim.tool.control.Source
 import de.bbisping.coupledsim.tool.control.Structure
 import de.bbisping.coupledsim.tool.view.GraphRenderer
@@ -26,9 +26,9 @@ object TransitionSystemFiddle extends JSApp with Control with ActionDispatcher {
     source.init()
     structure.init()
     val initialCode =
-      Samples.getExample(editor.getURLSampleSlug())
+      CCSSamples.getExample(editor.getURLSampleSlug())
       .map(_.code)
-      .getOrElse(Samples.default)
+      .getOrElse(CCSSamples.default)
     doAction(Source.LoadDefinition(initialCode), source)
   }
   
