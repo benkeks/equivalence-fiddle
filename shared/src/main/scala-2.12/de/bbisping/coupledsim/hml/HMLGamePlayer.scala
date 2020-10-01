@@ -10,6 +10,7 @@ import de.bbisping.coupledsim.game.SimpleGame
 import de.bbisping.coupledsim.hml.HennessyMilnerLogic
 import de.bbisping.coupledsim.game.AttackTreeBuilder
 import de.bbisping.coupledsim.game.SimpleGame.GameNode
+import de.bbisping.coupledsim.hml.HMLInterpreter
 
 
 class HMLGamePlayer[S, A, L] (
@@ -153,21 +154,33 @@ class HMLGamePlayer[S, A, L] (
     println("hml game size: " + hmlGame.discovered.size)
 
     val attackerWin = hmlGame.computeWinningRegion()
-
     val aLR = AttackerObservation(nodes(0), Set(nodes(1)))
     val aRL = AttackerObservation(nodes(1), Set(nodes(0)))
 
-    println("left simBy right:" + !attackerWin.contains(aLR))
+    val hmlInterpreter = new HMLInterpreter(ts)
 
+    println("left simBy right:" + !attackerWin.contains(aLR))
     if (attackerWin.contains(aLR)) {
       val formulas = buildHML(hmlGame, attackerWin, aLR)
-      formulas.foreach {f => println("Distinguished under " + f.classifyFormula() + " preorder by " + f.toString())}
+      formulas.foreach { f =>
+        println("Distinguished under " + f.classifyFormula() + " preorder by " + f.toString())
+        val check = hmlInterpreter.isTrueAt(f, List(nodes(0), nodes(1)))
+        if (!check(nodes(0)) || check(nodes(1))) {
+          System.err.println("Formula is no sound distinguishing formula! " + check)
+        }
+      }
     }
 
     println("right simBy left:" + !attackerWin.contains(aRL))
     if (attackerWin.contains(aRL)) {
       val formulas = buildHML(hmlGame, attackerWin, aRL)
-      formulas.foreach {f => println("Distinguished under " + f.classifyFormula() + " preorder by " + f.toString())}
+      formulas.foreach { f =>
+        println("Distinguished under " + f.classifyFormula() + " preorder by " + f.toString())
+        val check = hmlInterpreter.isTrueAt(f, List(nodes(0), nodes(1)))
+        if (!check(nodes(1)) || check(nodes(0))) {
+          System.err.println("Formula is no sound distinguishing formula! " + check)
+        }
+      }
     }
 
     true
