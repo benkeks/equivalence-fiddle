@@ -69,7 +69,8 @@ class GraphRenderer(val main: Control)
   val layerNodes = sceneRoot.append("g").classed("layer-nodes", true)
   val layerMeta = sceneRoot.append("g").classed("layer-meta", true)
       
-  var linkViews: Selection[NodeLink] = layerLinks.selectAll(".link")
+  //var linkViews: Selection[NodeLink] = layerLinks.selectAll(".link")
+  var linkPartViews: Selection[LinkViewPart] = layerLinks.selectAll(".link")
   var linkLabelViews: Selection[NodeLink] = layerMeta.selectAll(".link-label")
   
   var nodeViews: Selection[GraphNode] = layerNodes.selectAll(".node")
@@ -87,7 +88,7 @@ class GraphRenderer(val main: Control)
       ((e1, e2), ees) <- ts.step.tupleSet.groupBy(t => (t._1, t._3))
       en1 = nodes(e1)
       en2 = nodes(e2)
-    } yield new NodeLink('stepto, ees.map(_._2.toActString).mkString(", "), en1, en2)
+    } yield new NodeLink('stepto, ees.map(_._2.toActString).mkString(", "), Set(en1), Set(en2))
     
     (nodes, nodeLinks)
   }
@@ -109,16 +110,16 @@ class GraphRenderer(val main: Control)
     deletedLinks.foreach(l => links.remove(links.indexOf(l)))
     newLinks.foreach(links.push(_))
     
-    val linkUp = linkViews.data(links, (_: NodeLink).toString)
+    val linkUp = linkPartViews.data(links.flatMap(_.viewParts), (_: LinkViewPart).toString)
     linkUp.enter()
         .append("path")
-        .attr("class", (d: NodeLink, i: Int) => "link " + d.kind.name)
-        .attr("marker-end", (d: NodeLink, i: Int) => "url(#" + d.kind.name.split(" ")(0) + ")")
-        .call(dragLink)
-        .on("mousemove", onHover _)
-        .on("mouseout", onHoverEnd _)
+        .attr("class", (d: LinkViewPart, i: Int) => "link " + d.link.kind.name)
+        .attr("marker-end", (d: LinkViewPart, i: Int) => if (d.isEnd) "url(#" + d.link.kind.name.split(" ")(0) + ")" else "none")
+        //.call(dragLink)
+        //.on("mousemove", onHover _)
+        //.on("mouseout", onHoverEnd _)
     linkUp.exit().remove()
-    linkViews = layerLinks.selectAll(".link")
+    linkPartViews = layerLinks.selectAll(".link")
     
     val linkLabelUp = linkLabelViews.data(links, (_: NodeLink).toString)
     linkLabelUp.enter()
@@ -167,7 +168,7 @@ class GraphRenderer(val main: Control)
       (e1, l, e2) <- rel.tupleSet
       en1 <- nodes.find(_.nameId == e1)
       en2 <- nodes.find(_.nameId == e2)
-    } yield new NodeLink(Symbol("relation " + l), "", en1, en2)
+    } yield new NodeLink(Symbol("relation " + l), "", Set(en1), Set(en2))
     
     val newRealtionLinks = relationLinks.filter(l => !relation.exists(l.sameLink(_)))
     val deletedRelationLinks = relation.filter(l => !relationLinks.exists(l.sameLink(_)))
@@ -214,8 +215,8 @@ class GraphRenderer(val main: Control)
     nodeLabelViews
       .attr("x", ((d: GraphNode, i: Int) => d.x.get + 4))
       .attr("y", ((d: GraphNode, i: Int) => d.y.get - 10))
-    linkViews
-      .attr("d", (_: NodeLink).toSVGPathString)
+    linkPartViews
+      .attr("d", (_: LinkViewPart).toSVGPathString)
     linkLabelViews
       .attr("x", (_: NodeLink).center._1)
       .attr("y", (_: NodeLink).center._2)
