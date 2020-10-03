@@ -22,14 +22,22 @@ class HMLGamePlayer[S, A, L] (
   
 
   abstract sealed class MoveKind
-  case class ObservationMove(a: A) extends MoveKind
-  case class ConjunctMove() extends MoveKind
-  case class NegationMove() extends MoveKind
-  case class DefenderMove() extends MoveKind
+  case class ObservationMove(a: A) extends MoveKind {
+    override def toString() = "<" + a + ">"
+  }
+  case class ConjunctMove() extends MoveKind {
+    override def toString() = "/\\"
+  }
+  case class NegationMove() extends MoveKind {
+    override def toString() = "~"
+  }
+  case class DefenderMove() extends MoveKind {
+    override def toString() = "*"
+  }
 
   val recordedMoveEdges = collection.mutable.Map[(GameNode, GameNode), MoveKind]()
 
-  case class AttackerObservation(p: S, qq: Set[S]) extends SimpleGame.AttackerNode
+  case class AttackerObservation(p: S, qq: Set[S]) extends SimpleGame.AttackerNode 
   case class DefenderConjunction(p: S, qq: Set[S]) extends SimpleGame.DefenderNode
   case class DefenderNegation(p: S, qq: Set[S]) extends SimpleGame.DefenderNode
 

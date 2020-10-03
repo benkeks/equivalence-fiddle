@@ -105,18 +105,18 @@ class GraphRenderer(val main: Control)
       en1 = relationLinks filter (_.hasRep(e1))
       en2 = relationLinks filter (_.hasRep(e2))
       if (en1.nonEmpty)
-    } yield new NodeLink('relation, "", en1.toSet, en2.toSet, (e1, e2))
+    } yield new NodeLink(Symbol("relation ho"), l, en1.toSet, en2.toSet, (l, e1, e2))
 
     println(relationMetaLinks)
     
-    (nodes, nodeLinks ++ relationLinks ++ relationMetaLinks)
+    (nodes, nodeLinks ++ relationLinks, relationMetaLinks)
   }
   
   def setStructure() = for { ts <- structure } {
     
     force.stop()
     
-    val (sysNodes, nodeLinks) = buildGraph(ts, relation)
+    val (sysNodes, nodeLinks, hoLinks) = buildGraph(ts, relation)
     
     val newNodes = sysNodes.values.filter(n => !nodes.exists(n.sameRep(_)))
     val deletedNodes = nodes.filter(n => !sysNodes.isDefinedAt(n.nameId))
@@ -125,11 +125,13 @@ class GraphRenderer(val main: Control)
     nodes.foreach { n => n.updateMeta(ts.nodeLabeling.getOrElse(n.nameId, Structure.emptyLabel), force = true)}
     
     val nodesAndLinks = nodes ++ links
-
     val newLinks = nodeLinks.flatMap(_.integrate(nodesAndLinks)).filter(l => !links.exists(l.sameRep(_)))
+    val nodesAndLinks2 = nodesAndLinks ++ newLinks
+    val newHoLinks = hoLinks.flatMap(_.integrate(nodesAndLinks2)).filter(l => !links.exists(l.sameRep(_)))
     val deletedLinks = links.filter(l => !nodeLinks.exists(l.sameRep(_)))
     deletedLinks.foreach(l => links.remove(links.indexOf(l)))
     newLinks.foreach(links.push(_))
+    newHoLinks.foreach(links.push(_))
     
     val linkUp = linkPartViews.data(links.flatMap(_.viewParts), (_: LinkViewPart).toString)
     linkUp.enter()

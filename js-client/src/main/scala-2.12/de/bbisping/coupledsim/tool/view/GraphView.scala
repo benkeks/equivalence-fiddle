@@ -114,6 +114,8 @@ object GraphView {
     var length: Double = 0
     
     var dir: (Double, Double) = (0,0)
+
+    val isLoop = sources == targets
     
     var srcCenter: (Double, Double) = if (sources.nonEmpty) (
       (sources.map(_.centerX).sum / sources.size),
@@ -125,8 +127,8 @@ object GraphView {
       (targets.map(_.centerY).sum / targets.size)
     ) else (srcCenter._1 + 100, srcCenter._2 + 100)
     
-    override def centerX = (tarCenter._1 + srcCenter._1) / 2
-    override def centerY = (tarCenter._2 + srcCenter._2) / 2
+    override def centerX = ((tarCenter._1 + srcCenter._1) / 2) - 20 * dir._2
+    override def centerY = (tarCenter._2 + srcCenter._2) / 2 + 20 * dir._1
 
     val viewParts = {
       sources.map(new LinkViewPart(this, _, isEnd = false)) ++
@@ -156,7 +158,9 @@ object GraphView {
         srcCenter._2 + 100
       )
       length = Math.hypot(tarCenter._1 - srcCenter._1, tarCenter._2 - srcCenter._2)
-      dir = (
+      dir = if (isLoop || length <= 0.0001) (
+        (1,0)
+      ) else (
         (tarCenter._1 - srcCenter._1) / length,
         (tarCenter._2 - srcCenter._2) / length
       )
@@ -166,7 +170,7 @@ object GraphView {
       val newSrc = sources.flatMap { n => nodes.find(n.sameRep(_)) }
       val newTar = targets.flatMap { n => nodes.find(n.sameRep(_)) }
       if (newSrc.nonEmpty && newTar.nonEmpty) {
-        Some(new NodeLink(kind, label, newSrc, newTar, (newSrc, newTar)))
+        Some(new NodeLink(kind, label, newSrc, newTar, (label, newSrc, newTar)))
       } else {
         None
       }
@@ -264,14 +268,21 @@ object GraphView {
   
   class LinkViewPart(val link: NodeLink, val source: Linkable, val isEnd: Boolean = true) {
     
-    def toSVGPathString = if (isEnd) {
-      "M"   + link.centerX       +" "+ link.centerY + 
-          " Q" + (link.tarCenter._1 - 15.0 * link.dir._1) +" "+ (link.tarCenter._2 - 15.0 * link.dir._2)+
-           " " + (source.centerX - 12.0 * link.dir._1) +" "+ (source.centerY - 12.0 * link.dir._2)
-    } else {
-      "M" + link.centerX       +" "+ link.centerY +
-           " Q" + link.srcCenter._1    +" "+ link.srcCenter._2 +
-           " " + source.centerX             +" "+ source.centerY
+    def toSVGPathString = {
+      if (link.tarCenter._1.isNaN()) throw new Exception("NaN tar!")
+      if (link.dir._1.isNaN()) throw new Exception("NaN dir!")
+      if (link.source.centerX.isNaN()) throw new Exception("NaN center!")
+      if (isEnd) {
+        "M"   + link.centerX       +" "+ link.centerY + 
+            " C " + (link.centerX + .3 * link.length * link.dir._1) +" "+ (link.centerY + .3 * link.length * link.dir._2)+
+            ", " + (link.tarCenter._1 - 5.0 * link.dir._1) +" "+ (link.tarCenter._2 - 5.0 * link.dir._2)+
+            ", " + (source.centerX - 4.0 * link.dir._1) +" "+ (source.centerY - 4.0 * link.dir._2)
+      } else {
+        "M" + link.centerX       +" "+ link.centerY +
+            " C" + (link.centerX - .3 * link.length * link.dir._1) +" "+ (link.centerY - .3 * link.length * link.dir._2)+
+            ", " + link.srcCenter._1    +" "+ link.srcCenter._2 +
+            ", " + source.centerX             +" "+ source.centerY
+      }
     }
     
     override def toString = source + "::" + link
