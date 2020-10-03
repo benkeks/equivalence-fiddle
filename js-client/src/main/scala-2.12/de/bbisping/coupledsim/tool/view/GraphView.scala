@@ -272,6 +272,4 @@ object GraphView {
 trait GraphView {
   val nodes = js.Array[GraphView.GraphNode]()
   val links = js.Array[GraphView.NodeLink]()
-  
-  val relation = js.Array[GraphView.NodeLink]()
 }

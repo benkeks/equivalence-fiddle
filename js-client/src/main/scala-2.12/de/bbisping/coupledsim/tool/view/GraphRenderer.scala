@@ -77,8 +77,11 @@ class GraphRenderer(val main: Control)
   var nodeLabelViews: Selection[GraphNode] = layerMeta.selectAll(".node-label")
   
   var relationViews: Selection[NodeLink] = layerMeta.selectAll(".relation")
+
+  var structure: Option[Structure.TSStructure] = None
+  var relation: Iterable[(Iterable[NodeID], Iterable[NodeID])] = List()
   
-  def buildGraph(ts: Structure.TSStructure) = {
+  def buildGraph(ts: Structure.TSStructure, relation: Iterable[(Iterable[NodeID], Iterable[NodeID])]) = {
     
     val nodes = ts.nodes.map { e =>
       (e, new GraphNode(e, ts.nodeLabeling.getOrElse(e, Structure.emptyLabel)))
@@ -89,15 +92,22 @@ class GraphRenderer(val main: Control)
       en1 = nodes(e1)
       en2 = nodes(e2)
     } yield new NodeLink('stepto, ees.map(_._2.toActString).mkString(", "), Set(en1), Set(en2))
+
+    val relationLinks = for {
+      (e1, e2) <- relation
+      en1 = e1 map nodes
+      en2 = e2 map nodes
+      if (en1.nonEmpty && en2.nonEmpty) // for now exclude this kind of end game nodes... //TODO: Fixme!
+    } yield new NodeLink('relation, "", en1.toSet, en2.toSet)
     
-    (nodes, nodeLinks)
+    (nodes, nodeLinks ++ relationLinks)
   }
   
-  def setStructure(ts: Structure.TSStructure) {
+  def setStructure() = for { ts <- structure } {
     
     force.stop()
     
-    val (sysNodes, nodeLinks) = buildGraph(ts)
+    val (sysNodes, nodeLinks) = buildGraph(ts, relation)
     
     val newNodes = sysNodes.values.filter(n => !nodes.exists(n.sameNode(_)))
     val deletedNodes = nodes.filter(n => !sysNodes.isDefinedAt(n.nameId))
@@ -161,7 +171,7 @@ class GraphRenderer(val main: Control)
     force.start()
     
   }
-  
+  /*
   def setRelation(rel: LabeledRelation[NodeID, String]) {
     force.stop()
     val relationLinks = for {
@@ -185,7 +195,7 @@ class GraphRenderer(val main: Control)
     relationViews = layerMeta.selectAll(".relation")
     
     force.start()
-  }
+  }*/
   
   def setComment(comment: String) = {
     d3.select("#es-graph-comment")
@@ -206,9 +216,7 @@ class GraphRenderer(val main: Control)
     links foreach { d: NodeLink =>
       d.updateDirAndCenter()
     }
-    relation foreach { d: NodeLink =>
-      d.updateDirAndCenter()
-    }
+    
     nodeViews
       .attr("cx", ((d: GraphNode, i: Int) => d.x))
       .attr("cy", ((d: GraphNode, i: Int) => d.y))
@@ -233,11 +241,16 @@ class GraphRenderer(val main: Control)
   def notify(change: ModelComponent.Change) = change match {
     case Structure.StructureChange(structure) =>
       setComment("")
-      setStructure(structure)
+      this.structure = Some(structure)
+      relation = List()
+      setStructure()
     case Structure.StructurePartitionChange(partition) =>
       colorize(partition)
     case Structure.StructureRelationChange(relation) =>
-      setRelation(relation)
+      //setRelation(relation)
+    case Structure.StructureRichRelationChange(relation) =>
+      this.relation = relation 
+      setStructure()
     case Structure.StructureCommentChange(comment) =>
       setComment(comment)
     case _ =>

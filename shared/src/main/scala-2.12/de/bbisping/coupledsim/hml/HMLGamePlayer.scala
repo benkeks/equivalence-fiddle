@@ -11,11 +11,13 @@ import de.bbisping.coupledsim.hml.HennessyMilnerLogic
 import de.bbisping.coupledsim.game.AttackTreeBuilder
 import de.bbisping.coupledsim.game.SimpleGame.GameNode
 import de.bbisping.coupledsim.hml.HMLInterpreter
+import de.bbisping.coupledsim.algo.AlgorithmLogging
 
 
 class HMLGamePlayer[S, A, L] (
     val ts: WeakTransitionSystem[S, A, L],
-    val nodes: List[S]) {
+    val nodes: List[S])
+  extends AlgorithmLogging[S, A, L] {
   
 
   abstract sealed class MoveKind
@@ -86,6 +88,22 @@ class HMLGamePlayer[S, A, L] (
 
     // (TODO: this shouldnt need to be a tree at this point...)
     val attackTree = attackTreeBuilder.buildAttackTree(game, win, node)
+
+    if (AlgorithmLogging.loggingActive) {
+      val rel = for {
+        n <- (attackTree.lhs ++ attackTree.rhs)
+      } yield n match {
+        case AttackerObservation(p, qq) => 
+          (Set(p), qq)
+        case DefenderConjunction(p, qq) => 
+          (Set(p), qq)
+        case DefenderNegation(p, qq) =>
+          (Set(p), qq)
+      }
+      
+      logRichRelation(rel, "attack tree")
+    }
+    
 
     println("Attack Tree: " + attackTree)
 

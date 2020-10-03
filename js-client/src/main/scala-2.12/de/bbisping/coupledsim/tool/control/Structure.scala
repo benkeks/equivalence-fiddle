@@ -96,6 +96,9 @@ class Structure(val main: Control) extends ModelComponent {
           val labeled = new LabeledRelation(rel.tupleSet.map {case (p1, p2) => (p1, "", p2)})
           broadcast(Structure.StructureCommentChange(comment))
           broadcast(Structure.StructureRelationChange(labeled))
+        case AlgorithmLogging.LogRichRelation(rel, comment) =>
+          broadcast(Structure.StructureCommentChange(comment))
+          broadcast(Structure.StructureRichRelationChange(rel))
       }
       currentReplayStep += 1
       true
@@ -138,6 +141,8 @@ object Structure {
   case class StructurePartitionChange(partition: Coloring[NodeID]) extends ModelComponent.Change
 
   case class StructureRelationChange(relation: LabeledRelation[NodeID, String]) extends ModelComponent.Change
+
+  case class StructureRichRelationChange(relation: Iterable[(Iterable[NodeID], Iterable[NodeID])]) extends ModelComponent.Change
 
   case class StructureCommentChange(comment: String) extends ModelComponent.Change
 
@@ -283,7 +288,12 @@ object Structure {
 
         Console.out.println(n1 + ", " + n2)
 
-        new HMLGamePlayer(structure.structure, List(n1, n2)).compute()
+        val algo = new HMLGamePlayer(structure.structure, List(n1, n2))
+        algo.compute()
+        val replay = algo.getReplay()
+        
+        structure.setReplay(replay)
+        structure.main.doAction(StructureDoReplayStep(), structure)
 
         true
       } else {
