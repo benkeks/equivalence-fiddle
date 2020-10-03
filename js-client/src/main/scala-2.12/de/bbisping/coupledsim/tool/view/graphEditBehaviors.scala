@@ -16,7 +16,6 @@ import de.bbisping.coupledsim.tool.control.Source
 import de.bbisping.coupledsim.tool.control.Structure
 import de.bbisping.coupledsim.tool.view.GraphView.NodeLink
 import de.bbisping.coupledsim.tool.view.GraphView.GraphNode
-import de.bbisping.coupledsim.tool.view.GraphView.LinkTrait
 import de.bbisping.coupledsim.tool.model.NodeID
 
 trait GraphEditBehavior {
@@ -29,19 +28,19 @@ trait GraphEditBehavior {
   def onClick(node: GraphNode) {}
   
   def onHover(node: GraphNode) {}
-  def onHover(node: LinkTrait) {}
+  def onHover(node: NodeLink) {}
   
   def onHoverEnd(node: GraphNode) {}
-  def onHoverEnd(node: LinkTrait) {}
+  def onHoverEnd(node: NodeLink) {}
   
   def onDragStart(node: GraphNode) {}
-  def onDragStart(link: LinkTrait) {}
+  def onDragStart(link: NodeLink) {}
   
   def onDrag(node: GraphNode) {}
-  def onDrag(link: LinkTrait) {}
+  def onDrag(link: NodeLink) {}
   
   def onDragEnd(node: GraphNode) {}
-  def onDragEnd(link: LinkTrait) {}
+  def onDragEnd(link: NodeLink) {}
   
   def onSelectionChange() {}
 }
@@ -121,7 +120,7 @@ class GraphEditNode(renderer: GraphEditing) extends GraphEditBehavior {
   }
   
   override def onDragStart(node: GraphNode) {
-    if (activeNode.exists(!_.sameNode(node))) {
+    if (activeNode.exists(!_.sameRep(node))) {
       commitName()
     }
     newNode = None
@@ -171,16 +170,16 @@ abstract class GraphConnectNodes(renderer: GraphEditing) extends GraphEditBehavi
   }
   
   override def onHover(node: GraphNode) {
-    if (sourceNode != null && !sourceNode.sameNode(selectedTargetNode)) {
+    if (sourceNode != null && !sourceNode.sameRep(selectedTargetNode)) {
       selectedTargetNode = node
     
       val nodeViews: Selection[GraphNode] = renderer.sceneRoot.selectAll(".node")
-      nodeViews.classed("connection-possible", (n: GraphNode) => node.sameNode(n))
+      nodeViews.classed("connection-possible", (n: GraphNode) => node.sameRep(n))
     }
   }
   
   override def onHoverEnd(node: GraphNode) {
-    if (selectedTargetNode != null && selectedTargetNode.sameNode(node)) {
+    if (selectedTargetNode != null && selectedTargetNode.sameRep(node)) {
       selectedTargetNode = null
     
       val nodeViews: Selection[GraphNode] = renderer.sceneRoot.selectAll(".node")
@@ -233,18 +232,18 @@ class GraphConnectStepTo(renderer: GraphEditing) extends GraphConnectNodes(rende
 
 class GraphDeleteNodeOrLink(renderer: GraphEditing) extends GraphEditBehavior {
   
-  var hover: Option[Either[GraphNode, LinkTrait]] = None
+  var hover: Option[Either[GraphNode, NodeLink]] = None
   
   private def nodeActive(node: GraphNode) = {
     hover match {
-      case Some(Left(n)) => n.sameNode(node)
+      case Some(Left(n)) => n.sameRep(node)
       case _ => false
     }
   }
   
   private def linkActive(link: NodeLink) = {
     hover match {
-      case Some(Right(l)) => l.sameLink(link)
+      case Some(Right(l)) => l.sameRep(link)
       case _ => false
     }
   }
@@ -279,7 +278,7 @@ class GraphDeleteNodeOrLink(renderer: GraphEditing) extends GraphEditBehavior {
     commit()
   }
   
-  override def onDragStart(link: LinkTrait) {
+  override def onDragStart(link: NodeLink) {
     hover = Some(Right(link))
     commit()
   }

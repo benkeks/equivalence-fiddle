@@ -12,6 +12,7 @@ import de.bbisping.coupledsim.game.AttackTreeBuilder
 import de.bbisping.coupledsim.game.SimpleGame.GameNode
 import de.bbisping.coupledsim.hml.HMLInterpreter
 import de.bbisping.coupledsim.algo.AlgorithmLogging
+import de.bbisping.coupledsim.util.LabeledRelation
 
 
 class HMLGamePlayer[S, A, L] (
@@ -90,9 +91,8 @@ class HMLGamePlayer[S, A, L] (
     val attackTree = attackTreeBuilder.buildAttackTree(game, win, node)
 
     if (AlgorithmLogging.loggingActive) {
-      val rel = for {
-        n <- (attackTree.lhs ++ attackTree.rhs)
-      } yield n match {
+
+      def gameNodeToTuple(n: SimpleGame.GameNode) = n match {
         case AttackerObservation(p, qq) => 
           (Set(p), qq)
         case DefenderConjunction(p, qq) => 
@@ -101,7 +101,11 @@ class HMLGamePlayer[S, A, L] (
           (Set(p), qq)
       }
       
-      logRichRelation(rel, "attack tree")
+      val rel: Set[((Iterable[S], Iterable[S]), String, (Iterable[S], Iterable[S]))] = for {
+        (n1, n2) <- attackTree.tupleSet
+      } yield (gameNodeToTuple(n1), recordedMoveEdges(n1, n2).toString(), gameNodeToTuple(n2))
+      
+      logRichRelation(new LabeledRelation(rel), "attack tree")
     }
     
 

@@ -3,6 +3,7 @@ package de.bbisping.coupledsim.algo
 import de.bbisping.coupledsim.util.Relation
 import scala.collection.mutable.ListBuffer
 import de.bbisping.coupledsim.util.Coloring
+import de.bbisping.coupledsim.util.LabeledRelation
 
 trait AlgorithmLogging[S, A, L] {
   
@@ -30,7 +31,7 @@ object AlgorithmLogging {
   case class LogRelation[S, A, L](rel: Relation[S], comment: String) extends LogEntry[S, A, L]
   //case class LogColoring[S, A, L](colors: Coloring[S], comment: String) extends LogEntry[S, A, L]
 
-  case class LogRichRelation[S, A, L](rel: Iterable[(Iterable[S], Iterable[S])], comment: String) extends LogEntry[S, A, L]
+  case class LogRichRelation[S, A, L](rel: LabeledRelation[(Iterable[S], Iterable[S]), String], comment: String) extends LogEntry[S, A, L]
   
   var loggingActive = true
   

@@ -52,8 +52,8 @@ trait GraphEditing extends ViewComponent {
     .on("drag", onDrag _)
     .on("dragend", onDragEnd _)
     
-  val dragLink = d3.behavior.drag[LinkTrait]()
-    .origin((d: LinkTrait, _: Double) => d.asInstanceOf[js.Any])
+  val dragLink = d3.behavior.drag[NodeLink]()
+    .origin((d: NodeLink, _: Double) => d.asInstanceOf[js.Any])
     .on("dragstart", onDragStart _)
     .on("drag", onDrag _)
     .on("dragend", onDragEnd _)
@@ -114,7 +114,7 @@ trait GraphEditing extends ViewComponent {
     d3.event.asInstanceOf[js.Dynamic].sourceEvent.asInstanceOf[org.scalajs.dom.DragEvent].stopPropagation()
   }
   
-  def onDragStart(link: LinkTrait, id: Double) {
+  def onDragStart(link: NodeLink, id: Double) {
     editingBehavior.onDragStart(link)
     js.Object.getOwnPropertyDescriptor(d3.event.asInstanceOf[js.Object],"sourceEvent").value.asInstanceOf[org.scalajs.dom.DragEvent].stopPropagation()
   }
@@ -123,7 +123,7 @@ trait GraphEditing extends ViewComponent {
     editingBehavior.onDrag(node)
   }
   
-  def onDrag(link: LinkTrait, id: Double) {
+  def onDrag(link: NodeLink, id: Double) {
     editingBehavior.onDrag(link)
   }
   
@@ -131,7 +131,7 @@ trait GraphEditing extends ViewComponent {
     editingBehavior.onDragEnd(node)
   }
   
-  def onDragEnd(link: LinkTrait, id: Double) {
+  def onDragEnd(link: NodeLink, id: Double) {
     editingBehavior.onDragEnd(link)
   }
   
@@ -143,11 +143,11 @@ trait GraphEditing extends ViewComponent {
     editingBehavior.onHoverEnd(node)
   }
   
-  def onHover(link: LinkTrait) {
+  def onHover(link: NodeLink) {
     editingBehavior.onHover(link)
   }
   
-  def onHoverEnd(link: LinkTrait) {
+  def onHoverEnd(link: NodeLink) {
     editingBehavior.onHoverEnd(link)
   }
   

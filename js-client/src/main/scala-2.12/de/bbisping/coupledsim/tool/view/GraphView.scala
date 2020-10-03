@@ -12,10 +12,20 @@ import de.bbisping.coupledsim.tool.model.NodeID
 object GraphView {
   var graphBending = false
   
+  private val dummyNode = new GraphNode(NodeID("#dummy#"), Structure.NodeLabel(Set(), Option(0), Option(0)))
+
+  trait Linkable {
+    def centerX: Double
+    def centerY: Double
+
+    def sameRep(a: Linkable): Boolean
+
+    def hasRep(a: Any): Boolean
+  }
   class GraphNode(
       var nameId: NodeID,
       var meta: Structure.NodeLabel)
-    extends Node {
+    extends Node with Linkable {
     
     GraphNode.count = GraphNode.count + 1
     
@@ -68,8 +78,18 @@ object GraphView {
       }
     }
     
-    def sameNode(o: GraphNode) = o != null && (o.nameId equals nameId) // && (o.meta equals meta)
+    override def sameRep(a: Linkable) = a match {
+      case o: GraphNode =>
+        o.nameId equals nameId
+      case _ =>
+        false
+    }
+
+    override def hasRep(a: Any) = (nameId == a)
     
+    override def centerX = x.getOrElse(0)
+    override def centerY = y.getOrElse(0)
+
     override def hashCode = nameId.hashCode
     
     override def toString = id + nameId.name
@@ -78,42 +98,35 @@ object GraphView {
   object GraphNode {
     var count: Double = 0.0
   }
-  
-  trait LinkTrait {
-    def sameLink(o: LinkTrait): Boolean
     
-    def center: (Double, Double)
-  }
-  
   class NodeLink(
       var kind: Symbol, 
       var label: String,
-      var sources: Set[GraphNode],
-      var targets: Set[GraphNode])
-    extends Link[GraphNode] with LinkTrait {
+      var sources: Set[Linkable],
+      var targets: Set[Linkable],
+      var rep: Any)
+    extends Link[GraphNode] with Linkable {
     
-    val source = sources.head
+    val source = sources.collect { case gn: GraphNode => gn }.headOption.getOrElse(dummyNode)
 
-    val target = targets.head
+    val target = targets.collect { case gn: GraphNode => gn }.headOption.getOrElse(dummyNode)
 
     var length: Double = 0
     
     var dir: (Double, Double) = (0,0)
     
-    var srcCenter: (Double, Double) = (
-      (sources.map(_.x.get).sum / sources.size),
-      (sources.map(_.y.get).sum / sources.size)
-    )
+    var srcCenter: (Double, Double) = if (sources.nonEmpty) (
+      (sources.map(_.centerX).sum / sources.size),
+      (sources.map(_.centerY).sum / sources.size)
+    ) else (0, 0)
 
-    var tarCenter: (Double, Double) = (
-      (targets.map(_.x.get).sum / targets.size),
-      (targets.map(_.y.get).sum / targets.size)
-    )
+    var tarCenter: (Double, Double) = if (targets.nonEmpty) (
+      (targets.map(_.centerX).sum / targets.size),
+      (targets.map(_.centerY).sum / targets.size)
+    ) else (srcCenter._1 + 100, srcCenter._2 + 100)
     
-    var center: (Double, Double) = (
-      (tarCenter._1 + srcCenter._1) / 2,
-      (tarCenter._2 + srcCenter._2) / 2
-    )
+    override def centerX = (tarCenter._1 + srcCenter._1) / 2
+    override def centerY = (tarCenter._2 + srcCenter._2) / 2
 
     val viewParts = {
       sources.map(new LinkViewPart(this, _, isEnd = false)) ++
@@ -131,33 +144,29 @@ object GraphView {
         dir = ((target.x.get - source.x.get) / length, (target.y.get - source.y.get) / length)
         center = ((target.x.get + source.x.get) / 2, (target.y.get + source.y.get) / 2)
       }*/
-      srcCenter = (
-        (sources.map(_.x.get).sum / sources.size),
-        (sources.map(_.y.get).sum / sources.size)
-      )
-      tarCenter = (
-        (targets.map(_.x.get).sum / targets.size),
-        (targets.map(_.y.get).sum / targets.size)
+      srcCenter = if (sources.nonEmpty) (
+        (sources.map(_.centerX).sum / sources.size),
+        (sources.map(_.centerY).sum / sources.size)
+      ) else (tarCenter._1 + 100, tarCenter._2 + 100)
+      tarCenter = if (targets.nonEmpty) (
+        (targets.map(_.centerX).sum / targets.size),
+        (targets.map(_.centerY).sum / targets.size)
+      ) else (
+        srcCenter._1 + 100,
+        srcCenter._2 + 100
       )
       length = Math.hypot(tarCenter._1 - srcCenter._1, tarCenter._2 - srcCenter._2)
       dir = (
         (tarCenter._1 - srcCenter._1) / length,
         (tarCenter._2 - srcCenter._2) / length
       )
-      center = (
-        (tarCenter._1 + srcCenter._1) / 2,
-        (tarCenter._2 + srcCenter._2) / 2
-      )
     }
-    
-    /**
-     * integrates the nodes into an existing graph
-     */
-    def integrate(nodes: Iterable[GraphNode]): Option[NodeLink] = {
-      val newSrc = sources.flatMap { n => nodes.find(n.sameNode(_)) }
-      val newTar = targets.flatMap { n => nodes.find(n.sameNode(_)) }
+
+    def integrate(nodes: Iterable[Linkable]): Option[NodeLink] = {
+      val newSrc = sources.flatMap { n => nodes.find(n.sameRep(_)) }
+      val newTar = targets.flatMap { n => nodes.find(n.sameRep(_)) }
       if (newSrc.nonEmpty && newTar.nonEmpty) {
-        Some(new NodeLink(kind, label, newSrc, newTar))
+        Some(new NodeLink(kind, label, newSrc, newTar, (newSrc, newTar)))
       } else {
         None
       }
@@ -178,15 +187,17 @@ object GraphView {
     
     override def hashCode = 23 * kind.hashCode + 39 * sources.hashCode + targets.hashCode
     
-    def sameLink(l: LinkTrait) = l match {
+    def sameRep(l: Linkable) = l match {
       case o: NodeLink =>
         (o.kind equals kind) &&
           o.label == label &&
-          o.sources.map(_.nameId) == sources.map(_.nameId) &&
-          o.targets.map(_.nameId) == targets.map(_.nameId)
+          o.sources.forall(s => targets.exists(_.sameRep(s))) &&
+          o.targets.forall(t => sources.exists(_.sameRep(t)))
       case _ =>
         false
     }
+
+    override def hasRep(a: Any) = rep == a
   }
 
   /*class LinkLink(
@@ -251,16 +262,16 @@ object GraphView {
     override def toString = source.toString + "-" + kind + "-" + target.toString
   }*/
   
-  class LinkViewPart(val link: NodeLink, val source: GraphNode, val isEnd: Boolean = true) {
+  class LinkViewPart(val link: NodeLink, val source: Linkable, val isEnd: Boolean = true) {
     
     def toSVGPathString = if (isEnd) {
-      "M"   + link.center._1       +" "+ link.center._2 + 
+      "M"   + link.centerX       +" "+ link.centerY + 
           " Q" + (link.tarCenter._1 - 15.0 * link.dir._1) +" "+ (link.tarCenter._2 - 15.0 * link.dir._2)+
-           " " + (source.x.get - 12.0 * link.dir._1) +" "+ (source.y.get - 12.0 * link.dir._2)
+           " " + (source.centerX - 12.0 * link.dir._1) +" "+ (source.centerY - 12.0 * link.dir._2)
     } else {
-      "M" + link.center._1       +" "+ link.center._2 +
+      "M" + link.centerX       +" "+ link.centerY +
            " Q" + link.srcCenter._1    +" "+ link.srcCenter._2 +
-           " " + source.x.get             +" "+ source.y.get
+           " " + source.centerX             +" "+ source.centerY
     }
     
     override def toString = source + "::" + link

@@ -79,9 +79,9 @@ class GraphRenderer(val main: Control)
   var relationViews: Selection[NodeLink] = layerMeta.selectAll(".relation")
 
   var structure: Option[Structure.TSStructure] = None
-  var relation: Iterable[(Iterable[NodeID], Iterable[NodeID])] = List()
+  var relation: LabeledRelation[(Iterable[NodeID], Iterable[NodeID]), String] = LabeledRelation()
   
-  def buildGraph(ts: Structure.TSStructure, relation: Iterable[(Iterable[NodeID], Iterable[NodeID])]) = {
+  def buildGraph(ts: Structure.TSStructure, relation: LabeledRelation[(Iterable[NodeID], Iterable[NodeID]), String]) = {
     
     val nodes = ts.nodes.map { e =>
       (e, new GraphNode(e, ts.nodeLabeling.getOrElse(e, Structure.emptyLabel)))
@@ -91,16 +91,25 @@ class GraphRenderer(val main: Control)
       ((e1, e2), ees) <- ts.step.tupleSet.groupBy(t => (t._1, t._3))
       en1 = nodes(e1)
       en2 = nodes(e2)
-    } yield new NodeLink('stepto, ees.map(_._2.toActString).mkString(", "), Set(en1), Set(en2))
+    } yield new NodeLink('stepto, ees.map(_._2.toActString).mkString(", "), Set(en1), Set(en2), (en1, en2))
 
     val relationLinks = for {
-      (e1, e2) <- relation
+      (e1, e2) <- relation.lhs ++ relation.rhs
       en1 = e1 map nodes
       en2 = e2 map nodes
-      if (en1.nonEmpty && en2.nonEmpty) // for now exclude this kind of end game nodes... //TODO: Fixme!
-    } yield new NodeLink('relation, "", en1.toSet, en2.toSet)
+      if (en1.nonEmpty)
+    } yield new NodeLink('relation, "", en1.toSet, en2.toSet, (e1.toSet, e2.toSet))
+
+    val relationMetaLinks = for {
+      (e1, l, e2) <- relation.tupleSet
+      en1 = relationLinks filter (_.hasRep(e1))
+      en2 = relationLinks filter (_.hasRep(e2))
+      if (en1.nonEmpty)
+    } yield new NodeLink('relation, "", en1.toSet, en2.toSet, (e1, e2))
+
+    println(relationMetaLinks)
     
-    (nodes, nodeLinks ++ relationLinks)
+    (nodes, nodeLinks ++ relationLinks ++ relationMetaLinks)
   }
   
   def setStructure() = for { ts <- structure } {
@@ -109,14 +118,16 @@ class GraphRenderer(val main: Control)
     
     val (sysNodes, nodeLinks) = buildGraph(ts, relation)
     
-    val newNodes = sysNodes.values.filter(n => !nodes.exists(n.sameNode(_)))
+    val newNodes = sysNodes.values.filter(n => !nodes.exists(n.sameRep(_)))
     val deletedNodes = nodes.filter(n => !sysNodes.isDefinedAt(n.nameId))
     deletedNodes.foreach(n => nodes.remove(nodes.indexOf(n)))
     newNodes.foreach(nodes.push(_))
     nodes.foreach { n => n.updateMeta(ts.nodeLabeling.getOrElse(n.nameId, Structure.emptyLabel), force = true)}
     
-    val newLinks = nodeLinks.flatMap(_.integrate(nodes)).filter(l => !links.exists(l.sameLink(_)))
-    val deletedLinks = links.filter(l => !nodeLinks.exists(l.sameLink(_)))
+    val nodesAndLinks = nodes ++ links
+
+    val newLinks = nodeLinks.flatMap(_.integrate(nodesAndLinks)).filter(l => !links.exists(l.sameRep(_)))
+    val deletedLinks = links.filter(l => !nodeLinks.exists(l.sameRep(_)))
     deletedLinks.foreach(l => links.remove(links.indexOf(l)))
     newLinks.foreach(links.push(_))
     
@@ -171,32 +182,7 @@ class GraphRenderer(val main: Control)
     force.start()
     
   }
-  /*
-  def setRelation(rel: LabeledRelation[NodeID, String]) {
-    force.stop()
-    val relationLinks = for {
-      (e1, l, e2) <- rel.tupleSet
-      en1 <- nodes.find(_.nameId == e1)
-      en2 <- nodes.find(_.nameId == e2)
-    } yield new NodeLink(Symbol("relation " + l), "", Set(en1), Set(en2))
-    
-    val newRealtionLinks = relationLinks.filter(l => !relation.exists(l.sameLink(_)))
-    val deletedRelationLinks = relation.filter(l => !relationLinks.exists(l.sameLink(_)))
-    deletedRelationLinks.foreach(l => relation.remove(relation.indexOf(l)))
-    newRealtionLinks.foreach(relation.push(_))
-    
-    val relationUp = relationViews.data(relation, (_: NodeLink).toString)
-    relationUp.enter()
-        .append("path")
-        .attr("class", (d: NodeLink, i: Int) => "relation " + d.kind.name)
-        .attr("marker-end", (d: NodeLink, i: Int) => "url(#" + d.kind.name.split(" ")(0) + ")")
 
-    relationUp.exit().remove()
-    relationViews = layerMeta.selectAll(".relation")
-    
-    force.start()
-  }*/
-  
   def setComment(comment: String) = {
     d3.select("#es-graph-comment")
       .text(comment)
@@ -226,8 +212,8 @@ class GraphRenderer(val main: Control)
     linkPartViews
       .attr("d", (_: LinkViewPart).toSVGPathString)
     linkLabelViews
-      .attr("x", (_: NodeLink).center._1)
-      .attr("y", (_: NodeLink).center._2)
+      .attr("x", (_: NodeLink).centerX)
+      .attr("y", (_: NodeLink).centerY)
     relationViews
       .attr("d", (_: NodeLink).toSVGPathString)
   }
@@ -242,7 +228,7 @@ class GraphRenderer(val main: Control)
     case Structure.StructureChange(structure) =>
       setComment("")
       this.structure = Some(structure)
-      relation = List()
+      relation = LabeledRelation()
       setStructure()
     case Structure.StructurePartitionChange(partition) =>
       colorize(partition)
