@@ -102,14 +102,14 @@ class HMLGamePlayer[S, A, L] (
 
       def gameNodeToTuple(n: SimpleGame.GameNode) = n match {
         case AttackerObservation(p, qq) => 
-          (Set(p), qq)
+          (Set(p), "<>", qq)
         case DefenderConjunction(p, qq) => 
-          (Set(p), qq)
+          (Set(p), "/\\", qq)
         case DefenderNegation(p, qq) =>
-          (Set(p), qq)
+          (Set(p), "~", qq)
       }
       
-      val rel: Set[((Iterable[S], Iterable[S]), String, (Iterable[S], Iterable[S]))] = for {
+      val rel: Set[((Iterable[S], String, Iterable[S]), String, (Iterable[S], String, Iterable[S]))] = for {
         (n1, n2) <- attackTree.tupleSet
       } yield (gameNodeToTuple(n1), recordedMoveEdges(n1, n2).toString(), gameNodeToTuple(n2))
       

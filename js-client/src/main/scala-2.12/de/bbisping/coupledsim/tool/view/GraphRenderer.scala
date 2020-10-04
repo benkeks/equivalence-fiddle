@@ -79,9 +79,9 @@ class GraphRenderer(val main: Control)
   var relationViews: Selection[NodeLink] = layerMeta.selectAll(".relation")
 
   var structure: Option[Structure.TSStructure] = None
-  var relation: LabeledRelation[(Iterable[NodeID], Iterable[NodeID]), String] = LabeledRelation()
+  var relation: LabeledRelation[(Iterable[NodeID], String, Iterable[NodeID]), String] = LabeledRelation()
   
-  def buildGraph(ts: Structure.TSStructure, relation: LabeledRelation[(Iterable[NodeID], Iterable[NodeID]), String]) = {
+  def buildGraph(ts: Structure.TSStructure, relation: LabeledRelation[(Iterable[NodeID], String, Iterable[NodeID]), String]) = {
     
     val nodes = ts.nodes.map { e =>
       (e, new GraphNode(e, ts.nodeLabeling.getOrElse(e, Structure.emptyLabel)))
@@ -94,17 +94,20 @@ class GraphRenderer(val main: Control)
     } yield new NodeLink('stepto, ees.map(_._2.toActString).mkString(", "), Set(en1), Set(en2), (en1, en2))
 
     val relationLinks = for {
-      (e1, e2) <- relation.lhs ++ relation.rhs
+      ((e1, e2), ll) <- new LabeledRelation(relation.lhs ++ relation.rhs).tupleSet.groupBy(t => (t._1, t._3))
       en1 = e1 map nodes
       en2 = e2 map nodes
       if (en1.nonEmpty)
-    } yield new NodeLink('relation, "", en1.toSet, en2.toSet, (e1.toSet, e2.toSet))
+      (l0,i) <- ll.toList.zipWithIndex
+      l = (" " * i) + l0._2
+    } yield new NodeLink('relation, l, en1.toSet, en2.toSet, (e1.toSet, l, e2.toSet))
 
     val relationMetaLinks = for {
-      (e1, l, e2) <- relation.tupleSet
+      ((e1, e2), ll) <- relation.tupleSet.groupBy(t => (t._1, t._3))
       en1 = relationLinks filter (_.hasRep(e1))
       en2 = relationLinks filter (_.hasRep(e2))
       if (en1.nonEmpty)
+      l = ll.map(_._2).mkString(", ")
     } yield new NodeLink(Symbol("relation ho"), l, en1.toSet, en2.toSet, (l, e1, e2))
 
     println(relationMetaLinks)

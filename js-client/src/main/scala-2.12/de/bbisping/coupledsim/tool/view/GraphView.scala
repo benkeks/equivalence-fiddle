@@ -107,6 +107,8 @@ object GraphView {
       var rep: Any)
     extends Link[GraphNode] with Linkable {
     
+    val bend = 1.0 + label.takeWhile(_.isWhitespace).length
+
     val source = sources.collect { case gn: GraphNode => gn }.headOption.getOrElse(dummyNode)
 
     val target = targets.collect { case gn: GraphNode => gn }.headOption.getOrElse(dummyNode)
@@ -127,8 +129,8 @@ object GraphView {
       (targets.map(_.centerY).sum / targets.size)
     ) else (srcCenter._1 + 100, srcCenter._2 + 100)
     
-    override def centerX = ((tarCenter._1 + srcCenter._1) / 2) - 20 * dir._2
-    override def centerY = (tarCenter._2 + srcCenter._2) / 2 + 20 * dir._1
+    override def centerX = ((tarCenter._1 + srcCenter._1) / 2) - 15 * bend * dir._2
+    override def centerY = (tarCenter._2 + srcCenter._2) / 2 + 15 * bend * dir._1
 
     val viewParts = {
       sources.map(new LinkViewPart(this, _, isEnd = false)) ++
@@ -273,15 +275,15 @@ object GraphView {
       if (link.dir._1.isNaN()) throw new Exception("NaN dir!")
       if (link.source.centerX.isNaN()) throw new Exception("NaN center!")
       if (isEnd) {
-        "M"   + link.centerX       +" "+ link.centerY + 
-            " C " + (link.centerX + .3 * link.length * link.dir._1) +" "+ (link.centerY + .3 * link.length * link.dir._2)+
-            ", " + (link.tarCenter._1 - 5.0 * link.dir._1) +" "+ (link.tarCenter._2 - 5.0 * link.dir._2)+
-            ", " + (source.centerX - 4.0 * link.dir._1) +" "+ (source.centerY - 4.0 * link.dir._2)
+        "M "   + link.centerX       +","+ link.centerY + 
+            " C " + (link.centerX + .2 * link.length * link.dir._1) +","+ (link.centerY + .2 * link.length * link.dir._2)+
+            " " + (.5 * (link.centerX + link.tarCenter._1)) +","+ (.5 * (link.centerY + link.tarCenter._2)) +
+            " " + (source.centerX - 4.0 * link.dir._1) +","+ (source.centerY - 4.0 * link.dir._2)
       } else {
-        "M" + link.centerX       +" "+ link.centerY +
-            " C" + (link.centerX - .3 * link.length * link.dir._1) +" "+ (link.centerY - .3 * link.length * link.dir._2)+
-            ", " + link.srcCenter._1    +" "+ link.srcCenter._2 +
-            ", " + source.centerX             +" "+ source.centerY
+        "M " + link.centerX       +","+ link.centerY +
+            " C" + (link.centerX - .3 * link.length * link.dir._1) +","+ (link.centerY - .3 * link.length * link.dir._2)+
+            " " + (.5 * (link.centerX + link.srcCenter._1)) +","+ (.5 * (link.centerY + link.srcCenter._2)) +
+            " " + source.centerX             +","+ source.centerY
       }
     }
     
