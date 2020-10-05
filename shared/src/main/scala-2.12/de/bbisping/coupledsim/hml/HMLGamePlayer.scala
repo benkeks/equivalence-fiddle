@@ -109,7 +109,7 @@ class HMLGamePlayer[S, A, L] (
           (Set(p), "~", qq)
       }
       
-      val rel: Set[((Iterable[S], String, Iterable[S]), String, (Iterable[S], String, Iterable[S]))] = for {
+      val rel: Set[((Set[S], String, Set[S]), String, (Set[S], String, Set[S]))] = for {
         (n1, n2) <- attackTree.tupleSet
       } yield (gameNodeToTuple(n1), recordedMoveEdges(n1, n2).toString(), gameNodeToTuple(n2))
       

@@ -131,8 +131,8 @@ object GraphView {
       (targets.map(_.centerY).sum / targets.size)
     ) else (srcCenter._1 + 50, srcCenter._2 + 50)
     
-    override def centerX = ((tarCenter._1 + srcCenter._1) / 2) - 15 * (bend + (0.00001 * length * length)) * dir._2
-    override def centerY = (tarCenter._2 + srcCenter._2) / 2 + 15 * (bend + 0.00001 * length * length) * dir._1
+    override def centerX = (tarCenter._1 * (.5 - .02 * bend) + srcCenter._1 * (.5 + .02 * bend)) - 10 * (bend + 0.00001 * length * length) * dir._2
+    override def centerY = (tarCenter._2 * (.5 - .02 * bend) + srcCenter._2 * (.5 + .02 * bend)) + 10 * (bend + 0.00001 * length * length) * dir._1
 
     val viewParts = {
       sources.map(new LinkViewPart(this, _, isEnd = false)) ++
@@ -174,7 +174,7 @@ object GraphView {
     def integrate(nodes: Iterable[Linkable]): Option[NodeLink] = {
       val newSrc = sources.flatMap { n => nodes.find(n.sameRep(_)) }
       val newTar = targets.flatMap { n => nodes.find(n.sameRep(_)) }
-      Some(new NodeLink(kind, label, newSrc, newTar, (label, newSrc, newTar)))
+      Some(new NodeLink(kind, label, newSrc, newTar, rep))
     }
     
     def toSVGPathString = (
@@ -192,15 +192,7 @@ object GraphView {
     
     override def hashCode = 23 * kind.hashCode + 39 * sources.hashCode + targets.hashCode
     
-    def sameRep(l: Linkable) = l match {
-      case o: NodeLink =>
-        (o.kind equals kind) &&
-          o.label == label &&
-          o.sources.forall(s => targets.exists(_.sameRep(s))) &&
-          o.targets.forall(t => sources.exists(_.sameRep(t)))
-      case _ =>
-        false
-    }
+    def sameRep(l: Linkable) = l.hasRep(rep)
 
     override def hasRep(a: Any) = rep == a
   }
@@ -269,6 +261,8 @@ object GraphView {
   
   class LinkViewPart(val link: NodeLink, val node: Linkable, val isEnd: Boolean = true) {
     
+    private val endShortening = if (node.isInstanceOf[GraphNode]) 5.0 else 0
+
     def toSVGPathString = {
       if (link.tarCenter._1.isNaN()) throw new Exception("NaN tar!")
       if (link.dir._1.isNaN()) throw new Exception("NaN dir!")
@@ -285,7 +279,7 @@ object GraphView {
           "M "   + link.centerX       +","+ link.centerY + 
               " C " + (link.centerX + .2 * link.length * link.dir._1) +","+ (link.centerY + .2 * link.length * link.dir._2)+
               " " + (.5 * (link.centerX + link.tarCenter._1)) +","+ (.5 * (link.centerY + link.tarCenter._2)) +
-              " " + (node.centerX - 4.0 * link.dir._1) +","+ (node.centerY - 4.0 * link.dir._2)
+              " " + (node.centerX - endShortening * link.dir._1) +","+ (node.centerY - endShortening * link.dir._2)
         }
       } else {
         if (link.targets.contains(node)) {

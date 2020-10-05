@@ -142,7 +142,7 @@ object Structure {
 
   case class StructureRelationChange(relation: LabeledRelation[NodeID, String]) extends ModelComponent.Change
 
-  case class StructureRichRelationChange(relation: LabeledRelation[(Iterable[NodeID], String, Iterable[NodeID]), String]) extends ModelComponent.Change
+  case class StructureRichRelationChange(relation: LabeledRelation[(Set[NodeID], String, Set[NodeID]), String]) extends ModelComponent.Change
 
   case class StructureCommentChange(comment: String) extends ModelComponent.Change
 

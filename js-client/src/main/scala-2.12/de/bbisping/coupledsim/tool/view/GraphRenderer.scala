@@ -79,9 +79,9 @@ class GraphRenderer(val main: Control)
   var relationViews: Selection[NodeLink] = layerMeta.selectAll(".relation")
 
   var structure: Option[Structure.TSStructure] = None
-  var relation: LabeledRelation[(Iterable[NodeID], String, Iterable[NodeID]), String] = LabeledRelation()
+  var relation: LabeledRelation[(Set[NodeID], String, Set[NodeID]), String] = LabeledRelation()
   
-  def buildGraph(ts: Structure.TSStructure, relation: LabeledRelation[(Iterable[NodeID], String, Iterable[NodeID]), String]) = {
+  def buildGraph(ts: Structure.TSStructure, relation: LabeledRelation[(Set[NodeID], String, Set[NodeID]), String]) = {
     
     val nodes = ts.nodes.map { e =>
       (e, new GraphNode(e, ts.nodeLabeling.getOrElse(e, Structure.emptyLabel)))
@@ -94,21 +94,19 @@ class GraphRenderer(val main: Control)
     } yield new NodeLink('stepto, ees.map(_._2.toActString).mkString(", "), Set(en1), Set(en2), (en1, en2))
 
     val relationLinks = for {
-      ((e1, e2), ll) <- new LabeledRelation(relation.lhs ++ relation.rhs).tupleSet.groupBy(t => (t._1, t._3))
+      ((e1, e2), ll) <- (relation.lhs ++ relation.rhs).groupBy(t => (t._1, t._3)).toIterable
       en1 = e1 map nodes
       en2 = e2 map nodes
-      if (en1.nonEmpty)
       (l0,i) <- ll.toList.zipWithIndex
       l = (" " * i) + l0._2
-    } yield new NodeLink('relation, l, en1.toSet, en2.toSet, (e1.toSet, l, e2.toSet))
+    } yield new NodeLink('relation, l, en1.toSet, en2.toSet, (e1, l0._2, e2))
 
     val relationMetaLinks = for {
       ((e1, e2), ll) <- relation.tupleSet.groupBy(t => (t._1, t._3))
       en1 = relationLinks filter (_.hasRep(e1))
       en2 = relationLinks filter (_.hasRep(e2))
-      if (en1.nonEmpty)
       l = ll.map(_._2).mkString(", ")
-    } yield new NodeLink(Symbol("relation ho"), l, en1.toSet, en2.toSet, (l, e1, e2))
+    } yield new NodeLink(Symbol("relation ho"), l, en1.toSet, en2.toSet, (e1, l, e2))
 
     println(relationMetaLinks)
     
@@ -241,7 +239,7 @@ class GraphRenderer(val main: Control)
     case Structure.StructureRelationChange(relation) =>
       //setRelation(relation)
     case Structure.StructureRichRelationChange(relation) =>
-      this.relation = relation 
+      this.relation = relation
       setStructure()
     case Structure.StructureCommentChange(comment) =>
       setComment(comment)
