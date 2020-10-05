@@ -85,7 +85,7 @@ class GraphRenderer(val main: Control)
     
     val nodes = ts.nodes.map { e =>
       (e, new GraphNode(e, ts.nodeLabeling.getOrElse(e, Structure.emptyLabel)))
-    }.toMap
+    }.toMap + (GraphView.dummyNode.nameId -> GraphView.dummyNode)
     
     val nodeLinks = for {
       ((e1, e2), ees) <- ts.step.tupleSet.groupBy(t => (t._1, t._3))
@@ -197,8 +197,9 @@ class GraphRenderer(val main: Control)
   def colorize(partition: Coloring[NodeID]) {
     val colorScale = d3.scale.category20()
     nodeViews.style("stroke", { (d: GraphNode, i: Int) =>
-      val repHash = partition(d.nameId)
-      colorScale(repHash.toString)
+      for (repHash <- partition.get(d.nameId)) {
+        colorScale(repHash.toString)
+      }
     })
   }
   

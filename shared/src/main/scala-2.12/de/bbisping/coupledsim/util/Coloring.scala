@@ -12,6 +12,8 @@ case class Coloring[E](val colors: Map[E, Coloring.Color] = Map()) {
   def freshColor() = universe.max + 1
   
   def apply(e: E) = colors.apply(e)
+
+  def get(e: E) = colors.get(e)
   
   def partitionFor(e: E) = {
     for {

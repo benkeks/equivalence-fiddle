@@ -12,7 +12,7 @@ import de.bbisping.coupledsim.tool.model.NodeID
 object GraphView {
   var graphBending = false
   
-  private val dummyNode = new GraphNode(NodeID("#dummy#"), Structure.NodeLabel(Set(), Option(0), Option(0)))
+  val dummyNode = new GraphNode(NodeID("#dummy#"), Structure.NodeLabel(Set(), Option(0), Option(0)))
 
   trait Linkable {
     def centerX: Double
@@ -107,8 +107,6 @@ object GraphView {
       var rep: Any)
     extends Link[GraphNode] with Linkable {
     
-    val bend = 1.0 + label.takeWhile(_.isWhitespace).length
-
     val source = sources.collect { case gn: GraphNode => gn }.headOption.getOrElse(dummyNode)
 
     val target = targets.collect { case gn: GraphNode => gn }.headOption.getOrElse(dummyNode)
@@ -118,6 +116,10 @@ object GraphView {
     var dir: (Double, Double) = (0,0)
 
     val isLoop = sources == targets
+
+    val hasDanglingEnd = (target == dummyNode)
+
+    val bend = (if (hasDanglingEnd) 0.0 else .5) + label.takeWhile(_.isWhitespace).length
     
     var srcCenter: (Double, Double) = if (sources.nonEmpty) (
       (sources.map(_.centerX).sum / sources.size),
@@ -127,14 +129,15 @@ object GraphView {
     var tarCenter: (Double, Double) = if (targets.nonEmpty) (
       (targets.map(_.centerX).sum / targets.size),
       (targets.map(_.centerY).sum / targets.size)
-    ) else (srcCenter._1 + 100, srcCenter._2 + 100)
+    ) else (srcCenter._1 + 50, srcCenter._2 + 50)
     
-    override def centerX = ((tarCenter._1 + srcCenter._1) / 2) - 15 * bend * dir._2
-    override def centerY = (tarCenter._2 + srcCenter._2) / 2 + 15 * bend * dir._1
+    override def centerX = ((tarCenter._1 + srcCenter._1) / 2) - 15 * (bend + (0.00001 * length * length)) * dir._2
+    override def centerY = (tarCenter._2 + srcCenter._2) / 2 + 15 * (bend + 0.00001 * length * length) * dir._1
 
     val viewParts = {
       sources.map(new LinkViewPart(this, _, isEnd = false)) ++
-      targets.map(new LinkViewPart(this, _))
+      targets.map(new LinkViewPart(this, _)) ++
+      (if (targets.isEmpty) List(new LinkViewPart(this, dummyNode)) else List())
     }
 
     def updateDirAndCenter() {
@@ -151,13 +154,13 @@ object GraphView {
       srcCenter = if (sources.nonEmpty) (
         (sources.map(_.centerX).sum / sources.size),
         (sources.map(_.centerY).sum / sources.size)
-      ) else (tarCenter._1 + 100, tarCenter._2 + 100)
+      ) else (tarCenter._1 - 50, tarCenter._2 - 50)
       tarCenter = if (targets.nonEmpty) (
         (targets.map(_.centerX).sum / targets.size),
         (targets.map(_.centerY).sum / targets.size)
       ) else (
-        srcCenter._1 + 100,
-        srcCenter._2 + 100
+        srcCenter._1 + 50,
+        srcCenter._2 + 50
       )
       length = Math.hypot(tarCenter._1 - srcCenter._1, tarCenter._2 - srcCenter._2)
       dir = if (isLoop || length <= 0.0001) (
@@ -171,11 +174,7 @@ object GraphView {
     def integrate(nodes: Iterable[Linkable]): Option[NodeLink] = {
       val newSrc = sources.flatMap { n => nodes.find(n.sameRep(_)) }
       val newTar = targets.flatMap { n => nodes.find(n.sameRep(_)) }
-      if (newSrc.nonEmpty && newTar.nonEmpty) {
-        Some(new NodeLink(kind, label, newSrc, newTar, (label, newSrc, newTar)))
-      } else {
-        None
-      }
+      Some(new NodeLink(kind, label, newSrc, newTar, (label, newSrc, newTar)))
     }
     
     def toSVGPathString = (
@@ -268,26 +267,40 @@ object GraphView {
     override def toString = source.toString + "-" + kind + "-" + target.toString
   }*/
   
-  class LinkViewPart(val link: NodeLink, val source: Linkable, val isEnd: Boolean = true) {
+  class LinkViewPart(val link: NodeLink, val node: Linkable, val isEnd: Boolean = true) {
     
     def toSVGPathString = {
       if (link.tarCenter._1.isNaN()) throw new Exception("NaN tar!")
       if (link.dir._1.isNaN()) throw new Exception("NaN dir!")
-      if (link.source.centerX.isNaN()) throw new Exception("NaN center!")
+      if (node.centerX.isNaN()) throw new Exception("NaN center!")
       if (isEnd) {
-        "M "   + link.centerX       +","+ link.centerY + 
-            " C " + (link.centerX + .2 * link.length * link.dir._1) +","+ (link.centerY + .2 * link.length * link.dir._2)+
-            " " + (.5 * (link.centerX + link.tarCenter._1)) +","+ (.5 * (link.centerY + link.tarCenter._2)) +
-            " " + (source.centerX - 4.0 * link.dir._1) +","+ (source.centerY - 4.0 * link.dir._2)
+        if (link.sources.contains(node)) {
+          "M"   + (node.centerX + 5) + " " + (node.centerY) +
+            "A 30 30, 0, 1, 1, " + (link.centerX) + " " + (link.centerY)
+        } else if (link.hasDanglingEnd) {
+          "M "   + link.centerX       +","+ link.centerY + 
+              " Q " + (link.centerX + .2 * link.length * link.dir._1) +","+ (link.centerY + .2 * link.length * link.dir._2)+
+              " " + (.5 * (link.centerX + link.tarCenter._1)) +","+ (.5 * (link.centerY + link.tarCenter._2))
+        } else {
+          "M "   + link.centerX       +","+ link.centerY + 
+              " C " + (link.centerX + .2 * link.length * link.dir._1) +","+ (link.centerY + .2 * link.length * link.dir._2)+
+              " " + (.5 * (link.centerX + link.tarCenter._1)) +","+ (.5 * (link.centerY + link.tarCenter._2)) +
+              " " + (node.centerX - 4.0 * link.dir._1) +","+ (node.centerY - 4.0 * link.dir._2)
+        }
       } else {
-        "M " + link.centerX       +","+ link.centerY +
-            " C" + (link.centerX - .3 * link.length * link.dir._1) +","+ (link.centerY - .3 * link.length * link.dir._2)+
-            " " + (.5 * (link.centerX + link.srcCenter._1)) +","+ (.5 * (link.centerY + link.srcCenter._2)) +
-            " " + source.centerX             +","+ source.centerY
+        if (link.targets.contains(node)) {
+          "M"   + (link.centerX) + " " + (link.centerY) +
+            "A 30 30, 0, 1, 1, " + (node.centerX) + " " + (node.centerY + 5)
+        } else {
+          "M " + link.centerX       +","+ link.centerY +
+              " C" + (link.centerX - .3 * link.length * link.dir._1) +","+ (link.centerY - .3 * link.length * link.dir._2)+
+              " " + (.5 * (link.centerX + link.srcCenter._1)) +","+ (.5 * (link.centerY + link.srcCenter._2)) +
+              " " + node.centerX             +","+ node.centerY
+        }
       }
     }
     
-    override def toString = source + "::" + link
+    override def toString = node + "::" + link
   }
 
   
