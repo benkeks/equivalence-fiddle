@@ -45,7 +45,7 @@ object HennessyMilnerLogic {
           } else {
             "~failure-trace"
           }
-        } else if (highestNegation <= highestConjunction) {
+        } else if (highestNegation >= highestConjunction) {
           if (mixedConjunctions) {
             "possible-futures"
           } else {
@@ -65,7 +65,7 @@ object HennessyMilnerLogic {
 
   }
 
-  case class And[A](subterms: List[Formula[A]]) extends Formula[A] {
+  case class And[A](subterms: Set[Formula[A]]) extends Formula[A] {
     override def toString = {
       if (subterms.isEmpty) {
         "⊤"

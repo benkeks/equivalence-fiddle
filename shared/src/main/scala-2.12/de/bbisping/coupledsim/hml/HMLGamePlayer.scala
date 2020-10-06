@@ -23,13 +23,13 @@ class HMLGamePlayer[S, A, L] (
 
   abstract sealed class MoveKind
   case class ObservationMove(a: A) extends MoveKind {
-    override def toString() = "<" + a + ">"
+    override def toString() = "⟨" + a + "⟩"
   }
   case class ConjunctMove() extends MoveKind {
-    override def toString() = "/\\"
+    override def toString() = "⋀"
   }
   case class NegationMove() extends MoveKind {
-    override def toString() = "~"
+    override def toString() = "¬"
   }
   case class DefenderMove() extends MoveKind {
     override def toString() = "*"
@@ -82,12 +82,9 @@ class HMLGamePlayer[S, A, L] (
 
   def buildHML(game: HMLGame, win: Set[GameNode], node: GameNode) = {
 
-    //val localEdges = recordedMoveEdges.toMap
-    //def pickMin(edges: Iterable[MoveKind]) = edges.head
-
     val attackTreeBuilder = new AttackTreeBuilder[Set[HennessyMilnerLogic.Formula[A]]]()
 
-    // (TODO: this shouldnt need to be a tree at this point...)
+    // Note: this actually does not need to be a tree at this point
     val attackTree = attackTreeBuilder.buildAttackTree(game, win, node)
 
     println("Attack Tree: " + attackTree)
@@ -118,7 +115,7 @@ class HMLGamePlayer[S, A, L] (
         val productMoves =
           possibleMoves.foldLeft(Seq(Seq[HennessyMilnerLogic.Formula[A]]()))(
             (b, a) => b.flatMap(i => a.map(j => i ++ Seq(j))))
-        productMoves.map(mv => HennessyMilnerLogic.And(mv.toList).asInstanceOf[HennessyMilnerLogic.Formula[A]]).toSet
+        productMoves.map(mv => HennessyMilnerLogic.And(mv.toSet).asInstanceOf[HennessyMilnerLogic.Formula[A]]).toSet
       case _ =>
         possibleMoves.flatten.toSet
     }
@@ -127,7 +124,7 @@ class HMLGamePlayer[S, A, L] (
       tree = attackTree,
       priceCons = moveToHML _,
       pricePick = mergeMoves _,
-      finishingPrice = Set(HennessyMilnerLogic.And(List())),
+      finishingPrice = Set(HennessyMilnerLogic.And(Set())),
       supPrice = Set(),
       node = node,
       targetRegion = defenderDefeats
@@ -140,9 +137,9 @@ class HMLGamePlayer[S, A, L] (
 
       def gameNodeToTuple(n: SimpleGame.GameNode) = n match {
         case AttackerObservation(p, qq) => 
-          (Set(p), "<>", qq)
+          (Set(p), "A", qq)
         case DefenderConjunction(p, qq) => 
-          (Set(p), "/\\", qq)
+          (Set(p), "D", qq)
       }
       
       val rel: Set[((Set[S], String, Set[S]), String, (Set[S], String, Set[S]))] = for {
@@ -158,7 +155,7 @@ class HMLGamePlayer[S, A, L] (
         p + " distinguished from " + q + " under " + f.classifyFormula() + " preorder by " + f.toString()
       }
 
-      logRichRelation(new LabeledRelation(rel), msg.mkString("\n"))
+      logRichRelation(new LabeledRelation(rel), msg.mkString("<br>\n"))
     }
 
     formulas
@@ -183,7 +180,7 @@ class HMLGamePlayer[S, A, L] (
         println("Distinguished under " + f.classifyFormula() + " preorder by " + f.toString())
         val check = hmlInterpreter.isTrueAt(f, List(nodes(0), nodes(1)))
         if (!check(nodes(0)) || check(nodes(1))) {
-          System.err.println("Formula is no sound distinguishing formula! " + check)
+          System.err.println("Formula " + f.toString() + " is no sound distinguishing formula! " + check)
         }
       }
     }
@@ -195,7 +192,7 @@ class HMLGamePlayer[S, A, L] (
         println("Distinguished under " + f.classifyFormula() + " preorder by " + f.toString())
         val check = hmlInterpreter.isTrueAt(f, List(nodes(0), nodes(1)))
         if (!check(nodes(1)) || check(nodes(0))) {
-          System.err.println("Formula is no sound distinguishing formula! " + check)
+          System.err.println("Formula " + f.toString() + " is no sound distinguishing formula! " + check)
         }
       }
     }
