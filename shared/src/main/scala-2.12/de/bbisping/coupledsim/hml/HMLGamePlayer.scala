@@ -117,7 +117,18 @@ class HMLGamePlayer[S, A, L] (
             (b, a) => b.flatMap(i => a.map(j => i ++ Seq(j))))
         productMoves.map(mv => HennessyMilnerLogic.And(mv.toSet).asInstanceOf[HennessyMilnerLogic.Formula[A]]).toSet
       case _ =>
-        possibleMoves.flatten.toSet
+        val possibleFormulas = possibleMoves.flatten.toSet
+        if (possibleFormulas.size > 1) {
+          val minNegations = possibleFormulas.minBy(_.negationLevels)
+          val minConjunctions = possibleFormulas.minBy(_.conjunctionLevels)
+          val minConjunctionHeight = possibleFormulas.minBy(_.highestConjunction)
+          val minNegationHeight = possibleFormulas.minBy(_.highestNegation)
+          val minConjunctionBranching = possibleFormulas.minBy(_.maxConjunctionBranching)
+          val cleanestConjunctions = possibleFormulas.minBy(_.mixedConjunctions)
+          Set(minNegations, minConjunctions, minConjunctionHeight, minNegationHeight, minConjunctionBranching, cleanestConjunctions)
+        } else {
+          possibleFormulas
+        }
     }
 
     val accumulatedPrices = attackTreeBuilder.accumulatePrices(
@@ -131,7 +142,6 @@ class HMLGamePlayer[S, A, L] (
     )
 
     val formulas = accumulatedPrices(node)
-
 
     if (AlgorithmLogging.loggingActive) {
 

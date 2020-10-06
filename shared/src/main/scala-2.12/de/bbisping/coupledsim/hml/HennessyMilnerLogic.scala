@@ -20,8 +20,11 @@ object HennessyMilnerLogic {
     /** the maximal height of conjunctive subformulas */
     def highestConjunction: Int
 
-    /** whether there are conjunctions with not only negations as direct subformulas */
-    def mixedConjunctions: Boolean
+    /** the maximum of non-negative subformulas */
+    def mixedConjunctions: Int
+
+    /** the maximal branching of conjunctive subformulas, where every subformula containing more than one (possibly negated) observation is considered deep */
+    def maxConjunctionBranching: Int
 
     /** names the coarsest notion of equivalence where this formula is part of the distinguishing formulas */
     def classifyFormula(): String = {
@@ -29,24 +32,25 @@ object HennessyMilnerLogic {
         if (highestConjunction == 0) {
           "trace"
         } else {
-          "simulation"
+          (if (conjunctionLevels == 1) "possible-futures/" else "") +
+          (if (highestConjunction <= 2) "ready/" else if (maxConjunctionBranching <= 1) "ready-trace/" else "") +
+          "simulation" 
         } 
-      } else if (negationLevels == 1 && conjunctionLevels <= 1) {
-        if (highestNegation == 1 && highestConjunction <= 1) {
-          if (mixedConjunctions) {
+      } else if (negationLevels == 1) {
+        if (highestNegation == 1 && highestConjunction <= 2 && conjunctionLevels <= 1) {
+          if (mixedConjunctions > 0) {
             "ready"
           } else {
             "failure"
           }
-        } else if (highestNegation == 1 && highestConjunction > 1) {
-          //TODO: Ensure that exactly one sub formula at conjunctions may be deep (otherwise this definition is wrong
-          if (mixedConjunctions) {
-            "~ready-trace"
+        } else if (highestNegation == 1 && highestConjunction > 1 && maxConjunctionBranching == 1) {
+          if (mixedConjunctions > 1) {
+            "ready-trace"
           } else {
-            "~failure-trace"
+            "failure-trace"
           }
-        } else if (highestNegation >= highestConjunction) {
-          if (mixedConjunctions) {
+        } else if (highestNegation <= highestConjunction && conjunctionLevels == 1 || conjunctionLevels == 0) {
+          if (mixedConjunctions > 0) {
             "possible-futures"
           } else {
             "impossible-futures"
@@ -66,6 +70,7 @@ object HennessyMilnerLogic {
   }
 
   case class And[A](subterms: Set[Formula[A]]) extends Formula[A] {
+
     override def toString = {
       if (subterms.isEmpty) {
         "⊤"
@@ -100,10 +105,12 @@ object HennessyMilnerLogic {
 
     override val highestConjunction: Int = height
 
-    override val mixedConjunctions: Boolean = subterms.exists {
-      f => !f.isInstanceOf[Negate[_]] || f.mixedConjunctions
-    }
+    override val mixedConjunctions: Int =
+      (subterms.map(_.mixedConjunctions) + subterms.count(f => !f.isInstanceOf[Negate[_]])).max
 
+    override def maxConjunctionBranching: Int = {
+      (subterms.map(_.maxConjunctionBranching) + subterms.count(_.height > 1)).max
+    }
   }
 
   case class Observe[A](action: A, andThen: Formula[A]) extends Formula[A] {
@@ -119,7 +126,10 @@ object HennessyMilnerLogic {
 
     override val highestConjunction: Int = andThen.highestConjunction
 
-    override val mixedConjunctions: Boolean = andThen.mixedConjunctions
+    override val mixedConjunctions: Int = andThen.mixedConjunctions
+
+    override def maxConjunctionBranching: Int = andThen.maxConjunctionBranching
+
   }
 
   case class Negate[A](andThen: Formula[A]) extends Formula[A] {
@@ -135,7 +145,9 @@ object HennessyMilnerLogic {
 
     override val highestConjunction: Int = andThen.highestConjunction
     
-    override val mixedConjunctions: Boolean = andThen.mixedConjunctions
+    override val mixedConjunctions: Int = andThen.mixedConjunctions
+
+    override def maxConjunctionBranching: Int = andThen.maxConjunctionBranching
   }
 
 }
