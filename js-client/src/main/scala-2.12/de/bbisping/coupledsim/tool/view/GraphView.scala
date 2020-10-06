@@ -117,7 +117,7 @@ object GraphView {
 
     val isLoop = sources == targets
 
-    val hasDanglingEnd = (target == dummyNode)
+    val hasDanglingEnd = targets.isEmpty
 
     val bend = (if (hasDanglingEnd) 0.0 else .5) + label.takeWhile(_.isWhitespace).length
     

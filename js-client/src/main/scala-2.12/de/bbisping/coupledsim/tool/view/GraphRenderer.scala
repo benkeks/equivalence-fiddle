@@ -65,8 +65,8 @@ class GraphRenderer(val main: Control)
     }
   )
   
-  val layerLinks = sceneRoot.append("g").classed("layer-links", true)
   val layerNodes = sceneRoot.append("g").classed("layer-nodes", true)
+  val layerLinks = sceneRoot.append("g").classed("layer-links", true)
   val layerMeta = sceneRoot.append("g").classed("layer-meta", true)
       
   //var linkViews: Selection[NodeLink] = layerLinks.selectAll(".link")
@@ -97,7 +97,7 @@ class GraphRenderer(val main: Control)
       ((e1, e2), ll) <- (relation.lhs ++ relation.rhs).groupBy(t => (t._1, t._3)).toIterable
       en1 = e1 map nodes
       en2 = e2 map nodes
-      (l0,i) <- ll.toList.zipWithIndex
+      (l0, i) <- ll.toList.zipWithIndex
       l = (" " * i) + l0._2
     } yield new NodeLink('relation, l, en1.toSet, en2.toSet, (e1, l0._2, e2))
 
@@ -129,7 +129,8 @@ class GraphRenderer(val main: Control)
     val newLinks = nodeLinks.flatMap(_.integrate(nodesAndLinks)).filter(l => !links.exists(l.sameRep(_)))
     val nodesAndLinks2 = nodesAndLinks ++ newLinks
     val newHoLinks = hoLinks.flatMap(_.integrate(nodesAndLinks2)).filter(l => !links.exists(l.sameRep(_)))
-    val deletedLinks = links.filter(l => !nodeLinks.exists(l.sameRep(_)))
+    val nodeAndHOLinks = nodeLinks ++ hoLinks
+    val deletedLinks = links.filter(l => !nodeAndHOLinks.exists(l.sameRep(_)))
     deletedLinks.foreach(l => links.remove(links.indexOf(l)))
     newLinks.foreach(links.push(_))
     newHoLinks.foreach(links.push(_))
@@ -188,7 +189,7 @@ class GraphRenderer(val main: Control)
 
   def setComment(comment: String) = {
     d3.select("#es-graph-comment")
-      .text(comment)
+      .html(comment)
       .classed("hidden", comment.isEmpty())
   }
   
