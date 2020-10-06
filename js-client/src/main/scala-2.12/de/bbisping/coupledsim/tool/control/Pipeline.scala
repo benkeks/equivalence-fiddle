@@ -2,6 +2,7 @@ package de.bbisping.coupledsim.tool.control
 
 import de.bbisping.coupledsim.tool.arch.Action
 import de.bbisping.coupledsim.tool.arch.Control
+import de.bbisping.coupledsim.tool.model.NodeID
 
 class Pipeline(val main: Control) extends ModelComponent {
   
@@ -45,6 +46,21 @@ class Pipeline(val main: Control) extends ModelComponent {
     broadcast(Pipeline.PipelineStatusChange(List(Pipeline.CurrentLine(currentStep))))
   }
   
+  def runMetaRunner(meta: String, info: String, line: Int) = {
+    if ("compare" == meta) {
+      val states = info.split(",").map(_.trim())
+      if (states.length == 2) {
+        broadcast(Pipeline.PipelineStatusChange(List(Pipeline.CurrentLine(line))))
+        main.dispatchAction(Structure.StructureExamineEquivalences(NodeID(states(0)), NodeID(states(1))))
+        true
+      } else {
+        false
+      }
+    } else {
+      false
+    }
+  }
+
   def notify(change: ModelComponent.Change) = change match {
     case Structure.StructureOperationsChanged(ops) =>
       operations = ops toMap
@@ -101,4 +117,9 @@ object Pipeline {
     }
   }
   
+  case class RunMetaRunner(meta: String, info: String, line: Int) extends PipelineAction {
+    override def implementPipeline(pipeline: Pipeline) = {
+      pipeline.runMetaRunner(meta, info, line)
+    }
+  }
 }

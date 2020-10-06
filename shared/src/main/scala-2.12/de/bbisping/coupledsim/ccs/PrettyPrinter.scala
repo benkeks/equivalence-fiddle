@@ -16,10 +16,11 @@ class PrettyPrinter {
     case MetaDeclaration(k, v, p0) =>
       "@" + k + (if (v != "") " \"" + v + "\" " else "")
     case NodeDeclaration(n, aa, p0) =>
+      val name = (if (n.forall(_.isLetterOrDigit) && !n.charAt(0).isDigit) n else "\"" + n + "\"")
       if (aa.isEmpty) {
-        n
+        name
       } else {
-        n + aa.map(showAttribute).mkString("(", ", ", ")")
+        name + aa.map(showAttribute).mkString("(", ", ", ")")
       }
     case ProcessDeclaration(name, proc, p0) =>
       name + " = " + show(proc)

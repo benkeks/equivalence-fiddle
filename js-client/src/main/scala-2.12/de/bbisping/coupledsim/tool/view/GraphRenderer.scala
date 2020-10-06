@@ -45,7 +45,7 @@ class GraphRenderer(val main: Control)
     d3.select("#"+n).on("click", {_: EventTarget => setEditingBehavior(n)})
   }
   
-  setEditingBehavior("es-graph-examine")
+  setEditingBehavior("es-graph-move")
   
   val force = d3.layout.force[GraphNode, NodeLink] ()
       .charge(-300.0)
@@ -99,7 +99,7 @@ class GraphRenderer(val main: Control)
       en2 = e2 map nodes
       (l0, i) <- ll.toList.zipWithIndex
       l = (" " * i) + l0._2
-    } yield new NodeLink('relation, l, en1.toSet, en2.toSet, (e1, l0._2, e2))
+    } yield new NodeLink(Symbol("relation " + l0._2), l, en1.toSet, en2.toSet, (e1, l0._2, e2))
 
     val relationMetaLinks = for {
       ((e1, e2), ll) <- relation.tupleSet.groupBy(t => (t._1, t._3))
@@ -154,7 +154,7 @@ class GraphRenderer(val main: Control)
     linkLabelUp.exit().remove()
     linkLabelViews = layerMeta.selectAll(".link-label")
     
-    val nodeUp = nodeViews.data(nodes, (_:GraphNode).nameId.name)
+    val nodeUp = nodeViews.data(nodes - GraphView.dummyNode, (_:GraphNode).nameId.name)
     nodeUp.enter()
         .append("circle")
         .attr("cx", ((d: GraphNode, i: Int) => d.x))
@@ -169,7 +169,7 @@ class GraphRenderer(val main: Control)
     nodeViews = layerNodes.selectAll(".node")
         
     val nodeLabelUp = nodeLabelViews
-        .data(nodes, (_:GraphNode).nameId.name)
+        .data(nodes - GraphView.dummyNode, (_:GraphNode).nameId.name)
     nodeLabelUp.enter()
         .append("text")
         .attr("class", "node-label")

@@ -37,6 +37,7 @@ import de.bbisping.coupledsim.tool.control.Pipeline
 import de.bbisping.coupledsim.algo.AlgorithmLogging
 import de.bbisping.coupledsim.tool.model.NodeID
 import org.denigma.codemirror.LineWidget
+import de.bbisping.coupledsim.ccs.Syntax.MetaDeclaration
 
 class SourceEditor(val main: Control) extends ViewComponent {
   val PROBLEM_GUTTER = "es-problem-gutter"
@@ -72,18 +73,24 @@ class SourceEditor(val main: Control) extends ViewComponent {
   var lastText = ""
   var lastPipelineText = ""
   
+  var runners = List[(String, String, Int)]()
+  
   var currentPipelineLine = 0
   var pipelineReplayWidget: Option[LineWidget] = None
   
   var changeParseTimeout: Option[Int] = None
   
   var currentStructure: Option[Structure.TSStructure] = None
-  
+
   editor.on("change", { (_: Editor) =>
     changeParseTimeout foreach dom.window.clearTimeout
     changeParseTimeout = Some(dom.window.setTimeout(() => onChange(), 400))
   }: js.Function1[Editor, Unit])
-    
+  
+  editor.on("gutterClick", { (_: Editor, line: Int) =>
+    triggerLineAction(line)
+  }: js.Function2[Editor, Int, Unit])
+
   d3.select("#es-load-file").node().asInstanceOf[HTMLInputElement].onchange = onLoadFile _
   
   d3.select("#es-export")
@@ -123,7 +130,15 @@ class SourceEditor(val main: Control) extends ViewComponent {
     null
   })
   
-    
+  def triggerLineAction(line: Int) = {
+    for {
+      (meta, info, l) <- runners
+      if l == line
+    } {
+      triggerAction(new Pipeline.RunMetaRunner(meta, info, line))
+    }
+  }
+
   def onChange() {
     val newText = sourceDoc.getValue()
     if (newText != lastText) {
@@ -271,7 +286,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
         val node = dom.document.createElement("div").asInstanceOf[HTMLElement]
         node.setAttribute("class", "es-pipeline-current")
         node.setAttribute("title", "current line")
-        editor.setGutterMarker(line - 1, PROBLEM_GUTTER, node)
+        editor.setGutterMarker(line, PROBLEM_GUTTER, node)
     }
   }
   
@@ -279,8 +294,10 @@ class SourceEditor(val main: Control) extends ViewComponent {
     val node = dom.document.createElement("ul").asInstanceOf[HTMLElement]
     for ((le, i) <- replay.zipWithIndex) {
       val leChild = dom.document.createElement("li").asInstanceOf[HTMLElement]
-      leChild.textContent = i.toString + ": " + (le() match {
+      leChild.innerHTML = i.toString + ": " + (le() match {
         case AlgorithmLogging.LogRelation(_, comment) =>
+          comment
+        case AlgorithmLogging.LogRichRelation(_, comment) =>
           comment
         case _ =>
           ""
@@ -307,6 +324,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
   def notify(change: ModelComponent.Change) = change match {
     case Source.SourceChange(source, ast) =>
       setCode(source)
+      runners = ast.defs.collect{ case MetaDeclaration(key, value, pos) => (key, value, pos.line)}
     case Source.ProblemChange(source, errs) =>
       setErrors(source, errs)
     case Source.ExamplesChange(samples) => 

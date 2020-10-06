@@ -46,8 +46,9 @@ class Source(val main: Control) extends ModelComponent {
   }
   
   private def checkNodeName(name: String) = {
-    name != "" &&
-    name.forall(c => c.isLetterOrDigit || c == '_')
+    true // we're liberal, now!
+    //name != "" &&
+    //name.forall(c => c.isLetterOrDigit || c == '_')
   }
   
   def updateEventDeclarationAttributes(updates: List[(String, NodeLabel)]): Boolean = {
