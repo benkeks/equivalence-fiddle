@@ -39,7 +39,6 @@ class HMLGamePlayer[S, A, L] (
 
   case class AttackerObservation(p: S, qq: Set[S]) extends SimpleGame.AttackerNode 
   case class DefenderConjunction(p: S, qq: Set[S]) extends SimpleGame.DefenderNode
-  case class DefenderNegation(p: S, qq: Set[S]) extends SimpleGame.DefenderNode
 
   class HMLGame
     extends SimpleGame with GameDiscovery with WinningRegionComputation {
@@ -59,28 +58,21 @@ class HMLGamePlayer[S, A, L] (
           recordedMoveEdges((gn, next)) = ObservationMove(a)
           next
         }
-        val conj = DefenderConjunction(p0, qq0)
-        recordedMoveEdges((gn, conj)) = ConjunctMove()
-        if (qq0.nonEmpty) {
-          // only add negation moves if the defender hasn't trivially lost already (in order to have unique finishing moves with Conj for the attacker)
-          val neg = DefenderNegation(p0, qq0)
+        if (qq0.size == 1) {
+          // wlog only have negation moves when the defender is focused (which can be forced by the attacker using a preceding conjunction)
+          val neg = AttackerObservation(qq0.head, Set(p0))
           recordedMoveEdges((gn, neg)) = NegationMove()
-          dn ++ List(conj, neg)
+          dn ++ List(neg)
         } else {
+          // conjunct moves only make sense if the defender is spread
+          val conj = DefenderConjunction(p0, qq0)
+          recordedMoveEdges((gn, conj)) = ConjunctMove()
           dn ++ List(conj)
         }
       case DefenderConjunction(p0, qq0) =>
         for {
           q0 <- qq0
           obs = AttackerObservation(p0, Set(q0))
-        } yield {
-          recordedMoveEdges((gn, obs)) = DefenderMove()
-          obs
-        }
-      case DefenderNegation(p0, qq0) =>
-        for {
-          q0 <- qq0
-          obs = AttackerObservation(q0, Set(p0))
         } yield {
           recordedMoveEdges((gn, obs)) = DefenderMove()
           obs
@@ -98,25 +90,6 @@ class HMLGamePlayer[S, A, L] (
     // (TODO: this shouldnt need to be a tree at this point...)
     val attackTree = attackTreeBuilder.buildAttackTree(game, win, node)
 
-    if (AlgorithmLogging.loggingActive) {
-
-      def gameNodeToTuple(n: SimpleGame.GameNode) = n match {
-        case AttackerObservation(p, qq) => 
-          (Set(p), "<>", qq)
-        case DefenderConjunction(p, qq) => 
-          (Set(p), "/\\", qq)
-        case DefenderNegation(p, qq) =>
-          (Set(p), "~", qq)
-      }
-      
-      val rel: Set[((Set[S], String, Set[S]), String, (Set[S], String, Set[S]))] = for {
-        (n1, n2) <- attackTree.tupleSet
-      } yield (gameNodeToTuple(n1), recordedMoveEdges(n1, n2).toString(), gameNodeToTuple(n2))
-      
-      logRichRelation(new LabeledRelation(rel), "attack tree")
-    }
-    
-
     println("Attack Tree: " + attackTree)
 
     val defenderDefeats = attackTree.rhs.collect {
@@ -132,7 +105,7 @@ class HMLGamePlayer[S, A, L] (
         case ConjunctMove() =>
           ff//HennessyMilnerLogic.And(ff.toList)
         case NegationMove() =>
-          ff//TODO: Is this correct? 2020-09-28
+          ff.map(HennessyMilnerLogic.Negate(_))
         case ObservationMove(a) =>
           ff.map(HennessyMilnerLogic.Observe(a, _))
         case DefenderMove() =>
@@ -146,20 +119,6 @@ class HMLGamePlayer[S, A, L] (
           possibleMoves.foldLeft(Seq(Seq[HennessyMilnerLogic.Formula[A]]()))(
             (b, a) => b.flatMap(i => a.map(j => i ++ Seq(j))))
         productMoves.map(mv => HennessyMilnerLogic.And(mv.toList).asInstanceOf[HennessyMilnerLogic.Formula[A]]).toSet
-      
-      case DefenderNegation(_, _) =>
-        val productMoves =
-          possibleMoves.foldLeft(Seq(Seq[HennessyMilnerLogic.Formula[A]]()))(
-            (b, a) => b.flatMap(i => a.map(j => i ++ Seq(j))))
-        
-        productMoves.map { mv =>
-          if (mv.size == 1) {
-            HennessyMilnerLogic.Negate(mv.head)
-          } else {
-            HennessyMilnerLogic.And(mv.toList.map(HennessyMilnerLogic.Negate(_))).asInstanceOf[HennessyMilnerLogic.Formula[A]]
-          }
-        }.toSet
-
       case _ =>
         possibleMoves.flatten.toSet
     }
@@ -174,7 +133,35 @@ class HMLGamePlayer[S, A, L] (
       targetRegion = defenderDefeats
     )
 
-    accumulatedPrices(node)
+    val formulas = accumulatedPrices(node)
+
+
+    if (AlgorithmLogging.loggingActive) {
+
+      def gameNodeToTuple(n: SimpleGame.GameNode) = n match {
+        case AttackerObservation(p, qq) => 
+          (Set(p), "<>", qq)
+        case DefenderConjunction(p, qq) => 
+          (Set(p), "/\\", qq)
+      }
+      
+      val rel: Set[((Set[S], String, Set[S]), String, (Set[S], String, Set[S]))] = for {
+        (n1, n2) <- attackTree.tupleSet
+      } yield (gameNodeToTuple(n1), recordedMoveEdges(n1, n2).toString(), gameNodeToTuple(n2))
+      
+      val msg = for {
+        f <- formulas
+        s = gameNodeToTuple(node)
+        p <- s._1.headOption
+        q <- s._3.headOption
+      } yield {
+        p + " distinguished from " + q + " under " + f.classifyFormula() + " preorder by " + f.toString()
+      }
+
+      logRichRelation(new LabeledRelation(rel), msg.mkString("\n"))
+    }
+
+    formulas
   }
 
   def compute() = {
