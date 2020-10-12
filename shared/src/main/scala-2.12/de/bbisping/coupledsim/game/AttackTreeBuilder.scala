@@ -11,35 +11,30 @@ class AttackTreeBuilder[L] {
       node: GameNode):
     Relation[GameNode] = {
 
+    val beingVisited = collection.mutable.Set[GameNode]()
     val visited = collection.mutable.Set[GameNode]()
     val edges = collection.mutable.Queue[(GameNode, GameNode)]()
 
-    def buildAttackTreeEdges(
-      game: SimpleGame,
-      win: Set[GameNode],
-      node: GameNode): Unit = {
+    def buildAttackTreeEdges(node: GameNode): Unit = {
       
       if (!visited(node)) {
         visited += node
+        beingVisited += node
 
-        val winningMoves = game.successors(node).filter(n => win(n))
+        for (
+          t <- game.successors(node)
+        ) {
+          if (win(t) && !beingVisited(t)) {
+            edges += ((node, t))
+            buildAttackTreeEdges(t)
+          }
+        }
 
-        val directEdges = for {
-          t <- winningMoves
-          if node != t
-        } yield (node, t)
-
-        for {
-          t <- winningMoves
-        } {
-          buildAttackTreeEdges(game, win, t)
-        } 
-
-        edges ++= directEdges
+        beingVisited -= node
       }
     }
 
-    buildAttackTreeEdges(game, win, node)
+    buildAttackTreeEdges(node)
 
     new Relation(edges.toSet)
   }
@@ -55,20 +50,17 @@ class AttackTreeBuilder[L] {
     
     val prices = collection.mutable.Map[GameNode, L]()
     
-    prices ++= targetRegion map ((_, finishingPrice))
-
     def updatePrice(n: GameNode): Unit = {
+
       if (!prices.isDefinedAt(n)) {
         prices(n) = supPrice
         val succPrices = for {
-          s <- tree.rep.getOrElse(n, Set())
+          s <- tree.values(n)
         } yield {
           updatePrice(s)
           priceCons(n, s, prices(s))
         }
-        if (succPrices.nonEmpty) {
-          prices(n) = pricePick(n, succPrices)
-        }
+        prices(n) = pricePick(n, succPrices)
       }
     }
 

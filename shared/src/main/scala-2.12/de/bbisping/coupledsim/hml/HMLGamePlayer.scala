@@ -87,7 +87,7 @@ class HMLGamePlayer[S, A, L] (
     // Note: this actually does not need to be a tree at this point
     val attackTree = attackTreeBuilder.buildAttackTree(game, win, node)
 
-    println("Attack Tree: " + attackTree)
+    println("Attack Tree: " + attackTree.tupleSet.mkString("\n"))
 
     val defenderDefeats = attackTree.rhs.collect {
       case emptyDef @ DefenderConjunction(_, conjs) if conjs.isEmpty => emptyDef.asInstanceOf[GameNode]
@@ -111,21 +111,39 @@ class HMLGamePlayer[S, A, L] (
     }
     
     def mergeMoves(node: GameNode, possibleMoves: Iterable[Set[HennessyMilnerLogic.Formula[A]]]): Set[HennessyMilnerLogic.Formula[A]] = node match {
-      case DefenderConjunction(_, _) =>
+      case DefenderConjunction(_, _) if possibleMoves.size != 1 =>
         val productMoves =
           possibleMoves.foldLeft(Seq(Seq[HennessyMilnerLogic.Formula[A]]()))(
             (b, a) => b.flatMap(i => a.map(j => i ++ Seq(j))))
-        productMoves.map(mv => HennessyMilnerLogic.And(mv.toSet).asInstanceOf[HennessyMilnerLogic.Formula[A]]).toSet
+        productMoves.map { mv =>
+          val moves = mv.toSet
+          if (moves.size == 1) {
+            moves.head
+          } else {
+            HennessyMilnerLogic.And(moves).asInstanceOf[HennessyMilnerLogic.Formula[A]]
+          }
+        }.toSet
       case _ =>
         val possibleFormulas = possibleMoves.flatten.toSet
         if (possibleFormulas.size > 1) {
-          val minNegations = possibleFormulas.minBy(_.negationLevels)
-          val minConjunctions = possibleFormulas.minBy(_.conjunctionLevels)
-          val minConjunctionHeight = possibleFormulas.minBy(_.highestConjunction)
-          val minNegationHeight = possibleFormulas.minBy(_.highestNegation)
-          val minConjunctionBranching = possibleFormulas.minBy(_.maxConjunctionBranching)
-          val cleanestConjunctions = possibleFormulas.minBy(_.mixedConjunctions)
-          Set(minNegations, minConjunctions, minConjunctionHeight, minNegationHeight, minConjunctionBranching, cleanestConjunctions)
+          // val minNegations = possibleFormulas.minBy(_.negationLevels)
+          // val minConjunctions = possibleFormulas.minBy(_.conjunctionLevels)
+          // val minConjunctionHeight = possibleFormulas.minBy(_.highestConjunction)
+          // val minNegationHeight = possibleFormulas.minBy(_.highestNegation)
+          // val minConjunctionBranching = possibleFormulas.minBy(_.maxConjunctionBranching)
+          // val cleanestConjunctions = possibleFormulas.minBy(_.mixedConjunctions)
+          // Set(minNegations, minConjunctions, minConjunctionHeight, minNegationHeight, minConjunctionBranching, cleanestConjunctions)
+          var currentMax = List[HennessyMilnerLogic.ObservationClass]()
+          for {
+            f <- possibleFormulas
+            val cl = f.obsClass.balance
+            if !currentMax.exists(cl.above(_))
+          } yield {
+            currentMax = cl :: currentMax
+            //TODO: This is not correct for now, because it does not necesary follow a depency order.
+            f
+          }
+          possibleFormulas
         } else {
           possibleFormulas
         }
