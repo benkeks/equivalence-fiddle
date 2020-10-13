@@ -80,8 +80,9 @@ class GraphRenderer(val main: Control)
 
   var structure: Option[Structure.TSStructure] = None
   var relation: LabeledRelation[(Set[NodeID], String, Set[NodeID]), String] = LabeledRelation()
+  var baseRelation: Set[(Set[NodeID], String, Set[NodeID])] = Set()
   
-  def buildGraph(ts: Structure.TSStructure, relation: LabeledRelation[(Set[NodeID], String, Set[NodeID]), String]) = {
+  def buildGraph(ts: Structure.TSStructure) = {
     
     val nodes = ts.nodes.map { e =>
       (e, new GraphNode(e, ts.nodeLabeling.getOrElse(e, Structure.emptyLabel)))
@@ -94,7 +95,7 @@ class GraphRenderer(val main: Control)
     } yield new NodeLink('stepto, ees.map(_._2.toActString).mkString(", "), Set(en1), Set(en2), (en1, en2))
 
     val relationLinks = for {
-      ((e1, e2), ll) <- (relation.lhs ++ relation.rhs).groupBy(t => (t._1, t._3)).toIterable
+      ((e1, e2), ll) <- baseRelation.groupBy(t => (t._1, t._3)).toIterable
       en1 = e1 map nodes
       en2 = e2 map nodes
       (l0, i) <- ll.toList.zipWithIndex
@@ -117,7 +118,7 @@ class GraphRenderer(val main: Control)
     
     force.stop()
     
-    val (sysNodes, nodeLinks, hoLinks) = buildGraph(ts, relation)
+    val (sysNodes, nodeLinks, hoLinks) = buildGraph(ts)
     
     val newNodes = sysNodes.values.filter(n => !nodes.exists(n.sameRep(_)))
     val deletedNodes = nodes.filter(n => !sysNodes.isDefinedAt(n.nameId))
@@ -234,13 +235,16 @@ class GraphRenderer(val main: Control)
       setComment("")
       this.structure = Some(structure)
       relation = LabeledRelation()
+      baseRelation = Set()
       setStructure()
     case Structure.StructurePartitionChange(partition) =>
       colorize(partition)
     case Structure.StructureRelationChange(relation) =>
-      //setRelation(relation)
+      this.baseRelation = relation.tupleSet.map(t => (Set(t._1), t._2, Set(t._3)))
+      setStructure()
     case Structure.StructureRichRelationChange(relation) =>
       this.relation = relation
+      this.baseRelation = relation.lhs ++ relation.rhs
       setStructure()
     case Structure.StructureCommentChange(comment) =>
       setComment(comment)

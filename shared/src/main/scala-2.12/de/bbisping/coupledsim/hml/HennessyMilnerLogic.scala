@@ -75,14 +75,25 @@ object HennessyMilnerLogic {
     "ready-trace" -> ObservationClass(INFTY,INFTY,1,1,0,INFTY,1,true),
     "impossible-future" -> ObservationClass(INFTY,1,1,0,INFTY,0,INFTY,false),
     "possible-future" -> ObservationClass(INFTY,1,1,INFTY,INFTY,0,INFTY,true),
-    "simulation" -> ObservationClass(INFTY,INFTY,0,INFTY,INFTY,INFTY,INFTY,true),
-    "ready-simulation" -> ObservationClass(INFTY,INFTY,1,INFTY,INFTY,INFTY,INFTY,true),
+    "simulation" -> ObservationClass(INFTY,INFTY,0,INFTY,INFTY,INFTY,0,true),
+    "ready-simulation" -> ObservationClass(INFTY,INFTY,1,INFTY,INFTY,INFTY,1,true),
     "2-nested-simulation" -> ObservationClass(INFTY,INFTY,1,INFTY,INFTY,INFTY,INFTY,true),
     "bisimulation" -> ObservationClass(INFTY,INFTY,INFTY,INFTY,INFTY,INFTY,INFTY,true)
   )
 
-  abstract sealed class Formula[A] {
+  def getLeastDistinguishing[A](formulas: Set[Formula[A]]) = {
+    val classifications = formulas.map(f => (f, f.classifyFormula()))
+    val bounds = classifications.flatMap(_._2._2.map(_._2))
 
+    for {
+      (f, (cl, clB)) <- classifications
+      val clBb = clB.map(_._2)
+      // just keep formulas where one of the classifications is dominated by no other classification
+      if (clBb.exists(classBound => !bounds.exists(b => b != classBound && b.below(classBound))))
+    } yield f
+  }
+
+  abstract sealed class Formula[A] {
 
     def obsClass: ObservationClass
 
@@ -103,7 +114,7 @@ object HennessyMilnerLogic {
     }
 
     /** names the coarsest notion of equivalence where this formula is part of the distinguishing formulas */
-    def classifyFormula(): String = {
+    def classifyFormula(): (ObservationClass, List[(String, ObservationClass)]) = {
       val balancedClass = getRootClass()
       val classifications = ObservationClasses.collect { case (name, cl) if (balancedClass lub cl) == cl => (name, cl) }
       var currentMax = List[ObservationClass]()
@@ -112,9 +123,14 @@ object HennessyMilnerLogic {
         if !currentMax.exists(cl.above(_))
       } yield {
         currentMax = cl :: currentMax
-        name
+        (name, cl)
       }
-      balancedClass + (leastClassifications mkString ",")
+      (balancedClass, leastClassifications)
+    }
+
+    def classifyNicely() = {
+      val (_, classifications) = classifyFormula()
+      classifications.map(_._1).mkString(",")
     }
 
   }

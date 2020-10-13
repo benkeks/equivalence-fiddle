@@ -2,6 +2,7 @@ package de.bbisping.coupledsim.tool.control
 
 object CCSSamples {
   val ltbts1 = """
+@hint "compare processes by clicking on the gutter next to the @compare statements!"
 
 L13(x=-200,y=500)
 R13(x=300,y=500)

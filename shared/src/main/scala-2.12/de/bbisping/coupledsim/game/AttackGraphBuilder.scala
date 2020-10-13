@@ -3,9 +3,9 @@ package de.bbisping.coupledsim.game
 import de.bbisping.coupledsim.util.Relation
 import de.bbisping.coupledsim.game.SimpleGame.GameNode
 
-class AttackTreeBuilder[L] {
+class AttackGraphBuilder[L] {
 
-  def buildAttackTree(
+  def buildAttackGraph(
       game: SimpleGame,
       win: Set[GameNode],
       node: GameNode):
@@ -36,7 +36,7 @@ class AttackTreeBuilder[L] {
   }
 
   def accumulatePrices(
-      tree: Relation[GameNode],
+      graph: Relation[GameNode],
       priceCons: (GameNode, GameNode, L) => L,
       pricePick: (GameNode, Iterable[L]) => L,
       supPrice: L,
@@ -55,7 +55,7 @@ class AttackTreeBuilder[L] {
         prices(n) = supPrice
       }
 
-      val followUps = tree.values(n).map(s => (s, prices.get(s)))
+      val followUps = graph.values(n).map(s => (s, prices.get(s)))
       val instableFollowUps = followUps.filter(_._2.isEmpty)
       if (instableFollowUps.isEmpty) {
         val succPrices = for {
@@ -64,7 +64,7 @@ class AttackTreeBuilder[L] {
         val newPrice = pricePick(n, succPrices)
         if (!(oldPrice contains newPrice)) {
           prices(n) = newPrice
-          val predecessorUpdates = tree.valuesInverse(n).filterNot(priceToDo contains _) 
+          val predecessorUpdates = graph.valuesInverse(n).filterNot(priceToDo contains _) 
           priceToDo.appendAll(predecessorUpdates)
         }
       } else {

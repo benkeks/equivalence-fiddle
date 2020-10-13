@@ -8,7 +8,7 @@ import de.bbisping.coupledsim.game.WinningRegionComputation
 import de.bbisping.coupledsim.game.GameDiscovery
 import de.bbisping.coupledsim.game.SimpleGame
 import de.bbisping.coupledsim.hml.HennessyMilnerLogic
-import de.bbisping.coupledsim.game.AttackTreeBuilder
+import de.bbisping.coupledsim.game.AttackGraphBuilder
 import de.bbisping.coupledsim.game.SimpleGame.GameNode
 import de.bbisping.coupledsim.hml.HMLInterpreter
 import de.bbisping.coupledsim.algo.AlgorithmLogging
@@ -82,14 +82,13 @@ class HMLGamePlayer[S, A, L] (
 
   def buildHML(game: HMLGame, win: Set[GameNode], node: GameNode) = {
 
-    val attackTreeBuilder = new AttackTreeBuilder[Set[HennessyMilnerLogic.Formula[A]]]()
+    val attackGraphBuilder = new AttackGraphBuilder[Set[HennessyMilnerLogic.Formula[A]]]()
 
-    // Note: this actually does not need to be a tree at this point
-    val attackTree = attackTreeBuilder.buildAttackTree(game, win, node)
+    val attackGraph = attackGraphBuilder.buildAttackGraph(game, win, node)
 
-    println("Attack Tree: " + attackTree.tupleSet.mkString("\n"))
+    println("Attack Graph: " + attackGraph.tupleSet.mkString("; "))
 
-    val defenderDefeats = attackTree.rhs.collect {
+    val defenderDefeats = attackGraph.rhs.collect {
       case emptyDef @ DefenderConjunction(_, conjs) if conjs.isEmpty => emptyDef.asInstanceOf[GameNode]
     }
 
@@ -100,7 +99,7 @@ class HMLGamePlayer[S, A, L] (
 
       kind match {
         case ConjunctMove() =>
-          ff//HennessyMilnerLogic.And(ff.toList)
+          ff
         case NegationMove() =>
           ff.map(HennessyMilnerLogic.Negate(_))
         case ObservationMove(a) =>
@@ -142,14 +141,17 @@ class HMLGamePlayer[S, A, L] (
       for {
         f <- newFormulas
         val cl = f.getRootClass()
-        if (cl.height <= 1 && cl.negationLevels <= 1) || !formulaClasses.exists(clOther => cl.above(clOther) && cl != clOther)
+        // privilege for failures and impossible futures
+        if (cl.height <= 1 && cl.negationLevels <= 1) || 
+          (cl.negationLevels == 1 && cl.maxNegationHeight == cl.height) ||
+          !formulaClasses.exists(clOther => cl.above(clOther) && cl != clOther)
       } yield {
         f
       }
     }
 
-    val accumulatedPrices = attackTreeBuilder.accumulatePrices(
-      tree = attackTree,
+    val accumulatedPrices = attackGraphBuilder.accumulatePrices(
+      graph = attackGraph,
       priceCons = moveToHML _,
       pricePick = mergeMoves _,
       supPrice = Set(),
@@ -158,6 +160,8 @@ class HMLGamePlayer[S, A, L] (
     )
 
     val formulas = accumulatedPrices(node)
+
+    val resultFormulas = HennessyMilnerLogic.getLeastDistinguishing(formulas)
 
     if (AlgorithmLogging.loggingActive) {
 
@@ -169,22 +173,22 @@ class HMLGamePlayer[S, A, L] (
       }
       
       val rel: Set[((Set[S], String, Set[S]), String, (Set[S], String, Set[S]))] = for {
-        (n1, n2) <- attackTree.tupleSet
+        (n1, n2) <- attackGraph.tupleSet
       } yield (gameNodeToTuple(n1), recordedMoveEdges(n1, n2).toString(), gameNodeToTuple(n2))
       
       val msg = for {
-        f <- formulas
+        f <- resultFormulas
         s = gameNodeToTuple(node)
         p <- s._1.headOption
         q <- s._3.headOption
       } yield {
-        p + " distinguished from " + q + " under " + f.classifyFormula() + " preorder by " + f.toString()
+        p + " distinguished from " + q + " under " + f.classifyNicely() + " preorder by " + f.toString()
       }
 
       logRichRelation(new LabeledRelation(rel), msg.mkString("<br>\n"))
     }
 
-    formulas
+    resultFormulas
   }
 
   def compute() = {
@@ -221,6 +225,21 @@ class HMLGamePlayer[S, A, L] (
           System.err.println("Formula " + f.toString() + " is no sound distinguishing formula! " + check)
         }
       }
+    }
+
+    if (!attackerWin.contains(aLR) && !attackerWin.contains(aRL)) {
+      attackerWin.to
+
+      val simNodes = for {
+        gn <- hmlGame.discovered
+        if gn.isInstanceOf[AttackerObservation] && !attackerWin(gn)
+        AttackerObservation(p, qq) = gn
+        q <- qq
+      } yield (p, q)
+    
+      val rel = new Relation[S](simNodes.toSet)
+
+      logRelation(rel, nodes(0) + " and " + nodes(1) + " are bisimulation equivalent.")
     }
 
     true

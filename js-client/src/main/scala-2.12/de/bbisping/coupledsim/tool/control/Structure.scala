@@ -27,22 +27,22 @@ class Structure(val main: Control) extends ModelComponent {
   val operations = HashMap[String, StructureOperation]()
 
   def init() {
-    registerOperation(new StructureOperation.FixedPointCoupledSimilarityAnalyzer)
-    registerOperation(new StructureOperation.GameCoupledSimilarityAnalyzer)
-    registerOperation(new StructureOperation.GameCoupledSimilarityPlainAnalyzer)
+    // registerOperation(new StructureOperation.FixedPointCoupledSimilarityAnalyzer)
+    // registerOperation(new StructureOperation.GameCoupledSimilarityAnalyzer)
+    // registerOperation(new StructureOperation.GameCoupledSimilarityPlainAnalyzer)
 
-    registerOperation(new StructureOperation.GameContrasimilarityExponentialAnalyzer)
+    // registerOperation(new StructureOperation.GameContrasimilarityExponentialAnalyzer)
 
-    registerOperation(new StructureOperation.SigrefBisimilarityAnalyzer)
-    registerOperation(new StructureOperation.SigrefWeakBisimilarityAnalyzer)
+    // registerOperation(new StructureOperation.SigrefBisimilarityAnalyzer)
+    // registerOperation(new StructureOperation.SigrefWeakBisimilarityAnalyzer)
 
-    registerOperation(new StructureOperation.NaiveTransitiveTauClosure)
-    registerOperation(new StructureOperation.NaiveReflexiveTauClosure)
+    // registerOperation(new StructureOperation.NaiveTransitiveTauClosure)
+    // registerOperation(new StructureOperation.NaiveReflexiveTauClosure)
 
-    registerOperation(new StructureOperation.WeakStepRelationClosure)
+    // registerOperation(new StructureOperation.WeakStepRelationClosure)
 
-    registerOperation(new StructureOperation.TauLoopCompressor)
-    registerOperation(new StructureOperation.QuotientBuilder)
+    // registerOperation(new StructureOperation.TauLoopCompressor)
+    // registerOperation(new StructureOperation.QuotientBuilder)
   }
 
   def registerOperation(op: StructureOperation) = {
@@ -104,7 +104,7 @@ class Structure(val main: Control) extends ModelComponent {
       true
     } else if (currentReplayStep == currentReplay.length) {
       // reset everything
-      broadcast(Structure.StructureRelationChange(relation))
+      //broadcast(Structure.StructureRelationChange(relation))
       true
     } else {
       false
