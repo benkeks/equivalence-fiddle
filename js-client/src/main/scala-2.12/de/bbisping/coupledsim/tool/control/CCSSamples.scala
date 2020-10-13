@@ -109,10 +109,29 @@ R50 = a.(b.d.0 + c.e.0 + c.f.0 + b.g.0)
 "b.d.0 + c.e.0 + c.f.0 + b.g.0"(x=187, y=333)
 """
 
+  val failureAndSim = """
+P1(x=0, y=0)
+P2(x=600, y=0)
+"0"(x=300, y=600)
+"b.0 + d.0"(x=500, y=400)
+"c.0 + d.0"(x=300, y=300)
+"d.0"(x=100, y=400)
+"b.0 + c.0"(x=150, y=150)
+
+P1 = (a.(b.0 + c.0) + a.d.0)
+P2 = (a.(b.0 + d.0) + a.(c.0 + d.0))
+@comment "P1 is distinguished from P2 under failure and simulation preorder"
+@compare "P1,P2"
+"""
+
+
   val namedSamples = List[Samples.Example](
     Samples.Example("ltbts1",
 	    "Linear Time Branching Time Spectrum 1",
-        ltbts1)
+        ltbts1),
+    Samples.Example("failure-sim",
+	    "Neither failure and nor simulation equivalent",
+        failureAndSim)
   )
 
   def getExample(slug: String) = {

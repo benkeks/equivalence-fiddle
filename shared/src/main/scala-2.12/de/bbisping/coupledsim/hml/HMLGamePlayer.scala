@@ -126,24 +126,20 @@ class HMLGamePlayer[S, A, L] (
       case _ =>
         val possibleFormulas = possibleMoves.flatten.toSet
         if (possibleFormulas.size > 1) {
-          // val minNegations = possibleFormulas.minBy(_.negationLevels)
-          // val minConjunctions = possibleFormulas.minBy(_.conjunctionLevels)
-          // val minConjunctionHeight = possibleFormulas.minBy(_.highestConjunction)
-          // val minNegationHeight = possibleFormulas.minBy(_.highestNegation)
-          // val minConjunctionBranching = possibleFormulas.minBy(_.maxConjunctionBranching)
-          // val cleanestConjunctions = possibleFormulas.minBy(_.mixedConjunctions)
-          // Set(minNegations, minConjunctions, minConjunctionHeight, minNegationHeight, minConjunctionBranching, cleanestConjunctions)
           var currentMax = List[HennessyMilnerLogic.ObservationClass]()
+
+          val formulaClasses = for {
+            f <- possibleFormulas
+          } yield f.getRootClass()
+
+          // if no other formula's class dominates this formula's class...
           for {
             f <- possibleFormulas
-            val cl = f.obsClass.balance
-            if !currentMax.exists(cl.above(_))
+            val cl = f.getRootClass()
+            if !formulaClasses.exists(clOther => cl.above(clOther) && cl != clOther)
           } yield {
-            currentMax = cl :: currentMax
-            //TODO: This is not correct for now, because it does not necesary follow a depency order.
             f
           }
-          possibleFormulas
         } else {
           possibleFormulas
         }
