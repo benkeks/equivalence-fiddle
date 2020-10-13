@@ -142,7 +142,7 @@ class HMLGamePlayer[S, A, L] (
       for {
         f <- newFormulas
         val cl = f.getRootClass()
-        if !formulaClasses.exists(clOther => cl.above(clOther) && cl != clOther)
+        if (cl.height <= 1 && cl.negationLevels <= 1) || !formulaClasses.exists(clOther => cl.above(clOther) && cl != clOther)
       } yield {
         f
       }
@@ -152,7 +152,6 @@ class HMLGamePlayer[S, A, L] (
       tree = attackTree,
       priceCons = moveToHML _,
       pricePick = mergeMoves _,
-      lowerPrice = lubMoves,
       supPrice = Set(),
       node = node,
       targetRegion = defenderDefeats
