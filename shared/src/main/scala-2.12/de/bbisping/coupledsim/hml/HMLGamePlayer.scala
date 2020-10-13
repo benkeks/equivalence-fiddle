@@ -126,30 +126,33 @@ class HMLGamePlayer[S, A, L] (
       case _ =>
         val possibleFormulas = possibleMoves.flatten.toSet
         if (possibleFormulas.size > 1) {
-          var currentMax = List[HennessyMilnerLogic.ObservationClass]()
-
-          val formulaClasses = for {
-            f <- possibleFormulas
-          } yield f.getRootClass()
-
-          // if no other formula's class dominates this formula's class...
-          for {
-            f <- possibleFormulas
-            val cl = f.getRootClass()
-            if !formulaClasses.exists(clOther => cl.above(clOther) && cl != clOther)
-          } yield {
-            f
-          }
+          lubMoves(possibleFormulas, possibleFormulas)
         } else {
           possibleFormulas
         }
+    }
+
+    def lubMoves(newFormulas: Set[HennessyMilnerLogic.Formula[A]], oldFormulas: Set[HennessyMilnerLogic.Formula[A]]) = {
+
+      val formulaClasses = for {
+        f <- oldFormulas
+      } yield f.getRootClass()
+
+      // if no old formula's class dominates this formula's class...
+      for {
+        f <- newFormulas
+        val cl = f.getRootClass()
+        if !formulaClasses.exists(clOther => cl.above(clOther) && cl != clOther)
+      } yield {
+        f
+      }
     }
 
     val accumulatedPrices = attackTreeBuilder.accumulatePrices(
       tree = attackTree,
       priceCons = moveToHML _,
       pricePick = mergeMoves _,
-      finishingPrice = Set(HennessyMilnerLogic.And(Set())),
+      lowerPrice = lubMoves,
       supPrice = Set(),
       node = node,
       targetRegion = defenderDefeats

@@ -39,7 +39,7 @@ class AttackTreeBuilder[L] {
       tree: Relation[GameNode],
       priceCons: (GameNode, GameNode, L) => L,
       pricePick: (GameNode, Iterable[L]) => L,
-      finishingPrice: L,
+      lowerPrice: (L, L) => L,
       supPrice: L,
       node: GameNode,
       targetRegion: Set[GameNode]): Map[GameNode, L] = {
@@ -62,7 +62,11 @@ class AttackTreeBuilder[L] {
         val succPrices = for {
           (s, Some(p)) <- followUps
         } yield priceCons(n, s, p)
-        val newPrice = pricePick(n, succPrices)
+        val newPrice = if (oldPrice.nonEmpty) {
+          lowerPrice(pricePick(n, succPrices), oldPrice.get)
+        } else {
+          pricePick(n, succPrices)
+        }
         if (!(oldPrice contains newPrice)) {
           prices(n) = newPrice
           val predecessorUpdates = tree.valuesInverse(n).filterNot(priceToDo contains _) 
