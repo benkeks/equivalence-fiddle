@@ -67,6 +67,8 @@ object HennessyMilnerLogic {
   }
   val INFTY = Integer.MAX_VALUE
 
+  // height, conjunctionLevels, negationLevels, maxPosDeep, maxNegDeep, maxPosFlat, maxNegH, nonNegConjs
+  // nonNegConjs is necessary, because maxPosFlat will sometimes count one positive flat branch as deep to account for trace equivalences. 
   val ObservationClasses = List(
     "traces" ->             ObservationClass(INFTY,     0,    0,    0,    0,    0,    0,false),
     "failure" ->            ObservationClass(INFTY,     1,    1,    0,    0,    0,    1,false),
@@ -74,7 +76,7 @@ object HennessyMilnerLogic {
     "failure-trace" ->      ObservationClass(INFTY, INFTY,    1,    1,    0,    0,    1,true),
     "ready-trace" ->        ObservationClass(INFTY, INFTY,    1,    1,    0,INFTY,    1,true),
     "impossible-future" ->  ObservationClass(INFTY,     1,    1,    0,INFTY,    0,INFTY,false),
-    "possible-future" ->    ObservationClass(INFTY,     1,    1,INFTY,INFTY,    0,INFTY,true),
+    "possible-future" ->    ObservationClass(INFTY,     1,    1,INFTY,INFTY,INFTY,INFTY,true),
     "simulation" ->         ObservationClass(INFTY, INFTY,    0,INFTY,INFTY,INFTY,    0,true),
     "ready-simulation" ->   ObservationClass(INFTY, INFTY,    1,INFTY,INFTY,INFTY,    1,true),
     "2-nested-simulation"-> ObservationClass(INFTY, INFTY,    1,INFTY,INFTY,INFTY,INFTY,true),
