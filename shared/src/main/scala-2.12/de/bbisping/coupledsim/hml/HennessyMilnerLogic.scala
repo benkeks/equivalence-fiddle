@@ -65,20 +65,20 @@ object HennessyMilnerLogic {
       (!this.nonNegativeConjuncts || that.nonNegativeConjuncts)
     )
   }
-  val INFTY = 9999999
+  val INFTY = Integer.MAX_VALUE
 
   val ObservationClasses = List(
-    "traces" -> ObservationClass(INFTY,0,0,0,0,0,0,false),
-    "failure" -> ObservationClass(INFTY,1,1,0,0,0,1,false),
-    "readiness" -> ObservationClass(INFTY,1,1,0,0,INFTY,1,true),
-    "failure-trace" -> ObservationClass(INFTY,INFTY,1,1,0,0,1,true),
-    "ready-trace" -> ObservationClass(INFTY,INFTY,1,1,0,INFTY,1,true),
-    "impossible-future" -> ObservationClass(INFTY,1,1,0,INFTY,0,INFTY,false),
-    "possible-future" -> ObservationClass(INFTY,1,1,INFTY,INFTY,0,INFTY,true),
-    "simulation" -> ObservationClass(INFTY,INFTY,0,INFTY,INFTY,INFTY,0,true),
-    "ready-simulation" -> ObservationClass(INFTY,INFTY,1,INFTY,INFTY,INFTY,1,true),
-    "2-nested-simulation" -> ObservationClass(INFTY,INFTY,1,INFTY,INFTY,INFTY,INFTY,true),
-    "bisimulation" -> ObservationClass(INFTY,INFTY,INFTY,INFTY,INFTY,INFTY,INFTY,true)
+    "traces" ->             ObservationClass(INFTY,     0,    0,    0,    0,    0,    0,false),
+    "failure" ->            ObservationClass(INFTY,     1,    1,    0,    0,    0,    1,false),
+    "readiness" ->          ObservationClass(INFTY,     1,    1,    0,    0,INFTY,    1,true),
+    "failure-trace" ->      ObservationClass(INFTY, INFTY,    1,    1,    0,    0,    1,true),
+    "ready-trace" ->        ObservationClass(INFTY, INFTY,    1,    1,    0,INFTY,    1,true),
+    "impossible-future" ->  ObservationClass(INFTY,     1,    1,    0,INFTY,    0,INFTY,false),
+    "possible-future" ->    ObservationClass(INFTY,     1,    1,INFTY,INFTY,    0,INFTY,true),
+    "simulation" ->         ObservationClass(INFTY, INFTY,    0,INFTY,INFTY,INFTY,    0,true),
+    "ready-simulation" ->   ObservationClass(INFTY, INFTY,    1,INFTY,INFTY,INFTY,    1,true),
+    "2-nested-simulation"-> ObservationClass(INFTY, INFTY,    1,INFTY,INFTY,INFTY,INFTY,true),
+    "bisimulation" ->       ObservationClass(INFTY, INFTY,INFTY,INFTY,INFTY,INFTY,INFTY,true)
   )
 
   def getLeastDistinguishing[A](formulas: Set[Formula[A]]) = {
