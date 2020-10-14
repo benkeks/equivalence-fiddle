@@ -77,8 +77,8 @@ object HennessyMilnerLogic {
     "ready-trace" ->        ObservationClass(INFTY, INFTY,    1,    1,    0,INFTY,    1,true),
     "impossible-future" ->  ObservationClass(INFTY,     1,    1,    0,INFTY,    0,INFTY,false),
     "possible-future" ->    ObservationClass(INFTY,     1,    1,INFTY,INFTY,INFTY,INFTY,true),
-    "simulation" ->         ObservationClass(INFTY, INFTY,    0,INFTY,INFTY,INFTY,    0,true),
-    "ready-simulation" ->   ObservationClass(INFTY, INFTY,    1,INFTY,INFTY,INFTY,    1,true),
+    "simulation" ->         ObservationClass(INFTY, INFTY,    0,INFTY,    0,INFTY,    0,true),
+    "ready-simulation" ->   ObservationClass(INFTY, INFTY,    1,INFTY,    0,INFTY,    1,true),
     "2-nested-simulation"-> ObservationClass(INFTY, INFTY,    1,INFTY,INFTY,INFTY,INFTY,true),
     "bisimulation" ->       ObservationClass(INFTY, INFTY,INFTY,INFTY,INFTY,INFTY,INFTY,true)
   )
