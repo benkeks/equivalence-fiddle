@@ -286,10 +286,12 @@ object Structure {
       
       if (structure.structure.nodes(n1) && structure.structure.nodes(n2)) {
 
-        Console.out.println(n1 + ", " + n2)
+        val begin = Date.now
 
         val algo = new HMLGamePlayer(structure.structure, List(n1, n2))
         algo.compute()
+        println("Specroscopy took: " + (Date.now - begin) + "ms.")
+
         val replay = algo.getReplay()
         
         structure.setReplay(replay)

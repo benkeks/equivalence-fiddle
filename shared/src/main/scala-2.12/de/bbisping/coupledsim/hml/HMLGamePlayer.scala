@@ -14,7 +14,6 @@ import de.bbisping.coupledsim.hml.HMLInterpreter
 import de.bbisping.coupledsim.algo.AlgorithmLogging
 import de.bbisping.coupledsim.util.LabeledRelation
 
-
 class HMLGamePlayer[S, A, L] (
     val ts: WeakTransitionSystem[S, A, L],
     val nodes: List[S])
@@ -40,7 +39,7 @@ class HMLGamePlayer[S, A, L] (
   case class AttackerObservation(p: S, qq: Set[S]) extends SimpleGame.AttackerNode 
   case class DefenderConjunction(p: S, qq: Set[S]) extends SimpleGame.DefenderNode
 
-  class HMLGame
+  class HMLSpectroscopyGame
     extends SimpleGame with GameDiscovery with WinningRegionComputation {
 
     override def initialNodes: Iterable[GameNode] = Set(
@@ -80,83 +79,98 @@ class HMLGamePlayer[S, A, L] (
     }
   }
 
-  def buildHML(game: HMLGame, win: Set[GameNode], node: GameNode) = {
+  def moveToHML(n1: GameNode, n2: GameNode, ff: Set[HennessyMilnerLogic.Formula[A]]): Set[HennessyMilnerLogic.Formula[A]] = {
+    val kind = recordedMoveEdges(n1, n2)
+
+    kind match {
+      case ConjunctMove() =>
+        ff
+      case NegationMove() =>
+        ff.map(HennessyMilnerLogic.Negate(_))
+      case ObservationMove(a) =>
+        ff.map(HennessyMilnerLogic.Observe(a, _))
+      case DefenderMove() =>
+        ff
+    }
+  }
+  
+  def mergeMoves(node: GameNode, possibleMoves: Iterable[Set[HennessyMilnerLogic.Formula[A]]]): Set[HennessyMilnerLogic.Formula[A]] = node match {
+    case DefenderConjunction(_, _) if possibleMoves.size != 1 =>
+      val productMoves =
+        possibleMoves.foldLeft(Seq(Seq[HennessyMilnerLogic.Formula[A]]()))(
+          (b, a) => b.flatMap(i => a.map(j => i ++ Seq(j))))
+      productMoves.map { mv =>
+        val moves = mv.toSet
+        if (moves.size == 1) {
+          moves.head
+        } else {
+          HennessyMilnerLogic.And(moves).asInstanceOf[HennessyMilnerLogic.Formula[A]]
+        }
+      }.toSet
+    case _ =>
+      val possibleFormulas = possibleMoves.flatten.toSet
+      if (possibleFormulas.size > 1) {
+        lubMoves(possibleFormulas, possibleFormulas)
+      } else {
+        possibleFormulas
+      }
+  }
+
+  def lubMoves(newFormulas: Set[HennessyMilnerLogic.Formula[A]], oldFormulas: Set[HennessyMilnerLogic.Formula[A]]) = {
+
+    val formulaClasses = for {
+      f <- oldFormulas
+    } yield f.getRootClass()
+
+    // if no old formula's class dominates this formula's class...
+    for {
+      f <- newFormulas
+      val cl = f.getRootClass()
+      // privilege for failures and impossible futures
+      if (cl.height <= 1 && cl.negationLevels <= 1) || 
+        (cl.negationLevels == 1 && cl.maxNegationHeight == cl.height) ||
+        !formulaClasses.exists(clOther => cl.above(clOther) && cl != clOther)
+    } yield {
+      f
+    }
+  }
+
+  def logAttacksAndResult(node: GameNode, attackGraph: Relation[SimpleGame.GameNode], resultFormulas: Set[HennessyMilnerLogic.Formula[A]]) = {
+    def gameNodeToTuple(n: SimpleGame.GameNode) = n match {
+      case AttackerObservation(p, qq) => 
+        (Set(p), "A", qq)
+      case DefenderConjunction(p, qq) => 
+        (Set(p), "D", qq)
+    }
+    
+    val rel: Set[((Set[S], String, Set[S]), String, (Set[S], String, Set[S]))] = for {
+      (n1, n2) <- attackGraph.tupleSet
+    } yield (gameNodeToTuple(n1), recordedMoveEdges(n1, n2).toString(), gameNodeToTuple(n2))
+    
+    val msg = for {
+      f <- resultFormulas
+      s = gameNodeToTuple(node)
+      p <- s._1.headOption
+      q <- s._3.headOption
+    } yield {
+      p + " distinguished from " + q + " under " + f.classifyNicely() + " preorder by " + f.toString()
+    }
+
+    logRichRelation(new LabeledRelation(rel), msg.mkString("<br>\n"))
+  }
+
+  def buildHML(game: HMLSpectroscopyGame, win: Set[GameNode], node: GameNode) = {
 
     val attackGraphBuilder = new AttackGraphBuilder[Set[HennessyMilnerLogic.Formula[A]]]()
 
     val attackGraph = attackGraphBuilder.buildAttackGraph(game, win, node)
-
-    println("Attack Graph: " + attackGraph.tupleSet.mkString("; "))
-
-    val defenderDefeats = attackGraph.rhs.collect {
-      case emptyDef @ DefenderConjunction(_, conjs) if conjs.isEmpty => emptyDef.asInstanceOf[GameNode]
-    }
-
-    println("Defender Defeats: " + defenderDefeats.mkString("{", ",", "}"))
-
-    def moveToHML(n1: GameNode, n2: GameNode, ff: Set[HennessyMilnerLogic.Formula[A]]): Set[HennessyMilnerLogic.Formula[A]] = {
-      val kind = recordedMoveEdges(n1, n2)
-
-      kind match {
-        case ConjunctMove() =>
-          ff
-        case NegationMove() =>
-          ff.map(HennessyMilnerLogic.Negate(_))
-        case ObservationMove(a) =>
-          ff.map(HennessyMilnerLogic.Observe(a, _))
-        case DefenderMove() =>
-          ff
-      }
-    }
-    
-    def mergeMoves(node: GameNode, possibleMoves: Iterable[Set[HennessyMilnerLogic.Formula[A]]]): Set[HennessyMilnerLogic.Formula[A]] = node match {
-      case DefenderConjunction(_, _) if possibleMoves.size != 1 =>
-        val productMoves =
-          possibleMoves.foldLeft(Seq(Seq[HennessyMilnerLogic.Formula[A]]()))(
-            (b, a) => b.flatMap(i => a.map(j => i ++ Seq(j))))
-        productMoves.map { mv =>
-          val moves = mv.toSet
-          if (moves.size == 1) {
-            moves.head
-          } else {
-            HennessyMilnerLogic.And(moves).asInstanceOf[HennessyMilnerLogic.Formula[A]]
-          }
-        }.toSet
-      case _ =>
-        val possibleFormulas = possibleMoves.flatten.toSet
-        if (possibleFormulas.size > 1) {
-          lubMoves(possibleFormulas, possibleFormulas)
-        } else {
-          possibleFormulas
-        }
-    }
-
-    def lubMoves(newFormulas: Set[HennessyMilnerLogic.Formula[A]], oldFormulas: Set[HennessyMilnerLogic.Formula[A]]) = {
-
-      val formulaClasses = for {
-        f <- oldFormulas
-      } yield f.getRootClass()
-
-      // if no old formula's class dominates this formula's class...
-      for {
-        f <- newFormulas
-        val cl = f.getRootClass()
-        // privilege for failures and impossible futures
-        if (cl.height <= 1 && cl.negationLevels <= 1) || 
-          (cl.negationLevels == 1 && cl.maxNegationHeight == cl.height) ||
-          !formulaClasses.exists(clOther => cl.above(clOther) && cl != clOther)
-      } yield {
-        f
-      }
-    }
 
     val accumulatedPrices = attackGraphBuilder.accumulatePrices(
       graph = attackGraph,
       priceCons = moveToHML _,
       pricePick = mergeMoves _,
       supPrice = Set(),
-      node = node,
-      targetRegion = defenderDefeats
+      node = node
     )
 
     val formulas = accumulatedPrices(node)
@@ -164,71 +178,47 @@ class HMLGamePlayer[S, A, L] (
     val resultFormulas = HennessyMilnerLogic.getLeastDistinguishing(formulas)
 
     if (AlgorithmLogging.loggingActive) {
-
-      def gameNodeToTuple(n: SimpleGame.GameNode) = n match {
-        case AttackerObservation(p, qq) => 
-          (Set(p), "A", qq)
-        case DefenderConjunction(p, qq) => 
-          (Set(p), "D", qq)
-      }
-      
-      val rel: Set[((Set[S], String, Set[S]), String, (Set[S], String, Set[S]))] = for {
-        (n1, n2) <- attackGraph.tupleSet
-      } yield (gameNodeToTuple(n1), recordedMoveEdges(n1, n2).toString(), gameNodeToTuple(n2))
-      
-      val msg = for {
-        f <- resultFormulas
-        s = gameNodeToTuple(node)
-        p <- s._1.headOption
-        q <- s._3.headOption
-      } yield {
-        p + " distinguished from " + q + " under " + f.classifyNicely() + " preorder by " + f.toString()
-      }
-
-      logRichRelation(new LabeledRelation(rel), msg.mkString("<br>\n"))
+      logAttacksAndResult(node, attackGraph, resultFormulas)
     }
 
     resultFormulas
   }
 
+  def checkDistinguishing(formula: HennessyMilnerLogic.Formula[A], p: S, q: S) = {
+    val hmlInterpreter = new HMLInterpreter(ts)
+    val check = hmlInterpreter.isTrueAt(formula, List(p, q))
+    if (!check(p) || check(q)) {
+      System.err.println("Formula " + formula.toString() + " is no sound distinguishing formula! " + check)
+    }
+  }
+
   def compute() = {
 
-    val hmlGame = new HMLGame()
+    val hmlGame = new HMLSpectroscopyGame()
 
-    println("hml game size: " + hmlGame.discovered.size)
+    println("hml spectroscopy game size: " + hmlGame.discovered.size)
 
     val attackerWin = hmlGame.computeWinningRegion()
     val aLR = AttackerObservation(nodes(0), Set(nodes(1)))
     val aRL = AttackerObservation(nodes(1), Set(nodes(0)))
 
-    val hmlInterpreter = new HMLInterpreter(ts)
-
-    println("left simBy right:" + !attackerWin.contains(aLR))
     if (attackerWin.contains(aLR)) {
       val formulas = buildHML(hmlGame, attackerWin, aLR)
       formulas.foreach { f =>
         println("Distinguished under " + f.classifyFormula() + " preorder by " + f.toString())
-        val check = hmlInterpreter.isTrueAt(f, List(nodes(0), nodes(1)))
-        if (!check(nodes(0)) || check(nodes(1))) {
-          System.err.println("Formula " + f.toString() + " is no sound distinguishing formula! " + check)
-        }
+        checkDistinguishing(f, nodes(0), nodes(1))
       }
     }
 
-    println("right simBy left:" + !attackerWin.contains(aRL))
     if (attackerWin.contains(aRL)) {
       val formulas = buildHML(hmlGame, attackerWin, aRL)
       formulas.foreach { f =>
         println("Distinguished under " + f.classifyFormula() + " preorder by " + f.toString())
-        val check = hmlInterpreter.isTrueAt(f, List(nodes(0), nodes(1)))
-        if (!check(nodes(1)) || check(nodes(0))) {
-          System.err.println("Formula " + f.toString() + " is no sound distinguishing formula! " + check)
-        }
+        checkDistinguishing(f, nodes(1), nodes(0))
       }
     }
 
     if (!attackerWin.contains(aLR) && !attackerWin.contains(aRL)) {
-      attackerWin.to
 
       val simNodes = for {
         gn <- hmlGame.discovered

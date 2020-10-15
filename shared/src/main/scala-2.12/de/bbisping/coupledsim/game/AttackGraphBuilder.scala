@@ -40,8 +40,7 @@ class AttackGraphBuilder[L] {
       priceCons: (GameNode, GameNode, L) => L,
       pricePick: (GameNode, Iterable[L]) => L,
       supPrice: L,
-      node: GameNode,
-      targetRegion: Set[GameNode]): Map[GameNode, L] = {
+      node: GameNode): Map[GameNode, L] = {
     
     val prices = collection.mutable.Map[GameNode, L]()
     val priceToDo = collection.mutable.ListBuffer[GameNode](node)
