@@ -131,7 +131,7 @@ P2 = (a.(b.0 + d.0) + a.(c.0 + d.0))
 	    "Linear Time Branching Time Spectrum 1",
         ltbts1),
     Samples.Example("failure-sim",
-	    "Neither failure and nor simulation equivalent",
+	    "Neither failure nor simulation equivalent",
         failureAndSim)
   )
 
