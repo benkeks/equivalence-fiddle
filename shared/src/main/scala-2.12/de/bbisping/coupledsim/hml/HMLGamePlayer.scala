@@ -196,7 +196,7 @@ class HMLGamePlayer[S, A, L] (
 
     val hmlGame = new HMLSpectroscopyGame()
 
-    println("hml spectroscopy game size: " + hmlGame.discovered.size)
+    println("HML spectroscopy game size: " + hmlGame.discovered.size)
 
     val attackerWin = hmlGame.computeWinningRegion()
     val aLR = AttackerObservation(nodes(0), Set(nodes(1)))
