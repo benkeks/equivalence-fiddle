@@ -48,6 +48,7 @@ class Relation[E](val rep: Map[E, Set[E]]) {
 
   lazy val lhs = rep.keySet
   lazy val rhs = rep.values.flatten.toSet
+  lazy val domain = lhs ++ rhs
 
   def merge(other: Relation[E]) = new Relation(rep |+| other.rep)
 

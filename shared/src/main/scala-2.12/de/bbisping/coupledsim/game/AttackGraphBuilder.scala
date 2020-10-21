@@ -8,7 +8,7 @@ class AttackGraphBuilder[L] {
   def buildAttackGraph(
       game: SimpleGame,
       win: Set[GameNode],
-      node: GameNode):
+      nodes: Iterable[GameNode]):
     Relation[GameNode] = {
 
     val visited = collection.mutable.Set[GameNode]()
@@ -30,7 +30,7 @@ class AttackGraphBuilder[L] {
       }
     }
 
-    buildAttackTreeEdges(node)
+    nodes.foreach(buildAttackTreeEdges(_))
 
     new Relation(edges.toSet)
   }
@@ -40,10 +40,11 @@ class AttackGraphBuilder[L] {
       priceCons: (GameNode, GameNode, L) => L,
       pricePick: (GameNode, Iterable[L]) => L,
       supPrice: L,
-      node: GameNode): Map[GameNode, L] = {
+      nodes: Iterable[GameNode]): Map[GameNode, L] = {
     
     val prices = collection.mutable.Map[GameNode, L]()
-    val priceToDo = collection.mutable.ListBuffer[GameNode](node)
+    val priceToDo = collection.mutable.ListBuffer[GameNode]()
+    priceToDo.appendAll(nodes)
 
     while (priceToDo.nonEmpty) {
       val n = priceToDo.remove(0)

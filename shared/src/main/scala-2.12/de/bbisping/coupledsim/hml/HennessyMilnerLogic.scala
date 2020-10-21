@@ -38,7 +38,6 @@ object HennessyMilnerLogic {
       this.nonNegativeConjuncts && that.nonNegativeConjuncts
     )
 
-
     def above(that: ObservationClass) = (
       this.height >= that.height &&
       this.conjunctionLevels >= that.conjunctionLevels &&
@@ -49,6 +48,8 @@ object HennessyMilnerLogic {
       (this.nonNegativeConjuncts || !that.nonNegativeConjuncts)
     )
 
+    def strictlyAbove(that: ObservationClass) = (this != that) && (this above that)
+
     def below(that: ObservationClass) = (
       this.height <= that.height &&
       this.conjunctionLevels <= that.conjunctionLevels &&
@@ -58,6 +59,8 @@ object HennessyMilnerLogic {
       this.maxNegationHeight <= that.maxNegationHeight &&
       (!this.nonNegativeConjuncts || that.nonNegativeConjuncts)
     )
+
+    def strictlyBelow(that: ObservationClass) = (this != that) && (this below that)
   }
   val INFTY = Integer.MAX_VALUE
 
@@ -77,7 +80,7 @@ object HennessyMilnerLogic {
     "bisimulation" ->       ObservationClass(INFTY, INFTY,INFTY,INFTY,INFTY,INFTY,true)
   )
 
-  def getLeastDistinguishing[A](formulas: Set[Formula[A]]) = {
+  def getLeastDistinguishing[A](formulas: Set[Formula[A]]): Set[Formula[A]] = {
     val classifications = formulas.map(f => (f, f.classifyFormula()))
     val bounds = classifications.flatMap(_._2._2.map(_._2))
 
@@ -85,8 +88,17 @@ object HennessyMilnerLogic {
       (f, (cl, clB)) <- classifications
       val clBb = clB.map(_._2)
       // just keep formulas where one of the classifications is dominated by no other classification
-      if (clBb.exists(classBound => !bounds.exists(b => b != classBound && b.below(classBound))))
+      if clBb.exists(classBound => !bounds.exists(_ strictlyBelow classBound))
     } yield f
+  }
+
+  /** given a group of least distinguishing observation classes, tell what weaker ObservationClasses would be the strongest fit to preorder the distinguished states */
+  def getStrongestPreorderClass[A](leastClassifications: Iterable[(String, ObservationClass)]): List[(String, ObservationClass)] = {
+    
+    val weakerClasses = ObservationClasses.filterNot { c => leastClassifications.exists(c._2 above _._2) }
+    val mostFitting = weakerClasses.filterNot { c => weakerClasses.exists(_._2 strictlyAbove c._2) }
+
+    mostFitting.toList
   }
 
   abstract sealed class Formula[A] {

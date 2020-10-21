@@ -143,7 +143,7 @@ class HMLGamePlayer[S, A, L] (
         (Set(p), "D", qq)
     }
     
-    val rel: Set[((Set[S], String, Set[S]), String, (Set[S], String, Set[S]))] = for {
+    val gameRel: Set[((Set[S], String, Set[S]), String, (Set[S], String, Set[S]))] = for {
       (n1, n2) <- attackGraph.tupleSet
     } yield (gameNodeToTuple(n1), recordedMoveEdges(n1, n2).toString(), gameNodeToTuple(n2))
     
@@ -156,32 +156,60 @@ class HMLGamePlayer[S, A, L] (
       p + " distinguished from " + q + " under " + f.classifyNicely() + " preorder by " + f.toString()
     }
 
-    logRichRelation(new LabeledRelation(rel), msg.mkString("<br>\n"))
+    logRichRelation(new LabeledRelation(gameRel), msg.mkString("<br>\n"))
+
   }
 
-  def buildHML(game: HMLSpectroscopyGame, win: Set[GameNode], node: GameNode) = {
+  def logDefenseResult(node: GameNode, nodeFormulas: Map[GameNode, Set[HennessyMilnerLogic.Formula[A]]]) = {
+   
+    val bestPreorders = nodeFormulas.mapValues { ffs =>
+      val classes = ffs.flatMap(_.classifyFormula()._2)
+      HennessyMilnerLogic.getStrongestPreorderClass(classes)
+    }
+    
+
+    val simNodes = for {
+      (gn, preorders) <- bestPreorders
+      if gn.isInstanceOf[AttackerObservation]
+      AttackerObservation(p, qq) = gn
+      //TODO label by best preorder
+      q <- qq
+    } yield (p, q)
+    
+    val rel = new Relation[S](simNodes.toSet)
+    val AttackerObservation(p, qq) = node
+
+    for {
+      q <- qq
+      (preorderName, _) <- bestPreorders(node)
+    } {
+      val msg = p + " preordered to " + q + " by " + preorderName
+      logRelation(rel, msg)
+    }
+  }
+
+  def buildHML(game: HMLSpectroscopyGame, win: Set[GameNode], nodes: Set[GameNode]) = {
 
     val attackGraphBuilder = new AttackGraphBuilder[Set[HennessyMilnerLogic.Formula[A]]]()
 
-    val attackGraph = attackGraphBuilder.buildAttackGraph(game, win, node)
+    val attackGraph = attackGraphBuilder.buildAttackGraph(game, win, nodes)
 
     val accumulatedPrices = attackGraphBuilder.accumulatePrices(
       graph = attackGraph,
       priceCons = moveToHML _,
       pricePick = mergeMoves _,
       supPrice = Set(),
-      node = node
+      nodes = nodes
     )
 
-    val formulas = accumulatedPrices(node)
-
-    val resultFormulas = HennessyMilnerLogic.getLeastDistinguishing(formulas)
+    val minPrices = accumulatedPrices.mapValues(HennessyMilnerLogic.getLeastDistinguishing(_))
 
     if (AlgorithmLogging.loggingActive) {
-      logAttacksAndResult(node, attackGraph, resultFormulas)
+      nodes.foreach { n => logAttacksAndResult(n, attackGraph, minPrices(n)) }
+      nodes.foreach { n => logDefenseResult(n, minPrices)}
     }
 
-    resultFormulas
+    minPrices
   }
 
   def checkDistinguishing(formula: HennessyMilnerLogic.Formula[A], p: S, q: S) = {
@@ -202,23 +230,23 @@ class HMLGamePlayer[S, A, L] (
     val aLR = AttackerObservation(nodes(0), Set(nodes(1)))
     val aRL = AttackerObservation(nodes(1), Set(nodes(0)))
 
-    if (attackerWin.contains(aLR)) {
-      val formulas = buildHML(hmlGame, attackerWin, aLR)
-      formulas.foreach { f =>
-        println("Distinguished under " + f.classifyFormula() + " preorder by " + f.toString())
-        checkDistinguishing(f, nodes(0), nodes(1))
-      }
-    }
+    if (attackerWin.contains(aLR) || attackerWin.contains(aRL)) {
+      val minFormulas = buildHML(hmlGame, attackerWin, Set(aLR, aRL))
 
-    if (attackerWin.contains(aRL)) {
-      val formulas = buildHML(hmlGame, attackerWin, aRL)
-      formulas.foreach { f =>
-        println("Distinguished under " + f.classifyFormula() + " preorder by " + f.toString())
-        checkDistinguishing(f, nodes(1), nodes(0))
+      if (attackerWin.contains(aLR)) {
+        minFormulas(aLR).foreach { f =>
+          println("Distinguished under " + f.classifyFormula() + " preorder by " + f.toString())
+          checkDistinguishing(f, nodes(0), nodes(1))
+        }
       }
-    }
 
-    if (!attackerWin.contains(aLR) && !attackerWin.contains(aRL)) {
+      if (attackerWin.contains(aRL)) {
+        minFormulas(aRL).foreach { f =>
+          println("Distinguished under " + f.classifyFormula() + " preorder by " + f.toString())
+          checkDistinguishing(f, nodes(1), nodes(0))
+        }
+      }
+    } else {
 
       val simNodes = for {
         gn <- hmlGame.discovered
