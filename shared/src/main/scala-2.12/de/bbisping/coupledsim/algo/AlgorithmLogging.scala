@@ -28,7 +28,7 @@ object AlgorithmLogging {
   
   abstract class LogEntry[S, A, L]
   
-  case class LogRelation[S, A, L](rel: Relation[S], comment: String) extends LogEntry[S, A, L]
+  case class LogRelation[S, A, L](rel: LabeledRelation[S, String], comment: String) extends LogEntry[S, A, L]
   //case class LogColoring[S, A, L](colors: Coloring[S], comment: String) extends LogEntry[S, A, L]
 
   case class LogRichRelation[S, A, L](rel: LabeledRelation[(Set[S], String, Set[S]), String], comment: String) extends LogEntry[S, A, L]

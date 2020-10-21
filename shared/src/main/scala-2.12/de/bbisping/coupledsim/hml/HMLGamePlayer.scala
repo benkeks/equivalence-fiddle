@@ -172,11 +172,11 @@ class HMLGamePlayer[S, A, L] (
       (gn, preorders) <- bestPreorders
       if gn.isInstanceOf[AttackerObservation]
       AttackerObservation(p, qq) = gn
-      //TODO label by best preorder
+      val label = preorders.map(_._1).mkString(",")
       q <- qq
-    } yield (p, q)
+    } yield (p, label, q)
     
-    val rel = new Relation[S](simNodes.toSet)
+    val rel = new LabeledRelation(simNodes.toSet)
     val AttackerObservation(p, qq) = node
 
     for {
@@ -253,9 +253,9 @@ class HMLGamePlayer[S, A, L] (
         if gn.isInstanceOf[AttackerObservation] && !attackerWin(gn)
         AttackerObservation(p, qq) = gn
         q <- qq
-      } yield (p, q)
+      } yield (p, "", q)
     
-      val rel = new Relation[S](simNodes.toSet)
+      val rel = new LabeledRelation(simNodes.toSet)
 
       logRelation(rel, nodes(0) + " and " + nodes(1) + " are bisimulation equivalent.")
     }

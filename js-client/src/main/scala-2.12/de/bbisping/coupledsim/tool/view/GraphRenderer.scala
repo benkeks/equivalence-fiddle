@@ -240,6 +240,7 @@ class GraphRenderer(val main: Control)
     case Structure.StructurePartitionChange(partition) =>
       colorize(partition)
     case Structure.StructureRelationChange(relation) =>
+      this.relation = LabeledRelation()
       this.baseRelation = relation.tupleSet.map(t => (Set(t._1), t._2, Set(t._3)))
       setStructure()
     case Structure.StructureRichRelationChange(relation) =>

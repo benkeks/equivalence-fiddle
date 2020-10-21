@@ -93,9 +93,8 @@ class Structure(val main: Control) extends ModelComponent {
     if (currentReplayStep < currentReplay.length) {
       currentReplay(currentReplayStep)() match {
         case AlgorithmLogging.LogRelation(rel, comment) =>
-          val labeled = new LabeledRelation(rel.tupleSet.map {case (p1, p2) => (p1, "", p2)})
           broadcast(Structure.StructureCommentChange(comment))
-          broadcast(Structure.StructureRelationChange(labeled))
+          broadcast(Structure.StructureRelationChange(rel))
         case AlgorithmLogging.LogRichRelation(rel, comment) =>
           broadcast(Structure.StructureCommentChange(comment))
           broadcast(Structure.StructureRichRelationChange(rel))
