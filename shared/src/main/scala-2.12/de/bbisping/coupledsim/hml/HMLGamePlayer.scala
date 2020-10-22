@@ -13,6 +13,7 @@ import de.bbisping.coupledsim.game.SimpleGame.GameNode
 import de.bbisping.coupledsim.hml.HMLInterpreter
 import de.bbisping.coupledsim.algo.AlgorithmLogging
 import de.bbisping.coupledsim.util.LabeledRelation
+import de.bbisping.coupledsim.hml.ObservationClass
 
 class HMLGamePlayer[S, A, L] (
     val ts: WeakTransitionSystem[S, A, L],
@@ -164,7 +165,7 @@ class HMLGamePlayer[S, A, L] (
    
     val bestPreorders = nodeFormulas.mapValues { ffs =>
       val classes = ffs.flatMap(_.classifyFormula()._2)
-      HennessyMilnerLogic.getStrongestPreorderClass(classes)
+      ObservationClass.getStrongestPreorderClass(classes)
     }
     
 
