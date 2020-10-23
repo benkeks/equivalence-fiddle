@@ -1,4 +1,4 @@
-package de.bbisping.coupledsim.algo.cs
+package de.bbisping.coupledsim.hml
 
 import de.bbisping.coupledsim.util.Relation
 import de.bbisping.coupledsim.ts.WeakTransitionSystem
@@ -7,13 +7,10 @@ import scala.collection.mutable.Queue
 import de.bbisping.coupledsim.game.WinningRegionComputation
 import de.bbisping.coupledsim.game.GameDiscovery
 import de.bbisping.coupledsim.game.SimpleGame
-import de.bbisping.coupledsim.hml.HennessyMilnerLogic
 import de.bbisping.coupledsim.game.AttackGraphBuilder
 import de.bbisping.coupledsim.game.SimpleGame.GameNode
-import de.bbisping.coupledsim.hml.HMLInterpreter
 import de.bbisping.coupledsim.algo.AlgorithmLogging
 import de.bbisping.coupledsim.util.LabeledRelation
-import de.bbisping.coupledsim.hml.ObservationClass
 
 class HMLGamePlayer[S, A, L] (
     val ts: WeakTransitionSystem[S, A, L],

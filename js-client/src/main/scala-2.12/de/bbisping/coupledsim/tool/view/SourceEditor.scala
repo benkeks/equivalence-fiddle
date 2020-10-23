@@ -28,7 +28,7 @@ import org.singlespaced.d3js.Ops.fromFunction2To3
 import org.singlespaced.d3js.d3
 import de.bbisping.coupledsim.tool.arch.Control
 import de.bbisping.coupledsim.tool.control.ModelComponent
-import de.bbisping.coupledsim.tool.control.Samples
+import de.bbisping.coupledsim.ts.Samples
 import de.bbisping.coupledsim.tool.control.Source
 import de.bbisping.coupledsim.tool.control.Structure
 import de.bbisping.coupledsim.tool.control.StructureOperation

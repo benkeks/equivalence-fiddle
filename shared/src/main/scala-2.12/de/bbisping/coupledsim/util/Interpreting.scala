@@ -51,7 +51,7 @@ object Interpreting {
     
     override def isProblem = true
     
-    override def get = throw new Error("Can't get result from syntax.")
+    override def get = throw new Error("Can't get result from syntax. Problem: " + msg)
     
     override def getProblem = Some(this)
     
@@ -80,5 +80,10 @@ object Interpreting {
   def factorResults[E](results: Iterable[Result[E]]): Result[Iterable[E]] = {
     val (suc, prob) = partitionResults(results)
     prob.getOrElse(Success(suc))
+  }
+
+  def fromOption[E](opt: Option[E]) = opt match {
+    case Some(value) => Success(value)
+    case None => Problem("Empty option error", List())
   }
 }

@@ -1,4 +1,4 @@
-package de.bbisping.coupledsim.tool.control
+package de.bbisping.coupledsim.ts
 
 object Samples {
 

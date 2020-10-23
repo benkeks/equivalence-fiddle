@@ -5,7 +5,7 @@ import scala.scalajs.js.annotation.JSExportTopLevel
 import de.bbisping.coupledsim.tool.arch.Action
 import de.bbisping.coupledsim.tool.arch.ActionDispatcher
 import de.bbisping.coupledsim.tool.arch.Control
-import de.bbisping.coupledsim.tool.control.CCSSamples
+import de.bbisping.coupledsim.ccs.CCSSamples
 import de.bbisping.coupledsim.tool.control.Source
 import de.bbisping.coupledsim.tool.control.Structure
 import de.bbisping.coupledsim.tool.view.GraphRenderer

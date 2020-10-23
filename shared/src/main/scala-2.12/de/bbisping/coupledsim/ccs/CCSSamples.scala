@@ -1,4 +1,6 @@
-package de.bbisping.coupledsim.tool.control
+package de.bbisping.coupledsim.ccs
+
+import de.bbisping.coupledsim.ts.Samples
 
 object CCSSamples {
   val ltbts1 = """

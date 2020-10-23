@@ -6,6 +6,8 @@ import de.bbisping.coupledsim.tool.arch.Action
 import de.bbisping.coupledsim.tool.arch.Control
 import de.bbisping.coupledsim.ccs.Syntax
 import de.bbisping.coupledsim.ccs
+import de.bbisping.coupledsim.ccs.CCSSamples
+import de.bbisping.coupledsim.ts.Samples
 import de.bbisping.coupledsim.tool.control.Structure.NodeLabel
 import de.bbisping.coupledsim.util.Parsing
 

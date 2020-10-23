@@ -31,7 +31,9 @@ lazy val shared = (project in file("shared")).settings(
   scalacOptions ++= scalacOpts,
   test in assembly := {},
   libraryDependencies ++= Seq(
-    "org.scalaz" %%% "scalaz-core" % "7.2.29"
+    "org.scalaz" %%% "scalaz-core" % "7.2.29",
+    "org.scalactic" %% "scalactic" % "3.2.0",
+    "org.scalatest" %% "scalatest" % "3.2.0" % "test"
   )
 )
 
@@ -40,11 +42,9 @@ lazy val jsClient = (project in file("js-client")).settings(
   name := "coupledsim-client",
   parallelExecution in ThisBuild := false,
   scalacOptions ++= scalacOpts,
-  testFrameworks += new TestFramework("utest.runner.Framework"),
   resolvers += sbt.Resolver.bintrayRepo("denigma", "denigma-releases"),
   libraryDependencies ++= Seq(
     "org.scalaz" %%% "scalaz-core" % "7.2.29",
-    "com.lihaoyi" %%% "utest" % "0.5.4",
     "org.singlespaced" %%% "scalajs-d3" % "0.3.4",
     "org.denigma" %%% "codemirror-facade" % "5.13.2-0.8",
     "com.github.karasiq" %%% "scalajs-bootstrap" % "2.3.5"
@@ -63,7 +63,6 @@ lazy val jsClient = (project in file("js-client")).settings(
 ).aggregate(shared).dependsOn(shared).enablePlugins(ScalaJSPlugin, ScalaJSWeb)
 
 lazy val root = project.in(file(".")).settings(
-  name := "coupledsim",
-  testFrameworks += new TestFramework("utest.runner.Framework")
+  name := "coupledsim"
   ).aggregate(shared, jsClient, web)
    .dependsOn(jsClient, web)

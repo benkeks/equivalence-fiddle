@@ -14,7 +14,7 @@ import de.bbisping.coupledsim.util.Relation
 import de.bbisping.coupledsim.util.LabeledRelation
 import de.bbisping.coupledsim.ts.DivergenceInformation
 import de.bbisping.coupledsim.algo.AlgorithmLogging
-import de.bbisping.coupledsim.algo.cs.HMLGamePlayer
+import de.bbisping.coupledsim.hml.HMLGamePlayer
 
 class Structure(val main: Control) extends ModelComponent {
 
