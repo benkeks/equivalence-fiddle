@@ -18,9 +18,20 @@ class LTBTSTests extends AnyFunSpec with should.Matchers  {
   
   val ltbtsSystem = TestSamples.samples.find(_._1 == "ltbts1").get._2
 
+  private def toSpectrumClassSet(names: Iterable[String]) = (for {
+    n <- names
+    cl <- ObservationClass.getSpectrumClass(n)
+  } yield cl).toSet
+
   val samples = List(
-    ("L13", "R13", Set(ObservationClass.getSpectrumClass("simulation").get), Set(ObservationClass.getSpectrumClass("failure").get))
-  )
+    ("L13", "R13", List("simulation"), List("failure")),
+    ("R13", "L13", List("2-nested-simulation"), List("bisimulation")),
+    ("L16", "R16", List("simulation"), List("failure")),
+    ("R16", "L16", List("2-nested-simulation"), List("bisimulation"))
+  ).map {
+    case (n1, n2, preords, notPreords) =>
+      (n1, n2, toSpectrumClassSet(preords), toSpectrumClassSet(notPreords))
+  }
   
   describe("The Spectroscopy") {
     forAll(samples) { case (n1s, n2s, preords, notPreords) =>
@@ -33,10 +44,8 @@ class LTBTSTests extends AnyFunSpec with should.Matchers  {
         val algo = new HMLGamePlayer(ltbtsSystem, List(n1, n2))
         algo.compute()
 
-        val replay = algo.getReplay()
-
         val log = for {
-          r <- replay
+          r <- algo.getReplay()
         } yield r()
         
         log.foreach {
