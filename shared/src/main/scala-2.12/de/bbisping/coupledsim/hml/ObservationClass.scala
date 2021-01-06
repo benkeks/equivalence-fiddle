@@ -81,6 +81,8 @@ object ObservationClass {
     "bisimulation" ->       ObservationClass(INFTY, INFTY,INFTY,INFTY,INFTY,INFTY,true)
   )
 
+  val LTBTSNotionNames = LTBTS.map(_._1).toSet
+
   def getSpectrumClass(name: String) = LTBTS.find(_._1 == name)
 
   /** given a group of least distinguishing observation classes, tell what weaker ObservationClasses would be the strongest fit to preorder the distinguished states */
