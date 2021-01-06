@@ -49,7 +49,6 @@ class HMLInterpreter[S, A, L] (
 
   def isTrueAt(f: Formula[A], states: Iterable[S]) = {
     val interpretationGame = new HMLFormulaGame(f, states)
-    println(interpretationGame.discovered)
     val attackerWin = interpretationGame.computeWinningRegion()
     val result = for {
       s <- states

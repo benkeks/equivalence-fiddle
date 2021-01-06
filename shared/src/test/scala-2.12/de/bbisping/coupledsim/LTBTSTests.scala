@@ -15,6 +15,7 @@ import de.bbisping.coupledsim.algo.AlgorithmLogging.{LogRelation, LogRichRelatio
 class LTBTSTests extends AnyFunSpec with should.Matchers  {
   
   AlgorithmLogging.loggingActive = true
+  AlgorithmLogging.debugLogActive = false
   
   val ltbtsSystem = TestSamples.samples.find(_._1 == "ltbts1").get._2
 
@@ -69,14 +70,12 @@ class LTBTSTests extends AnyFunSpec with should.Matchers  {
         log.foreach {
           case LogRichRelation(_, comment) if comment.startsWith(n1 + " distinguished") =>
             val commentParts = comment.split(Array(',', ' ')).toSet intersect ObservationClass.LTBTSNotionNames
-            println(commentParts)
             val diff = notPreordsStr diff commentParts
             it ("should be distinguished by " + notPreordsStr.mkString(",")) {
               diff should be (empty)
             }
           case LogRelation(_, comment) if comment.startsWith(n1 + " preordered") =>
             val commentParts = comment.split(Array(',', ' ')).toSet intersect ObservationClass.LTBTSNotionNames
-            println(commentParts)
             foundPreorders ++= commentParts
           case _ =>
         }

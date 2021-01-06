@@ -222,7 +222,7 @@ class HMLGamePlayer[S, A, L] (
 
     val hmlGame = new HMLSpectroscopyGame()
 
-    println("HML spectroscopy game size: " + hmlGame.discovered.size)
+    debugLog("HML spectroscopy game size: " + hmlGame.discovered.size)
 
     val attackerWin = hmlGame.computeWinningRegion()
     val aLR = AttackerObservation(nodes(0), Set(nodes(1)))
@@ -233,14 +233,14 @@ class HMLGamePlayer[S, A, L] (
 
       if (attackerWin.contains(aLR)) {
         minFormulas(aLR).foreach { f =>
-          println("Distinguished under " + f.classifyFormula() + " preorder by " + f.toString())
+          debugLog("Distinguished under " + f.classifyFormula() + " preorder by " + f.toString())
           checkDistinguishing(f, nodes(0), nodes(1))
         }
       }
 
       if (attackerWin.contains(aRL)) {
         minFormulas(aRL).foreach { f =>
-          println("Distinguished under " + f.classifyFormula() + " preorder by " + f.toString())
+          debugLog("Distinguished under " + f.classifyFormula() + " preorder by " + f.toString())
           checkDistinguishing(f, nodes(1), nodes(0))
         }
       }

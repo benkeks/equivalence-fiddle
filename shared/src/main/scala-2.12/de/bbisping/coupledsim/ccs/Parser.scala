@@ -260,7 +260,6 @@ class Parser(val input: String) extends Parsing {
     if (fails.nonEmpty) {
       ParseFail("Unknown tokens. "+fails.head.msg, fails)
     } else {
-      println(tokens)
       parseDefinition(tokens) match {
         case s @ ParseSuccess(esDef, Nil) =>
           s

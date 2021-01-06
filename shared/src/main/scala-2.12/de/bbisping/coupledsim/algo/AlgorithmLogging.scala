@@ -22,6 +22,12 @@ trait AlgorithmLogging[S, A, L] {
     logAppend(AlgorithmLogging.LogRichRelation[S, A, L]) _
   
   def getReplay() = log toList
+
+  def debugLog(msg: => String) = {
+    if (AlgorithmLogging.debugLogActive) {
+      println(msg)
+    }
+  }
 }
 
 object AlgorithmLogging {
@@ -36,4 +42,5 @@ object AlgorithmLogging {
   
   var maxLogLength = 100
   
+  var debugLogActive = true
 }
