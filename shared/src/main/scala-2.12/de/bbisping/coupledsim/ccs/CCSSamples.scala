@@ -112,7 +112,7 @@ R50 = a.(b.d.0 + c.e.0 + c.f.0 + b.g.0)
 "b.d.0 + c.e.0 + c.f.0 + b.g.0"(x=187, y=333)
 """
 
-  val failureAndSim = """
+  val notFailureOrSim = """
 P1(x=0, y=0)
 P2(x=600, y=0)
 "0"(x=300, y=600)
@@ -127,14 +127,32 @@ P2 = (a.(b.0 + d.0) + a.(c.0 + d.0))
 @compare "P1,P2"
 """
 
+  val failureTraceAndImpossibleFutures = """
+P1(x=0, y=0)
+P2(x=600, y=0)
+"b.0 + c.0"(x=-200, y=250)
+"0"(x=300, y=450)
+"c.0"(x=550, y=300)
+"b.0"(x=200, y=250)
+
+P1 = (a.b.0 + a.(b.0 + c.0) + a.c.0)
+P2 = (a.b.0 + a.0 + a.c.0)
+@comment "P1 is preordered to P2 by failure-trace AND impossible futures"
+@compare "P1,P2"
+"""
+
+
 
   val namedSamples = List[Samples.Example](
     Samples.Example("ltbts1",
 	    "Linear Time Branching Time Spectrum 1",
         ltbts1),
-    Samples.Example("failure-sim",
+    Samples.Example("neither-failure-sim",
 	    "Neither failure nor simulation equivalent",
-        failureAndSim)
+        notFailureOrSim),
+    Samples.Example("ft-and-if",
+	    "As well FT as well as IF preordered",
+        failureTraceAndImpossibleFutures)
   )
 
   def getExample(slug: String) = {
