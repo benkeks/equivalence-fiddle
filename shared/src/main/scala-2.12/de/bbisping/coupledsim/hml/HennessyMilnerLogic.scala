@@ -9,7 +9,7 @@ object HennessyMilnerLogic {
 
     for {
       (f, (cl, clB)) <- classifications
-      val clBb = clB.map(_._2)
+      clBb = clB.map(_._2)
       // just keep formulas where one of the classifications is dominated by no other classification
       if clBb.exists(classBound => !bounds.exists(_ strictlyBelow classBound))
     } yield f

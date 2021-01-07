@@ -26,10 +26,10 @@ class Interpreter[S, A, L](
       rels <- factorResults ( tsDef.defs collect {
         case r: Syntax.Relation => convertRelation(r)
       } )
-      val labelMap = nodeDecls.toMap
-      val trans = new LabeledRelation(rels.toSet)
-      val emptyLabels = (trans.lhs ++ trans.rhs) map { n => (n, nodeLabeling(None).get) } toMap
-      val labels = emptyLabels ++ labelMap
+      labelMap = nodeDecls.toMap
+      trans = new LabeledRelation(rels.toSet)
+      emptyLabels = ((trans.lhs ++ trans.rhs) map { n => (n, nodeLabeling(None).get) } toMap)
+      labels = emptyLabels ++ labelMap
     } yield factory(trans, labels)
     
   }

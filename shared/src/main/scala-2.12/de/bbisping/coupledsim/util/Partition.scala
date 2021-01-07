@@ -23,12 +23,12 @@ case class Partition[E](val parts: Set[Set[E]]) {
   def splitInsert(part: Set[E]) = {
     val shrunkenParts1 = for {
       p <- parts
-      val nP = p -- part
+      nP = p -- part
       if nP.nonEmpty
     } yield nP
     val shrunkenParts2 = for {
       p <- parts
-      val nP = p intersect part
+      nP = p intersect part
       if nP.nonEmpty
     } yield nP
     

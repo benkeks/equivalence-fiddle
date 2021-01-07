@@ -20,10 +20,10 @@ object TestSamples  {
 
   val samples = for {
     Samples.Example(slug, name, src) <- CCSSamples.namedSamples
-    val parser: Parser = new Parser(src)
-    val parser.ParseSuccess(esDef, _) = parser.parse
-    val interpreter = new Interpreter(esDef, NodeID(_), arrowLabeling, nodeLabeling)
-    val Interpreting.Success(is) = interpreter.result(new WeakTransitionSystem(_, _, Set()))
+    parser: Parser = new Parser(src)
+    parser.ParseSuccess(esDef, _) = parser.parse
+    interpreter = new Interpreter(esDef, NodeID(_), arrowLabeling, nodeLabeling)
+    Interpreting.Success(is) = interpreter.result(new WeakTransitionSystem(_, _, Set()))
   } yield (slug, is.asInstanceOf[WeakTransitionSystem[NodeID, String, String]])
   
 }

@@ -189,7 +189,7 @@ object Relation {
     val partitions = part.partitions.withDefaultValue(Set[E]())
     val newRel = for {
       p <- partitions.keySet
-      val partMembers = partitions(p)
+      partMembers = partitions(p)
       l1 <- partMembers
       r1 <- partMembers
     } yield (l1, r1)

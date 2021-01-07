@@ -16,10 +16,10 @@ class DirectTSImporter(
     
     val transitions = for {
       l <- tsFileContent.linesIterator
-      val transitionMatcher(srcS, tarS, actionS) = l
-      val src = srcS.toInt
-      val tar = tarS.toInt
-      val action = Symbol(actionS)
+      transitionMatcher(srcS, tarS, actionS) = l
+      src = srcS.toInt
+      tar = tarS.toInt
+      action = Symbol(actionS)
     } yield {
       (src, action, tar)
     }

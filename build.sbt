@@ -9,7 +9,8 @@ val scalacOpts = Seq(
   "-feature",
   "-language:implicitConversions",
   "-language:postfixOps",
-  "-language:existentials"
+  "-language:existentials",
+  "-deprecation"
 )
 
 lazy val web = (project in file("web")).settings(
@@ -21,7 +22,7 @@ lazy val web = (project in file("web")).settings(
   libraryDependencies ++= Seq(
     "org.webjars" % "codemirror" % "5.13",
     "org.webjars" % "jquery" % "2.1.3",
-    "org.webjars" % "bootstrap" % "3.3.6"
+    "org.webjars" % "bootstrap" % "3.4.1"
   )
 ).enablePlugins(SbtWeb)
 
@@ -46,7 +47,7 @@ lazy val jsClient = (project in file("js-client")).settings(
   libraryDependencies ++= Seq(
     "org.scalaz" %%% "scalaz-core" % "7.2.29",
     "org.singlespaced" %%% "scalajs-d3" % "0.3.4",
-    "org.denigma" %%% "codemirror-facade" % "5.13.2-0.8",
+    "org.denigma" %%% "codemirror-facade" % "5.22.0-0.8",
     "com.github.karasiq" %%% "scalajs-bootstrap" % "2.3.5"
   ),
   artifactPath in (Compile,fastOptJS) :=
@@ -56,7 +57,7 @@ lazy val jsClient = (project in file("js-client")).settings(
   jsDependencies ++= Seq(
     "org.webjars" % "codemirror" % "5.13" / "codemirror.js",
     "org.webjars" % "jquery" % "2.1.3" / "2.1.3/jquery.js",
-    "org.webjars" % "bootstrap" % "3.3.7" / "bootstrap.min.js"
+    "org.webjars" % "bootstrap" % "3.4.1" / "bootstrap.min.js"
   ),
   unmanagedSourceDirectories in Compile +=
       baseDirectory.value / ".." / "shared" / "src" / "main" / "scala-2.12"

@@ -50,7 +50,7 @@ class HMLGamePlayer[S, A, L] (
         val dn = for {
           (a,pp1) <- ts.post(p0)
           p1 <- pp1
-          val next = AttackerObservation(p1, qq0.flatMap(ts.post(_, a)))
+          next = AttackerObservation(p1, qq0.flatMap(ts.post(_, a)))
         } yield {
           recordedMoveEdges((gn, next)) = ObservationMove(a)
           next
@@ -123,7 +123,7 @@ class HMLGamePlayer[S, A, L] (
     // if no old formula's class dominates this formula's class...
     for {
       f <- newFormulas
-      val cl = f.getRootClass()
+      cl = f.getRootClass()
       // privilege for failures and impossible futures
       if (cl.height <= 1 && cl.negationLevels <= 1) || 
         (cl.negationLevels == 1 && cl.maxNegationHeight == cl.height) ||
@@ -170,7 +170,7 @@ class HMLGamePlayer[S, A, L] (
       (gn, preorders) <- bestPreorders
       if gn.isInstanceOf[AttackerObservation]
       AttackerObservation(p, qq) = gn
-      val label = preorders.map(_._1).mkString(",")
+      label = preorders.map(_._1).mkString(",")
       q <- qq
     } yield (p, label, q)
     
