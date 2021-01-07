@@ -56,7 +56,10 @@ object Syntax {
   
   case class Prefix(val l: Label, val proc: ProcessExpression, pos: Pos = Pos0) extends ProcessExpression(pos) {
     
-    override def toString() = l.toString + "." + proc.toString()
+    override def toString() = {
+      val ps = proc.toString()
+      l.toString + "." + (if (ps.contains(" ")) "(" + ps + ")" else ps)
+    }
   }
 
   case class Choice(val procs: List[ProcessExpression], pos: Pos = Pos0) extends ProcessExpression(pos) {
@@ -81,8 +84,11 @@ object Syntax {
   
   case class Definition(val defs: List[Expression]) extends Expression(Pos0) {
     
-    val metaInfo = defs.collect{ case md: MetaDeclaration => md }.groupBy(_.key)
+    val metaInfo = defs.collect { case md: MetaDeclaration => md }.groupBy(_.key)
     
+    def getDeclaration(processID: String): Option[ProcessDeclaration] = defs.collectFirst {
+      case pd @ ProcessDeclaration(n, _, _) if n == processID => pd
+    }
   }
 
   implicit def intPairToPos(pos: (Int, Int)) = Pos(pos._1, pos._2)

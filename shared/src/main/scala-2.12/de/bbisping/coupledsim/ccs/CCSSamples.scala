@@ -64,8 +64,8 @@ L34 = a.b.c.0 + a.(b.c.0 + b.d.0)
 
 L38(x=100,y=-100)
 L38 = a.b.0 + a.0 + a.c.0
-@eqs "L38,L24:1F"
-@notEqs "L38,L24:CT,F"
+@eqs "L38,R24:1F"
+@notEqs "L38,R24:CT,F"
 @compare "L38,R24"
 
 L42(x=-200,y=-200)
