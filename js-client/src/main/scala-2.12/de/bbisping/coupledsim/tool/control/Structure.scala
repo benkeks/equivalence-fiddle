@@ -234,7 +234,7 @@ object Structure {
     case Some(aL @ Syntax.Label(name, pos)) =>
       try {
         val l = ActionLabel(
-          act = Symbol(if (name == "tau") "τ" else name)
+          act = Symbol(if (name == "τ") "tau" else name)
         )
         Interpreting.Success(l)
       } catch {

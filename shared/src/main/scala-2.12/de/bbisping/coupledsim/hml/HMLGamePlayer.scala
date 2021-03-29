@@ -55,27 +55,31 @@ class HMLGamePlayer[S, A, L] (
           (a,pp1) <- ts.post(p0)
           p1 <- pp1
           next = AttackerObservation(p1,
-            qq0.flatMap(ts.post(_, a)) ++
-            (if (ts.silentActions(a)) qq0 else Set()) // the defender may react to silent observations by stuttering
+            qq0.flatMap(ts.post(_, a))
           )
         } yield {
           recordedMoveEdges((gn, next)) = ObservationMove(a)
           next
         }
 
-        val passNext = AttackerObservation(p0, qq0.flatMap(ts.silentReachable(_)))
-        recordedMoveEdges((gn, passNext)) = PassingMove()
+        val in = for {
+          p1 <- ts.silentReachable(p0)
+          passNext = AttackerObservation(p0, qq0.flatMap(ts.silentReachable(_)))
+        } yield {
+          recordedMoveEdges((gn, passNext)) = PassingMove()
+          passNext
+        }
         
         if (qq0.size == 1) {
           // wlog only have negation moves when the defender is focused (which can be forced by the attacker using a preceding conjunction)
           val neg = AttackerObservation(qq0.head, Set(p0))
           recordedMoveEdges((gn, neg)) = NegationMove()
-          dn ++ List(neg)
+          dn ++ in ++ List(neg)
         } else {
           // conjunct moves only make sense if the defender is spread
           val conj = DefenderConjunction(p0, qq0)
           recordedMoveEdges((gn, conj)) = ConjunctMove()
-          dn ++ List(conj)
+          dn ++ in ++ List(conj)
         }
       case DefenderConjunction(p0, qq0) =>
         for {

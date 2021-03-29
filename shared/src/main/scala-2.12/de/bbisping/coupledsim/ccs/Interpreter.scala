@@ -14,7 +14,7 @@ class Interpreter[S, A, L](
     nodeLabeling: Option[Syntax.NodeDeclaration] => Interpreting.Result[L]
   ) {
   
-  val silentActions = Set(arrowLabeling(Some(Syntax.Label("τ"))).get)
+  val silentActions = Set(arrowLabeling(Some(Syntax.Label("tau"))).get)
   
   val defaultFactory = new WeakTransitionSystem[S, A, L](_: LabeledRelation[S, A], _: Map[S, L], silentActions)
 
