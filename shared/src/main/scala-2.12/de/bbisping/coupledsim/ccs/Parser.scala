@@ -5,7 +5,7 @@ import de.bbisping.coupledsim.ccs.Syntax._
 
 class Parser(val input: String) extends Parsing {
   
-  val idChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789".toSet
+  val idChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789τ".toSet
   
   import Parsing._
   

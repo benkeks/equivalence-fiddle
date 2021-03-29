@@ -4,7 +4,7 @@ import de.bbisping.coupledsim.util.Interpreting
 import de.bbisping.coupledsim.util.Interpreting._
 import de.bbisping.coupledsim.util.Relation
 import de.bbisping.coupledsim.util.LabeledRelation
-import de.bbisping.coupledsim.ts.TransitionSystem
+import de.bbisping.coupledsim.ts.WeakTransitionSystem
 
 /** Transforms a CCS term into a transition system */
 class Interpreter[S, A, L](
@@ -14,7 +14,9 @@ class Interpreter[S, A, L](
     nodeLabeling: Option[Syntax.NodeDeclaration] => Interpreting.Result[L]
   ) {
   
-  val defaultFactory = TransitionSystem[S, A, L](_: LabeledRelation[S, A], _: Map[S, L])
+  val silentActions = Set(arrowLabeling(Some(Syntax.Label("τ"))).get)
+  
+  val defaultFactory = new WeakTransitionSystem[S, A, L](_: LabeledRelation[S, A], _: Map[S, L], silentActions)
 
   val transitions = collection.mutable.Map[S, List[(A, S)]]()
     

@@ -22,6 +22,10 @@ class HMLGamePlayer[S, A, L] (
   case class ObservationMove(a: A) extends MoveKind {
     override def toString() = "⟨" + a + "⟩"
   }
+
+  case class PassingMove() extends MoveKind {
+    override def toString() = "⟨ϵ⟩"
+  }
   case class ConjunctMove() extends MoveKind {
     override def toString() = "⋀"
   }
@@ -50,11 +54,18 @@ class HMLGamePlayer[S, A, L] (
         val dn = for {
           (a,pp1) <- ts.post(p0)
           p1 <- pp1
-          next = AttackerObservation(p1, qq0.flatMap(ts.post(_, a)))
+          next = AttackerObservation(p1,
+            qq0.flatMap(ts.post(_, a)) ++
+            (if (ts.silentActions(a)) qq0 else Set()) // the defender may react to silent observations by stuttering
+          )
         } yield {
           recordedMoveEdges((gn, next)) = ObservationMove(a)
           next
         }
+
+        val passNext = AttackerObservation(p0, qq0.flatMap(ts.silentReachable(_)))
+        recordedMoveEdges((gn, passNext)) = PassingMove()
+        
         if (qq0.size == 1) {
           // wlog only have negation moves when the defender is focused (which can be forced by the attacker using a preceding conjunction)
           val neg = AttackerObservation(qq0.head, Set(p0))
@@ -87,6 +98,8 @@ class HMLGamePlayer[S, A, L] (
         ff.map(HennessyMilnerLogic.Negate(_))
       case ObservationMove(a) =>
         ff.map(HennessyMilnerLogic.Observe(a, _))
+      case PassingMove() =>
+        ff.map(HennessyMilnerLogic.Pass(_))
       case DefenderMove() =>
         ff
     }
