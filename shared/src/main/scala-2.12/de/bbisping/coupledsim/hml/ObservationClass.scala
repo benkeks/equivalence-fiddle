@@ -2,19 +2,25 @@ package de.bbisping.coupledsim.hml
 
 case class ObservationClass(
   /** the maximal depth of the subformulas (⊤ has height 0, negation are neutral wrt. height) */
-  height: Int,
+  height: Int = 0,
   /** the maximal amount of conjunctions when descending into a formula */
-  conjunctionLevels: Int,
+  conjunctionLevels: Int = 0,
   /** the maximal amount of negations when descending into a formula */
-  negationLevels: Int,
+  negationLevels: Int = 0,
   /** the maximal amount of positive deep branches */
-  maxPositiveDeepBranches: Int,
+  maxPositiveDeepBranches: Int = 0,
   /** the maximal amount of positive flat branches (height > 1); if all branches are flat, one positive branch will be counted as deep */
-  maxPositiveFlatBranches: Int,
+  maxPositiveFlatBranches: Int = 0,
   /** maximal height of negative subformulas */
-  maxNegationHeight: Int,
+  maxNegationHeight: Int = 0,
   /** if there are any conjunctions with positive subformulas */
-  nonNegativeConjuncts: Boolean
+  nonNegativeConjuncts: Boolean = false,
+  /** if there are observations that are not immediately followed by possible internal activity */
+  immediatePostObs: Boolean = false,
+  /** if there are conjunctions / negations that are not immediately preceeded by possible internal activity */
+  immediateConj: Boolean = false,
+  /** how many immediate observations may occur within weak conjunctions? */
+  etaConjObs: Int = 0
 ) {
   def lub(that: ObservationClass) = ObservationClass(
     Integer.max(this.height, that.height),
@@ -23,7 +29,10 @@ case class ObservationClass(
     Integer.max(this.maxPositiveDeepBranches, that.maxPositiveDeepBranches),
     Integer.max(this.maxPositiveFlatBranches, that.maxPositiveFlatBranches),
     Integer.max(this.maxNegationHeight, that.maxNegationHeight),
-    this.nonNegativeConjuncts || that.nonNegativeConjuncts
+    this.nonNegativeConjuncts || that.nonNegativeConjuncts,
+    this.immediatePostObs || that.immediatePostObs,
+    this.immediateConj || that.immediateConj,
+    Integer.max(this.etaConjObs, that.etaConjObs)
   )
 
   def glb(that: ObservationClass) = ObservationClass(
@@ -33,7 +42,10 @@ case class ObservationClass(
     Integer.min(this.maxPositiveDeepBranches, that.maxPositiveDeepBranches),
     Integer.min(this.maxPositiveFlatBranches, that.maxPositiveFlatBranches),
     Integer.min(this.maxNegationHeight, that.maxNegationHeight),
-    this.nonNegativeConjuncts && that.nonNegativeConjuncts
+    this.nonNegativeConjuncts && that.nonNegativeConjuncts,
+    this.immediatePostObs && that.immediatePostObs,
+    this.immediateConj && that.immediateConj,
+    Integer.min(this.etaConjObs, that.etaConjObs)
   )
 
   def above(that: ObservationClass) = (
@@ -43,7 +55,10 @@ case class ObservationClass(
     this.maxPositiveDeepBranches >= that.maxPositiveDeepBranches &&
     this.maxPositiveFlatBranches >= that.maxPositiveFlatBranches &&
     this.maxNegationHeight >= that.maxNegationHeight &&
-    (this.nonNegativeConjuncts || !that.nonNegativeConjuncts)
+    (this.nonNegativeConjuncts || !that.nonNegativeConjuncts) &&
+    (this.immediatePostObs || !that.immediatePostObs) &&
+    (this.immediateConj || !that.immediateConj) &&
+    this.etaConjObs >= that.etaConjObs
   )
 
   def strictlyAbove(that: ObservationClass) = (this != that) && (this above that)
@@ -55,7 +70,10 @@ case class ObservationClass(
     this.maxPositiveDeepBranches <= that.maxPositiveDeepBranches &&
     this.maxPositiveFlatBranches <= that.maxPositiveFlatBranches &&
     this.maxNegationHeight <= that.maxNegationHeight &&
-    (!this.nonNegativeConjuncts || that.nonNegativeConjuncts)
+    (!this.nonNegativeConjuncts || that.nonNegativeConjuncts) &&
+    (!this.immediatePostObs || that.immediatePostObs) &&
+    (!this.immediateConj || that.immediateConj) &&
+    this.etaConjObs <= that.etaConjObs
   )
 
   def strictlyBelow(that: ObservationClass) = (this != that) && (this below that)
@@ -68,17 +86,36 @@ object ObservationClass {
   // nonNegConjs is necessary, because maxPosFlat will sometimes count one positive flat branch as deep to account for trace equivalences. 
   // The Linear-time Branching-time Spectrum
   val LTBTS = List(
-    "traces" ->             ObservationClass(INFTY,     0,    0,    0,    0,    0,false),
-    "failure" ->            ObservationClass(INFTY,     1,    1,    0,    0,    1,false),
-    "readiness" ->          ObservationClass(INFTY,     1,    1,    0,INFTY,    1,true),
-    "failure-trace" ->      ObservationClass(INFTY, INFTY,    1,    1,    0,    1,true),
-    "ready-trace" ->        ObservationClass(INFTY, INFTY,    1,    1,INFTY,    1,true),
-    "impossible-future" ->  ObservationClass(INFTY,     1,    1,    0,    0,INFTY,false),
-    "possible-future" ->    ObservationClass(INFTY,     1,    1,INFTY,INFTY,INFTY,true),
-    "simulation" ->         ObservationClass(INFTY, INFTY,    0,INFTY,INFTY,    0,true),
-    "ready-simulation" ->   ObservationClass(INFTY, INFTY,    1,INFTY,INFTY,    1,true),
-    "2-nested-simulation"-> ObservationClass(INFTY, INFTY,    1,INFTY,INFTY,INFTY,true),
-    "bisimulation" ->       ObservationClass(INFTY, INFTY,INFTY,INFTY,INFTY,INFTY,true)
+    // Strong notions
+    "traces" ->             ObservationClass(INFTY,     0,    0,    0,    0,    0,false,   true,  true,  INFTY),
+    "failure" ->            ObservationClass(INFTY,     1,    1,    0,    0,    1,false,   true,  true,  INFTY),
+    "readiness" ->          ObservationClass(INFTY,     1,    1,    0,INFTY,    1, true,   true,  true,  INFTY),
+    "failure-trace" ->      ObservationClass(INFTY, INFTY,    1,    1,    0,    1, true,   true,  true,  INFTY),
+    "ready-trace" ->        ObservationClass(INFTY, INFTY,    1,    1,INFTY,    1, true,   true,  true,  INFTY),
+    "impossible-future" ->  ObservationClass(INFTY,     1,    1,    0,    0,INFTY,false,   true,  true,  INFTY),
+    "possible-future" ->    ObservationClass(INFTY,     1,    1,INFTY,INFTY,INFTY, true,   true,  true,  INFTY),
+    "simulation" ->         ObservationClass(INFTY, INFTY,    0,INFTY,INFTY,    0, true,   true,  true,  INFTY),
+    "ready-simulation" ->   ObservationClass(INFTY, INFTY,    1,INFTY,INFTY,    1, true,   true,  true,  INFTY),
+    "2-nested-simulation"-> ObservationClass(INFTY, INFTY,    1,INFTY,INFTY,INFTY, true,   true,  true,  INFTY),
+    "bisimulation" ->       ObservationClass(INFTY, INFTY,INFTY,INFTY,INFTY,INFTY, true,   true,  true,  INFTY),
+
+    // Weak notions
+    "weak-traces" ->             ObservationClass(INFTY,     0,    0,    0,    0,    0,false,  false,false, 0),
+    "weak-failure" ->            ObservationClass(INFTY,     1,    1,    0,    0,    1,false,  false,false, 0),
+    "weak-readiness" ->          ObservationClass(INFTY,     1,    1,    0,INFTY,    1, true,  false,false, 0),
+    "weak-failure-trace" ->      ObservationClass(INFTY, INFTY,    1,    1,    0,    1, true,  false,false, 0),
+    "weak-ready-trace" ->        ObservationClass(INFTY, INFTY,    1,    1,INFTY,    1, true,  false,false, 0),
+    "weak-impossible-future" ->  ObservationClass(INFTY,     1,    1,    0,    0,INFTY,false,  false,false, 0),
+    "weak-possible-future" ->    ObservationClass(INFTY,     1,    1,INFTY,INFTY,INFTY, true,  false,false, 0),
+    "contrasimulation" ->        ObservationClass(INFTY, INFTY,INFTY,    0,    0,INFTY,false,  false,false, 0),
+    "weak-simulation" ->         ObservationClass(INFTY, INFTY,    0,INFTY,INFTY,    0, true,  false,false, 0),
+    "weak-ready-simulation" ->   ObservationClass(INFTY, INFTY,    1,INFTY,INFTY,    1, true,  false,false, 0),
+    "weak-2-nested-simulation"-> ObservationClass(INFTY, INFTY,    1,INFTY,INFTY,INFTY, true,  false,false, 0),
+    "coupled-simulation" ->      ObservationClass(INFTY, INFTY,INFTY,INFTY,INFTY,INFTY, true,  false,false, 0), // TODO!!
+    "weak-bisimulation" ->       ObservationClass(INFTY, INFTY,INFTY,INFTY,INFTY,INFTY, true,  false,false, 0), // TODO
+    "delay-bisimulation" ->      ObservationClass(INFTY, INFTY,INFTY,INFTY,INFTY,INFTY, true,   true,false, 0),
+    "eta-bisimulation" ->        ObservationClass(INFTY, INFTY,INFTY,INFTY,INFTY,INFTY, true,  false, true, 1),
+    "branching-bisimulation" ->  ObservationClass(INFTY, INFTY,INFTY,INFTY,INFTY,INFTY, true,   true, true, 1)
   )
 
   val LTBTSNotionNames = LTBTS.map(_._1).toSet

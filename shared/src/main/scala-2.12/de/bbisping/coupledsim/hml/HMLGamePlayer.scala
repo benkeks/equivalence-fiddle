@@ -53,6 +53,7 @@ class HMLGamePlayer[S, A, L] (
       case AttackerObservation(p0, qq0) =>
         val dn = for {
           (a,pp1) <- ts.post(p0)
+          if !ts.silentActions(a)
           p1 <- pp1
           next = AttackerObservation(p1,
             qq0.flatMap(ts.post(_, a))
@@ -64,7 +65,7 @@ class HMLGamePlayer[S, A, L] (
 
         val in = for {
           p1 <- ts.silentReachable(p0)
-          passNext = AttackerObservation(p0, qq0.flatMap(ts.silentReachable(_)))
+          passNext = AttackerObservation(p1, qq0.flatMap(ts.silentReachable(_)))
         } yield {
           recordedMoveEdges((gn, passNext)) = PassingMove()
           passNext
@@ -141,9 +142,10 @@ class HMLGamePlayer[S, A, L] (
     for {
       f <- newFormulas
       cl = f.getRootClass()
-      // privilege for failures and impossible futures
+      // privilege for failures and impossible futures and weak formulas
       if (cl.height <= 1 && cl.negationLevels <= 1) || 
         (cl.negationLevels == 1 && cl.maxNegationHeight == cl.height) ||
+        f.isInstanceOf[HennessyMilnerLogic.Pass[A]] ||
         !formulaClasses.exists(clOther => cl.above(clOther) && cl != clOther)
     } yield {
       f

@@ -34,6 +34,10 @@ class HMLInterpreter[S, A, L] (
         for {
           s1 <- ts.post(s, action)
         } yield makeNode(s1, Negate(andThen))
+      case HMLAttack(s, Negate(Pass(andThen))) =>
+        for {
+          s1 <- ts.silentReachable(s)
+        } yield makeNode(s1, Negate(andThen))
       case HMLAttack(s, Negate(Negate(andThen))) =>
         List(makeNode(s, andThen))
       case HMLDefense(s, Negate(And(subterms))) =>
