@@ -99,7 +99,7 @@ object HennessyMilnerLogic {
           /** if there are observations that are not immediately followed by possible internal activity */
           immediatePostObs = subterms.exists(_.obsClass.immediatePostObs),
           /** if there are conjunctions / negations that are not immediately preceeded by possible internal activity */
-          immediateConj = true,
+          immediateConj = subterms.exists(_.obsClass.immediateConj),
           /** how many immediate observations may occur within weak conjunctions? */
           etaConjObs = subterms.map(_.obsClass.etaConjObs).max
         )
@@ -116,37 +116,67 @@ object HennessyMilnerLogic {
       ObservationClass(
         height = andThen.obsClass.height + 1,
         conjunctionLevels = andThen.obsClass.conjunctionLevels + (if (!andThen.isPositive) 1 else 0),
-        immediatePostObs = !andThen.isInstanceOf[Pass[A]],
-        immediateConj = andThen.isInstanceOf[And[A]] || !andThen.isPositive
+        immediatePostObs = andThen.isInstanceOf[Immediate[A]],
+        immediateConj = !andThen.isPositive && andThen.isInstanceOf[Immediate[A]] //andThen.isInstanceOf[And[A]] || !andThen.isPositive
       ) lub andThen.obsClass
   }
 
-  case class Pass[A](andThen: Formula[A]) extends Formula[A] {
-    override def toString = "⟨ϵ⟩" + andThen.toString
+  // case class Pass[A](andThen: Formula[A]) extends Formula[A] {
+  //   override def toString = "⟨ϵ⟩" + andThen.toString
 
-    override val isPositive = true
+  //   override val isPositive = true
+    
+  //   override val obsClass = ObservationClass(
+  //     height = andThen.obsClass.height,
+  //     conjunctionLevels = andThen.obsClass.conjunctionLevels,
+  //     negationLevels = andThen.obsClass.negationLevels,
+  //     maxPositiveDeepBranches = andThen.obsClass.maxPositiveDeepBranches,
+  //     maxPositiveFlatBranches = andThen.obsClass.maxPositiveFlatBranches,
+  //     maxNegationHeight = andThen.obsClass.maxNegationHeight,
+  //     nonNegativeConjuncts = andThen.obsClass.nonNegativeConjuncts,
+  //     immediateConj = andThen match {
+  //       case And(subterms) =>
+  //         subterms.exists(_.obsClass.immediateConj)
+  //       case _ =>
+  //         andThen.obsClass.immediateConj
+  //     },
+  //     etaConjObs = andThen match {
+  //       case And(subterms) =>
+  //         Integer.max(
+  //           subterms.map(_.obsClass.etaConjObs).max,
+  //           subterms.count(_.isInstanceOf[Observe[A]]))
+  //       case _ =>
+  //         0
+  //     },
+  //     immediatePostObs = andThen.obsClass.immediatePostObs
+  //   )
+
+  // }
+
+  case class Immediate[A](andThen: Formula[A]) extends Formula[A] {
+    override def toString = "!" + andThen.toString
+
+    override val isPositive = andThen.isPositive
     
     override val obsClass = ObservationClass(
-      height = andThen.obsClass.height,
+      height = andThen.obsClass.height + 1,
       conjunctionLevels = andThen.obsClass.conjunctionLevels,
       negationLevels = andThen.obsClass.negationLevels,
       maxPositiveDeepBranches = andThen.obsClass.maxPositiveDeepBranches,
       maxPositiveFlatBranches = andThen.obsClass.maxPositiveFlatBranches,
       maxNegationHeight = andThen.obsClass.maxNegationHeight,
       nonNegativeConjuncts = andThen.obsClass.nonNegativeConjuncts,
-      immediateConj = andThen match {
-        case And(subterms) =>
-          subterms.exists(_.obsClass.immediateConj)
-        case _ =>
-          andThen.obsClass.immediateConj
-      },
+      immediateConj = andThen.isInstanceOf[And[A]] || andThen.obsClass.immediateConj,
       etaConjObs = andThen match {
         case And(subterms) =>
           Integer.max(
-            subterms.map(_.obsClass.etaConjObs).max,
-            subterms.count(_.isInstanceOf[Observe[A]]))
+            if (subterms.isEmpty) 0 else subterms.map(_.obsClass.etaConjObs).max,
+            subterms.count(_ match {
+              case Immediate(Observe(a, andThen)) => true
+              case _ => false
+            } ))
         case _ =>
-          0
+          andThen.obsClass.etaConjObs
       },
       immediatePostObs = andThen.obsClass.immediatePostObs
     )

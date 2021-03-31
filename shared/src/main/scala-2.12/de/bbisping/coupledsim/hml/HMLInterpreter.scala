@@ -19,39 +19,53 @@ class HMLInterpreter[S, A, L] (
       for { s <- states } yield makeNode(s, formula)
 
     def makeNode(s: S, formula: Formula[A]) = formula match {
-      case Observe(_, _) | Negate(And(_)) | Pass(_) =>
+      case Immediate(Observe(_, _)) | Immediate(Negate(And(_))) | Immediate(Negate(Immediate(And(_)))) =>
         HMLDefense(s, formula)
-      case And(_) | Negate(_)=> 
+      case Immediate(And(_)) | Immediate(Negate(_)) | Negate(_) => 
         HMLAttack(s, formula)
+      case _ =>
+        HMLDefense(s, formula)
     }
 
     def successors(gn: GameNode): Iterable[GameNode] = gn match {
-      case HMLAttack(s, And(subterms)) =>
+      case HMLAttack(s, Immediate(And(subterms))) =>
         for {
           f <- subterms
         } yield makeNode(s, f)
-      case HMLAttack(s, Negate(Observe(action, andThen))) =>
+      case HMLAttack(s, Immediate(Negate(Immediate(Observe(action, andThen))))) =>
         for {
           s1 <- ts.post(s, action)
-        } yield makeNode(s1, Negate(andThen))
-      case HMLAttack(s, Negate(Pass(andThen))) =>
+        } yield makeNode(s1, Immediate(Negate(andThen)))
+      case HMLAttack(s, Immediate(Negate(Observe(action, andThen)))) =>
+        for {
+          s1 <- ts.weakPostDelay(s, action)
+        } yield makeNode(s1, Immediate(Negate(andThen)))
+      case HMLAttack(s, Immediate(Negate(Immediate(Negate(andThen))))) =>
+        List(makeNode(s, andThen))
+      case HMLAttack(s, Negate(andThen)) =>
         for {
           s1 <- ts.silentReachable(s)
-        } yield makeNode(s1, Negate(andThen))
-      case HMLAttack(s, Negate(Negate(andThen))) =>
-        List(makeNode(s, andThen))
-      case HMLDefense(s, Negate(And(subterms))) =>
+        } yield makeNode(s1, Immediate(Negate(andThen)))
+      case HMLDefense(s, Immediate(Negate(Immediate(And(subterms))))) =>
         for {
           f <- subterms
-        } yield makeNode(s, Negate(f))
-      case HMLDefense(s, Observe(action, andThen)) =>
+        } yield makeNode(s, Immediate(Negate(f)))
+      case HMLDefense(s, Immediate(Negate(And(subterms)))) =>
+        for {
+          f <- subterms
+          s1 <- ts.silentReachable(s)
+        } yield makeNode(s1, Immediate(Negate(f)))
+      case HMLDefense(s, Immediate(Observe(action, andThen))) =>
         for {
           s1 <- ts.post(s, action)
         } yield makeNode(s1, andThen)
-      case HMLDefense(s, Pass(andThen)) =>
+
+      case HMLDefense(s, Immediate(Immediate(formula))) =>
+        List(makeNode(s, Immediate(formula)))
+      case HMLDefense(s, formula) =>
         for {
           s1 <- ts.silentReachable(s)
-        } yield makeNode(s1, andThen)
+        } yield makeNode(s1, Immediate(formula))
     }
   }
 

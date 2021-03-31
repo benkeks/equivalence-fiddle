@@ -23,9 +23,13 @@ class HMLGamePlayer[S, A, L] (
     override def toString() = "⟨" + a + "⟩"
   }
 
-  case class PassingMove() extends MoveKind {
-    override def toString() = "⟨ϵ⟩"
+  // case class PassingMove() extends MoveKind {
+  //   override def toString() = "⟨ϵ⟩"
+  // }
+  case class ImmediacyMove() extends MoveKind {
+    override def toString() = "!"
   }
+  
   case class ConjunctMove() extends MoveKind {
     override def toString() = "⋀"
   }
@@ -38,7 +42,7 @@ class HMLGamePlayer[S, A, L] (
 
   val recordedMoveEdges = collection.mutable.Map[(GameNode, GameNode), MoveKind]()
 
-  case class AttackerObservation(p: S, qq: Set[S]) extends SimpleGame.AttackerNode 
+  case class AttackerObservation(p: S, qq: Set[S], immediacy: Boolean = false) extends SimpleGame.AttackerNode 
   case class DefenderConjunction(p: S, qq: Set[S]) extends SimpleGame.DefenderNode
 
   class HMLSpectroscopyGame
@@ -50,38 +54,42 @@ class HMLGamePlayer[S, A, L] (
     )
 
     def successors(gn: GameNode): Iterable[GameNode] = gn match {
-      case AttackerObservation(p0, qq0) =>
+      case AttackerObservation(p0, qq0, immediacy) =>
         val dn = for {
           (a,pp1) <- ts.post(p0)
           if !ts.silentActions(a)
           p1 <- pp1
-          next = AttackerObservation(p1,
-            qq0.flatMap(ts.post(_, a))
-          )
+          next = if (immediacy) {
+            AttackerObservation(p1, qq0.flatMap(ts.post(_, a)), immediacy = false)
+          } else {
+            AttackerObservation(p1, qq0.flatMap(ts.weakPostDelay(_, a)), immediacy = false)
+          }
+          
         } yield {
           recordedMoveEdges((gn, next)) = ObservationMove(a)
           next
         }
 
-        val in = for {
-          p1 <- ts.silentReachable(p0)
-          passNext = AttackerObservation(p1, qq0.flatMap(ts.silentReachable(_)))
-        } yield {
-          recordedMoveEdges((gn, passNext)) = PassingMove()
-          passNext
-        }
+        //TODO only if no immediacy!
+        val immediate = AttackerObservation(p0, qq0, immediacy = true)
+        recordedMoveEdges((gn, immediate)) = ImmediacyMove()
         
-        if (qq0.size == 1) {
+        val conj = if (immediacy) {
+          DefenderConjunction(p0, qq0)
+        } else {
+          DefenderConjunction(p0, qq0.flatMap(ts.silentReachable(_)))
+        }
+        recordedMoveEdges((gn, conj)) = ConjunctMove()
+
+        (if (qq0.size == 1) {
           // wlog only have negation moves when the defender is focused (which can be forced by the attacker using a preceding conjunction)
           val neg = AttackerObservation(qq0.head, Set(p0))
           recordedMoveEdges((gn, neg)) = NegationMove()
-          dn ++ in ++ List(neg)
+          List(neg)
         } else {
-          // conjunct moves only make sense if the defender is spread
-          val conj = DefenderConjunction(p0, qq0)
-          recordedMoveEdges((gn, conj)) = ConjunctMove()
-          dn ++ in ++ List(conj)
-        }
+          List()
+          // immediate conjunct moves only make sense if the defender is spread
+        }) ++ dn ++ List(immediate, conj)
       case DefenderConjunction(p0, qq0) =>
         for {
           q0 <- qq0
@@ -103,8 +111,8 @@ class HMLGamePlayer[S, A, L] (
         ff.map(HennessyMilnerLogic.Negate(_))
       case ObservationMove(a) =>
         ff.map(HennessyMilnerLogic.Observe(a, _))
-      case PassingMove() =>
-        ff.map(HennessyMilnerLogic.Pass(_))
+      case ImmediacyMove() =>
+        ff.map(HennessyMilnerLogic.Immediate(_))
       case DefenderMove() =>
         ff
     }
@@ -145,7 +153,6 @@ class HMLGamePlayer[S, A, L] (
       // privilege for failures and impossible futures and weak formulas
       if (cl.height <= 1 && cl.negationLevels <= 1) || 
         (cl.negationLevels == 1 && cl.maxNegationHeight == cl.height) ||
-        f.isInstanceOf[HennessyMilnerLogic.Pass[A]] ||
         !formulaClasses.exists(clOther => cl.above(clOther) && cl != clOther)
     } yield {
       f
@@ -154,8 +161,10 @@ class HMLGamePlayer[S, A, L] (
 
   def logAttacksAndResult(node: GameNode, attackGraph: Relation[SimpleGame.GameNode], resultFormulas: Set[HennessyMilnerLogic.Formula[A]]) = {
     def gameNodeToTuple(n: SimpleGame.GameNode) = n match {
-      case AttackerObservation(p, qq) => 
+      case AttackerObservation(p, qq, false) => 
         (Set(p), "A", qq)
+      case AttackerObservation(p, qq, true) => 
+        (Set(p), "A!", qq)
       case DefenderConjunction(p, qq) => 
         (Set(p), "D", qq)
     }
@@ -184,17 +193,16 @@ class HMLGamePlayer[S, A, L] (
       ObservationClass.getStrongestPreorderClass(classes)
     }
     
-
     val simNodes = for {
       (gn, preorders) <- bestPreorders
       if gn.isInstanceOf[AttackerObservation]
-      AttackerObservation(p, qq) = gn
+      AttackerObservation(p, qq, _) = gn // TODO non?-immediate
       label = preorders.map(_._1).mkString(",")
       q <- qq
     } yield (p, label, q)
     
     val rel = new LabeledRelation(simNodes.toSet)
-    val AttackerObservation(p, qq) = node
+    val AttackerObservation(p, qq, _) = node // TODO non?-immediate
 
     for {
       q <- qq
@@ -268,7 +276,7 @@ class HMLGamePlayer[S, A, L] (
       val simNodes = for {
         gn <- hmlGame.discovered
         if gn.isInstanceOf[AttackerObservation] && !attackerWin(gn)
-        AttackerObservation(p, qq) = gn
+        AttackerObservation(p, qq, _) = gn // TODO non?-immediate
         q <- qq
       } yield (p, "", q)
     
