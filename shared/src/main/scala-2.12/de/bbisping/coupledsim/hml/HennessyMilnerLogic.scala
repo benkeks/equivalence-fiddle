@@ -31,8 +31,8 @@ object HennessyMilnerLogic {
         obsClass.maxPositiveFlatBranches,
         obsClass.maxNegationHeight,
         obsClass.nonNegativeConjuncts,
-        obsClass.immediatePostObs,
-        obsClass.immediateConj || !isPositive,
+        obsClass.mixedConjuncts,
+        obsClass.immediateConj,
         obsClass.etaConjObs
       )
     }
@@ -96,12 +96,18 @@ object HennessyMilnerLogic {
           /** maximal height of negative subformulas */
           maxNegationHeight = subterms.map(_.obsClass.maxNegationHeight).max,
           nonNegativeConjuncts = subterms.exists(f => f.isPositive || f.obsClass.nonNegativeConjuncts),
-          /** if there are observations that are not immediately followed by possible internal activity */
-          immediatePostObs = subterms.exists(_.obsClass.immediatePostObs),
+          /** if there are conjunctions with positive AND negative parts */
+          mixedConjuncts = (subterms.exists(f => f.isPositive) && subterms.exists(f => !f.isPositive)) || subterms.exists(_.obsClass.mixedConjuncts),
           /** if there are conjunctions / negations that are not immediately preceeded by possible internal activity */
           immediateConj = subterms.exists(_.obsClass.immediateConj),
           /** how many immediate observations may occur within weak conjunctions? */
-          etaConjObs = subterms.map(_.obsClass.etaConjObs).max
+          etaConjObs =
+            Integer.max(
+              if (subterms.isEmpty) 0 else subterms.map(_.obsClass.etaConjObs).max,
+              subterms.count(_ match {
+                case Immediate(Observe(a, andThen)) => true
+                case _ => false
+              } ))
         )
       }
     }
@@ -116,8 +122,7 @@ object HennessyMilnerLogic {
       ObservationClass(
         height = andThen.obsClass.height + 1,
         conjunctionLevels = andThen.obsClass.conjunctionLevels + (if (!andThen.isPositive) 1 else 0),
-        immediatePostObs = andThen.isInstanceOf[Immediate[A]],
-        immediateConj = !andThen.isPositive && andThen.isInstanceOf[Immediate[A]] //andThen.isInstanceOf[And[A]] || !andThen.isPositive
+        //immediateConj = andThen.isInstanceOf[Immediate[A]] //andThen.isInstanceOf[And[A]] || !andThen.isPositive // !andThen.isPositive && 
       ) lub andThen.obsClass
   }
 
@@ -168,17 +173,19 @@ object HennessyMilnerLogic {
       nonNegativeConjuncts = andThen.obsClass.nonNegativeConjuncts,
       immediateConj = andThen.isInstanceOf[And[A]] || andThen.obsClass.immediateConj,
       etaConjObs = andThen match {
-        case And(subterms) =>
-          Integer.max(
-            if (subterms.isEmpty) 0 else subterms.map(_.obsClass.etaConjObs).max,
-            subterms.count(_ match {
-              case Immediate(Observe(a, andThen)) => true
-              case _ => false
-            } ))
+        // case And(subterms) =>
+        //   Integer.max(
+        //     if (subterms.isEmpty) 0 else subterms.map(_.obsClass.etaConjObs).max,
+        //     subterms.count(_ match {
+        //       case Immediate(Observe(a, andThen)) => true
+        //       case _ => false
+        //     } ))
+        case Observe(a, andThen) =>
+          Integer.max(1, andThen.obsClass.etaConjObs)
         case _ =>
           andThen.obsClass.etaConjObs
       },
-      immediatePostObs = andThen.obsClass.immediatePostObs
+      mixedConjuncts = andThen.obsClass.mixedConjuncts
     )
 
   }

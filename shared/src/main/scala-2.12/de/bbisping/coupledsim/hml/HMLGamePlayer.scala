@@ -57,7 +57,7 @@ class HMLGamePlayer[S, A, L] (
       case AttackerObservation(p0, qq0, immediacy) =>
         val dn = for {
           (a,pp1) <- ts.post(p0)
-          if !ts.silentActions(a)
+          if !(immediacy && ts.silentActions(a)) // <- allow attacker to move down tau steps only in non immediate mode, for now
           p1 <- pp1
           next = if (immediacy) {
             AttackerObservation(p1, qq0.flatMap(ts.post(_, a)), immediacy = false)
@@ -238,11 +238,11 @@ class HMLGamePlayer[S, A, L] (
   }
 
   def checkDistinguishing(formula: HennessyMilnerLogic.Formula[A], p: S, q: S) = {
-    val hmlInterpreter = new HMLInterpreter(ts)
-    val check = hmlInterpreter.isTrueAt(formula, List(p, q))
-    if (!check(p) || check(q)) {
-      System.err.println("Formula " + formula.toString() + " is no sound distinguishing formula! " + check)
-    }
+    // val hmlInterpreter = new HMLInterpreter(ts)
+    // val check = hmlInterpreter.isTrueAt(formula, List(p, q))
+    // if (!check(p) || check(q)) {
+    //   System.err.println("Formula " + formula.toString() + " is no sound distinguishing formula! " + check)
+    // }
   }
 
   def compute() = {

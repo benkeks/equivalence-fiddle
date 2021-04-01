@@ -141,6 +141,27 @@ P2 = (a.b.0 + a.0 + a.c.0)
 @compare "P1,P2"
 """
 
+  val weakBisimCoupledContraSim = """
+P1A(x=0, y=0)
+P1B(x=600, y=0)
+
+P1A = tau.grace.a.0 + tau.grace.b.0
+P1B = tau.grace.a.0 + tau.grace.b.0 + grace.(tau.a.0 + tau.b.0)
+
+@comment "Distinguished by Coupled Sim"
+@compare "P1A,P1B"
+
+
+P2A(x=0, y=300)
+P2B(x=600, y=300)
+
+P2A = tau.a.0 + tau.b.0 + tau.c.0
+P2B = tau.a.0 + tau.(tau.b.0 + tau.c.0)
+
+@comment "Distinguished by Weak Bisim"
+@compare "P2A,P2B"
+"""
+
 
 
   val namedSamples = List[Samples.Example](
@@ -152,7 +173,10 @@ P2 = (a.b.0 + a.0 + a.c.0)
         notFailureOrSim),
     Samples.Example("ft-and-if",
 	    "As well FT as well as IF preordered",
-        failureTraceAndImpossibleFutures)
+        failureTraceAndImpossibleFutures),
+    Samples.Example("weak-sims",
+	    "Weak Bisim, Coupled, Contrasim",
+        weakBisimCoupledContraSim)
   )
 
   def getExample(slug: String) = {
