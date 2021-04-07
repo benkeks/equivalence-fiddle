@@ -39,10 +39,12 @@ object Benchmark extends App {
   def nodeLabeling(o: Option[Syntax.NodeDeclaration]) = {
     Interpreting.fromOption(o.map(_.name) orElse(Some("")))
   }
+  def actionIsOutput(a: String) = a.endsWith("!")
+  def actionToInput(a: String): String = if (actionIsOutput(a)) actionToInput(a.dropRight(1)) else a
 
   val parser: Parser = new Parser(CCSSamples.ltbts1)
   val parser.ParseSuccess(esDef, _) = parser.parse
-  val interpreter = new Interpreter(esDef, NodeID(_), arrowLabeling, nodeLabeling)
+  val interpreter = new Interpreter(esDef, NodeID(_), arrowLabeling, nodeLabeling, actionToInput, actionIsOutput)
   val Interpreting.Success(is) = interpreter.result(new WeakTransitionSystem(_, _, Set()))
   val ltbtsSystem = is.asInstanceOf[WeakTransitionSystem[NodeID, String, String]]
   

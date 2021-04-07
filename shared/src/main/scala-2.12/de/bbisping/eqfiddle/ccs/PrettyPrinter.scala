@@ -24,12 +24,18 @@ class PrettyPrinter {
       }
     case ProcessDeclaration(name, proc, p0) =>
       name + " = " + show(proc)
+    case Prefix(l, proc, p0) if l.isOutput =>
+      show(l.toInput) + "!" + show(proc)
     case Prefix(l, proc, p0) =>
       show(l) + "." + show(proc)
     case Choice(procs, pos) if procs.isEmpty =>
       "0"
     case Choice(procs, pos) =>
       procs.map(show(_)).mkString("(", " + ", ")")
+    case Parallel(procs, pos) if procs.isEmpty =>
+      "0"
+    case Parallel(procs, pos) =>
+      procs.map(show(_)).mkString("(", " | ", ")")
     case ProcessName(l, p0) =>
       show(l)
     case Label(l, p0) =>
