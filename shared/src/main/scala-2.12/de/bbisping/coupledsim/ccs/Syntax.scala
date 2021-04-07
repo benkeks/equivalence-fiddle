@@ -20,6 +20,8 @@ object Syntax {
       case NodeDeclaration(n, aa, p0) => NodeDeclaration(n, aa, pos)
       case Label(n, p0) => Label(n, pos)
       case Prefix(l, proc, p0) => Prefix(l, proc, pos)
+      case Restrict(lls, proc, p0) => Restrict(lls, proc, pos)
+      case Parallel(procs, p0) => Parallel(procs, pos)
       case Choice(procs, p0) => Choice(procs, pos)
       case ProcessName(l, p0) => ProcessName(l, pos)
       case Definition(defs) => Definition(defs) // no effect!
@@ -32,6 +34,8 @@ object Syntax {
         case NodeDeclaration(n, aa, p0) => NodeDeclaration(n, aa, Pos0)
         case Label(n, p0) => Label(n, Pos0)
         case Prefix(l, proc, p0) => Prefix(l, proc.prunePos, Pos0)
+        case Restrict(lls, proc, p0) => Restrict(lls, proc.prunePos, Pos0)
+        case Parallel(procs, p0) => Parallel(procs map (_.prunePos), Pos0)
         case Choice(procs, p0) => Choice(procs map (_.prunePos), Pos0)
         case ProcessName(l, p0) => ProcessName(l, Pos0)
         case Definition(defs) => Definition(defs.map(_.prunePos))
@@ -50,6 +54,11 @@ object Syntax {
   case class Label(name: String, pos: Pos = Pos0) extends Expression(pos) {
     
     override def toString() = name
+
+    def isOutput = name.endsWith("!")
+    def toOutput = if (isOutput) this else Label(name + "!", pos)
+    def toInput: Label = if (isOutput) Label(name.dropRight(1), pos).toInput else this
+
   }
 
   abstract sealed class ProcessExpression(pos: Pos) extends Expression(pos)
@@ -58,7 +67,11 @@ object Syntax {
     
     override def toString() = {
       val ps = proc.toString()
-      l.toString + "." + (if (ps.contains(" ")) "(" + ps + ")" else ps)
+      if (l.isOutput) {
+        l.toString + (if (ps.contains(" ")) "(" + ps + ")" else ps)
+      } else {
+        l.toString + "." + (if (ps.contains(" ")) "(" + ps + ")" else ps)
+      }
     }
   }
 
@@ -68,6 +81,23 @@ object Syntax {
       "0"
     } else {
       procs.mkString(" + ")
+    }
+  }
+
+  case class Parallel(val procs: List[ProcessExpression], pos: Pos = Pos0) extends ProcessExpression(pos) {
+    
+    override def toString() = if (procs.isEmpty) {
+      "0"
+    } else {
+      procs.mkString(" | ")
+    }
+  }
+
+    case class Restrict(val names: List[Label], val proc: ProcessExpression, pos: Pos = Pos0) extends ProcessExpression(pos) {
+    
+    override def toString() = {
+      val ps = proc.toString()
+      (if (ps.contains(" ")) "(" + ps + ")" else ps) + names.mkString(" \\ {",",","}")
     }
   }
 

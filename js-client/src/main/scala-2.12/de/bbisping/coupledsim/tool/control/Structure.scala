@@ -54,7 +54,7 @@ class Structure(val main: Control) extends ModelComponent {
     case Source.SourceChange(source, ast) =>
       val beginInterpret = Date.now
       val interpretationResult =
-        new Interpreter(ast, NodeID(_), Structure.arrowAnnotator, Structure.nodeAnnotator)
+        new Interpreter(ast, NodeID(_), Structure.arrowAnnotator, Structure.nodeAnnotator, Structure.actionToInput, Structure.actionIsOutput)
         .result(Structure.transitionSystemConstructor(_, _))
 
       interpretationResult match {
@@ -244,6 +244,12 @@ object Structure {
       Interpreting.Success(emptyActionLabel)
   }
 
+  def actionIsOutput(a: ActionLabel): Boolean = actionStrIsOutput(a.toActString)
+  def actionToInput(a: ActionLabel): ActionLabel =
+    if (actionIsOutput(a)) ActionLabel(Symbol(actionStrToInput(a.toActString)), a.x, a.y) else a
+
+  def actionStrIsOutput(a: String) = a.endsWith("!")
+  def actionStrToInput(a: String): String = if (actionStrIsOutput(a)) actionStrToInput(a.dropRight(1)) else a
 
   def transitionSystemConstructor(
       rel: LabeledRelation[NodeID, ActionLabel],

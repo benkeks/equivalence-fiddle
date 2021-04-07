@@ -162,6 +162,26 @@ P2B = tau.a.0 + tau.(tau.b.0 + tau.c.0)
 @compare "P2A,P2B"
 """
 
+  val petersonMutex = """
+B1f = b1rf!B1f + b1wf.B1f + b1wt.B1t
+B1t = b1rt!B1t + b1wf.B1f + b1wt.B1t
+B2f = b2rf!B2f + b2wf.B2f + b2wt.B2t
+B2t = b2rt!B2t + b2wf.B2f + b2wt.B2t
+
+K1 = kr1!K1 + kw1.K1 + kw2.K2
+K2 = kr2!K2 + kw1.K1 + kw2.K2
+P1 = b1wt!kw2!P11
+P11 = b2rf.P12 + b2rt.(kr2.P11 + kr1.P12)
+P12 = enter1.exit1.b1wf!P1
+P2 = b2wt!kw1!P21
+P21 = b1rf.P22 + b1rt.(kr1.P21 + kr2.P22)
+P22 = enter2.exit2.b2wf!P2
+
+Peterson = (P1 | P2 | K1 | B1f | B2f) 
+
+Spec = enter1.exit1.Spec + enter2.exit2.Spec
+""" // \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}
+
 
 
   val namedSamples = List[Samples.Example](
@@ -176,7 +196,10 @@ P2B = tau.a.0 + tau.(tau.b.0 + tau.c.0)
         failureTraceAndImpossibleFutures),
     Samples.Example("weak-sims",
 	    "Weak Bisim, Coupled, Contrasim",
-        weakBisimCoupledContraSim)
+        weakBisimCoupledContraSim),
+    Samples.Example("peterson-mutex",
+	    "Peterson Mutual exclusion",
+        petersonMutex)
   )
 
   def getExample(slug: String) = {

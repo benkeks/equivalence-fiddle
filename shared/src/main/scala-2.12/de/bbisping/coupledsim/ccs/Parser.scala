@@ -15,6 +15,7 @@ class Parser(val input: String) extends Parsing {
   case class LiteralString(string: String, pos: Pos) extends Token(pos)
   case class RoundBracketOpen(pos: Pos) extends Token(pos)
   case class RoundBracketClose(pos: Pos) extends Token(pos)
+  case class CurlyBracketOpen(pos: Pos) extends Token(pos)
   case class CurlyBracketClose(pos: Pos) extends Token(pos)
   case class Comma(pos: Pos) extends Token(pos)
   case class Equals(pos: Pos) extends Token(pos)
@@ -24,19 +25,23 @@ class Parser(val input: String) extends Parsing {
   case class Star(pos: Pos) extends Token(pos)
   case class Percent(pos: Pos) extends Token(pos)
   case class Plus(pos: Pos) extends Token(pos)
+  case class Backslash(pos: Pos) extends Token(pos)
   case class Bang(pos: Pos) extends Token(pos)
   case class Colon(pos: Pos) extends Token(pos)
+  case class Pipe(pos: Pos) extends Token(pos)
   case class Dot(pos: Pos) extends Token(pos)
   case class MetaSign(pos: Pos) extends Token(pos)
   case class ErrorToken(msg: String, pos: Pos) extends Token(pos)
   
   override def getTokenPosition(token: Token) = token.position
   
-  val symbolToks = Set("(", ")", ",", "=", "-->", "|-", "->", "*", "%", "+", "!", ":", ".", "@")
+  val symbolToks = Set("(", ")", "{", "}", ",", "=", "-->", "|-", "->", "*", "%", "+", "\\", "!", ":", "|", ".", "@")
   
   def toToken(txt: String, pos: Pos) = txt match {
     case "(" => RoundBracketOpen(pos)
     case ")" => RoundBracketClose(pos)
+    case "{" => CurlyBracketOpen(pos)
+    case "}" => CurlyBracketClose(pos)
     case "," => Comma(pos)
     case "=" => Equals(pos)
     case "-->" => RelationArrow(pos)
@@ -45,8 +50,10 @@ class Parser(val input: String) extends Parsing {
     case "*" => Star(pos)
     case "%" => Percent(pos)
     case "+" => Plus(pos)
+    case "\\" => Backslash(pos)
     case "!" => Bang(pos)
     case ":" => Colon(pos)
+    case "|" => Pipe(pos)
     case "." => Dot(pos)
     case "@" => MetaSign(pos)
     case x if x startsWith "\"" =>
@@ -143,6 +150,10 @@ class Parser(val input: String) extends Parsing {
             processPrefixes(in3) flatMap { (e2, rt) =>
               ParseSuccess(Prefix(name, e2, name.pos), rt)
             }
+          case Bang(_) :: in3 =>
+            processPrefixes(in3) flatMap { (e2, rt) =>
+              ParseSuccess(Prefix(name.toOutput, e2, name.pos), rt)
+            }
           case other =>
             ParseSuccess(ProcessName(name, name.pos), other)
         }
@@ -176,12 +187,44 @@ class Parser(val input: String) extends Parsing {
             case (e, rt) =>
               ParseSuccess(Choice(proc :: e :: Nil, proc.position), rt)
           }
+        case Pipe(_) :: in5 =>
+          process(in5) flatMap {
+            case (Parallel(procs, pos), rt) if procs.nonEmpty =>
+              ParseSuccess(Parallel(proc :: procs, proc.position), rt)
+            case (e, rt) =>
+              ParseSuccess(Parallel(proc :: e :: Nil, proc.position), rt)
+          }
+        case Backslash(_) :: CurlyBracketOpen(_) :: in5 =>
+          parseLabelSet(in5) flatMap {
+            case (labels, rt) =>
+              ParseSuccess(Restrict(labels, proc, proc.position), rt)
+          }
         case other =>
           ParseFail("Expected process continuation.", other)
       }
     }
 
     complexTerm or firstPrefix
+  }
+
+  def parseLabelSet(in: List[Token]): Parsed[List[Label]] = {
+
+    node(in) flatMap { (l, in1) => 
+      in1 match {
+        case Comma(_) :: rt =>
+          parseLabelSet(rt)
+        case CurlyBracketClose(_) :: rt =>
+          ParseSuccess(List(l), rt)
+        case other =>
+          ParseFail("Expected , or } to continue label list", other)
+      }
+    } orElse { _ => in match {
+        case CurlyBracketClose(_) :: rt =>
+          ParseSuccess(List(), rt)
+        case other =>
+          ParseFail("Expected , or } to continue label list", other)
+      }
+    }
   }
   
   def processDeclaration(in: List[Token]): Parsed[ProcessDeclaration] = {
