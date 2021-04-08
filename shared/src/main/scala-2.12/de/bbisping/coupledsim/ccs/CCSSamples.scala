@@ -162,6 +162,17 @@ P2B = tau.a.0 + tau.(tau.b.0 + tau.c.0)
 @compare "P2A,P2B"
 """
 
+  val weakBisimCoupledSimParallel = """
+P2A(x=0, y=300)
+P2B(x=600, y=300)
+
+P2A = (res!0 | (res.a.0 + res.b.0 + res.c.0)) \ {res}
+P2B = (res1!res2!0 | (res1.res2.a.0 + res1.(res2.b.0 + res2.c.0))) \ {res1 | res2}
+
+@comment "Distinguished by Weak Bisim"
+@compare "P2A,P2B"
+"""
+
   val petersonMutex = """
 B1f = b1rf!B1f + b1wf.B1f + b1wt.B1t
 B1t = b1rt!B1t + b1wf.B1f + b1wt.B1t
@@ -177,7 +188,7 @@ P2 = b2wt!kw1!P21
 P21 = b1rf.P22 + b1rt.(kr1.P21 + kr2.P22)
 P22 = enter2.exit2.b2wf!P2
 
-Peterson = (P1 | P2 | K1 | B1f | B2f) 
+Peterson = (P1 | P2 | K1 | B1f | B2f) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}
 
 Spec = enter1.exit1.Spec + enter2.exit2.Spec
 """ // \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}

@@ -5,6 +5,7 @@ import de.bbisping.coupledsim.util.Interpreting._
 import de.bbisping.coupledsim.util.Relation
 import de.bbisping.coupledsim.util.LabeledRelation
 import de.bbisping.coupledsim.ts.WeakTransitionSystem
+import de.bbisping.coupledsim.ccs.Syntax.Restrict
 
 /** Transforms a CCS term into a transition system */
 class Interpreter[S, A, L](
@@ -83,27 +84,21 @@ class Interpreter[S, A, L](
           } yield (a, s1)
           transitions(stateId) = newTransitions
         case Syntax.Parallel(procs, _) =>
-          println("interpreting parallel")
           val initialTransitions = for {
             p <- procs
             Success(s0) = convertProcess(p)
           } yield transitions(s0)
 
-          println("initial trans " + initialTransitions)
-          
           val initialTransitionsGrouped =
             initialTransitions.map(_.groupBy { case (a, _) => (toInput(a), isOutput(a)) }).zipWithIndex
 
-          println("initial trans grouped " + initialTransitionsGrouped)
-
           val newSyncTransitions = for {
             (initsA, iA) <- initialTransitionsGrouped
-            (initsB, iB) <- initialTransitionsGrouped
-            if iA != iB
+            (initsB, iB) <- initialTransitionsGrouped.filterNot(_._2 == iA)
             bOutputs = initsB.filterKeys(_._2)
-            ((actionA, _), succA) <- initsA.filterKeys(k => !k._2)
+            ((actionA, _), succA) <- initsA.filterKeys(k => !k._2).toList
             sA <- succA
-            sB <- bOutputs.getOrElse((actionA, true), List())
+            sB <- bOutputs.getOrElse((actionA, true), Nil)
           } yield {
             val newProcs = procs.zipWithIndex.map { case (p, i) =>
               if (i == iA) {
@@ -115,21 +110,29 @@ class Interpreter[S, A, L](
               }
             }
             val Success(newState) = convertProcess(Syntax.Parallel(newProcs, e.position))
-            println("synced:" + (silentAction, newState))
             (silentAction, newState)
           }
-          println("synced:" + newSyncTransitions)
           val newInterleavedTransitions: List[(A, S)] = for {
             (initsA, iA) <- initialTransitions.zipWithIndex
             (a, s) <- initsA
           } yield {
             val newProcs = procs.updated(iA, sourceProcess(s))
             val Success(newState) = convertProcess(Syntax.Parallel(newProcs, e.position))
-            println("interleaved:" + newProcs)
             (a, newState)
           }
 
           transitions(stateId) = newSyncTransitions ++ newInterleavedTransitions
+        case Restrict(names, proc, pos) => 
+          val Success(s0) = convertProcess(proc)
+          val aNames = names.map(a => arrowLabeling(Some(a)).get)
+          val newTransitions = for {
+            (a, s) <- transitions(s0)
+            if !aNames.contains(toInput(a))
+          } yield {
+            val Success(newState) = convertProcess(Syntax.Restrict(names, sourceProcess(s), pos))
+            (a, newState)
+          }
+          transitions(stateId) = newTransitions
         case Syntax.ProcessName(l, _) =>
           if (!transitions.isDefinedAt(stateId)) transitions(stateId) = List()
       }
