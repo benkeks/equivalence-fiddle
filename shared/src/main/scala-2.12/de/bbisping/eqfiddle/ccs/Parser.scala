@@ -212,7 +212,7 @@ class Parser(val input: String) extends Parsing {
     node(in) flatMap { (l, in1) => 
       in1 match {
         case Comma(_) :: rt =>
-          parseLabelSet(rt)
+          parseLabelSet(rt) flatMap { (ll, rt2) => ParseSuccess(l :: ll, rt2) }
         case CurlyBracketClose(_) :: rt =>
           ParseSuccess(List(l), rt)
         case other =>

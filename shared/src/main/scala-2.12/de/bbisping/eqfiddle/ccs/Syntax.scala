@@ -80,7 +80,8 @@ object Syntax {
     override def toString() = if (procs.isEmpty) {
       "0"
     } else {
-      procs.mkString(" + ")
+      val str = procs.mkString(" + ")
+      if (str.contains("|")) "(" + str + ")" else str
     }
   }
 
