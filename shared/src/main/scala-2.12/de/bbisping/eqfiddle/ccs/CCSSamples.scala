@@ -41,9 +41,9 @@ R24 = a.b.0 + a.(b.0 + c.0) + a.c.0
 L27(x=-200,y=100)
 R27(x=300,y=100)
 L27 = a.(b.0 + a.(b.0 + c.d.0) + a.c.e.0)
-	+ a.(a.c.d.0 + a.(c.e.0 + b.0))
+  + a.(a.c.d.0 + a.(c.e.0 + b.0))
 R27 = a.(a.(b.0 + c.d.0) + a.c.e.0)
-	+ a.(a.c.d.0 + a.(c.e.0 + b.0) + b.0)
+  + a.(a.c.d.0 + a.(c.e.0 + b.0) + b.0)
 @eqs "L27,R27:PF"
 @notEqs "L27,R27:FT,S"
 @compare "L27,R27"
@@ -182,7 +182,7 @@ P2A(x=0, y=300)
 P2B(x=600, y=300)
 
 P2A = (res!0 | (res.a.0 + res.b.0 + res.c.0)) \ {res}
-P2B = (res1!res2!0 | (res1.res2.a.0 + res1.(res2.b.0 + res2.c.0))) \ {res1 | res2}
+P2B = (res1!res2!0 | (res1.res2.a.0 + res1.(res2.b.0 + res2.c.0))) \ {res1, res2}
 
 @comment "Distinguished by Weak Bisim"
 @compare "P2A,P2B"
@@ -211,22 +211,22 @@ Spec = enter1.exit1.Spec + enter2.exit2.Spec
 
   val namedSamples = List[Samples.Example](
     Samples.Example("ltbts1",
-	    "Linear Time Branching Time Spectrum 1",
+      "Linear Time Branching Time Spectrum 1",
         ltbts1),
     Samples.Example("neither-failure-sim",
-	    "Neither failure nor simulation equivalent",
+      "Neither failure nor simulation equivalent",
         notFailureOrSim),
     Samples.Example("ft-and-if",
-	    "FT as well as IF preordered",
+      "FT as well as IF preordered",
         failureTraceAndImpossibleFutures),
     Samples.Example("review-counterexamples",
-	    "Spurious failure-trace preorderings in original algorithm",
+      "Spurious failure-trace preorderings in original algorithm",
         reviewCounterexamples),
-    // Samples.Example("weak-sims",
-	  //   "Weak Bisim, Coupled, Contrasim",
-    //     weakBisimCoupledContraSim),
+    Samples.Example("weak-sims",
+       "Weak Bisim, Coupled, Contrasim",
+         weakBisimCoupledSimParallel),
     Samples.Example("peterson-mutex",
-	    "Peterson Mutual exclusion",
+      "Peterson Mutual exclusion",
         petersonMutex)
   )
 
