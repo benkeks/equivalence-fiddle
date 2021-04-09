@@ -309,6 +309,33 @@ object Structure {
     }
   }
 
+  case class StructureExamineCharacterizations(n: NodeID, resetReplay: Boolean = true) extends StructureAction {
+
+    override def implementStructure(structure: Structure) = {
+      if (resetReplay) {
+        structure.setReplay(List())
+      }
+      
+      if (structure.structure.nodes(n)) {
+
+        val begin = Date.now
+
+        // val algo = new HMLGamePlayer(structure.structure, List(n1, n2))
+        // algo.compute()
+        // println("Spectroscopy took: " + (Date.now - begin) + "ms.")
+
+        // val replay = algo.getReplay()
+        
+        // structure.setReplay(replay)
+        // structure.main.doAction(StructureDoReplayStep(), structure)
+
+        true
+      } else {
+        false
+      }
+    }
+  }
+
   case class StructureDoReplayStep(goToStep: Int = -1) extends StructureAction {
     override def implementStructure(structure: Structure) = {
       if (goToStep >= 0) structure.currentReplayStep = goToStep
