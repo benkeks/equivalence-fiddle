@@ -56,8 +56,8 @@ object Benchmark extends App {
     esDef.getDeclaration(n1s) map (_.process) foreach (println(_))
     esDef.getDeclaration(n2s) map (_.process) foreach (println(_))
 
-    val algo = new HMLGamePlayer(ltbtsSystem, List(n1, n2))
-    algo.compute()
+    val algo = new HMLGamePlayer(ltbtsSystem)
+    algo.computeSpectroscopy(n1, n2)
 
     val log = for {
       r <- algo.getReplay()

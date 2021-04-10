@@ -13,8 +13,7 @@ import de.bbisping.coupledsim.algo.AlgorithmLogging
 import de.bbisping.coupledsim.util.LabeledRelation
 
 class HMLGamePlayer[S, A, L] (
-    val ts: WeakTransitionSystem[S, A, L],
-    val nodes: List[S])
+    val ts: WeakTransitionSystem[S, A, L])
   extends AlgorithmLogging[S, A, L] {
 
   def moveToHML(game: HMLSpectroscopyGame[S,A,L])(n1: GameNode, n2: GameNode, ff: Set[HennessyMilnerLogic.Formula[A]]): Set[HennessyMilnerLogic.Formula[A]] = {
@@ -161,17 +160,17 @@ class HMLGamePlayer[S, A, L] (
     // }
   }
 
-  def compute() = {
+  def computeSpectroscopy(s0: S, s1: S) = {
 
-    val initialStates = List((nodes(0), Set(nodes(1))), (nodes(1), Set(nodes(0))))
+    val initialStates = List((s0, Set(s1)), (s1, Set(s0)))
 
     val hmlGame = new HMLSpectroscopyGame(initialStates, ts)
 
     debugLog("HML spectroscopy game size: " + hmlGame.discovered.size)
 
     val attackerWin = hmlGame.computeWinningRegion()
-    val aLR = hmlGame.AttackerObservation(nodes(0), Set(nodes(1)))
-    val aRL = hmlGame.AttackerObservation(nodes(1), Set(nodes(0)))
+    val aLR = hmlGame.AttackerObservation(s0, Set(s1))
+    val aRL = hmlGame.AttackerObservation(s1, Set(s0))
 
     if (attackerWin.contains(aLR) || attackerWin.contains(aRL)) {
       val minFormulas = buildHML(hmlGame, attackerWin, Set(aLR, aRL))
@@ -179,28 +178,66 @@ class HMLGamePlayer[S, A, L] (
       if (attackerWin.contains(aLR)) {
         minFormulas(aLR).foreach { f =>
           debugLog("Distinguished under " + f.classifyFormula() + " preorder by " + f.toString())
-          checkDistinguishing(f, nodes(0), nodes(1))
+          checkDistinguishing(f, s0, s1)
         }
       }
 
       if (attackerWin.contains(aRL)) {
         minFormulas(aRL).foreach { f =>
           debugLog("Distinguished under " + f.classifyFormula() + " preorder by " + f.toString())
-          checkDistinguishing(f, nodes(1), nodes(0))
+          checkDistinguishing(f, s1, s0)
         }
       }
     } else {
 
-      val simNodes = for {
+      val simStates = for {
         gn <- hmlGame.discovered
         if gn.isInstanceOf[hmlGame.AttackerObservation] && !attackerWin(gn)
         hmlGame.AttackerObservation(p, qq, _) = gn // TODO non?-immediate
         q <- qq
       } yield (p, "", q)
     
-      val rel = new LabeledRelation(simNodes.toSet)
+      val rel = new LabeledRelation(simStates.toSet)
 
-      logRelation(rel, nodes(0) + " and " + nodes(1) + " are bisimulation equivalent.")
+      logRelation(rel, s0 + " and " + s1 + " are bisimulation equivalent.")
+    }
+
+    true
+  }
+
+  def computeCharacterization(s0: S) = {
+
+    val initialStates = List((s0, ts.nodes - s0))
+
+    val hmlGame = new HMLSpectroscopyGame(initialStates, ts)
+
+    debugLog("HML spectroscopy game size: " + hmlGame.discovered.size)
+
+    val attackerWin = hmlGame.computeWinningRegion()
+    val aStateAll = hmlGame.AttackerObservation(s0, ts.nodes - s0)
+
+    if (attackerWin.contains(aStateAll)) {
+      val minFormulas = buildHML(hmlGame, attackerWin, Set(aStateAll))
+
+      if (attackerWin.contains(aStateAll)) {
+        minFormulas(aStateAll).foreach { f =>
+          debugLog("Locally characterized by " + f.classifyFormula() + " with equivalence " + f.toString())
+          //checkDistinguishing(f, s0, s1)
+        }
+      }
+
+    } else {
+
+      // val simStates = for {
+      //   gn <- hmlGame.discovered
+      //   if gn.isInstanceOf[hmlGame.AttackerObservation] && !attackerWin(gn)
+      //   hmlGame.AttackerObservation(p, qq, _) = gn // TODO non?-immediate
+      //   q <- qq
+      // } yield (p, "", q)
+    
+      // val rel = new LabeledRelation(simStates.toSet)
+
+      // logRelation(rel, s0 + " and " + s1 + " are bisimulation equivalent.")
     }
 
     true

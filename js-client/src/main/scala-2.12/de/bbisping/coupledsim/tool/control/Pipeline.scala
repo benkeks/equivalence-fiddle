@@ -59,7 +59,7 @@ class Pipeline(val main: Control) extends ModelComponent {
     } else if ("characterize" == meta) {
       val state = info.trim()
       broadcast(Pipeline.PipelineStatusChange(List(Pipeline.CurrentLine(line))))
-      //main.dispatchAction(Structure.StructureExamineCharacterizations(NodeID(states(0))))
+      main.dispatchAction(Structure.StructureExamineCharacterizations(NodeID(state)))
       true
     } else {
       false
