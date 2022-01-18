@@ -1,6 +1,6 @@
 # Linear-time–Branching-time Spectroscope
 
-This is a tool for finding the best ways of equating / preordering / distinguishing finite process models.
+This is a tool for finding the best ways of equating / preordering / distinguishing finite process models as described in [Bisping & Nestmann, TACAS 2021](https://link.springer.com/chapter/10.1007%2F978-3-030-72016-2_1).
 
 It runs online on https://concurrency-theory.org/ltbt-spectroscope/ .
 
@@ -21,11 +21,20 @@ This will download all dependencies and output a website under `web/target/web/s
 In order to test that the algorithm determines the expected (in-)equivaences for the example processes from https://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.36.8596, run:
 
 ```
-sbt shared/test
+sbt "shared/test"
 ```
+
+To generate distinguishing formulas displayed in Table 2 of the [paper](https://link.springer.com/chapter/10.1007%2F978-3-030-72016-2_1):
+
+```
+sbt "shared/run"
+```
+
 
 ## Developed by
 
 The LTBT Spectroscope is developed at [MTV TU Berlin](https://www.mtv.tu-berlin.de) by Benjamin Bisping (benjamin.bisping@tu-berlin.de).
+
+The code is subject to the MIT License to be found in `LICENSE`. The full source can be obtained from <https://concurrency-theory.org/ltbt-spectroscope/code/>.
 
 The frontend is derived from our [HDES Tool](http://hdes.mtv.tu-berlin.de/) for higher-order dynamic-causality event structures.
