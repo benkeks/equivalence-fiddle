@@ -39,3 +39,31 @@ case class Partition[E](val parts: Set[Set[E]]) {
     partitionFor(e).map(_.max)
   }
 }
+
+object Partition {
+
+  def partitioningListsOfSet[E](ee: Set[E]): Iterable[List[Set[E]]] = {
+    if (ee.isEmpty) {
+      List(List())
+    } else {
+      val focused = ee.head
+      val rest = ee.tail
+      if (rest.isEmpty) {
+        List(List(ee))
+      } else {
+        val restPartitionings = partitioningListsOfSet(rest)
+        for {
+          partition <- restPartitionings
+          i <- (0 to partition.length)
+        } yield {
+          if (i == partition.length) {
+            partition :+ Set(focused)
+          } else {
+            partition.updated(i, partition(i) + focused)
+          }
+        }
+      }
+    }
+  }
+
+}
