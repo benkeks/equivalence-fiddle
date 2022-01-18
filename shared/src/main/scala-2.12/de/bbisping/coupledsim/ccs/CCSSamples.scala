@@ -141,7 +141,34 @@ P2 = (a.b.0 + a.0 + a.c.0)
 @compare "P1,P2"
 """
 
+  val reviewCounterexamples = """
+@comment "These examples have been mischaracterized by the original published algorithm as failure-trace-preordered." 
 
+L1(x=0, y=0)
+R1(x=600, y=0)
+"0"(x=300, y=450)
+"b.0"(x=200, y=250)
+"a.0 + b.0"(x=600, y=300)
+"b.b.0"(x=300, y=100)
+
+L1 = a.b.0
+R1 = (a.0 + a.b.b.0 + a.(a.0 + b.0))
+@comment "L1 is preordered to R1 by readiness (but distinguished by failure-traces AND impossible futures)" 
+@compare "L1,R1" 
+
+L2(x=0, y=700)
+R2(x=600, y=700)
+"b.0 + c.0 + d.d.0"(x=100, y=600)
+"a.0 + d.d.0"(x=500, y=650)
+"d.0"(x=300,y=600)
+"d.d.0"(x=400, y=600)
+"b.b.0 + c.0 + d.d.d.0"(x=550, y=500)
+"b.0 + c.c.0 + d.d.d.0"(x=550, y=600)
+"c.0"(x=461, y=508)
+L2 = a.(b.0 + c.0 + d.d.0)
+R2 = (a.(a.0 + d.d.0) + a.(b.b.0 + c.0 + d.d.d.0) + a.(b.0 + c.c.0 + d.d.d.0))
+@compare "L2, R2"
+"""
 
   val namedSamples = List[Samples.Example](
     Samples.Example("ltbts1",
@@ -151,8 +178,11 @@ P2 = (a.b.0 + a.0 + a.c.0)
 	    "Neither failure nor simulation equivalent",
         notFailureOrSim),
     Samples.Example("ft-and-if",
-	    "As well FT as well as IF preordered",
-        failureTraceAndImpossibleFutures)
+	    "FT as well as IF preordered",
+        failureTraceAndImpossibleFutures),
+    Samples.Example("review-counterexamples",
+	    "Spurious failure-trace preorderings in original algorithm",
+        reviewCounterexamples)
   )
 
   def getExample(slug: String) = {
