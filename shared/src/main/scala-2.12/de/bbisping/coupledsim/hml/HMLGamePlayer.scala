@@ -256,7 +256,7 @@ class HMLGamePlayer[S, A, L] (
       def nodeToString(gn: GameNode): String = gn match {
         case AttackerObservation(p: S, qq: Set[S]) =>
           val qqString = qq.mkString("{",",","}")
-          val formulaString = formulas.getOrElse(gn,Set()).mkString(",").replaceAllLiterally("⊤","")
+          val formulaString = formulas.getOrElse(gn,Set()).mkString("\\n").replaceAllLiterally("⊤","")
           val label = s"$p, $qqString" + (if (formulaString != "{}") s"\\n------\\n$formulaString" else "")
           label.replaceAllLiterally(".0", "")
         case DefenderConjunction(p: S, qqPart: List[Set[S]]) =>
