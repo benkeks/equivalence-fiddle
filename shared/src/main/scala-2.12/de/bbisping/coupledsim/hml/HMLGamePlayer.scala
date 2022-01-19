@@ -53,7 +53,7 @@ class HMLGamePlayer[S, A, L] (
 
     def successors(gn: GameNode): Iterable[GameNode] = gn match {
       case AttackerObservation(p0, qq0) =>
-        if ((qq0 contains p0) && false) {
+        if ((qq0 contains p0)) {
           List()
         } else {
           val dn = for {
