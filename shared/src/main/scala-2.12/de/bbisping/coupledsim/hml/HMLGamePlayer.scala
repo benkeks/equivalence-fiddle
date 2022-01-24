@@ -40,7 +40,7 @@ class HMLGamePlayer[S, A, L] (
 
   val recordedMoveEdges = collection.mutable.Map[(GameNode, GameNode), MoveKind]()
 
-  case class AttackerObservation(p: S, qq: Set[S]) extends SimpleGame.AttackerNode 
+  case class AttackerObservation(p: S, qq: Set[S], afterConj: Boolean = false) extends SimpleGame.AttackerNode
   case class DefenderConjunction(p: S, qqPart: List[Set[S]]) extends SimpleGame.DefenderNode
 
   class HMLSpectroscopyGame
@@ -52,8 +52,8 @@ class HMLGamePlayer[S, A, L] (
     )
 
     def successors(gn: GameNode): Iterable[GameNode] = gn match {
-      case AttackerObservation(p0, qq0) =>
-        if ((qq0 contains p0)) {
+      case AttackerObservation(p0, qq0, afterConj) =>
+        if ((qq0 contains p0) && false) {
           List()
         } else {
           val dn = for {
@@ -80,6 +80,8 @@ class HMLGamePlayer[S, A, L] (
             val neg = AttackerObservation(qq0.head, Set(p0))
             recordedMoveEdges((gn, neg)) = NegationMove()
             dn ++ List(neg)
+          } else if (afterConj) {
+            dn
           } else {
             // conjunct moves only make sense if the defender is spread
             val conjMoves = for {
@@ -97,7 +99,7 @@ class HMLGamePlayer[S, A, L] (
       case DefenderConjunction(p0, qqPart0) =>
         for {
           qq0 <- qqPart0
-          obs = AttackerObservation(p0, qq0)
+          obs = AttackerObservation(p0, qq0, afterConj = true)
         } yield {
           recordedMoveEdges((gn, obs)) = DefenderMove()
           obs
@@ -165,7 +167,7 @@ class HMLGamePlayer[S, A, L] (
 
   def logAttacksAndResult(node: GameNode, attackGraph: Relation[SimpleGame.GameNode], resultFormulas: Set[HennessyMilnerLogic.Formula[A]]) = {
     def gameNodeToTuple(n: SimpleGame.GameNode) = n match {
-      case AttackerObservation(p, qq) =>
+      case AttackerObservation(p, qq, afterConj) =>
         (Set(p), "A", qq)
       case DefenderConjunction(p, qq) =>
         //TODO: This display does not work anymore with the paritioning approach!
@@ -200,13 +202,13 @@ class HMLGamePlayer[S, A, L] (
     val simNodes = for {
       (gn, preorders) <- bestPreorders
       if gn.isInstanceOf[AttackerObservation]
-      AttackerObservation(p, qq) = gn
+      AttackerObservation(p, qq, _) = gn
       label = preorders.map(_._1).mkString(",")
       q <- qq
     } yield (p, label, q)
     
     val rel = new LabeledRelation(simNodes.toSet)
-    val AttackerObservation(p, qq) = node
+    val AttackerObservation(p, qq, _) = node
 
     for {
       q <- qq
@@ -255,10 +257,12 @@ class HMLGamePlayer[S, A, L] (
       def nodeToID(gn: GameNode): String = gn.hashCode().toString()
 
       def nodeToString(gn: GameNode): String = gn match {
-        case AttackerObservation(p: S, qq: Set[S]) =>
+        case AttackerObservation(p: S, qq: Set[S], afterConj) =>
           val qqString = qq.mkString("{",",","}")
           val formulaString = formulas.getOrElse(gn,Set()).mkString("\\n").replaceAllLiterally("⟩⊤","⟩")
-          val label = s"$p, $qqString" + (if (formulaString != "{}") s"\\n------\\n$formulaString" else "")
+          val label = s"$p, $qqString" +
+            (if (afterConj) " ⤓" else "")
+            (if (formulaString != "{}") s"\\n------\\n$formulaString" else "")
           label.replaceAllLiterally(".0", "")
         case DefenderConjunction(p: S, qqPart: List[Set[S]]) =>
           val qqString = qqPart.map(_.mkString("{",",","}")).mkString("/")
@@ -307,7 +311,7 @@ class HMLGamePlayer[S, A, L] (
       val simNodes = for {
         gn <- hmlGame.discovered
         if gn.isInstanceOf[AttackerObservation] && !attackerWin(gn)
-        AttackerObservation(p, qq) = gn
+        AttackerObservation(p, qq, _) = gn
         q <- qq
       } yield (p, "", q)
 
