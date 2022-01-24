@@ -22,7 +22,7 @@ abstract class GameGraphVisualizer(game: SimpleGame with GameDiscovery) {
       nodeLabel = nodeToString(node)
       isAttacker = node.isInstanceOf[SimpleGame.AttackerNode]
       shape = if (isAttacker) "square" else "circle, width=2, fixedsize=true"
-      color = if (isAttacker) {if (attackerWinningRegion(node)) "red" else "blue"} else "black"
+      color = if (attackerWinningRegion(node)) "red" else "blue"
       style = "bold"
     } yield s"$nodeID [shape=$shape, color=$color, style=$style, label=" + "\"" + nodeLabel +"\"]"
 

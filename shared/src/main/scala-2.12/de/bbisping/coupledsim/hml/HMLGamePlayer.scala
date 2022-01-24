@@ -84,6 +84,7 @@ class HMLGamePlayer[S, A, L] (
             // conjunct moves only make sense if the defender is spread
             val conjMoves = for {
               parts <- Partition.partitioningListsOfSet(qq0)
+              //if parts.length == qq0.size // this is equivalent to the original algorithm's game
               if parts.length != 1 // drop the trivial partitioning
               conj = DefenderConjunction(p0, parts)
             } yield {
@@ -256,7 +257,7 @@ class HMLGamePlayer[S, A, L] (
       def nodeToString(gn: GameNode): String = gn match {
         case AttackerObservation(p: S, qq: Set[S]) =>
           val qqString = qq.mkString("{",",","}")
-          val formulaString = formulas.getOrElse(gn,Set()).mkString("\\n").replaceAllLiterally("⊤","")
+          val formulaString = formulas.getOrElse(gn,Set()).mkString("\\n").replaceAllLiterally("⟩⊤","⟩")
           val label = s"$p, $qqString" + (if (formulaString != "{}") s"\\n------\\n$formulaString" else "")
           label.replaceAllLiterally(".0", "")
         case DefenderConjunction(p: S, qqPart: List[Set[S]]) =>
