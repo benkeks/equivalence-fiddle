@@ -11,6 +11,8 @@ import de.bbisping.coupledsim.game.AttackGraphBuilder
 import de.bbisping.coupledsim.game.SimpleGame.GameNode
 import de.bbisping.coupledsim.algo.AlgorithmLogging
 import de.bbisping.coupledsim.util.LabeledRelation
+import de.bbisping.coupledsim.util.Partition
+import de.bbisping.coupledsim.game.GameGraphVisualizer
 
 class HMLGamePlayer[S, A, L] (
     val ts: WeakTransitionSystem[S, A, L],
@@ -38,8 +40,8 @@ class HMLGamePlayer[S, A, L] (
 
   val recordedMoveEdges = collection.mutable.Map[(GameNode, GameNode), MoveKind]()
 
-  case class AttackerObservation(p: S, qq: Set[S]) extends SimpleGame.AttackerNode 
-  case class DefenderConjunction(p: S, qq: Set[S]) extends SimpleGame.DefenderNode
+  case class AttackerObservation(p: S, qq: Set[S], afterConj: Boolean = false) extends SimpleGame.AttackerNode
+  case class DefenderConjunction(p: S, qqPart: List[Set[S]]) extends SimpleGame.DefenderNode
 
   class HMLSpectroscopyGame
     extends SimpleGame with GameDiscovery with WinningRegionComputation {
@@ -50,41 +52,54 @@ class HMLGamePlayer[S, A, L] (
     )
 
     def successors(gn: GameNode): Iterable[GameNode] = gn match {
-      case AttackerObservation(p0, qq0) =>
-        val dn = for {
-          (a,pp1) <- ts.post(p0)
-          p1 <- pp1
-          next = AttackerObservation(p1,
-            qq0.flatMap(ts.post(_, a))
-          )
-        } yield {
-          recordedMoveEdges((gn, next)) = ObservationMove(a)
-          next
-        }
-
-        val in = for {
-          p1 <- ts.silentReachable(p0)
-          passNext = AttackerObservation(p0, qq0.flatMap(ts.silentReachable(_)))
-        } yield {
-          recordedMoveEdges((gn, passNext)) = PassingMove()
-          passNext
-        }
-        
-        if (qq0.size == 1) {
-          // wlog only have negation moves when the defender is focused (which can be forced by the attacker using a preceding conjunction)
-          val neg = AttackerObservation(qq0.head, Set(p0))
-          recordedMoveEdges((gn, neg)) = NegationMove()
-          dn ++ in ++ List(neg)
+      case AttackerObservation(p0, qq0, afterConj) =>
+        if ((qq0 contains p0) && false) {
+          List()
         } else {
-          // conjunct moves only make sense if the defender is spread
-          val conj = DefenderConjunction(p0, qq0)
-          recordedMoveEdges((gn, conj)) = ConjunctMove()
-          dn ++ in ++ List(conj)
+          val dn = for {
+            (a,pp1) <- ts.post(p0)
+            p1 <- pp1
+            next = AttackerObservation(p1,
+              qq0.flatMap(ts.post(_, a))
+            )
+          } yield {
+            recordedMoveEdges((gn, next)) = ObservationMove(a)
+            next
+          }
+
+          // val in = for {
+          //   p1 <- ts.silentReachable(p0)
+          //   passNext = AttackerObservation(p0, qq0.flatMap(ts.silentReachable(_)))
+          // } yield {
+          //   recordedMoveEdges((gn, passNext)) = PassingMove()
+          //   passNext
+          // }
+          
+          if (qq0.size == 1) {
+            // wlog only have negation moves when the defender is focused (which can be forced by the attacker using preceding conjunctions)
+            val neg = AttackerObservation(qq0.head, Set(p0))
+            recordedMoveEdges((gn, neg)) = NegationMove()
+            dn ++ List(neg)
+          } else if (afterConj) {
+            dn
+          } else {
+            // conjunct moves only make sense if the defender is spread
+            val conjMoves = for {
+              parts <- Partition.partitioningListsOfSet(qq0)
+              //if parts.length == qq0.size // this is equivalent to the original algorithm's game
+              if parts.length != 1 // drop the trivial partitioning
+              conj = DefenderConjunction(p0, parts)
+            } yield {
+              recordedMoveEdges((gn, conj)) = ConjunctMove()
+              conj
+            }
+            dn ++ conjMoves
+          }
         }
-      case DefenderConjunction(p0, qq0) =>
+      case DefenderConjunction(p0, qqPart0) =>
         for {
-          q0 <- qq0
-          obs = AttackerObservation(p0, Set(q0))
+          qq0 <- qqPart0
+          obs = AttackerObservation(p0, qq0, afterConj = true)
         } yield {
           recordedMoveEdges((gn, obs)) = DefenderMove()
           obs
@@ -152,10 +167,11 @@ class HMLGamePlayer[S, A, L] (
 
   def logAttacksAndResult(node: GameNode, attackGraph: Relation[SimpleGame.GameNode], resultFormulas: Set[HennessyMilnerLogic.Formula[A]]) = {
     def gameNodeToTuple(n: SimpleGame.GameNode) = n match {
-      case AttackerObservation(p, qq) => 
+      case AttackerObservation(p, qq, afterConj) =>
         (Set(p), "A", qq)
-      case DefenderConjunction(p, qq) => 
-        (Set(p), "D", qq)
+      case DefenderConjunction(p, qq) =>
+        //TODO: This display does not work anymore with the paritioning approach!
+        (Set(p), "D", qq.flatten.toSet)
     }
     
     val gameRel: Set[((Set[S], String, Set[S]), String, (Set[S], String, Set[S]))] = for {
@@ -186,13 +202,13 @@ class HMLGamePlayer[S, A, L] (
     val simNodes = for {
       (gn, preorders) <- bestPreorders
       if gn.isInstanceOf[AttackerObservation]
-      AttackerObservation(p, qq) = gn
+      AttackerObservation(p, qq, _) = gn
       label = preorders.map(_._1).mkString(",")
       q <- qq
     } yield (p, label, q)
     
     val rel = new LabeledRelation(simNodes.toSet)
-    val AttackerObservation(p, qq) = node
+    val AttackerObservation(p, qq, _) = node
 
     for {
       q <- qq
@@ -235,6 +251,34 @@ class HMLGamePlayer[S, A, L] (
     }
   }
 
+  def graphvizGameWithFormulas(game: HMLSpectroscopyGame, win: Set[GameNode], formulas: Map[GameNode, Set[HennessyMilnerLogic.Formula[A]]]) = {
+    val visualizer = new GameGraphVisualizer(game) {
+
+      def nodeToID(gn: GameNode): String = gn.hashCode().toString()
+
+      def nodeToString(gn: GameNode): String = gn match {
+        case AttackerObservation(p, qq: Set[_], afterConj) =>
+          val qqString = qq.mkString("{",",","}")
+          val formulaString = formulas.getOrElse(gn,Set()).mkString("\\n").replaceAllLiterally("⟩⊤","⟩")
+          val label = s"$p, $qqString" +
+            (if (afterConj) " ⤓" else "") +
+            (if (formulaString != "{}") s"\\n------\\n$formulaString" else "")
+          label.replaceAllLiterally(".0", "")
+        case DefenderConjunction(p, qqPart: List[Set[_]]) =>
+          val qqString = qqPart.map(_.mkString("{",",","}")).mkString("/")
+          (s"$p, $qqString").replaceAllLiterally(".0", "")
+        case _ => ""
+      }
+
+      def edgeToLabel(gn1: GameNode, gn2: GameNode) = {
+        recordedMoveEdges(gn1, gn2).toString()
+      }
+      
+    }
+
+    visualizer.outputDot(win)
+  }
+
   def compute() = {
 
     val hmlGame = new HMLSpectroscopyGame()
@@ -261,18 +305,20 @@ class HMLGamePlayer[S, A, L] (
           checkDistinguishing(f, nodes(1), nodes(0))
         }
       }
+      debugLog(graphvizGameWithFormulas(hmlGame, attackerWin, minFormulas))
     } else {
 
       val simNodes = for {
         gn <- hmlGame.discovered
         if gn.isInstanceOf[AttackerObservation] && !attackerWin(gn)
-        AttackerObservation(p, qq) = gn
+        AttackerObservation(p, qq, _) = gn
         q <- qq
       } yield (p, "", q)
-    
-      val rel = new LabeledRelation(simNodes.toSet)
 
+      val rel = new LabeledRelation(simNodes.toSet)
       logRelation(rel, nodes(0) + " and " + nodes(1) + " are bisimulation equivalent.")
+
+      debugLog(graphvizGameWithFormulas(hmlGame, attackerWin, Map().withDefaultValue(Set())))
     }
 
     true
