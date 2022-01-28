@@ -19,6 +19,7 @@ lazy val web = (project in file("web")).settings(
   isDevMode in scalaJSPipeline := true,
   pipelineStages in Assets := Seq(scalaJSPipeline),
   compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline).value,
+  skip in packageJSDependencies := false,
   libraryDependencies ++= Seq(
     "org.webjars" % "codemirror" % "5.13",
     "org.webjars" % "jquery" % "2.1.3",
@@ -40,20 +41,20 @@ lazy val shared = (project in file("shared")).settings(
 
 lazy val jsClient = (project in file("js-client")).settings(
   scalaVersion := "2.12.10",
-  name := "coupledsim-client",
+  name := "eqfiddle-client",
   parallelExecution in ThisBuild := false,
   scalacOptions ++= scalacOpts,
-  resolvers += sbt.Resolver.bintrayRepo("denigma", "denigma-releases"),
   libraryDependencies ++= Seq(
     "org.scalaz" %%% "scalaz-core" % "7.2.29",
     "org.singlespaced" %%% "scalajs-d3" % "0.3.4",
-    "org.denigma" %%% "codemirror-facade" % "5.22.0-0.8",
+    //"org.denigma" %%% "codemirror-facade" % "5.22.0-0.8", // now placed in js-client/lib
     "com.github.karasiq" %%% "scalajs-bootstrap" % "2.3.5"
   ),
   artifactPath in (Compile,fastOptJS) :=
       ((target in fastOptJS).value /
         ((moduleName in fastOptJS).value + ".js")),
   artifactPath in (Compile,fullOptJS) := (artifactPath in (Compile,fastOptJS)).value,
+  skip in packageJSDependencies := false,
   jsDependencies ++= Seq(
     "org.webjars" % "codemirror" % "5.13" / "codemirror.js",
     "org.webjars" % "jquery" % "2.1.3" / "2.1.3/jquery.js",
@@ -64,6 +65,6 @@ lazy val jsClient = (project in file("js-client")).settings(
 ).aggregate(shared).dependsOn(shared).enablePlugins(ScalaJSPlugin, ScalaJSWeb)
 
 lazy val root = project.in(file(".")).settings(
-  name := "coupledsim"
+  name := "eqfiddle"
   ).aggregate(shared, jsClient, web)
    .dependsOn(jsClient, web)
