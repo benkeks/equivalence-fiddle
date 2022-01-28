@@ -1,0 +1,40 @@
+name: Scala CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up JDK 11
+      uses: actions/setup-java@v2
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+    - name: Coursier cache
+      uses: coursier/cache-action@v6
+    - name: Run tests
+      run: sbt "shared/test"
+    - name: Compile webtool
+      run: sbt webStage
+    - name: Archive production artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: webclient
+        path: |
+          web/target/web/stage
+    - name: Cleanup before cache
+      shell: bash
+      run: |
+        rm -rf "$HOME/.ivy2/local" || true
+        find $HOME/Library/Caches/Coursier/v1        -name "ivydata-*.properties" -delete || true
+        find $HOME/.ivy2/cache                       -name "ivydata-*.properties" -delete || true
+        find $HOME/.cache/coursier/v1                -name "ivydata-*.properties" -delete || true
+        find $HOME/.sbt                              -name "*.lock"               -delete || true
