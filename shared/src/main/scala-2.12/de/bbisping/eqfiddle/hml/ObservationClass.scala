@@ -7,10 +7,10 @@ case class ObservationClass(
   conjunctionLevels: Int,
   /** the maximal amount of negations when descending into a formula */
   negationLevels: Int,
-  /** the maximal amount of positive deep branches */
+  /** the maximal amount of positive deep branches (observationHeight > 1)*/
   maxPositiveDeepBranches: Int,
-  /** the maximal amount of positive flat branches (observationHeight > 1); if all branches are flat, one positive branch will be counted as deep */
-  maxPositiveFlatBranches: Int,
+  /** the maximal amount of positive branches*/
+  maxPositiveBranches: Int,
   /** maximal observationHeight of negative subformulas */
   maxNegationHeight: Int,
   /** if there are any conjunctions with positive subformulas */
@@ -21,7 +21,7 @@ case class ObservationClass(
     Integer.max(this.conjunctionLevels, that.conjunctionLevels),
     Integer.max(this.negationLevels, that.negationLevels),
     Integer.max(this.maxPositiveDeepBranches, that.maxPositiveDeepBranches),
-    Integer.max(this.maxPositiveFlatBranches, that.maxPositiveFlatBranches),
+    Integer.max(this.maxPositiveBranches, that.maxPositiveBranches),
     Integer.max(this.maxNegationHeight, that.maxNegationHeight),
     this.nonNegativeConjuncts || that.nonNegativeConjuncts
   )
@@ -31,7 +31,7 @@ case class ObservationClass(
     Integer.min(this.conjunctionLevels, that.conjunctionLevels),
     Integer.min(this.negationLevels, that.negationLevels),
     Integer.min(this.maxPositiveDeepBranches, that.maxPositiveDeepBranches),
-    Integer.min(this.maxPositiveFlatBranches, that.maxPositiveFlatBranches),
+    Integer.min(this.maxPositiveBranches, that.maxPositiveBranches),
     Integer.min(this.maxNegationHeight, that.maxNegationHeight),
     this.nonNegativeConjuncts && that.nonNegativeConjuncts
   )
@@ -41,7 +41,7 @@ case class ObservationClass(
     this.conjunctionLevels >= that.conjunctionLevels &&
     this.negationLevels >= that.negationLevels &&
     this.maxPositiveDeepBranches >= that.maxPositiveDeepBranches &&
-    this.maxPositiveFlatBranches >= that.maxPositiveFlatBranches &&
+    this.maxPositiveBranches >= that.maxPositiveBranches &&
     this.maxNegationHeight >= that.maxNegationHeight &&
     (this.nonNegativeConjuncts || !that.nonNegativeConjuncts)
   )
@@ -53,7 +53,7 @@ case class ObservationClass(
     this.conjunctionLevels <= that.conjunctionLevels &&
     this.negationLevels <= that.negationLevels &&
     this.maxPositiveDeepBranches <= that.maxPositiveDeepBranches &&
-    this.maxPositiveFlatBranches <= that.maxPositiveFlatBranches &&
+    this.maxPositiveBranches <= that.maxPositiveBranches &&
     this.maxNegationHeight <= that.maxNegationHeight &&
     (!this.nonNegativeConjuncts || that.nonNegativeConjuncts)
   )
@@ -72,7 +72,7 @@ object ObservationClass {
     "traces" ->             ObservationClass(INFTY,     0,    0,    0,    0,    0,false),
     "failure" ->            ObservationClass(INFTY,     1,    1,    0,    0,    1,false),
     "readiness" ->          ObservationClass(INFTY,     1,    1,    0,INFTY,    1,true),
-    "failure-trace" ->      ObservationClass(INFTY, INFTY,    1,    1,    0,    1,true),
+    "failure-trace" ->      ObservationClass(INFTY, INFTY,    1,    1,    1,    1,true),
     "ready-trace" ->        ObservationClass(INFTY, INFTY,    1,    1,INFTY,    1,true),
     "impossible-future" ->  ObservationClass(INFTY,     1,    1,    0,    0,INFTY,false),
     "possible-future" ->    ObservationClass(INFTY,     1,    1,INFTY,INFTY,INFTY,true),

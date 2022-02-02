@@ -28,7 +28,7 @@ object HennessyMilnerLogic {
         obsClass.conjunctionLevels + (if (!isPositive) 1 else 0),
         obsClass.negationLevels,
         obsClass.maxPositiveDeepBranches,
-        obsClass.maxPositiveFlatBranches,
+        obsClass.maxPositiveBranches,
         obsClass.maxNegationHeight,
         obsClass.nonNegativeConjuncts
       )
@@ -72,13 +72,8 @@ object HennessyMilnerLogic {
       if (subterms.isEmpty) {
         ObservationClass(0,0,0,0,0,0,false)
       } else {
-        val (deepSubtermsPrelim, flatSubtermsPrelim) = subterms.partition(_.obsClass.observationHeight > 1)
-        val positiveFlat = flatSubtermsPrelim.find(_.isPositive)
-        
-        val (deepSubterms, flatSubterms) = if (deepSubtermsPrelim.isEmpty && positiveFlat.nonEmpty)
-          (positiveFlat.toList, flatSubtermsPrelim - positiveFlat.get)
-        else
-          (deepSubtermsPrelim, flatSubtermsPrelim)
+        val positiveSubterms = subterms.filter(_.isPositive)
+        val positiveFlatCount = positiveSubterms.count(_.obsClass.observationHeight <= 1)
 
         ObservationClass(
           observationHeight = subterms.map(_.obsClass.observationHeight).max,
@@ -86,10 +81,10 @@ object HennessyMilnerLogic {
           conjunctionLevels = subterms.map(_.obsClass.conjunctionLevels).max + 1,
           /** the maximal amount of negations when descending into a formula */
           negationLevels = subterms.map(_.obsClass.negationLevels).max,
-          /** the maximal amount of positive deep branches */
-          maxPositiveDeepBranches = (subterms.map(_.obsClass.maxPositiveDeepBranches) + deepSubtermsPrelim.count(_.isPositive)).max,
-          /** the maximal amount of positive flat branches (observationHeight > 1); if all branches are flat, one positive branch will be exempted from the count */
-          maxPositiveFlatBranches = (subterms.map(_.obsClass.maxPositiveFlatBranches) + flatSubterms.count(f => f.isPositive)).max,
+          /** the maximal amount of positive deep branches (observationHeight > 1)*/
+          maxPositiveDeepBranches = (subterms.map(_.obsClass.maxPositiveDeepBranches) + (positiveSubterms.size - positiveFlatCount)).max,
+          /** the maximal amount of positive branches */
+          maxPositiveBranches = (subterms.map(_.obsClass.maxPositiveBranches) + positiveSubterms.size).max,
           /** maximal observationHeight of negative subformulas */
           maxNegationHeight = subterms.map(_.obsClass.maxNegationHeight).max,
           nonNegativeConjuncts = subterms.exists(f => f.isPositive || f.obsClass.nonNegativeConjuncts)
