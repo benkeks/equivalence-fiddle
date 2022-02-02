@@ -91,6 +91,8 @@ object HennessyMilnerLogic {
     }
   }
 
+  def True[A]: And[A] = And[A](Set())
+
   case class Observe[A](action: A, andThen: Formula[A]) extends Formula[A] {
     override def toString = "⟨" + action.toString + "⟩" + andThen.toString
 
