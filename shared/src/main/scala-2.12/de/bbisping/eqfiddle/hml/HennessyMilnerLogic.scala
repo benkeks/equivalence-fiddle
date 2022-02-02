@@ -26,9 +26,9 @@ object HennessyMilnerLogic {
       ObservationClass(
         obsClass.observationHeight,
         obsClass.conjunctionLevels + (if (!isPositive) 1 else 0),
-        obsClass.negationLevels,
         obsClass.maxPositiveDeepBranches,
         obsClass.maxPositiveBranches,
+        obsClass.negationLevels,
         obsClass.maxNegationHeight
       )
     }
@@ -78,12 +78,12 @@ object HennessyMilnerLogic {
           observationHeight = subterms.map(_.obsClass.observationHeight).max,
           /** the maximal amount of conjunctions when descending into a formula */
           conjunctionLevels = subterms.map(_.obsClass.conjunctionLevels).max + 1,
-          /** the maximal amount of negations when descending into a formula */
-          negationLevels = subterms.map(_.obsClass.negationLevels).max,
           /** the maximal amount of positive deep branches (observationHeight > 1)*/
           maxPositiveDeepBranches = (subterms.map(_.obsClass.maxPositiveDeepBranches) + (positiveSubterms.size - positiveFlatCount)).max,
           /** the maximal amount of positive branches */
           maxPositiveBranches = (subterms.map(_.obsClass.maxPositiveBranches) + positiveSubterms.size).max,
+          /** the maximal amount of negations when descending into a formula */
+          negationLevels = subterms.map(_.obsClass.negationLevels).max,
           /** maximal observationHeight of negative subformulas */
           maxNegationHeight = subterms.map(_.obsClass.maxNegationHeight).max
         )
@@ -116,7 +116,7 @@ object HennessyMilnerLogic {
     override val isPositive = false
 
     override val obsClass = ObservationClass(0, andThen.obsClass.conjunctionLevels + (if (!andThen.isPositive) 1 else 0),
-      andThen.obsClass.negationLevels + 1,0,0,andThen.obsClass.observationHeight) lub andThen.obsClass
+      0,0,andThen.obsClass.negationLevels + 1,andThen.obsClass.observationHeight) lub andThen.obsClass
 
   }
 
