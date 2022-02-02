@@ -68,6 +68,7 @@ object ObservationClass {
   // nonNegConjs is necessary, because maxPosFlat will sometimes count one positive flat branch as deep to account for trace equivalences. 
   // The Linear-time Branching-time Spectrum
   val LTBTS = List(
+    "enabledness" ->        ObservationClass(    1,     0,    0,    0,    0,    0,false),
     "traces" ->             ObservationClass(INFTY,     0,    0,    0,    0,    0,false),
     "failure" ->            ObservationClass(INFTY,     1,    1,    0,    0,    1,false),
     "readiness" ->          ObservationClass(INFTY,     1,    1,    0,INFTY,    1,true),
