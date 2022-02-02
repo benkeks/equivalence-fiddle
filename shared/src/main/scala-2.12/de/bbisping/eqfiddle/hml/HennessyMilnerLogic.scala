@@ -29,8 +29,7 @@ object HennessyMilnerLogic {
         obsClass.negationLevels,
         obsClass.maxPositiveDeepBranches,
         obsClass.maxPositiveBranches,
-        obsClass.maxNegationHeight,
-        obsClass.nonNegativeConjuncts
+        obsClass.maxNegationHeight
       )
     }
 
@@ -70,7 +69,7 @@ object HennessyMilnerLogic {
     override val obsClass = {
       
       if (subterms.isEmpty) {
-        ObservationClass(0,0,0,0,0,0,false)
+        ObservationClass(0,0,0,0,0,0)
       } else {
         val positiveSubterms = subterms.filter(_.isPositive)
         val positiveFlatCount = positiveSubterms.count(_.obsClass.observationHeight <= 1)
@@ -86,8 +85,7 @@ object HennessyMilnerLogic {
           /** the maximal amount of positive branches */
           maxPositiveBranches = (subterms.map(_.obsClass.maxPositiveBranches) + positiveSubterms.size).max,
           /** maximal observationHeight of negative subformulas */
-          maxNegationHeight = subterms.map(_.obsClass.maxNegationHeight).max,
-          nonNegativeConjuncts = subterms.exists(f => f.isPositive || f.obsClass.nonNegativeConjuncts)
+          maxNegationHeight = subterms.map(_.obsClass.maxNegationHeight).max
         )
       }
     }
@@ -98,7 +96,8 @@ object HennessyMilnerLogic {
 
     override val isPositive = true
     
-    override val obsClass = ObservationClass(andThen.obsClass.observationHeight + 1, andThen.obsClass.conjunctionLevels + (if (!andThen.isPositive) 1 else 0),0,0,0,0, false) lub andThen.obsClass
+    override val obsClass = ObservationClass(andThen.obsClass.observationHeight + 1,
+      andThen.obsClass.conjunctionLevels + (if (!andThen.isPositive) 1 else 0),0,0,0,0) lub andThen.obsClass
 
   }
 
@@ -108,7 +107,7 @@ object HennessyMilnerLogic {
     //TODO: or andThen.isPositive ?
     override val isPositive = true
     
-    override val obsClass = ObservationClass(andThen.obsClass.observationHeight + 1, andThen.obsClass.conjunctionLevels,0,0,0,0, false) lub andThen.obsClass
+    override val obsClass = ObservationClass(andThen.obsClass.observationHeight + 1, andThen.obsClass.conjunctionLevels,0,0,0,0) lub andThen.obsClass
 
   }
   case class Negate[A](andThen: Formula[A]) extends Formula[A] {
@@ -116,7 +115,8 @@ object HennessyMilnerLogic {
 
     override val isPositive = false
 
-    override val obsClass = ObservationClass(0, andThen.obsClass.conjunctionLevels + (if (!andThen.isPositive) 1 else 0),andThen.obsClass.negationLevels + 1,0,0,andThen.obsClass.observationHeight,false) lub andThen.obsClass
+    override val obsClass = ObservationClass(0, andThen.obsClass.conjunctionLevels + (if (!andThen.isPositive) 1 else 0),
+      andThen.obsClass.negationLevels + 1,0,0,andThen.obsClass.observationHeight) lub andThen.obsClass
 
   }
 
