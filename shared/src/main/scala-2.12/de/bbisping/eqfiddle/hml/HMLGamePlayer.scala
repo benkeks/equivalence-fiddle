@@ -157,8 +157,8 @@ class HMLGamePlayer[S, A, L] (
       f <- newFormulas
       cl = f.getRootClass()
       // privilege for failures and impossible futures
-      if (cl.height <= 1 && cl.negationLevels <= 1) || 
-        (cl.negationLevels == 1 && cl.maxNegationHeight == cl.height) ||
+      if (cl.observationHeight <= 1 && cl.negationLevels <= 1) || 
+        (cl.negationLevels == 1 && cl.maxNegationHeight == cl.observationHeight) ||
         !formulaClasses.exists(clOther => cl.above(clOther) && cl != clOther)
     } yield {
       f

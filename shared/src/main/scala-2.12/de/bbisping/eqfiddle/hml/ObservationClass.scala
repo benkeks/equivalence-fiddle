@@ -1,23 +1,23 @@
 package de.bbisping.eqfiddle.hml
 
 case class ObservationClass(
-  /** the maximal depth of the subformulas (⊤ has height 0, negation are neutral wrt. height) */
-  height: Int,
+  /** the maximal observation depth of the subformulas (⊤ has height 0, negation and conjunction are neutral wrt. height) */
+  observationHeight: Int,
   /** the maximal amount of conjunctions when descending into a formula */
   conjunctionLevels: Int,
   /** the maximal amount of negations when descending into a formula */
   negationLevels: Int,
   /** the maximal amount of positive deep branches */
   maxPositiveDeepBranches: Int,
-  /** the maximal amount of positive flat branches (height > 1); if all branches are flat, one positive branch will be counted as deep */
+  /** the maximal amount of positive flat branches (observationHeight > 1); if all branches are flat, one positive branch will be counted as deep */
   maxPositiveFlatBranches: Int,
-  /** maximal height of negative subformulas */
+  /** maximal observationHeight of negative subformulas */
   maxNegationHeight: Int,
   /** if there are any conjunctions with positive subformulas */
   nonNegativeConjuncts: Boolean
 ) {
   def lub(that: ObservationClass) = ObservationClass(
-    Integer.max(this.height, that.height),
+    Integer.max(this.observationHeight, that.observationHeight),
     Integer.max(this.conjunctionLevels, that.conjunctionLevels),
     Integer.max(this.negationLevels, that.negationLevels),
     Integer.max(this.maxPositiveDeepBranches, that.maxPositiveDeepBranches),
@@ -27,7 +27,7 @@ case class ObservationClass(
   )
 
   def glb(that: ObservationClass) = ObservationClass(
-    Integer.min(this.height, that.height),
+    Integer.min(this.observationHeight, that.observationHeight),
     Integer.min(this.conjunctionLevels, that.conjunctionLevels),
     Integer.min(this.negationLevels, that.negationLevels),
     Integer.min(this.maxPositiveDeepBranches, that.maxPositiveDeepBranches),
@@ -37,7 +37,7 @@ case class ObservationClass(
   )
 
   def above(that: ObservationClass) = (
-    this.height >= that.height &&
+    this.observationHeight >= that.observationHeight &&
     this.conjunctionLevels >= that.conjunctionLevels &&
     this.negationLevels >= that.negationLevels &&
     this.maxPositiveDeepBranches >= that.maxPositiveDeepBranches &&
@@ -49,7 +49,7 @@ case class ObservationClass(
   def strictlyAbove(that: ObservationClass) = (this != that) && (this above that)
 
   def below(that: ObservationClass) = (
-    this.height <= that.height &&
+    this.observationHeight <= that.observationHeight &&
     this.conjunctionLevels <= that.conjunctionLevels &&
     this.negationLevels <= that.negationLevels &&
     this.maxPositiveDeepBranches <= that.maxPositiveDeepBranches &&
@@ -64,7 +64,7 @@ case class ObservationClass(
 object ObservationClass {
   val INFTY = Integer.MAX_VALUE
 
-  // height, conjunctionLevels, negationLevels, maxPosDeep, maxNegDeep, maxPosFlat, maxNegH, nonNegConjs
+  // observationHeight, conjunctionLevels, negationLevels, maxPosDeep, maxNegDeep, maxPosFlat, maxNegH, nonNegConjs
   // nonNegConjs is necessary, because maxPosFlat will sometimes count one positive flat branch as deep to account for trace equivalences. 
   // The Linear-time Branching-time Spectrum
   val LTBTS = List(
