@@ -106,10 +106,10 @@ class HMLGamePlayer[S, A, L] (
       case ConjunctMove() =>
         ff
       case NegationMove() =>
-        ff.map {
-          case HennessyMilnerLogic.Negate(f1) => f1
-          case f => HennessyMilnerLogic.Negate(f)
-        }
+        for {
+          f <- ff
+          if !f.isInstanceOf[HennessyMilnerLogic.Negate[_]]
+        } yield HennessyMilnerLogic.Negate(f)
       case ObservationMove(a) =>
         ff.map(HennessyMilnerLogic.Observe(a, _))
       case PassingMove() =>
