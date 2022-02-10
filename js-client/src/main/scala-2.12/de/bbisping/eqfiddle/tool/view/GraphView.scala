@@ -2,13 +2,12 @@ package de.bbisping.eqfiddle.tool.view
 
 import scala.scalajs.js
 import scala.scalajs.js.UndefOr
-import scala.scalajs.js.UndefOr.any2undefOrA
-import scala.scalajs.js.UndefOr.undefOr2ops
-import org.singlespaced.d3js.Link
-import org.singlespaced.d3js.forceModule.Node
+
+import typings.d3.global._
+import typings.d3Force.mod._
+
 import de.bbisping.eqfiddle.tool.control.Structure
 import de.bbisping.eqfiddle.tool.model.NodeID
-
 object GraphView {
   var graphBending = false
   
@@ -25,11 +24,11 @@ object GraphView {
   class GraphNode(
       var nameId: NodeID,
       var meta: Structure.NodeLabel)
-    extends Node with Linkable {
+    extends SimulationNodeDatum with Linkable {
     
     GraphNode.count = GraphNode.count + 1
     
-    var fixedPermanently = meta.x.isDefined && meta.y.isDefined
+    //var fixedPermanently = meta.x.isDefined && meta.y.isDefined
     
     var id: Double = GraphNode.count
     
@@ -38,44 +37,41 @@ object GraphView {
     
     x = 100 + Math.cos(GraphNode.count * 5.1) * 100
     y = 100 + Math.sin(GraphNode.count * 5.1) * 100
-    weight = 1.0
     
     updateMeta(meta, true)
     
     def updateMeta(metaInfo: Structure.NodeLabel, force: Boolean = false) = {
       if (meta != metaInfo || force) {
         meta = metaInfo
-        x = UndefOr.any2undefOrA(meta.x getOrElse x.get)
-        y = UndefOr.any2undefOrA(meta.y getOrElse y.get)
-        px = x
-        py = y
-        fixedPermanently = meta.x.isDefined && meta.y.isDefined
-        fixed = if (fixedPermanently) 1 else 0
+        fx = (meta.x getOrElse x.get).asInstanceOf[Double]
+        fy = (meta.y getOrElse y.get).asInstanceOf[Double]
+        //fixedPermanently = meta.x.isDefined && meta.y.isDefined
+        //fixed = if (fixedPermanently) 1 else 0
       }
     }
     
     def updatePos() = {
-      if (fixedPermanently && fixed.get <= 1.5) {
-        fixed = 1
-        for (tarX <- meta.x; currX <- x.toOption) {
-          val xDiff = tarX - currX
-          if (Math.abs(xDiff) < 2.0) {
-            x = UndefOr.any2undefOrA(tarX)
-          } else {
-            x = UndefOr.any2undefOrA(currX + 2.0 * Math.signum(xDiff))
-            fixed = 0
-          }
-        }
-        for (tarY <- meta.y; currY <- y.toOption) {
-          val yDiff = tarY - currY
-          if (Math.abs(yDiff) < 2.0) {
-            y = UndefOr.any2undefOrA(tarY)
-          } else {
-            y = UndefOr.any2undefOrA(currY + 2.0 * Math.signum(yDiff))
-            fixed = 0
-          }
+      //if (fixedPermanently && fixed.get <= 1.5) {
+      //  fixed = 1
+      for (tarX <- meta.x; currX <- x.toOption) {
+        val xDiff = tarX - currX
+        if (Math.abs(xDiff) < 2.0) {
+          fx = tarX
+        } else {
+          x = (currX + 2.0 * Math.signum(xDiff))
+          fx = js.undefined
         }
       }
+      for (tarY <- meta.y; currY <- y.toOption) {
+        val yDiff = tarY - currY
+        if (Math.abs(yDiff) < 2.0) {
+          fy = tarY
+        } else {
+          y = currY + 2.0 * Math.signum(yDiff)
+          fy = js.undefined
+        }
+      }
+      //}
     }
     
     override def sameRep(a: Linkable) = a match {
@@ -105,11 +101,11 @@ object GraphView {
       var sources: Set[Linkable],
       var targets: Set[Linkable],
       var rep: Any)
-    extends Link[GraphNode] with Linkable {
+    extends SimulationLinkDatum[Linkable] with Linkable {
     
-    val source = sources.collect { case gn: GraphNode => gn }.headOption.getOrElse(dummyNode)
+    val source: Linkable = sources.collect { case gn: GraphNode => gn }.headOption.getOrElse(dummyNode)
 
-    val target = targets.collect { case gn: GraphNode => gn }.headOption.getOrElse(dummyNode)
+    val target: Linkable = targets.collect { case gn: GraphNode => gn }.headOption.getOrElse(dummyNode)
 
     var length: Double = 0
     

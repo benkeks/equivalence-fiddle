@@ -4,38 +4,39 @@ import scala.scalajs.js
 import scala.scalajs.js.Function0
 import scala.scalajs.js.Any.fromFunction0
 import scala.scalajs.js.Any.fromFunction1
+import scala.scalajs.js.Any.fromFunction1
+import scala.scalajs.js.ThisFunction.fromFunction2
+import scala.scalajs.js.ThisFunction2
 import scala.scalajs.js.Any.fromInt
 import scala.scalajs.js.Any.jsArrayOps
 import scala.scalajs.js.Any.wrapArray
 import scala.scalajs.js.URIUtils
 import scala.scalajs.js.|.from
-import org.scalajs.jquery.jQuery
-import org.denigma.codemirror.CodeMirror
 import org.denigma.codemirror.Editor
 import org.denigma.codemirror.extensions.EditorConfig
 import org.scalajs.dom
-import org.scalajs.dom.raw.Event
-import org.scalajs.dom.raw.EventTarget
-import org.scalajs.dom.raw.HTMLElement
-import org.scalajs.dom.raw.HTMLInputElement
-import org.scalajs.dom.raw.HTMLTextAreaElement
-import org.scalajs.dom.raw.SVGSVGElement
-import org.scalajs.dom.raw.UIEvent
-import org.singlespaced.d3js.Ops.fromFunction1To2
-import org.singlespaced.d3js.Ops.fromFunction1To3
-import org.singlespaced.d3js.Ops.fromFunction2To3
-import org.singlespaced.d3js.d3
+import org.scalajs.dom.Event
+import org.scalajs.dom.EventTarget
+import org.scalajs.dom.HTMLElement
+import org.scalajs.dom.HTMLInputElement
+import org.scalajs.dom.HTMLTextAreaElement
+import org.scalajs.dom.SVGSVGElement
+import org.scalajs.dom.ProgressEvent
+import org.scalajs.dom.Element
+import io.udash.wrappers.jquery._
+import org.denigma.codemirror.CodeMirror
+import org.denigma.codemirror.LineWidget
+import typings.d3.global._
+
 import de.bbisping.eqfiddle.tool.arch.Control
 import de.bbisping.eqfiddle.tool.control.ModelComponent
 import de.bbisping.eqfiddle.ts.Samples
 import de.bbisping.eqfiddle.tool.control.Source
 import de.bbisping.eqfiddle.tool.control.Structure
 import de.bbisping.eqfiddle.tool.control.StructureOperation
-import org.scalajs.jquery.JQueryEventObject
 import de.bbisping.eqfiddle.tool.control.Pipeline
 import de.bbisping.eqfiddle.algo.AlgorithmLogging
 import de.bbisping.eqfiddle.tool.model.NodeID
-import org.denigma.codemirror.LineWidget
 import de.bbisping.eqfiddle.ccs.Syntax.MetaDeclaration
 
 class SourceEditor(val main: Control) extends ViewComponent {
@@ -95,36 +96,36 @@ class SourceEditor(val main: Control) extends ViewComponent {
   d3.select("#es-export")
     .on("click", onExport _)
     
-  val sourceButton = jQuery("#es-graph-mode-edit")
-  val pipelineButton = jQuery("#es-graph-mode-pipeline")
+  val sourceButton = jQ("#es-graph-mode-edit")
+  val pipelineButton = jQ("#es-graph-mode-pipeline")
   
-  sourceButton.on("click", { ev: JQueryEventObject => 
+  sourceButton.on("click", { (el: Element, ev: JQueryEvent) => 
     editor.swapDoc(sourceDoc)
     null
   })
-  pipelineButton.on("click", { ev: JQueryEventObject => 
+  pipelineButton.on("click", { (el: Element, ev: JQueryEvent) => 
     editor.swapDoc(pipelineDoc)
     null
   })
   
-  val pipelineStepButton = jQuery("#es-pipeline-step")
-  val pipelineStepMicroButton = jQuery("#es-pipeline-step-micro")
-  val pipelineRunButton = jQuery("#es-pipeline-run")
-  val pipelineResetButton = jQuery("#es-pipeline-reset")
+  val pipelineStepButton = jQ("#es-pipeline-step")
+  val pipelineStepMicroButton = jQ("#es-pipeline-step-micro")
+  val pipelineRunButton = jQ("#es-pipeline-run")
+  val pipelineResetButton = jQ("#es-pipeline-reset")
   
-  pipelineStepButton.on("click", { ev: JQueryEventObject => 
+  pipelineStepButton.on("click", { (el: Element, ev: JQueryEvent) => 
     triggerAction(Pipeline.StepPipeline())
     null
   })
-  pipelineStepMicroButton.on("click", { ev: JQueryEventObject => 
+  pipelineStepMicroButton.on("click", { (el: Element, ev: JQueryEvent) => 
     triggerAction(Structure.StructureDoReplayStep())
     null
   })
-  pipelineRunButton.on("click", { ev: JQueryEventObject => 
+  pipelineRunButton.on("click", { (el: Element, ev: JQueryEvent) => 
     triggerAction(Pipeline.RunPipeline())
     null
   })
-  pipelineResetButton.on("click", { ev: JQueryEventObject => 
+  pipelineResetButton.on("click", { (el: Element, ev: JQueryEvent) => 
     triggerAction(Pipeline.ResetPipeline())
     null
   })
@@ -152,7 +153,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
     }
   }
     
-  def onExport(et: EventTarget) {
+  def onExport(et: EventTarget, i: Int, j: js.UndefOr[Int]) {
     
     val newText = sourceDoc.getValue()
     val textUri = URIUtils.encodeURIComponent(newText)
@@ -202,7 +203,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
     println("reading file: " + fileBlob.name)
     
     val reader = new dom.FileReader()
-    reader.onload = (e: UIEvent) => {
+    reader.onload = (e: ProgressEvent) => {
       val contents = reader.result.asInstanceOf[String]
       triggerAction(Source.LoadDefinition(contents))
     }
@@ -216,7 +217,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
     println("reading file: " + fileBlob.name)
     
     val reader = new dom.FileReader()
-    reader.onload = (e: UIEvent) => {
+    reader.onload = (e: ProgressEvent) => {
       val contents = reader.result.asInstanceOf[String]
       triggerAction(Source.LoadDefinition(contents))
     }
@@ -249,9 +250,9 @@ class SourceEditor(val main: Control) extends ViewComponent {
       .enter()
         .append("li")
         .classed("es-load-example", true)
-        .classed("divider", (s: Samples.Example, i: Int) => s.slug == "diamond")
-        .html((s: Samples.Example, i: Int) => "<a href=\"#" + s.slug + "\">" + s.name + "</a>")
-        .on("click", {(s: Samples.Example, i: Int) => 
+        .classed("divider", (s: Samples.Example, i: Int, _: js.UndefOr[Int]) => s.slug == "diamond")
+        .html((s: Samples.Example, i: Int, _: js.UndefOr[Int]) => "<a href=\"#" + s.slug + "\">" + s.name + "</a>")
+        .on("click", {(s: Samples.Example, i: Int, _: js.UndefOr[Int]) => 
           triggerAction(Source.LoadDefinition(s.code))
         })
   }
@@ -266,12 +267,12 @@ class SourceEditor(val main: Control) extends ViewComponent {
       val list = js.Array[(String, String, String)]()
       list.appendAll(ops2 map { a => (a.slug, a.name, a.description) })
       d3.select("#es-transform .dropdown-menu."+group).selectAll[(String, String, String)](".es-apply-analyzer")
-        .data(list, (_: (String, String, String))._1)
+        .data(list, ((s: (String, String, String), _: Int) => s._1))
         .enter()
           .append("li")
           .classed("es-apply-analyzer", true)
-          .html((a: (String, String, String), i: Int) => "<a href=\"#" + a._1 + "\" title=\""+ a._3 + "\">" + a._2 + "</a>")
-          .on("click", {(a: (String, String, String), i: Int) => 
+          .html((a: (String, String, String), i: Int, _: js.UndefOr[Int]) => "<a href=\"#" + a._1 + "\" title=\""+ a._3 + "\">" + a._2 + "</a>")
+          .on("click", {(a: (String, String, String), i: Int, _: js.UndefOr[Int]) => 
             triggerAction(Structure.StructureCallOperation(a._1))
           })
     }
@@ -302,7 +303,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
           ""
       })
       leChild.setAttribute("class", "es-pipeline-replay-step")
-      jQuery(leChild).on("click", { ev: JQueryEventObject => 
+      jQ(leChild).on("click", { (_: Element, ev: JQueryEvent) => 
         triggerAction(Structure.StructureDoReplayStep(i))
         null
       })

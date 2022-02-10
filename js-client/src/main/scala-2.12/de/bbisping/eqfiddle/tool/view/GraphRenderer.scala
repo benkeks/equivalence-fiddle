@@ -3,22 +3,19 @@ package de.bbisping.eqfiddle.tool.view
 import scala.annotation.migration
 import scala.scalajs.js.Any.fromFunction1
 import scala.scalajs.js.Any.fromFunction2
+import scala.scalajs.js.ThisFunction.fromFunction3
 import scala.scalajs.js.Any.jsArrayOps
 import scala.scalajs.js.Any.wrapArray
 import scala.scalajs.js.Tuple2.fromScalaTuple2
-import scala.scalajs.js.UndefOr.undefOr2ops
+import scala.scalajs.js.UndefOr
 import scala.scalajs.js.|.from
 import org.scalajs.dom
-import org.scalajs.dom.raw.EventTarget
-import org.scalajs.dom.raw.HTMLInputElement
-import org.singlespaced.d3js.Ops.asPrimitive
-import org.singlespaced.d3js.Ops.fromFunction1To2
-import org.singlespaced.d3js.Ops.fromFunction1To3
-import org.singlespaced.d3js.Ops.fromFunction2To3
-import org.singlespaced.d3js.Ops.fromFunction2To3DoublePrimitive
-import org.singlespaced.d3js.Ops.fromFunction2To3StringPrimitive
-import org.singlespaced.d3js.Selection
-import org.singlespaced.d3js.d3
+import org.scalajs.dom.EventTarget
+import org.scalajs.dom.HTMLInputElement
+
+import typings.d3.global._
+import typings.d3Force.mod._
+
 import de.bbisping.eqfiddle.tool.arch.Control
 import de.bbisping.eqfiddle.tool.control.ModelComponent
 import de.bbisping.eqfiddle.tool.control.Structure
@@ -27,6 +24,7 @@ import de.bbisping.eqfiddle.tool.model.NodeID
 import de.bbisping.eqfiddle.util.Coloring
 import de.bbisping.eqfiddle.util.Relation
 import de.bbisping.eqfiddle.util.LabeledRelation
+import typings.std.global.HTMLElement
 
 class GraphRenderer(val main: Control)
   extends GraphView
@@ -41,26 +39,25 @@ class GraphRenderer(val main: Control)
   registerEditingBehavior("es-graph-connect-stepto", new GraphConnectStepTo(this))
   registerEditingBehavior("es-graph-examine", new GraphExamineNodes(this))
   
-  behaviors.foreach{ case (n: String, b: GraphEditBehavior) =>
-    d3.select("#"+n).on("click", {_: EventTarget => setEditingBehavior(n)})
+  behaviors.foreach { case (n: String, b: GraphEditBehavior) =>
+    d3.select("#"+n).on("click", {(_: dom.HTMLElement, _: Any, _: Any) => setEditingBehavior(n)})
   }
   
   setEditingBehavior("es-graph-move")
   
-  val force = d3.layout.force[GraphNode, NodeLink] ()
-      .charge(-300.0)
-      .chargeDistance(200.0)
-      .linkStrength(0.3)
-      .size((400.0, 400.0))
-      .gravity(.2)
-      .nodes(nodes)
-      .links(links)
+  val force = forceSimulation_NodeDatum_SimulationNodeDatumLinkDatum_SimulationLinkDatumNodeDatum[GraphNode, NodeLink](nodes)
+  val forceL = forceLink[GraphNode, NodeLink](links)
+      // .charge(-300.0)
+      // .chargeDistance(200.0)
+      // .linkStrength(0.3)
+      // .size((400.0, 400.0))
+      // .gravity(.2)
       
   val graphBendingButton = d3.selectAll("#es-graph-arrowbending")
   graphBendingButton
-    .on("change", (a: EventTarget, b: Int) => {
+    .on("change", (a: EventTarget, _: Any, _: Any) => {
       GraphView.graphBending = graphBendingButton.node.asInstanceOf[HTMLInputElement].checked
-      force.resume()
+      //force.restart()
       println("set bending: " + GraphView.graphBending)
     }
   )

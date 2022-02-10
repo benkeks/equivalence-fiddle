@@ -4,14 +4,10 @@ import scala.Left
 import scala.Right
 import scala.scalajs.js
 import scala.scalajs.js.Any.jsArrayOps
-import scala.scalajs.js.UndefOr.any2undefOrA
-import scala.scalajs.js.UndefOr.undefOr2ops
 import scala.scalajs.js.|.from
 import org.scalajs.dom.raw.HTMLInputElement
-import org.singlespaced.d3js.Ops.fromFunction1To3
-import org.singlespaced.d3js.Ops.fromFunction2To3StringPrimitive
-import org.singlespaced.d3js.Selection
-import org.singlespaced.d3js.d3
+import typings.d3.global._
+
 import de.bbisping.eqfiddle.tool.control.Source
 import de.bbisping.eqfiddle.tool.control.Structure
 import de.bbisping.eqfiddle.tool.view.GraphView.NodeLink

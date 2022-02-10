@@ -1,6 +1,5 @@
 package de.bbisping.eqfiddle.tool
 
-import scala.scalajs.js.JSApp
 import scala.scalajs.js.annotation.{JSExportTopLevel, JSExport}
 import de.bbisping.eqfiddle.tool.arch.Action
 import de.bbisping.eqfiddle.tool.arch.ActionDispatcher

@@ -1,5 +1,7 @@
-addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.29")
+addSbtPlugin("com.vmunier" % "sbt-web-scalajs" % "1.2.0")
+addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.5.1")
+addSbtPlugin("org.scala-js" % "sbt-jsdependencies" % "1.0.2")
 
-addSbtPlugin("com.typesafe.sbt" % "sbt-less" % "1.1.2")
+addSbtPlugin("ch.epfl.scala" % "sbt-scalajs-bundler" % "0.20.0")
 
-addSbtPlugin("com.vmunier" % "sbt-web-scalajs" % "1.0.9-0.6")
+addSbtPlugin("org.scalablytyped.converter" % "sbt-converter" % "1.0.0-beta37")
