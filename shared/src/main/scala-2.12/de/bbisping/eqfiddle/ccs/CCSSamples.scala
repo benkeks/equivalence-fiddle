@@ -168,6 +168,13 @@ R2(x=600, y=700)
 L2 = a.(b.0 + c.0 + d.d.0)
 R2 = (a.(a.0 + d.d.0) + a.(b.b.0 + c.0 + d.d.d.0) + a.(b.0 + c.c.0 + d.d.d.0))
 @compare "L2, R2"
+
+L3(x=-200, y=500)
+R3(x=-100, y=500)
+L3 = c.(a.a.0 + b.b.0)
+R3 = c.(a.a.0 + a.0 + b.0) + c.(a.a.0 + a.0 + b.b.0)
+@comment "Example where the improved pruning finds minimal formula ⟨c⟩¬⟨a⟩¬⟨a⟩⊤."
+@compare "L3, R3"
 """
 
   val namedSamples = List[Samples.Example](
