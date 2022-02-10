@@ -53,7 +53,7 @@ class HMLGamePlayer[S, A, L] (
 
     def successors(gn: GameNode): Iterable[GameNode] = gn match {
       case AttackerObservation(p0, qq0, afterConj) =>
-        if ((qq0 contains p0) && false) {
+        if (qq0 contains p0) {
           List()
         } else {
           val dn = for {
@@ -66,15 +66,6 @@ class HMLGamePlayer[S, A, L] (
             recordedMoveEdges((gn, next)) = ObservationMove(a)
             next
           }
-
-          // val in = for {
-          //   p1 <- ts.silentReachable(p0)
-          //   passNext = AttackerObservation(p0, qq0.flatMap(ts.silentReachable(_)))
-          // } yield {
-          //   recordedMoveEdges((gn, passNext)) = PassingMove()
-          //   passNext
-          // }
-          
           if (qq0.size == 1) {
             // wlog only have negation moves when the defender is focused (which can be forced by the attacker using preceding conjunctions)
             val neg = AttackerObservation(qq0.head, Set(p0))
@@ -99,7 +90,8 @@ class HMLGamePlayer[S, A, L] (
       case DefenderConjunction(p0, qqPart0) =>
         for {
           qq0 <- qqPart0
-          obs = AttackerObservation(p0, qq0, afterConj = true)
+          // after-conj nodes with singleton qq0 are conflated with usual attacker nodes.
+          obs = AttackerObservation(p0, qq0, afterConj = (qq0.size != 1))
         } yield {
           recordedMoveEdges((gn, obs)) = DefenderMove()
           obs
