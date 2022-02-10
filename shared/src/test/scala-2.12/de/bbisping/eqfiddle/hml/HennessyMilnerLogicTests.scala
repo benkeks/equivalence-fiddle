@@ -26,5 +26,15 @@ class HennessyMilnerLogicTests extends AnyFunSpec with should.Matchers  {
     it(ob3 + " should have coordinates (3,1,1,2,1,1)") {
       ob3.obsClass should equal (ObservationClass(3,1,1,2,1,1))
     }
+
+    val conj1a = And(Set[Formula[String]](
+      Observe("a", Observe("a", True[String])),
+      Observe("b", True[String])))
+    val conj1b = And(Set[Formula[String]](
+      Observe("a", Observe("a", True[String])),
+      Observe("b", Observe("b", True[String]))))
+    it(conj1a + " should be cheaper than " + conj1b) {
+      (conj1a.obsClass strictlyBelow conj1b.obsClass) should be (true)
+    }
   }
 }
