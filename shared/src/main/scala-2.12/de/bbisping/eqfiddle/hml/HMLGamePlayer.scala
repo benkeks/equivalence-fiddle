@@ -53,7 +53,7 @@ class HMLGamePlayer[S, A, L] (
 
     def successors(gn: GameNode): Iterable[GameNode] = gn match {
       case AttackerObservation(p0, qq0, afterConj) =>
-        if ((qq0 contains p0) && false) {
+        if (qq0 contains p0) {
           List()
         } else {
           val dn = for {
@@ -66,15 +66,6 @@ class HMLGamePlayer[S, A, L] (
             recordedMoveEdges((gn, next)) = ObservationMove(a)
             next
           }
-
-          // val in = for {
-          //   p1 <- ts.silentReachable(p0)
-          //   passNext = AttackerObservation(p0, qq0.flatMap(ts.silentReachable(_)))
-          // } yield {
-          //   recordedMoveEdges((gn, passNext)) = PassingMove()
-          //   passNext
-          // }
-          
           if (qq0.size == 1) {
             // wlog only have negation moves when the defender is focused (which can be forced by the attacker using preceding conjunctions)
             val neg = AttackerObservation(qq0.head, Set(p0))
@@ -99,7 +90,8 @@ class HMLGamePlayer[S, A, L] (
       case DefenderConjunction(p0, qqPart0) =>
         for {
           qq0 <- qqPart0
-          obs = AttackerObservation(p0, qq0, afterConj = true)
+          // after-conj nodes with singleton qq0 are conflated with usual attacker nodes.
+          obs = AttackerObservation(p0, qq0, afterConj = (qq0.size != 1))
         } yield {
           recordedMoveEdges((gn, obs)) = DefenderMove()
           obs
@@ -114,7 +106,10 @@ class HMLGamePlayer[S, A, L] (
       case ConjunctMove() =>
         ff
       case NegationMove() =>
-        ff.map(HennessyMilnerLogic.Negate(_))
+        for {
+          f <- ff
+          if !f.isInstanceOf[HennessyMilnerLogic.Negate[_]]
+        } yield HennessyMilnerLogic.Negate(f)
       case ObservationMove(a) =>
         ff.map(HennessyMilnerLogic.Observe(a, _))
       case PassingMove() =>
@@ -148,18 +143,33 @@ class HMLGamePlayer[S, A, L] (
 
   def lubMoves(newFormulas: Set[HennessyMilnerLogic.Formula[A]], oldFormulas: Set[HennessyMilnerLogic.Formula[A]]) = {
 
-    val formulaClasses = for {
+    val observationFormulaClasses = for {
       f <- oldFormulas
+      if f.isInstanceOf[HennessyMilnerLogic.Observe[_]]
+    } yield f.getRootClass()
+
+    val negationFormulaClasses = for {
+      f <- oldFormulas
+      if f.isInstanceOf[HennessyMilnerLogic.Negate[_]]
+    } yield f.getRootClass()
+
+    val conjunctionFormulaClasses = for {
+      f <- oldFormulas
+      if f.isInstanceOf[HennessyMilnerLogic.And[_]]
     } yield f.getRootClass()
 
     // if no old formula's class dominates this formula's class...
     for {
       f <- newFormulas
       cl = f.getRootClass()
-      // privilege for failures and impossible futures
-      if (cl.observationHeight <= 1 && cl.negationLevels <= 1) || 
-        (cl.negationLevels == 1 && cl.maxNegationHeight == cl.observationHeight) ||
-        !formulaClasses.exists(clOther => cl.above(clOther) && cl != clOther)
+      if f.isInstanceOf[HennessyMilnerLogic.Observe[_]] &&
+          !observationFormulaClasses.exists(clOther => cl.strictlyAbove(clOther)) ||
+        f.isInstanceOf[HennessyMilnerLogic.Negate[_]] &&
+          !negationFormulaClasses.exists(clOther => cl.strictlyAbove(clOther)) ||
+        f.isInstanceOf[HennessyMilnerLogic.And[_]] &&
+          !observationFormulaClasses.exists(clOther => cl.strictlyAbove(clOther)) &&
+          !negationFormulaClasses.exists(clOther => cl.strictlyAbove(clOther)) &&
+          !conjunctionFormulaClasses.exists(clOther => cl.strictlyAbove(clOther))
     } yield {
       f
     }
