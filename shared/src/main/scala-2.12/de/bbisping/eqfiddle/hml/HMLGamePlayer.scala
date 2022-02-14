@@ -38,138 +38,95 @@ class HMLGamePlayer[S, A, L] (
     override def toString() = "*"
   }
 
-  val recordedMoveEdges = collection.mutable.Map[(GameNode, GameNode), MoveKind]()
-
-  case class AttackerObservation(p: S, qq: Set[S], afterConj: Boolean = false) extends SimpleGame.AttackerNode
+  case class AttackerObservation(p: S, qq: Set[S], arrivingMove: MoveKind) extends SimpleGame.AttackerNode
   case class DefenderConjunction(p: S, qqPart: List[Set[S]]) extends SimpleGame.DefenderNode
 
   class HMLSpectroscopyGame
     extends SimpleGame with GameDiscovery with WinningRegionComputation {
 
     override def initialNodes: Iterable[GameNode] = Set(
-      AttackerObservation(nodes(0), Set(nodes(1))),
-      AttackerObservation(nodes(1), Set(nodes(0)))
+      AttackerObservation(nodes(0), Set(nodes(1)), ConjunctMove()),
+      AttackerObservation(nodes(1), Set(nodes(0)), ConjunctMove())
     )
 
     def successors(gn: GameNode): Iterable[GameNode] = gn match {
-      case AttackerObservation(p0, qq0, afterConj) =>
+      case AttackerObservation(p0, qq0, moveKind) =>
         if (qq0 contains p0) {
           List()
         } else {
           val dn = for {
             (a,pp1) <- ts.post(p0)
             p1 <- pp1
-            next = AttackerObservation(p1,
-              qq0.flatMap(ts.post(_, a))
-            )
           } yield {
-            recordedMoveEdges((gn, next)) = ObservationMove(a)
-            next
+            AttackerObservation(p1,
+              qq0.flatMap(ts.post(_, a)),
+              ObservationMove(a)
+            )
           }
-          if (qq0.size == 1) {
+          if (qq0.size == 1 && moveKind.isInstanceOf[ConjunctMove]) {
             // wlog only have negation moves when the defender is focused (which can be forced by the attacker using preceding conjunctions)
-            val neg = AttackerObservation(qq0.head, Set(p0))
-            recordedMoveEdges((gn, neg)) = NegationMove()
+            val neg = AttackerObservation(qq0.head, Set(p0), NegationMove())
             dn ++ List(neg)
-          } else if (afterConj) {
-            dn
-          } else {
-            // conjunct moves only make sense if the defender is spread
+          } else if (moveKind.isInstanceOf[ObservationMove]) {
             val conjMoves = for {
               parts <- Partition.partitioningListsOfSet(qq0)
               //if parts.length == qq0.size // this is equivalent to the original algorithm's game
-              if parts.length != 1 // drop the trivial partitioning
-              conj = DefenderConjunction(p0, parts)
+              //if parts.length != 1 // drop the trivial partitioning
             } yield {
-              recordedMoveEdges((gn, conj)) = ConjunctMove()
-              conj
+              DefenderConjunction(p0, parts)
             }
             dn ++ conjMoves
+          } else {
+            dn
           }
         }
       case DefenderConjunction(p0, qqPart0) =>
         for {
           qq0 <- qqPart0
-          // after-conj nodes with singleton qq0 are conflated with usual attacker nodes.
-          obs = AttackerObservation(p0, qq0, afterConj = (qq0.size != 1))
         } yield {
-          recordedMoveEdges((gn, obs)) = DefenderMove()
-          obs
+          AttackerObservation(p0, qq0, ConjunctMove())
         }
     }
   }
 
-  def moveToHML(n1: GameNode, n2: GameNode, ff: Set[HennessyMilnerLogic.Formula[A]]): Set[HennessyMilnerLogic.Formula[A]] = {
-    val kind = recordedMoveEdges(n1, n2)
-
-    kind match {
-      case ConjunctMove() =>
-        ff
-      case NegationMove() =>
-        for {
-          f <- ff
-          if !f.isInstanceOf[HennessyMilnerLogic.Negate[_]]
-        } yield HennessyMilnerLogic.Negate(f)
-      case ObservationMove(a) =>
-        ff.map(HennessyMilnerLogic.Observe(a, _))
-      case PassingMove() =>
-        ff.map(HennessyMilnerLogic.Pass(_))
-      case DefenderMove() =>
-        ff
-    }
-  }
-  
-  def mergeMoves(node: GameNode, possibleMoves: Iterable[Set[HennessyMilnerLogic.Formula[A]]]): Set[HennessyMilnerLogic.Formula[A]] = node match {
-    case DefenderConjunction(_, _) if possibleMoves.size != 1 =>
-      val productMoves =
-        possibleMoves.foldLeft(Seq(Seq[HennessyMilnerLogic.Formula[A]]()))(
-          (b, a) => b.flatMap(i => a.map(j => i ++ Seq(j))))
-      productMoves.map { mv =>
-        val moves = mv.toSet
-        if (moves.size == 1) {
-          moves.head
-        } else {
+  def mergeMoves(node: GameNode, possibleMoves: Iterable[Set[HennessyMilnerLogic.Formula[A]]]): Set[HennessyMilnerLogic.Formula[A]] = {
+    val moves: Set[HennessyMilnerLogic.Formula[A]] = node match {
+      case DefenderConjunction(_, _) => //if possibleMoves.size != 1 =>
+        val productMoves =
+          possibleMoves.foldLeft(Seq(Seq[HennessyMilnerLogic.Formula[A]]()))(
+            (b, a) => b.flatMap(i => a.map(j => i ++ Seq(j))))
+        productMoves.map { mv =>
+          val moves = mv.toSet
           HennessyMilnerLogic.And(moves).asInstanceOf[HennessyMilnerLogic.Formula[A]]
-        }
-      }.toSet
-    case _ =>
-      val possibleFormulas = possibleMoves.flatten.toSet
-      if (possibleFormulas.size > 1) {
-        lubMoves(possibleFormulas, possibleFormulas)
-      } else {
-        possibleFormulas
-      }
+        }.toSet
+      case AttackerObservation(_, _, ConjunctMove()) =>
+        possibleMoves.flatten.toSet
+      case AttackerObservation(_, _, NegationMove()) =>
+        for {
+          f <- possibleMoves.flatten.toSet[HennessyMilnerLogic.Formula[A]]
+          //if !f.isInstanceOf[HennessyMilnerLogic.Negate[_]]
+        } yield HennessyMilnerLogic.Negate(f)
+      case AttackerObservation(_, _, ObservationMove(a)) =>
+        possibleMoves.flatten.toSet[HennessyMilnerLogic.Formula[A]].map(HennessyMilnerLogic.Observe(a, _))
+      case AttackerObservation(_, _, PassingMove()) =>
+        possibleMoves.flatten.toSet[HennessyMilnerLogic.Formula[A]].map(HennessyMilnerLogic.Pass(_))
+    }
+    node match {
+      case AttackerObservation(_, _, ConjunctMove()) => moves
+      case _ => lubMoves(moves, moves)
+    }
   }
 
   def lubMoves(newFormulas: Set[HennessyMilnerLogic.Formula[A]], oldFormulas: Set[HennessyMilnerLogic.Formula[A]]) = {
-
-    val observationFormulaClasses = for {
+    val oldFormulaClasses = for {
       f <- oldFormulas
       if f.isInstanceOf[HennessyMilnerLogic.Observe[_]]
     } yield f.getRootClass()
-
-    val negationFormulaClasses = for {
-      f <- oldFormulas
-      if f.isInstanceOf[HennessyMilnerLogic.Negate[_]]
-    } yield f.getRootClass()
-
-    val conjunctionFormulaClasses = for {
-      f <- oldFormulas
-      if f.isInstanceOf[HennessyMilnerLogic.And[_]]
-    } yield f.getRootClass()
-
     // if no old formula's class dominates this formula's class...
     for {
       f <- newFormulas
       cl = f.getRootClass()
-      if f.isInstanceOf[HennessyMilnerLogic.Observe[_]] &&
-          !observationFormulaClasses.exists(clOther => cl.strictlyAbove(clOther)) ||
-        f.isInstanceOf[HennessyMilnerLogic.Negate[_]] &&
-          !negationFormulaClasses.exists(clOther => cl.strictlyAbove(clOther)) ||
-        f.isInstanceOf[HennessyMilnerLogic.And[_]] &&
-          !observationFormulaClasses.exists(clOther => cl.strictlyAbove(clOther)) &&
-          !negationFormulaClasses.exists(clOther => cl.strictlyAbove(clOther)) &&
-          !conjunctionFormulaClasses.exists(clOther => cl.strictlyAbove(clOther))
+      if !oldFormulaClasses.exists(clOther => cl.strictlyAbove(clOther))
     } yield {
       f
     }
@@ -186,7 +143,7 @@ class HMLGamePlayer[S, A, L] (
     
     val gameRel: Set[((Set[S], String, Set[S]), String, (Set[S], String, Set[S]))] = for {
       (n1, n2) <- attackGraph.tupleSet
-    } yield (gameNodeToTuple(n1), recordedMoveEdges(n1, n2).toString(), gameNodeToTuple(n2))
+    } yield (gameNodeToTuple(n1), "", gameNodeToTuple(n2))
     
     val msg = for {
       f <- resultFormulas
@@ -237,7 +194,7 @@ class HMLGamePlayer[S, A, L] (
 
     val accumulatedPrices = attackGraphBuilder.accumulatePrices(
       graph = attackGraph,
-      priceCons = moveToHML _,
+      priceCons = (_, _, ff) => ff,
       pricePick = mergeMoves _,
       supPrice = Set(),
       nodes = nodes
@@ -267,11 +224,10 @@ class HMLGamePlayer[S, A, L] (
       def nodeToID(gn: GameNode): String = gn.hashCode().toString()
 
       def nodeToString(gn: GameNode): String = gn match {
-        case AttackerObservation(p, qq: Set[_], afterConj) =>
+        case AttackerObservation(p, qq: Set[_], kind) =>
           val qqString = qq.mkString("{",",","}")
           val formulaString = formulas.getOrElse(gn,Set()).mkString("\\n").replaceAllLiterally("⟩⊤","⟩")
-          val label = s"$p, $qqString" +
-            (if (afterConj) " ⤓" else "") +
+          val label = s"$p, $qqString, $kind" +
             (if (formulaString != "{}") s"\\n------\\n$formulaString" else "")
           label.replaceAllLiterally(".0", "")
         case DefenderConjunction(p, qqPart: List[Set[_]]) =>
@@ -281,7 +237,7 @@ class HMLGamePlayer[S, A, L] (
       }
 
       def edgeToLabel(gn1: GameNode, gn2: GameNode) = {
-        recordedMoveEdges(gn1, gn2).toString()
+        ""
       }
       
     }
@@ -296,8 +252,8 @@ class HMLGamePlayer[S, A, L] (
     debugLog("HML spectroscopy game size: " + hmlGame.discovered.size)
 
     val attackerWin = hmlGame.computeWinningRegion()
-    val aLR = AttackerObservation(nodes(0), Set(nodes(1)))
-    val aRL = AttackerObservation(nodes(1), Set(nodes(0)))
+    val aLR = AttackerObservation(nodes(0), Set(nodes(1)), ConjunctMove())
+    val aRL = AttackerObservation(nodes(1), Set(nodes(0)), ConjunctMove())
 
     if (attackerWin.contains(aLR) || attackerWin.contains(aRL)) {
       val minFormulas = buildHML(hmlGame, attackerWin, Set(aLR, aRL))
