@@ -15,9 +15,9 @@ class HMLGamePlayer[S, A, L] (
     val nodes: List[S])
   extends AlgorithmLogging[S, A, L] {
 
-  def mergeMoves(game: SpectroscopyGame[S, A, L])(node: GameNode, possibleMoves: Iterable[Set[HennessyMilnerLogic.Formula[A]]]): Set[HennessyMilnerLogic.Formula[A]] = {
+  def buildStrategyFormulas(game: SpectroscopyGame[S, A, L])(node: GameNode, possibleMoves: Iterable[Set[HennessyMilnerLogic.Formula[A]]]): Set[HennessyMilnerLogic.Formula[A]] = {
     val moves: Set[HennessyMilnerLogic.Formula[A]] = node match {
-      case game.DefenderConjunction(_, _) => //if possibleMoves.size != 1 =>
+      case game.DefenderConjunction(_, _) =>
         val productMoves =
           possibleMoves.foldLeft(Seq(Seq[HennessyMilnerLogic.Formula[A]]()))(
             (b, a) => b.flatMap(i => a.map(j => i ++ Seq(j))))
@@ -25,30 +25,27 @@ class HMLGamePlayer[S, A, L] (
           val moves = mv.toSet
           HennessyMilnerLogic.And(moves).asInstanceOf[HennessyMilnerLogic.Formula[A]]
         }.toSet
-      case game.AttackerObservation(_, _, game.ConjunctMove()) =>
+      case game.AttackerObservation(_, _, game.ConjunctMove) =>
         possibleMoves.flatten.toSet
-      case game.AttackerObservation(_, _, game.NegationMove()) =>
-        for {
-          f <- possibleMoves.flatten.toSet[HennessyMilnerLogic.Formula[A]]
-          //if !f.isInstanceOf[HennessyMilnerLogic.Negate[_]]
-        } yield HennessyMilnerLogic.Negate(f)
+      case game.AttackerObservation(_, _, game.NegationMove) =>
+        possibleMoves.flatten.toSet[HennessyMilnerLogic.Formula[A]].map(HennessyMilnerLogic.Negate(_))
       case game.AttackerObservation(_, _, game.ObservationMove(a)) =>
         possibleMoves.flatten.toSet[HennessyMilnerLogic.Formula[A]].map(HennessyMilnerLogic.Observe[A](a, _))
     }
     node match {
-      case game.AttackerObservation(_, _, game.ConjunctMove()) => moves
-      case _ => lubMoves(moves, moves)
+      case game.AttackerObservation(_, _, game.ConjunctMove) => moves
+      case _ => pruneDominated(moves)
     }
   }
 
-  def lubMoves(newFormulas: Set[HennessyMilnerLogic.Formula[A]], oldFormulas: Set[HennessyMilnerLogic.Formula[A]]) = {
+  def pruneDominated(oldFormulas: Set[HennessyMilnerLogic.Formula[A]]) = {
     val oldFormulaClasses = for {
       f <- oldFormulas
       if f.isInstanceOf[HennessyMilnerLogic.Observe[_]]
     } yield f.getRootClass()
     // if no old formula's class dominates this formula's class...
     for {
-      f <- newFormulas
+      f <- oldFormulas
       cl = f.getRootClass()
       if !oldFormulaClasses.exists(clOther => cl.strictlyAbove(clOther))
     } yield {
@@ -88,7 +85,6 @@ class HMLGamePlayer[S, A, L] (
       val classes = ffs.flatMap(_.classifyFormula()._2)
       ObservationClass.getStrongestPreorderClass(classes)
     }
-    
 
     val simNodes = for {
       (gn, preorders) <- bestPreorders
@@ -116,10 +112,9 @@ class HMLGamePlayer[S, A, L] (
 
     val attackGraph = attackGraphBuilder.buildAttackGraph(game, win, nodes)
 
-    val accumulatedPrices = attackGraphBuilder.accumulatePrices(
+    val accumulatedPrices = attackGraphBuilder.accumulateNodePrices(
       graph = attackGraph,
-      priceCons = (_, _, ff) => ff,
-      pricePick = mergeMoves(game) _,
+      pricePick = buildStrategyFormulas(game) _,
       supPrice = Set(),
       nodes = nodes
     )
@@ -176,8 +171,8 @@ class HMLGamePlayer[S, A, L] (
     debugLog("HML spectroscopy game size: " + hmlGame.discovered.size)
 
     val attackerWin = hmlGame.computeWinningRegion()
-    val aLR = hmlGame.AttackerObservation(nodes(0), Set(nodes(1)), hmlGame.ConjunctMove())
-    val aRL = hmlGame.AttackerObservation(nodes(1), Set(nodes(0)), hmlGame.ConjunctMove())
+    val aLR = hmlGame.AttackerObservation(nodes(0), Set(nodes(1)), hmlGame.ConjunctMove)
+    val aRL = hmlGame.AttackerObservation(nodes(1), Set(nodes(0)), hmlGame.ConjunctMove)
 
     if (attackerWin.contains(aLR) || attackerWin.contains(aRL)) {
       val minFormulas = buildHML(hmlGame, attackerWin, Set(aLR, aRL))

@@ -13,13 +13,13 @@ class SpectroscopyGame[S, A, L](val ts: WeakTransitionSystem[S, A, L], init: Ite
   case class ObservationMove(a: A) extends MoveKind {
     override def toString() = "⟨" + a + "⟩"
   }
-  case class ConjunctMove() extends MoveKind {
+  case object ConjunctMove extends MoveKind {
     override def toString() = "⋀"
   }
-  case class NegationMove() extends MoveKind {
+  case object NegationMove extends MoveKind {
     override def toString() = "¬"
   }
-  case class DefenderMove() extends MoveKind {
+  case object DefenderMove extends MoveKind {
     override def toString() = "*"
   }
 
@@ -27,7 +27,7 @@ class SpectroscopyGame[S, A, L](val ts: WeakTransitionSystem[S, A, L], init: Ite
   case class DefenderConjunction(p: S, qqPart: List[Set[S]]) extends SimpleGame.DefenderNode
 
   override def initialNodes: Iterable[GameNode] = {
-    init map { case (p0, qq0) => AttackerObservation(p0, qq0, ConjunctMove()) }
+    init map { case (p0, qq0) => AttackerObservation(p0, qq0, ConjunctMove) }
   }
 
   def successors(gn: GameNode): Iterable[GameNode] = gn match {
@@ -44,9 +44,9 @@ class SpectroscopyGame[S, A, L](val ts: WeakTransitionSystem[S, A, L], init: Ite
             ObservationMove(a)
           )
         }
-        if (qq0.size == 1 && moveKind.isInstanceOf[ConjunctMove]) {
+        if (qq0.size == 1 && moveKind == ConjunctMove) {
           // wlog only have negation moves when the defender is focused (which can be forced by the attacker using preceding conjunctions)
-          val neg = AttackerObservation(qq0.head, Set(p0), NegationMove())
+          val neg = AttackerObservation(qq0.head, Set(p0), NegationMove)
           dn ++ List(neg)
         } else if (moveKind.isInstanceOf[ObservationMove]) {
           val conjMoves = for {
@@ -65,7 +65,7 @@ class SpectroscopyGame[S, A, L](val ts: WeakTransitionSystem[S, A, L], init: Ite
       for {
         qq0 <- qqPart0
       } yield {
-        AttackerObservation(p0, qq0, ConjunctMove())
+        AttackerObservation(p0, qq0, ConjunctMove)
       }
   }
 }
