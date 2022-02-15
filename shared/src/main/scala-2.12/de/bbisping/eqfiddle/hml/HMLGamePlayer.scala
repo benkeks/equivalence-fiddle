@@ -16,42 +16,27 @@ class HMLGamePlayer[S, A, L] (
   extends AlgorithmLogging[S, A, L] {
 
   def buildStrategyFormulas(game: SpectroscopyGame[S, A, L])(node: GameNode, possibleMoves: Iterable[Set[HennessyMilnerLogic.Formula[A]]]): Set[HennessyMilnerLogic.Formula[A]] = {
-    val moves: Set[HennessyMilnerLogic.Formula[A]] = node match {
+    node match {
       case game.DefenderConjunction(_, _) =>
         val productMoves =
           possibleMoves.foldLeft(Seq(Seq[HennessyMilnerLogic.Formula[A]]()))(
             (b, a) => b.flatMap(i => a.map(j => i ++ Seq(j))))
-        productMoves.map { mv =>
+        val moveSet = productMoves.map { mv =>
           val moves = mv.toSet
           HennessyMilnerLogic.And(moves).asInstanceOf[HennessyMilnerLogic.Formula[A]]
         }.toSet
+        pruneDominated(moveSet)
       case game.AttackerObservation(_, _, game.ConjunctMove) =>
         possibleMoves.flatten.toSet
       case game.AttackerObservation(_, _, game.NegationMove) =>
-        possibleMoves.flatten.toSet[HennessyMilnerLogic.Formula[A]].map(HennessyMilnerLogic.Negate(_))
+        pruneDominated(possibleMoves.flatten.map(HennessyMilnerLogic.Negate(_)).toSet)
       case game.AttackerObservation(_, _, game.ObservationMove(a)) =>
-        possibleMoves.flatten.toSet[HennessyMilnerLogic.Formula[A]].map(HennessyMilnerLogic.Observe[A](a, _))
-    }
-    node match {
-      case game.AttackerObservation(_, _, game.ConjunctMove) => moves
-      case _ => pruneDominated(moves)
+        pruneDominated(possibleMoves.flatten.toSet.map(HennessyMilnerLogic.Observe[A](a, _)))
     }
   }
 
-  def pruneDominated(oldFormulas: Set[HennessyMilnerLogic.Formula[A]]) = {
-    val oldFormulaClasses = for {
-      f <- oldFormulas
-      if f.isInstanceOf[HennessyMilnerLogic.Observe[_]]
-    } yield f.getRootClass()
-    // if no old formula's class dominates this formula's class...
-    for {
-      f <- oldFormulas
-      cl = f.getRootClass()
-      if !oldFormulaClasses.exists(clOther => cl.strictlyAbove(clOther))
-    } yield {
-      f
-    }
-  }
+  def pruneDominated(oldFormulas: Set[HennessyMilnerLogic.Formula[A]]) =
+    HennessyMilnerLogic.getLeastDistinguishing(oldFormulas)
 
   def logAttacksAndResult(game: SpectroscopyGame[S, A, L], node: GameNode, attackGraph: Relation[GameNode], resultFormulas: Set[HennessyMilnerLogic.Formula[A]]) = {
     def gameNodeToTuple(n: GameNode) = n match {
@@ -112,7 +97,7 @@ class HMLGamePlayer[S, A, L] (
 
     val attackGraph = attackGraphBuilder.buildAttackGraph(game, win, nodes)
 
-    val accumulatedPrices = attackGraphBuilder.accumulateNodePrices(
+    val accumulatedPrices: Map[GameNode, Set[HennessyMilnerLogic.Formula[A]]] = attackGraphBuilder.accumulateNodePrices(
       graph = attackGraph,
       pricePick = buildStrategyFormulas(game) _,
       supPrice = Set(),
@@ -142,17 +127,17 @@ class HMLGamePlayer[S, A, L] (
 
       def nodeToID(gn: GameNode): String = gn.hashCode().toString()
 
-      def nodeToString(gn: GameNode): String = gn match {
-        case game.AttackerObservation(p, qq: Set[_], kind) =>
-          val qqString = qq.mkString("{",",","}")
-          val formulaString = formulas.getOrElse(gn,Set()).mkString("\\n").replaceAllLiterally("⟩⊤","⟩")
-          val label = s"$p, $qqString, $kind" +
-            (if (formulaString != "{}") s"\\n------\\n$formulaString" else "")
-          label.replaceAllLiterally(".0", "")
-        case game.DefenderConjunction(p, qqPart: List[Set[_]]) =>
-          val qqString = qqPart.map(_.mkString("{",",","}")).mkString("/")
-          (s"$p, $qqString").replaceAllLiterally(".0", "")
-        case _ => ""
+      def nodeToString(gn: GameNode): String = {
+        val formulaString = formulas.getOrElse(gn,Set()).mkString("\\n").replaceAllLiterally("⟩⊤","⟩")
+        (gn match {
+          case game.AttackerObservation(p, qq: Set[_], kind) =>
+            val qqString = qq.mkString("{",",","}")
+            s"$p, $qqString, $kind"
+          case game.DefenderConjunction(p, qqPart: List[Set[_]]) =>
+            val qqString = qqPart.map(_.mkString("{",",","}")).mkString("/")
+            s"$p, $qqString"
+          case _ => ""
+        }).replaceAllLiterally(".0", "") + (if (formulaString != "") s"\\n------\\n$formulaString" else "")
       }
 
       def edgeToLabel(gn1: GameNode, gn2: GameNode) = {
