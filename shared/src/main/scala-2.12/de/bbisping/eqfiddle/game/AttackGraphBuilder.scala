@@ -74,4 +74,44 @@ class AttackGraphBuilder[L] {
 
     prices.toMap
   }
+
+
+  def accumulateNodePrices(
+      graph: Relation[GameNode],
+      pricePick: (GameNode, Iterable[L]) => L,
+      supPrice: L,
+      nodes: Iterable[GameNode]): Map[GameNode, L] = {
+
+    val prices = collection.mutable.Map[GameNode, L]()
+    val priceToDo = collection.mutable.ListBuffer[GameNode]()
+    priceToDo.appendAll(nodes)
+
+    while (priceToDo.nonEmpty) {
+      val n = priceToDo.remove(0)
+
+      val oldPrice = prices.get(n)
+
+      if (oldPrice.isEmpty) {
+        prices(n) = supPrice
+      }
+
+      val followUps = graph.values(n).map(s => (s, prices.get(s)))
+      val instableFollowUps = followUps.filter(_._2.isEmpty)
+      if (instableFollowUps.isEmpty) {
+        val succPrices = for {
+          (s, Some(p)) <- followUps
+        } yield p
+        val newPrice = pricePick(n, succPrices)
+        if (!(oldPrice contains newPrice)) {
+          prices(n) = newPrice
+          val predecessorUpdates = graph.valuesInverse(n).filterNot(priceToDo contains _) 
+          priceToDo.appendAll(predecessorUpdates)
+        }
+      } else {
+        priceToDo.prependAll(instableFollowUps.map(_._1))
+      }
+    }
+
+    prices.toMap
+  }
 }
