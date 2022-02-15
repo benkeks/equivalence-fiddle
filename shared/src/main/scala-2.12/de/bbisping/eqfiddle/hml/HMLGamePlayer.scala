@@ -24,10 +24,6 @@ class HMLGamePlayer[S, A, L] (
   case class ObservationMove(a: A) extends MoveKind {
     override def toString() = "⟨" + a + "⟩"
   }
-
-  case class PassingMove() extends MoveKind {
-    override def toString() = "⟨ϵ⟩"
-  }
   case class ConjunctMove() extends MoveKind {
     override def toString() = "⋀"
   }
@@ -108,8 +104,6 @@ class HMLGamePlayer[S, A, L] (
         } yield HennessyMilnerLogic.Negate(f)
       case AttackerObservation(_, _, ObservationMove(a)) =>
         possibleMoves.flatten.toSet[HennessyMilnerLogic.Formula[A]].map(HennessyMilnerLogic.Observe(a, _))
-      case AttackerObservation(_, _, PassingMove()) =>
-        possibleMoves.flatten.toSet[HennessyMilnerLogic.Formula[A]].map(HennessyMilnerLogic.Pass(_))
     }
     node match {
       case AttackerObservation(_, _, ConjunctMove()) => moves
