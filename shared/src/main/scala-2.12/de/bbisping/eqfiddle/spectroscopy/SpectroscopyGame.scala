@@ -1,4 +1,4 @@
-package de.bbisping.eqfiddle.hml
+package de.bbisping.eqfiddle.spectroscopy
 
 import de.bbisping.eqfiddle.game.SimpleGame
 import de.bbisping.eqfiddle.game.WinningRegionComputation
@@ -6,25 +6,8 @@ import de.bbisping.eqfiddle.game.GameDiscovery
 import de.bbisping.eqfiddle.ts.WeakTransitionSystem
 import de.bbisping.eqfiddle.util.Partition
 
-class SpectroscopyGame[S, A, L](val ts: WeakTransitionSystem[S, A, L], init: Iterable[(S, Set[S])])
-  extends SimpleGame with GameDiscovery with WinningRegionComputation {
-  
-  abstract sealed class MoveKind
-  case class ObservationMove(a: A) extends MoveKind {
-    override def toString() = "⟨" + a + "⟩"
-  }
-  case object ConjunctMove extends MoveKind {
-    override def toString() = "⋀"
-  }
-  case object NegationMove extends MoveKind {
-    override def toString() = "¬"
-  }
-  case object DefenderMove extends MoveKind {
-    override def toString() = "*"
-  }
-
-  case class AttackerObservation(p: S, qq: Set[S], arrivingMove: MoveKind) extends SimpleGame.AttackerNode
-  case class DefenderConjunction(p: S, qqPart: List[Set[S]]) extends SimpleGame.DefenderNode
+class SpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], init: Iterable[(S, Set[S])])
+  extends AbstractSpectroscopyGame(ts, init) {
 
   override def initialNodes: Iterable[GameNode] = {
     init map { case (p0, qq0) => AttackerObservation(p0, qq0, ConjunctMove) }

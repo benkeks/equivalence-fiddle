@@ -8,7 +8,7 @@ import org.scalatest.matchers.should
 import de.bbisping.eqfiddle.tool.model.NodeID
 import de.bbisping.eqfiddle.util.Relation
 import de.bbisping.eqfiddle.hml.ObservationClass
-import de.bbisping.eqfiddle.hml.HMLGamePlayer
+import de.bbisping.eqfiddle.spectroscopy.PositionalSpectroscopy
 import de.bbisping.eqfiddle.ts.WeakTransitionSystem
 import de.bbisping.eqfiddle.algo.AlgorithmLogging
 import de.bbisping.eqfiddle.algo.AlgorithmLogging.{LogRelation, LogRichRelation}
@@ -36,7 +36,7 @@ trait CSSSampleTests extends AnyFunSpec with should.Matchers  {
           val preordsStr = preords.map(_._1)
           val notPreordsStr = notPreords.map(_._1)
 
-          val algo = new HMLGamePlayer(sampleSystem, List(n1, n2))
+          val algo = new PositionalSpectroscopy(sampleSystem, List(n1, n2))
           algo.compute()
 
           val log = for {
