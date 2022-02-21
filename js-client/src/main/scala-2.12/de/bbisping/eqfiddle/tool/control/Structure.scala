@@ -14,7 +14,7 @@ import de.bbisping.eqfiddle.util.Relation
 import de.bbisping.eqfiddle.util.LabeledRelation
 import de.bbisping.eqfiddle.ts.DivergenceInformation
 import de.bbisping.eqfiddle.algo.AlgorithmLogging
-import de.bbisping.eqfiddle.hml.HMLGamePlayer
+import de.bbisping.eqfiddle.spectroscopy.PositionalSpectroscopy
 
 class Structure(val main: Control) extends ModelComponent {
 
@@ -287,7 +287,7 @@ object Structure {
 
         val begin = Date.now
 
-        val algo = new HMLGamePlayer(structure.structure, List(n1, n2))
+        val algo = new PositionalSpectroscopy(structure.structure, List(n1, n2))
         algo.compute()
         println("Spectroscopy took: " + (Date.now - begin) + "ms.")
 

@@ -102,16 +102,6 @@ object HennessyMilnerLogic {
       andThen.obsClass.conjunctionLevels + (if (!andThen.isPositive) 1 else 0),0,0,0,0) lub andThen.obsClass
 
   }
-
-  case class Pass[A](andThen: Formula[A]) extends Formula[A] {
-    override def toString = "⟨ϵ⟩" + andThen.toString
-
-    //TODO: or andThen.isPositive ?
-    override val isPositive = true
-    
-    override val obsClass = ObservationClass(andThen.obsClass.observationHeight + 1, andThen.obsClass.conjunctionLevels,0,0,0,0) lub andThen.obsClass
-
-  }
   case class Negate[A](andThen: Formula[A]) extends Formula[A] {
     override def toString = "¬" + andThen.toString
 

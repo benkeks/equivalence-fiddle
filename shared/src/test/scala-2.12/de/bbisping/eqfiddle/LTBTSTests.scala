@@ -1,5 +1,8 @@
 package de.bbisping.eqfiddle
 
+import de.bbisping.eqfiddle.spectroscopy.PositionalSpectroscopy
+import de.bbisping.eqfiddle.spectroscopy.EdgeSpectroscopy
+
 
 class LTBTSTests extends CSSSampleTests {
   val ltbtsSystem = TestSamples.samples.find(_._1 == "ltbts1").get._2
@@ -27,5 +30,6 @@ class LTBTSTests extends CSSSampleTests {
     ("R50", "L50", List("ready-trace", "impossible-future"), List("possible-future", "simulation"))
   )
 
-  runTest(ltbtsSystem, sampleNames)
+  runTest(ltbtsSystem, sampleNames, new PositionalSpectroscopy(_, _), "(positional)")
+  runTest(ltbtsSystem, sampleNames, new EdgeSpectroscopy(_, _), "(edge-labeled)")
 }
