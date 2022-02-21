@@ -18,7 +18,7 @@ abstract class AbstractSpectroscopy[S, A, L] (
     val nodes: List[S])
   extends AlgorithmLogging[S, A, L] {
 
-  def buildStrategyFormulas(game: SpectroscopyGame[S, A, L])(node: GameNode, possibleMoves: Iterable[Set[HennessyMilnerLogic.Formula[A]]]): Set[HennessyMilnerLogic.Formula[A]] = {
+  def buildStrategyFormulas(game: AbstractSpectroscopyGame[S, A, L])(node: GameNode, possibleMoves: Iterable[Set[HennessyMilnerLogic.Formula[A]]]): Set[HennessyMilnerLogic.Formula[A]] = {
     node match {
       case game.DefenderConjunction(_, _) =>
         val productMoves =
@@ -41,7 +41,7 @@ abstract class AbstractSpectroscopy[S, A, L] (
   def pruneDominated(oldFormulas: Set[HennessyMilnerLogic.Formula[A]]) =
     HennessyMilnerLogic.getLeastDistinguishing(oldFormulas)
 
-  def logAttacksAndResult(game: SpectroscopyGame[S, A, L], node: GameNode, attackGraph: Relation[GameNode], resultFormulas: Set[HennessyMilnerLogic.Formula[A]]) = {
+  def logAttacksAndResult(game: AbstractSpectroscopyGame[S, A, L], node: GameNode, attackGraph: Relation[GameNode], resultFormulas: Set[HennessyMilnerLogic.Formula[A]]) = {
     def gameNodeToTuple(n: GameNode) = n match {
       case game.AttackerObservation(p, qq, afterConj) =>
         (Set(p), "A", qq)
@@ -67,7 +67,7 @@ abstract class AbstractSpectroscopy[S, A, L] (
 
   }
 
-  def logDefenseResult(game: SpectroscopyGame[S, A, L], node: GameNode, nodeFormulas: Map[GameNode, Set[HennessyMilnerLogic.Formula[A]]]) = {
+  def logDefenseResult(game: AbstractSpectroscopyGame[S, A, L], node: GameNode, nodeFormulas: Map[GameNode, Set[HennessyMilnerLogic.Formula[A]]]) = {
    
     val bestPreorders = nodeFormulas.mapValues { ffs =>
       val classes = ffs.flatMap(_.classifyFormula()._2)
@@ -94,7 +94,7 @@ abstract class AbstractSpectroscopy[S, A, L] (
     }
   }
 
-  def buildHML(game: SpectroscopyGame[S, A, L], win: Set[GameNode], nodes: Set[GameNode]) = {
+  def buildHML(game: AbstractSpectroscopyGame[S, A, L], win: Set[GameNode], nodes: Set[GameNode]) = {
 
     val attackGraphBuilder = new AttackGraphBuilder[Set[HennessyMilnerLogic.Formula[A]]]()
 
@@ -125,7 +125,7 @@ abstract class AbstractSpectroscopy[S, A, L] (
     }
   }
 
-  def graphvizGameWithFormulas(game: SpectroscopyGame[S, A, L], win: Set[GameNode], formulas: Map[GameNode, Set[HennessyMilnerLogic.Formula[A]]]) = {
+  def graphvizGameWithFormulas(game: AbstractSpectroscopyGame[S, A, L], win: Set[GameNode], formulas: Map[GameNode, Set[HennessyMilnerLogic.Formula[A]]]) = {
     val visualizer = new GameGraphVisualizer(game) {
 
       def nodeToID(gn: GameNode): String = gn.hashCode().toString()
