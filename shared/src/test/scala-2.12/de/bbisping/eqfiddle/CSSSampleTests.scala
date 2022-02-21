@@ -8,27 +8,32 @@ import org.scalatest.matchers.should
 import de.bbisping.eqfiddle.tool.model.NodeID
 import de.bbisping.eqfiddle.util.Relation
 import de.bbisping.eqfiddle.hml.ObservationClass
-import de.bbisping.eqfiddle.spectroscopy.PositionalSpectroscopy
 import de.bbisping.eqfiddle.ts.WeakTransitionSystem
 import de.bbisping.eqfiddle.algo.AlgorithmLogging
 import de.bbisping.eqfiddle.algo.AlgorithmLogging.{LogRelation, LogRichRelation}
+import de.bbisping.eqfiddle.spectroscopy.AbstractSpectroscopy
+import de.bbisping.eqfiddle.spectroscopy.PositionalSpectroscopy
 
 trait CSSSampleTests extends AnyFunSpec with should.Matchers  {
   
   AlgorithmLogging.loggingActive = true
   AlgorithmLogging.debugLogActive = false
-  
+
   private def toSpectrumClassSet(names: Iterable[String]) = (for {
     n <- names
     cl <- ObservationClass.getSpectrumClass(n)
   } yield cl).toSet
 
-  def runTest(sampleSystem: WeakTransitionSystem[NodeID,String,String], sampleNames: List[(String, String, List[String], List[String])]) = {
+  def runTest(
+      sampleSystem: WeakTransitionSystem[NodeID,String,String],
+      sampleNames: List[(String, String, List[String], List[String])],
+      spectroscopyAlgo: (WeakTransitionSystem[NodeID,String,String], List[NodeID]) => AbstractSpectroscopy[NodeID,String,String],
+      title: String) = {
     val samples = sampleNames.map {
       case (n1, n2, preords, notPreords) =>
         (n1, n2, toSpectrumClassSet(preords), toSpectrumClassSet(notPreords))
     }
-    describe("The Spectroscopy") {
+    describe("The Spectroscopy " + title) {
       forAll(samples) { case (n1s, n2s, preords, notPreords) =>
         describe("for " + n1s + " <= " + n2s) {
           val n1 = NodeID(n1s)
@@ -36,7 +41,7 @@ trait CSSSampleTests extends AnyFunSpec with should.Matchers  {
           val preordsStr = preords.map(_._1)
           val notPreordsStr = notPreords.map(_._1)
 
-          val algo = new PositionalSpectroscopy(sampleSystem, List(n1, n2))
+          val algo = spectroscopyAlgo(sampleSystem, List(n1, n2))
           algo.compute()
 
           val log = for {

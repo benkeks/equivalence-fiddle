@@ -16,8 +16,51 @@ class PositionalSpectroscopy[S, A, L] (
     nodes: List[S])
   extends AbstractSpectroscopy[S, A, L](ts, nodes) {
 
+  def buildStrategyFormulas(game: AbstractSpectroscopyGame[S, A, L])(node: GameNode, possibleMoves: Iterable[Set[HennessyMilnerLogic.Formula[A]]]): Set[HennessyMilnerLogic.Formula[A]] = {
+    node match {
+      case game.DefenderConjunction(_, _) =>
+        val productMoves =
+          possibleMoves.foldLeft(Seq(Seq[HennessyMilnerLogic.Formula[A]]()))(
+            (b, a) => b.flatMap(i => a.map(j => i ++ Seq(j))))
+        val moveSet = productMoves.map { mv =>
+          val moves = mv.toSet
+          HennessyMilnerLogic.And(moves).asInstanceOf[HennessyMilnerLogic.Formula[A]]
+        }.toSet
+        pruneDominated(moveSet)
+      case game.AttackerObservation(_, _, game.ConjunctMove) =>
+        possibleMoves.flatten.toSet
+      case game.AttackerObservation(_, _, game.NegationMove) =>
+        pruneDominated(possibleMoves.flatten.map(HennessyMilnerLogic.Negate(_)).toSet)
+      case game.AttackerObservation(_, _, game.ObservationMove(a)) =>
+        pruneDominated(possibleMoves.flatten.toSet.map(HennessyMilnerLogic.Observe[A](a, _)))
+    }
+  }
+
   override def pruneDominated(oldFormulas: Set[HennessyMilnerLogic.Formula[A]]) =
     HennessyMilnerLogic.getLeastDistinguishing(oldFormulas)
+
+  def buildHML(game: AbstractSpectroscopyGame[S, A, L], win: Set[GameNode], nodes: Set[GameNode]) = {
+
+    val attackGraphBuilder = new AttackGraphBuilder[Set[HennessyMilnerLogic.Formula[A]]]()
+
+    val attackGraph = attackGraphBuilder.buildAttackGraph(game, win, nodes)
+
+    val accumulatedPrices: Map[GameNode, Set[HennessyMilnerLogic.Formula[A]]] = attackGraphBuilder.accumulateNodePrices(
+      graph = attackGraph,
+      pricePick = buildStrategyFormulas(game) _,
+      supPrice = Set(),
+      nodes = nodes
+    )
+
+    val minPrices = accumulatedPrices.mapValues(HennessyMilnerLogic.getLeastDistinguishing(_))
+
+    if (AlgorithmLogging.loggingActive) {
+      nodes.foreach { n => logAttacksAndResult(game, n, attackGraph, minPrices(n)) }
+      nodes.foreach { n => logDefenseResult(game, n, minPrices)}
+    }
+
+    minPrices
+  }
 
   def compute() = {
 
