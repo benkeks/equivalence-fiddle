@@ -36,8 +36,18 @@ class PositionalSpectroscopy[S, A, L] (
     }
   }
 
-  override def pruneDominated(oldFormulas: Set[HennessyMilnerLogic.Formula[A]]) =
-    HennessyMilnerLogic.getLeastDistinguishing(oldFormulas)
+  override def pruneDominated(oldFormulas: Set[HennessyMilnerLogic.Formula[A]]) = {
+    val formulaClasses = for {
+      f <- oldFormulas
+    } yield f.getRootClass()
+    for {
+      f <- oldFormulas
+      cl = f.getRootClass()
+      if !formulaClasses.exists(clOther => cl.strictlyAbove(clOther))
+    } yield {
+      f
+    }
+  }
 
   def buildHML(game: AbstractSpectroscopyGame[S, A, L], win: Set[GameNode], nodes: Set[GameNode]) = {
 
