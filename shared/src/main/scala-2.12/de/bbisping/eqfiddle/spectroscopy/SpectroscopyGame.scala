@@ -9,13 +9,16 @@ import de.bbisping.eqfiddle.util.Partition
 class SpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], init: Iterable[(S, Set[S])])
   extends AbstractSpectroscopyGame(ts, init) {
 
+  /* This will abort the game construction in nodes where the attacker cannot win because p is contained in qq. */
+  val optimizeSymmetryDefWins: Boolean = false;  
+
   override def initialNodes: Iterable[GameNode] = {
     init map { case (p0, qq0) => AttackerObservation(p0, qq0, ConjunctMove) }
   }
 
   def successors(gn: GameNode): Iterable[GameNode] = gn match {
     case AttackerObservation(p0, qq0, moveKind) =>
-      if (qq0 contains p0) {
+      if (optimizeSymmetryDefWins && (qq0 contains p0)) {
         List()
       } else {
         val dn = for {
@@ -28,14 +31,11 @@ class SpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], init: Iterabl
           )
         }
         if (qq0.size == 1 && moveKind == ConjunctMove) {
-          // wlog only have negation moves when the defender is focused (which can be forced by the attacker using preceding conjunctions)
           val neg = AttackerObservation(qq0.head, Set(p0), NegationMove)
           dn ++ List(neg)
         } else if (moveKind.isInstanceOf[ObservationMove]) {
           val conjMoves = for {
             parts <- Partition.partitioningListsOfSet(qq0)
-            //if parts.length == qq0.size // this is equivalent to the original algorithm's game
-            //if parts.length != 1 // drop the trivial partitioning
           } yield {
             DefenderConjunction(p0, parts)
           }
