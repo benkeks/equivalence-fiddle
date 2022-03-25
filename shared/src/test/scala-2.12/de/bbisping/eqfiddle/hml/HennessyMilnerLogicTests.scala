@@ -37,4 +37,11 @@ class HennessyMilnerLogicTests extends AnyFunSpec with should.Matchers  {
       (conj1a.obsClass strictlyBelow conj1b.obsClass) should be (true)
     }
   }
+
+
+  describe("When selecting equivalences") {
+    it("the best preorder if there are no distinctions should be bisimulation") {
+      ObservationClass.getStrongestPreorderClass(List()) should equal (ObservationClass.getSpectrumClass("bisimulation").toList)
+    }
+  }
 }

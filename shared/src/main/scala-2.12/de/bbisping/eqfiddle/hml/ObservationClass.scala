@@ -53,10 +53,14 @@ case class ObservationClass(
   )
 
   def strictlyBelow(that: ObservationClass) = (this != that) && (this below that)
+
+  def toTuple = (observationHeight, conjunctionLevels, maxPositiveDeepBranches, maxPositiveBranches, negationLevels, maxNegationHeight)
 }
 
 object ObservationClass {
   val INFTY = Integer.MAX_VALUE
+
+  type EquivalenceNotion = (String, ObservationClass)
 
   // observationHeight, conjunctionLevels, maxPosDeep, maxPos, negationLevels, maxNegH
   // The Linear-time Branching-time Spectrum
