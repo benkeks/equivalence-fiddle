@@ -15,6 +15,7 @@ import de.bbisping.eqfiddle.util.LabeledRelation
 import de.bbisping.eqfiddle.ts.DivergenceInformation
 import de.bbisping.eqfiddle.algo.AlgorithmLogging
 import de.bbisping.eqfiddle.spectroscopy.PositionalSpectroscopy
+import scala.scalajs.js
 
 class Structure(val main: Control) extends ModelComponent {
 
@@ -288,8 +289,14 @@ object Structure {
         val begin = Date.now
 
         val algo = new PositionalSpectroscopy(structure.structure, List(n1, n2))
-        algo.compute()
+        val result = algo.compute()
         println("Spectroscopy took: " + (Date.now - begin) + "ms.")
+
+        import js.JSConverters._
+        val resSerialized = for {
+          res <- result.relationItems.toJSArray
+        } yield res.serialize(_.toJSArray, _.toJSDictionary)
+        println("spectroscopy_result_as_json = " + js.JSON.stringify(resSerialized))
 
         val replay = algo.getReplay()
         

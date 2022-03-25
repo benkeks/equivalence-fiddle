@@ -151,8 +151,24 @@ object AbstractSpectroscopy {
     right: S,
     distinctions: List[(HennessyMilnerLogic.Formula[A], ObservationClass, List[ObservationClass.EquivalenceNotion])],
     preorderings: List[ObservationClass.EquivalenceNotion]
-  )
+  ) {
+    def serialize(listConstructor: (Iterable[Any] => Any), mapConstructor: (Map[String, Any] => Any)) = {
+      val dists = for {
+        (f, price, eqs) <- distinctions
+      } yield mapConstructor(Map(
+        ("formula", f.toString()),
+        ("price", listConstructor(price.productIterator.toIterable)),
+        ("inequivalences", listConstructor(eqs.map(_._1))))
+      )
+      mapConstructor(Map(
+        ("left", left.toString()),
+        ("right", right.toString()),
+        ("distinctions", listConstructor(dists)),
+        ("preorderings", listConstructor(preorderings.map(_._1)))
+      ))
+    }
+  }
 
-  case class SpectroscopyResult[S, A](relationItems: List[SpectroscopyResultItem[S, A]])
+  case class SpectroscopyResult[S, A](val relationItems: List[SpectroscopyResultItem[S, A]])
 
 }

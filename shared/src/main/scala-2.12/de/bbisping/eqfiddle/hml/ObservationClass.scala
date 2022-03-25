@@ -53,6 +53,8 @@ case class ObservationClass(
   )
 
   def strictlyBelow(that: ObservationClass) = (this != that) && (this below that)
+
+  def toTuple = (observationHeight, conjunctionLevels, maxPositiveDeepBranches, maxPositiveBranches, negationLevels, maxNegationHeight)
 }
 
 object ObservationClass {
