@@ -18,9 +18,40 @@ abstract class AbstractSpectroscopy[S, A, L] (
     val nodes: List[S])
   extends AlgorithmLogging[S, A, L] {
 
+  import AbstractSpectroscopy._
+
   def buildStrategyFormulas(game: AbstractSpectroscopyGame[S, A, L])(node: GameNode, possibleMoves: Iterable[Set[HennessyMilnerLogic.Formula[A]]]): Set[HennessyMilnerLogic.Formula[A]]
 
   def pruneDominated(oldFormulas: Set[HennessyMilnerLogic.Formula[A]]): Set[HennessyMilnerLogic.Formula[A]]
+
+  def compute(): SpectroscopyResult[S,A]
+
+  def collectSpectroscopyResult(
+    game: AbstractSpectroscopyGame[S, A, L],
+    nodeFormulas: Map[GameNode, Set[HennessyMilnerLogic.Formula[A]]])
+  : SpectroscopyResult[S,A] = {
+    
+    val bestPreorders: Map[GameNode,List[ObservationClass.EquivalenceNotion]] = nodeFormulas.mapValues { ffs =>
+      val classes = ffs.flatMap(_.classifyFormula()._2)
+      ObservationClass.getStrongestPreorderClass(classes)
+    }
+
+    val spectroResults = for {
+      gn <- game.discovered
+      if gn.isInstanceOf[game.AttackerObservation]
+      game.AttackerObservation(p, qq, kind) = gn
+      if kind == game.ConjunctMove && qq.size == 1
+      q <- qq
+      preorders <- bestPreorders.get(gn)
+      distinctionFormulas = nodeFormulas(gn)
+      distinctions = for {
+        f <- distinctionFormulas.toList
+        (price, eqs) = f.classifyFormula()
+      } yield (f, price, eqs)
+    } yield SpectroscopyResultItem(p, q, distinctions, preorders)
+
+    SpectroscopyResult(spectroResults.toList)
+  }
 
   def logAttacksAndResult(game: AbstractSpectroscopyGame[S, A, L], node: GameNode, attackGraph: Relation[GameNode], resultFormulas: Set[HennessyMilnerLogic.Formula[A]]) = {
     def gameNodeToTuple(n: GameNode) = n match {
@@ -34,7 +65,7 @@ abstract class AbstractSpectroscopy[S, A, L] (
     val gameRel: Set[((Set[S], String, Set[S]), String, (Set[S], String, Set[S]))] = for {
       (n1, n2) <- attackGraph.tupleSet
     } yield (gameNodeToTuple(n1), "", gameNodeToTuple(n2))
-    
+
     val msg = for {
       f <- resultFormulas
       s = gameNodeToTuple(node)
@@ -111,5 +142,17 @@ abstract class AbstractSpectroscopy[S, A, L] (
     visualizer.outputDot(win)
   }
 
-  def compute(): Boolean
+}
+
+object AbstractSpectroscopy {
+
+  case class SpectroscopyResultItem[S, A](
+    left: S,
+    right: S,
+    distinctions: List[(HennessyMilnerLogic.Formula[A], ObservationClass, List[ObservationClass.EquivalenceNotion])],
+    preorderings: List[ObservationClass.EquivalenceNotion]
+  )
+
+  case class SpectroscopyResult[S, A](relationItems: List[SpectroscopyResultItem[S, A]])
+
 }

@@ -150,6 +150,6 @@ class EdgeSpectroscopy[S, A, L] (
     }
     debugLog(graphvizGameWithFormulas(hmlGame, attackerWin, minFormulas))
 
-    true
+    collectSpectroscopyResult(hmlGame, minFormulas)
   }
 }

@@ -58,6 +58,8 @@ case class ObservationClass(
 object ObservationClass {
   val INFTY = Integer.MAX_VALUE
 
+  type EquivalenceNotion = (String, ObservationClass)
+
   // observationHeight, conjunctionLevels, maxPosDeep, maxPos, negationLevels, maxNegH
   // The Linear-time Branching-time Spectrum
   val LTBTS = List(
