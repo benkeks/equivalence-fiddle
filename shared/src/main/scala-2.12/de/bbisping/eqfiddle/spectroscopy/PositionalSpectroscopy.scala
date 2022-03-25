@@ -59,10 +59,19 @@ class PositionalSpectroscopy[S, A, L] (
       graph = attackGraph,
       pricePick = buildStrategyFormulas(game) _,
       supPrice = Set(),
-      nodes = nodes
+      nodes = nodes 
     )
 
-    val minPrices = accumulatedPrices.mapValues(HennessyMilnerLogic.getLeastDistinguishing(_))
+    val bisimilarNodes = for {
+      gn <- game.discovered
+      if gn.isInstanceOf[game.AttackerObservation] && !win(gn)
+      game.AttackerObservation(p, qq, kind) = gn
+      if qq.size == 1 && kind == game.ConjunctMove
+    } yield (gn, Set[HennessyMilnerLogic.Formula[A]]())
+
+    val minPrices =
+      bisimilarNodes.toMap ++
+      accumulatedPrices.mapValues(HennessyMilnerLogic.getLeastDistinguishing(_))
 
     if (AlgorithmLogging.loggingActive) {
       nodes.foreach { n => logAttacksAndResult(game, n, attackGraph, minPrices(n)) }
@@ -82,37 +91,22 @@ class PositionalSpectroscopy[S, A, L] (
     val aLR = hmlGame.AttackerObservation(nodes(0), Set(nodes(1)), hmlGame.ConjunctMove)
     val aRL = hmlGame.AttackerObservation(nodes(1), Set(nodes(0)), hmlGame.ConjunctMove)
 
-    if (attackerWin.contains(aLR) || attackerWin.contains(aRL)) {
-      val minFormulas = buildHML(hmlGame, attackerWin, Set(aLR, aRL))
+    val minFormulas = buildHML(hmlGame, attackerWin, Set(aLR, aRL))
 
-      if (attackerWin.contains(aLR)) {
-        minFormulas(aLR).foreach { f =>
-          debugLog("Distinguished under " + f.classifyFormula() + " preorder by " + f.toString())
-          checkDistinguishing(f, nodes(0), nodes(1))
-        }
+    if (attackerWin.contains(aLR)) {
+      minFormulas(aLR).foreach { f =>
+        debugLog("Distinguished under " + f.classifyFormula() + " preorder by " + f.toString())
+        checkDistinguishing(f, nodes(0), nodes(1))
       }
-
-      if (attackerWin.contains(aRL)) {
-        minFormulas(aRL).foreach { f =>
-          debugLog("Distinguished under " + f.classifyFormula() + " preorder by " + f.toString())
-          checkDistinguishing(f, nodes(1), nodes(0))
-        }
-      }
-      debugLog(graphvizGameWithFormulas(hmlGame, attackerWin, minFormulas))
-    } else {
-
-      val simNodes = for {
-        gn <- hmlGame.discovered
-        if gn.isInstanceOf[hmlGame.AttackerObservation] && !attackerWin(gn)
-        hmlGame.AttackerObservation(p, qq, _) = gn
-        q <- qq
-      } yield (p, "", q)
-
-      val rel = new LabeledRelation(simNodes.toSet)
-      logRelation(rel, nodes(0) + " and " + nodes(1) + " are bisimulation equivalent.")
-
-      debugLog(graphvizGameWithFormulas(hmlGame, attackerWin, Map().withDefaultValue(Set())))
     }
+
+    if (attackerWin.contains(aRL)) {
+      minFormulas(aRL).foreach { f =>
+        debugLog("Distinguished under " + f.classifyFormula() + " preorder by " + f.toString())
+        checkDistinguishing(f, nodes(1), nodes(0))
+      }
+    }
+    debugLog(graphvizGameWithFormulas(hmlGame, attackerWin, minFormulas))
 
     true
   }

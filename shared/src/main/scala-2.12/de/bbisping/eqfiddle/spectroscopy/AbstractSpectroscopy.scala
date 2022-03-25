@@ -58,7 +58,8 @@ abstract class AbstractSpectroscopy[S, A, L] (
     val simNodes = for {
       (gn, preorders) <- bestPreorders
       if gn.isInstanceOf[game.AttackerObservation]
-      game.AttackerObservation(p, qq, _) = gn
+      game.AttackerObservation(p, qq, kind) = gn
+      if kind == game.ConjunctMove && qq.size == 1
       label = preorders.map(_._1).mkString(",")
       q <- qq
     } yield (p, label, q)
