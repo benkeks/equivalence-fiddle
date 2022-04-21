@@ -12,7 +12,7 @@ case class ObservationClass(
   /** the maximal amount of negations when descending into a formula */
   negationLevels: Int,
   /** maximal observationHeight of negative subformulas */
-  maxNegationHeight: Int
+  maxNegatedHeight: Int
 ) {
   def lub(that: ObservationClass) = ObservationClass(
     Integer.max(this.observationHeight, that.observationHeight),
@@ -20,7 +20,7 @@ case class ObservationClass(
     Integer.max(this.maxPositiveDeepBranches, that.maxPositiveDeepBranches),
     Integer.max(this.maxPositiveBranches, that.maxPositiveBranches),
     Integer.max(this.negationLevels, that.negationLevels),
-    Integer.max(this.maxNegationHeight, that.maxNegationHeight)
+    Integer.max(this.maxNegatedHeight, that.maxNegatedHeight)
   )
 
   def glb(that: ObservationClass) = ObservationClass(
@@ -29,7 +29,7 @@ case class ObservationClass(
     Integer.min(this.maxPositiveDeepBranches, that.maxPositiveDeepBranches),
     Integer.min(this.maxPositiveBranches, that.maxPositiveBranches),
     Integer.min(this.negationLevels, that.negationLevels),
-    Integer.min(this.maxNegationHeight, that.maxNegationHeight)
+    Integer.min(this.maxNegatedHeight, that.maxNegatedHeight)
   )
 
   def above(that: ObservationClass) = (
@@ -38,7 +38,7 @@ case class ObservationClass(
     this.maxPositiveDeepBranches >= that.maxPositiveDeepBranches &&
     this.maxPositiveBranches >= that.maxPositiveBranches &&
     this.negationLevels >= that.negationLevels &&
-    this.maxNegationHeight >= that.maxNegationHeight
+    this.maxNegatedHeight >= that.maxNegatedHeight
   )
 
   def strictlyAbove(that: ObservationClass) = (this != that) && (this above that)
@@ -49,12 +49,12 @@ case class ObservationClass(
     this.maxPositiveDeepBranches <= that.maxPositiveDeepBranches &&
     this.maxPositiveBranches <= that.maxPositiveBranches &&
     this.negationLevels <= that.negationLevels &&
-    this.maxNegationHeight <= that.maxNegationHeight
+    this.maxNegatedHeight <= that.maxNegatedHeight
   )
 
   def strictlyBelow(that: ObservationClass) = (this != that) && (this below that)
 
-  def toTuple = (observationHeight, conjunctionLevels, maxPositiveDeepBranches, maxPositiveBranches, negationLevels, maxNegationHeight)
+  def toTuple = (observationHeight, conjunctionLevels, maxPositiveDeepBranches, maxPositiveBranches, negationLevels, maxNegatedHeight)
 }
 
 object ObservationClass {

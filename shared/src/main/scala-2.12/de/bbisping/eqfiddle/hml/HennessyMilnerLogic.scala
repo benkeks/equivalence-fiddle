@@ -29,7 +29,7 @@ object HennessyMilnerLogic {
         obsClass.maxPositiveDeepBranches,
         obsClass.maxPositiveBranches,
         obsClass.negationLevels,
-        obsClass.maxNegationHeight
+        obsClass.maxNegatedHeight
       )
     }
 
@@ -85,7 +85,7 @@ object HennessyMilnerLogic {
           /** the maximal amount of negations when descending into a formula */
           negationLevels = subterms.map(_.obsClass.negationLevels).max,
           /** maximal observationHeight of negative subformulas */
-          maxNegationHeight = subterms.map(_.obsClass.maxNegationHeight).max
+          maxNegatedHeight = subterms.map(_.obsClass.maxNegatedHeight).max
         )
       }
     }
