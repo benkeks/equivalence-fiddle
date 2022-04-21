@@ -9,9 +9,6 @@ import de.bbisping.eqfiddle.util.Partition
 class SpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], init: Iterable[(S, Set[S])])
   extends AbstractSpectroscopyGame(ts, init) {
 
-  /* This will abort the game construction in nodes where the attacker cannot win because p is contained in qq. */
-  val optimizeSymmetryDefWins: Boolean = false;  
-
   override def initialNodes: Iterable[GameNode] = {
     init map { case (p0, qq0) => AttackerObservation(p0, qq0, ConjunctMove) }
   }

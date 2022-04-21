@@ -1,6 +1,6 @@
 package de.bbisping.eqfiddle.tool
 
-import de.bbisping.eqfiddle.spectroscopy.PositionalSpectroscopy
+import de.bbisping.eqfiddle.spectroscopy.EdgeSpectroscopy
 import de.bbisping.eqfiddle.algo.AlgorithmLogging
 import de.bbisping.eqfiddle.algo.AlgorithmLogging.{LogRelation, LogRichRelation}
 import de.bbisping.eqfiddle.ccs.CCSSamples
@@ -54,7 +54,7 @@ object Benchmark extends App {
     esDef.getDeclaration(n1s) map (_.process) foreach (println(_))
     esDef.getDeclaration(n2s) map (_.process) foreach (println(_))
 
-    val algo = new PositionalSpectroscopy(ltbtsSystem, List(n1, n2))
+    val algo = new EdgeSpectroscopy(ltbtsSystem, List(n1, n2))
     algo.compute()
 
     val log = for {

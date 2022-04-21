@@ -5,13 +5,13 @@ object HennessyMilnerLogic {
 
   def getLeastDistinguishing[A](formulas: Set[Formula[A]]): Set[Formula[A]] = {
     val classifications = formulas.map(f => (f, f.classifyFormula()))
-    val bounds = classifications.flatMap(_._2._2.map(_._2))
+    val allClassBounds = classifications.flatMap(_._2._2.map(_._2))
 
     for {
-      (f, (cl, clB)) <- classifications
-      clBb = clB.map(_._2)
+      (f, (_, namedClassBounds)) <- classifications
+      classBounds = namedClassBounds.map(_._2)
       // just keep formulas where one of the classifications is dominated by no other classification
-      if clBb.exists(classBound => !bounds.exists(_ strictlyBelow classBound))
+      if classBounds.exists(classBound => !allClassBounds.exists(_ strictlyBelow classBound))
     } yield f
   }
 
