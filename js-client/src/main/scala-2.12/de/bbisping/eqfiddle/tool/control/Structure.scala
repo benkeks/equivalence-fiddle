@@ -302,7 +302,7 @@ object Structure {
         println("spectroscopy_result_as_json = " + js.JSON.stringify(resSerialized))
 
         val replay = algo.getReplay()
-        
+
         structure.setReplay(replay)
         structure.main.doAction(StructureDoReplayStep(), structure)
 
