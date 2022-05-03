@@ -64,7 +64,21 @@ lazy val jsClient = (project in file("js-client")).settings(
       baseDirectory.value / ".." / "shared" / "src" / "main" / "scala-2.12"
 ).aggregate(shared).dependsOn(shared).enablePlugins(ScalaJSPlugin, ScalaJSWeb)
 
+lazy val jsApi = (project in file("js-api")).settings(
+  scalaVersion := "2.12.10",
+  name := "eqfiddle-api",
+  parallelExecution in ThisBuild := false,
+  scalacOptions ++= scalacOpts,
+  scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
+  artifactPath in (Compile,fastOptJS) :=
+      ((target in fastOptJS).value /
+        ((moduleName in fastOptJS).value + ".js")),
+  artifactPath in (Compile,fullOptJS) := (artifactPath in (Compile,fastOptJS)).value,
+  unmanagedSourceDirectories in Compile +=
+      baseDirectory.value / ".." / "shared" / "src" / "main" / "scala-2.12"
+).aggregate(shared).dependsOn(shared).enablePlugins(ScalaJSPlugin)
+
 lazy val root = project.in(file(".")).settings(
   name := "eqfiddle"
-  ).aggregate(shared, jsClient, web)
+  ).aggregate(shared, jsClient, jsApi, web)
    .dependsOn(jsClient, web)
