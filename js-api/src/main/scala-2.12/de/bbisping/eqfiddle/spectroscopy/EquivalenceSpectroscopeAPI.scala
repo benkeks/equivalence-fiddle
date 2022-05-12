@@ -1,14 +1,41 @@
 package de.bbisping.eqfiddle.spectroscopy
 
 import scala.scalajs.js
-import scala.scalajs.js.annotation.{JSExportTopLevel, JSExport}
+import scala.scalajs.js.annotation.{JSExportTopLevel, JSExport, JSExportAll}
+import scala.scalajs.js.JSConverters._
 
 import de.bbisping.eqfiddle.algo.AlgorithmLogging
 import de.bbisping.eqfiddle.ts.WeakTransitionSystem
 import de.bbisping.eqfiddle.util.LabeledRelation
-
+import de.bbisping.eqfiddle.spectroscopy.helpers.CytoscapeHelpers
 object EquivalenceSpectroscopeAPI {
-  type WeakTS = WeakTransitionSystem[String, String, String]
+
+  @JSExportAll
+  class WeakTS(
+      step: LabeledRelation[String, String],
+      nodeLabeling: Map[String, String],
+      override val silentActions: Set[String])
+    extends WeakTransitionSystem[String, String, String](step, nodeLabeling, silentActions)
+      with CytoscapeHelpers {
+
+    def _toMime() = {
+      Map("text/html" -> buildCytoscape(cytoNodes(), cytoEdges()) ).toJSDictionary
+    }
+
+    private def cytoNodes() = {
+      val nodeStrings = for {
+        (id, label) <- nodeLabeling.toIterable
+      } yield s"{ data: { id: '$id', name: '$label'} }"
+      nodeStrings.mkString("[", ",", "]")
+    }
+
+    private def cytoEdges() = {
+      val edgeStrings = for {
+        (src, label, target) <- step.tupleSet
+      } yield s"{ data: { source: '$src', target: '$target', label: '$label'} }"
+      edgeStrings.mkString("[", ",", "]")
+    }
+  }
 
   @JSExportTopLevel("loadLTS")
   def loadLTS(ltsObject: js.Dynamic): WeakTS = {
@@ -34,7 +61,7 @@ object EquivalenceSpectroscopeAPI {
     val silentAction: String =
       if (js.isUndefined(lts.silent)) "tau" else lts.silent.asInstanceOf[String]
 
-    new WeakTransitionSystem[String, String, String](step, nodeLabeling, Set(silentAction))
+    new WeakTS(step, nodeLabeling, Set(silentAction))
   }
 
   @JSExportTopLevel("performSpectroscopy")
@@ -43,7 +70,6 @@ object EquivalenceSpectroscopeAPI {
     val algo = new PositionalSpectroscopy(lts, List(p1, p2))
     val result = algo.compute()
 
-    import js.JSConverters._
     for {
       res <- result.relationItems.toJSArray
     } yield res.serialize(_.toJSArray, _.toJSDictionary)
