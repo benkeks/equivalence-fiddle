@@ -17,7 +17,7 @@ class SpectroscopyGameEdgeLabeled[S, A, L](ts: WeakTransitionSystem[S, A, L], in
 
   def successors(gn: GameNode): Iterable[GameNode] = gn match {
     case AttackerObservation(p0, qq0, moveLabel) =>
-      if (qq0 contains p0) {
+      if (optimizeSymmetryDefWins && (qq0 contains p0)) {
         List()
       } else {
         val dn = for {

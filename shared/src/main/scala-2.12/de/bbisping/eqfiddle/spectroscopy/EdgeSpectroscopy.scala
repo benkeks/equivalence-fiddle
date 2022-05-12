@@ -39,6 +39,11 @@ class EdgeSpectroscopy[S, A, L] (
       }
   }
 
+  def nodeIsRelevantForResults(game: AbstractSpectroscopyGame[S, A, L], gn: GameNode): Boolean = gn match {
+    case game.AttackerObservation(p, qq, kind) => (kind == game.DefenderMove && qq.size == 1)
+    case _ => false
+  }
+
   def moveToHML(game: SpectroscopyGameEdgeLabeled[S, A, L])(n1: GameNode, n2: GameNode, ff: Set[HennessyMilnerLogic.Formula[A]]): Set[HennessyMilnerLogic.Formula[A]] = {
     val kind = game.recordedMoveEdges(n1, n2)
 
@@ -107,13 +112,15 @@ class EdgeSpectroscopy[S, A, L] (
     val bisimilarNodes = for {
       gn <- game.discovered
       if gn.isInstanceOf[game.AttackerObservation] && !win(gn)
-      game.AttackerObservation(p, qq, kind) = gn
-      if qq.size == 1 && kind == game.ConjunctMove
+      if nodeIsRelevantForResults(game, gn)
     } yield (gn, Set[HennessyMilnerLogic.Formula[A]]())
 
     val minPrices =
       bisimilarNodes.toMap ++
-      accumulatedPrices.mapValues(HennessyMilnerLogic.getLeastDistinguishing(_))
+      (if (discardLanguageDominatedResults)
+        accumulatedPrices.mapValues(HennessyMilnerLogic.getLeastDistinguishing(_))
+      else
+        accumulatedPrices)
 
     if (AlgorithmLogging.loggingActive) {
       nodes.foreach { n => logAttacksAndResult(game, n, attackGraph, minPrices(n)) }
@@ -121,6 +128,10 @@ class EdgeSpectroscopy[S, A, L] (
     }
 
     minPrices
+  }
+
+  def gameEdgeToLabel(game: AbstractSpectroscopyGame[S, A, L], gn1: GameNode, gn2: GameNode): String = {
+    game.asInstanceOf[SpectroscopyGameEdgeLabeled[S, A, L]].recordedMoveEdges(gn1, gn2).toString()
   }
 
   def compute() = {

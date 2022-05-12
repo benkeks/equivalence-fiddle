@@ -1,7 +1,10 @@
 package de.bbisping.eqfiddle.tool.control
 
 import scala.collection.mutable.HashMap
+
 import scala.scalajs.js.Date
+import scala.scalajs.js
+
 import de.bbisping.eqfiddle.tool.arch.Action
 import de.bbisping.eqfiddle.tool.arch.Control
 import de.bbisping.eqfiddle.tool.model.NodeID
@@ -14,8 +17,8 @@ import de.bbisping.eqfiddle.util.Relation
 import de.bbisping.eqfiddle.util.LabeledRelation
 import de.bbisping.eqfiddle.ts.DivergenceInformation
 import de.bbisping.eqfiddle.algo.AlgorithmLogging
-import de.bbisping.eqfiddle.spectroscopy.PositionalSpectroscopy
-import scala.scalajs.js
+import de.bbisping.eqfiddle.spectroscopy.{PositionalSpectroscopy, EdgeSpectroscopy}
+
 
 class Structure(val main: Control) extends ModelComponent {
 
@@ -288,7 +291,7 @@ object Structure {
 
         val begin = Date.now
 
-        val algo = new PositionalSpectroscopy(structure.structure, List(n1, n2))
+        val algo = new EdgeSpectroscopy(structure.structure, List(n1, n2))
         val result = algo.compute()
         println("Spectroscopy took: " + (Date.now - begin) + "ms.")
 
@@ -299,7 +302,7 @@ object Structure {
         println("spectroscopy_result_as_json = " + js.JSON.stringify(resSerialized))
 
         val replay = algo.getReplay()
-        
+
         structure.setReplay(replay)
         structure.main.doAction(StructureDoReplayStep(), structure)
 

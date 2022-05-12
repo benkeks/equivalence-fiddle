@@ -26,6 +26,11 @@ abstract class AbstractSpectroscopy[S, A, L] (
 
   def compute(): SpectroscopyResult[S,A]
 
+  /* Discards distinguishing formulas that do not contribute “extreme” distinguishing notions of equivalence */
+  val discardLanguageDominatedResults: Boolean = true
+
+  def nodeIsRelevantForResults(game: AbstractSpectroscopyGame[S, A, L], gn: GameNode): Boolean
+
   def collectSpectroscopyResult(
     game: AbstractSpectroscopyGame[S, A, L],
     nodeFormulas: Map[GameNode, Set[HennessyMilnerLogic.Formula[A]]])
@@ -40,7 +45,7 @@ abstract class AbstractSpectroscopy[S, A, L] (
       gn <- game.discovered
       if gn.isInstanceOf[game.AttackerObservation]
       game.AttackerObservation(p, qq, kind) = gn
-      if kind == game.ConjunctMove && qq.size == 1
+      if nodeIsRelevantForResults(game, gn)
       q <- qq
       preorders <- bestPreorders.get(gn)
       distinctionFormulas = nodeFormulas(gn)
@@ -88,9 +93,10 @@ abstract class AbstractSpectroscopy[S, A, L] (
 
     val simNodes = for {
       (gn, preorders) <- bestPreorders
+      if preorders.nonEmpty
       if gn.isInstanceOf[game.AttackerObservation]
+      if nodeIsRelevantForResults(game, gn)
       game.AttackerObservation(p, qq, kind) = gn
-      if kind == game.ConjunctMove && qq.size == 1
       label = preorders.map(_._1).mkString(",")
       q <- qq
     } yield (p, label, q)
@@ -115,6 +121,8 @@ abstract class AbstractSpectroscopy[S, A, L] (
     }
   }
 
+  def gameEdgeToLabel(game: AbstractSpectroscopyGame[S, A, L], gn1: GameNode, gn2: GameNode): String
+
   def graphvizGameWithFormulas(game: AbstractSpectroscopyGame[S, A, L], win: Set[GameNode], formulas: Map[GameNode, Set[HennessyMilnerLogic.Formula[A]]]) = {
     val visualizer = new GameGraphVisualizer(game) {
 
@@ -133,10 +141,7 @@ abstract class AbstractSpectroscopy[S, A, L] (
         }).replaceAllLiterally(".0", "") + (if (formulaString != "") s"\\n------\\n$formulaString" else "")
       }
 
-      def edgeToLabel(gn1: GameNode, gn2: GameNode) = {
-        ""
-      }
-      
+      def edgeToLabel(gn1: GameNode, gn2: GameNode) = gameEdgeToLabel(game, gn1, gn2)
     }
 
     visualizer.outputDot(win)

@@ -135,7 +135,7 @@ object GraphView {
     override def centerY = (tarCenter._2 * (.5 - .02 * bend) + srcCenter._2 * (.5 + .02 * bend)) + 10 * (bend + 0.00001 * length * length) * dir._1
 
     val viewParts = {
-      sources.map(new LinkViewPart(this, _, isEnd = false)) ++
+      sources.map(s => new LinkViewPart(this, s, isEnd = targets.contains(s))) ++
       targets.map(new LinkViewPart(this, _)) ++
       (if (targets.isEmpty) List(new LinkViewPart(this, dummyNode)) else List())
     }
@@ -258,9 +258,9 @@ object GraphView {
     
     override def toString = source.toString + "-" + kind + "-" + target.toString
   }*/
-  
+
   class LinkViewPart(val link: NodeLink, val node: Linkable, val isEnd: Boolean = true) {
-    
+
     private val endShortening = if (node.isInstanceOf[GraphNode]) 5.0 else 0
 
     def toSVGPathString = {
@@ -269,8 +269,8 @@ object GraphView {
       if (node.centerX.isNaN()) throw new Exception("NaN center!")
       if (isEnd) {
         if (link.sources.contains(node)) {
-          "M"   + (node.centerX + 5) + " " + (node.centerY) +
-            "A 30 30, 0, 1, 1, " + (link.centerX) + " " + (link.centerY)
+          "M"   + (node.centerX + 9) + " " + (node.centerY) +
+            "A 30 30, 0, 1, 1, " + (link.centerX) + " " + (link.centerY + 9)
         } else if (link.hasDanglingEnd) {
           "M "   + link.centerX       +","+ link.centerY + 
               " Q " + (link.centerX + .2 * link.length * link.dir._1) +","+ (link.centerY + .2 * link.length * link.dir._2)+
@@ -283,8 +283,8 @@ object GraphView {
         }
       } else {
         if (link.targets.contains(node)) {
-          "M"   + (link.centerX) + " " + (link.centerY) +
-            "A 30 30, 0, 1, 1, " + (node.centerX) + " " + (node.centerY + 5)
+          "M"   + (link.centerX + 9) + " " + (link.centerY) +
+            "A 30 30, 0, 1, 1, " + (node.centerX) + " " + (node.centerY + 9)
         } else {
           "M " + link.centerX       +","+ link.centerY +
               " C" + (link.centerX - .3 * link.length * link.dir._1) +","+ (link.centerY - .3 * link.length * link.dir._2)+
