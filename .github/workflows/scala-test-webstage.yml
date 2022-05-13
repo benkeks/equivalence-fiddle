@@ -25,12 +25,20 @@ jobs:
       run: sbt "shared/test"
     - name: Compile webtool
       run: sbt webStage
-    - name: Archive production artifacts
-      uses: actions/upload-artifact@v2
+    - name: Compile JS api
+      run: sbt "jsApi/fullOptJS"
+    - name: Archive production webclient artifact
+      uses: actions/upload-artifact@v3
       with:
-        name: webclient
+        name: ltbt-spectroscopy-webclient
         path: |
           web/target/web/stage
+    - name: Archive production JS api artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ltbt-spectroscopy-js-api
+        path: |
+          js-api/target/eqfiddle-api.js
     - name: Cleanup before cache
       shell: bash
       run: |
