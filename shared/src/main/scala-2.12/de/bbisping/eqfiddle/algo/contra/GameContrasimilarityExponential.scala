@@ -12,7 +12,7 @@ import de.bbisping.eqfiddle.game.SimpleGame
 
 class GameContrasimilarityExponential[S, A, L] (
     val ts: WeakTransitionSystem[S, A, L])
-  extends AlgorithmLogging[S, A, L] {
+  extends AlgorithmLogging[S] {
 
   case class ContraAttackerNode(p: S, qq: Set[S]) extends SimpleGame.AttackerNode
   case class ContraDefenderCouplingNode(p: S, qq: Set[S]) extends SimpleGame.DefenderNode

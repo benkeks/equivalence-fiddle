@@ -16,7 +16,7 @@ import de.bbisping.eqfiddle.game.SimpleGame
 
 class GameCoupledSimilarityPlain[S, A, L] (
     val ts: WeakTransitionSystem[S, A, L])
-  extends AlgorithmLogging[S, A, L] {
+  extends AlgorithmLogging[S] {
   
   case class CSAttackerNode(p: S, q: S) extends SimpleGame.AttackerNode
   case class CSDefenderStepNode(a: A, p: S, q: S) extends SimpleGame.DefenderNode

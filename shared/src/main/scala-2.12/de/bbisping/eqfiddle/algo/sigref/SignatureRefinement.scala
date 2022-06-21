@@ -14,7 +14,7 @@ import de.bbisping.eqfiddle.ts.WeakTransitionSystem
 
 abstract class SignatureRefinement[S, A, L] (
     val ts: WeakTransitionSystem[S, A, L])
-  extends AlgorithmLogging[S, A, L] {
+  extends AlgorithmLogging[S] {
   
   val labelColors = {
     val parts = for {

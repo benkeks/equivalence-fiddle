@@ -289,7 +289,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
     }
   }
   
-  def setReplay(replay: List[() => AlgorithmLogging.LogEntry[NodeID, Structure.ActionLabel, Structure.NodeLabel]]) {
+  def setReplay(replay: List[() => AlgorithmLogging.LogEntry[NodeID]]) {
     val node = dom.document.createElement("ul").asInstanceOf[HTMLElement]
     for ((le, i) <- replay.zipWithIndex) {
       val leChild = dom.document.createElement("li").asInstanceOf[HTMLElement]

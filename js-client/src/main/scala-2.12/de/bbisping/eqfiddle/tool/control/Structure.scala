@@ -17,7 +17,7 @@ import de.bbisping.eqfiddle.util.Relation
 import de.bbisping.eqfiddle.util.LabeledRelation
 import de.bbisping.eqfiddle.ts.DivergenceInformation
 import de.bbisping.eqfiddle.algo.AlgorithmLogging
-import de.bbisping.eqfiddle.spectroscopy.{PositionalSpectroscopy, EdgeSpectroscopy}
+import de.bbisping.eqfiddle.spectroscopy.{AbstractSpectroscopy, PositionalSpectroscopy, EdgeSpectroscopy}
 
 
 class Structure(val main: Control) extends ModelComponent {
@@ -26,7 +26,7 @@ class Structure(val main: Control) extends ModelComponent {
   var partition: Coloring[NodeID] = Coloring(Map())
   var relation: LabeledRelation[NodeID, String] = LabeledRelation()
   var currentReplayStep: Int = 0
-  var currentReplay = List[() => AlgorithmLogging.LogEntry[NodeID, Structure.ActionLabel, Structure.NodeLabel]]()
+  var currentReplay = List[() => AlgorithmLogging.LogEntry[NodeID]]()
 
   val operations = HashMap[String, StructureOperation]()
 
@@ -87,7 +87,7 @@ class Structure(val main: Control) extends ModelComponent {
     broadcast(Structure.StructureRelationChange(relation))
   }
 
-  def setReplay(replay: List[() => AlgorithmLogging.LogEntry[NodeID, Structure.ActionLabel, Structure.NodeLabel]]): Unit = {
+  def setReplay(replay: List[() => AlgorithmLogging.LogEntry[NodeID]]): Unit = {
     currentReplay = replay
     currentReplayStep = 0
     broadcast(Structure.StructureReplayChange(currentReplay))
@@ -149,7 +149,7 @@ object Structure {
 
   case class StructureCommentChange(comment: String) extends ModelComponent.Change
 
-  case class StructureReplayChange(replay: List[() => AlgorithmLogging.LogEntry[NodeID, Structure.ActionLabel, Structure.NodeLabel]])
+  case class StructureReplayChange(replay: List[() => AlgorithmLogging.LogEntry[NodeID]])
     extends ModelComponent.Change
 
   case class StructureOperationsChanged(operations: HashMap[String, StructureOperation]) extends ModelComponent.Change {
@@ -295,16 +295,23 @@ object Structure {
         val result = algo.compute()
         println("Spectroscopy took: " + (Date.now - begin) + "ms.")
 
-        import js.JSConverters._
-        val resSerialized = for {
-          res <- result.relationItems.toJSArray
-        } yield res.serialize(_.toJSArray, _.toJSDictionary)
-        println("spectroscopy_result_as_json = " + js.JSON.stringify(resSerialized))
+        for {
+          res <- result.relationItems.find(r => r.left == n1 && r.right == n2)
+          AbstractSpectroscopy.SpectroscopyResultItem(_, _, distinctions, preorderings) = res
+        } {
+          val replay = List(
+            () => AlgorithmLogging.LogRelation(result.toDistinctionRelation(), "Distinguished")
+          )
+          structure.setReplay(replay)
+          structure.main.doAction(StructureDoReplayStep(), structure)
+        }
+        // import js.JSConverters._
+        // val resSerialized = for {
+        //   res <- result.relationItems.toJSArray
+        // } yield res.serialize(_.toJSArray, _.toJSDictionary)
+        // println("spectroscopy_result_as_json = " + js.JSON.stringify(resSerialized))
 
-        val replay = algo.getReplay()
-
-        structure.setReplay(replay)
-        structure.main.doAction(StructureDoReplayStep(), structure)
+        // val replay = algo.getReplay()
 
         true
       } else {

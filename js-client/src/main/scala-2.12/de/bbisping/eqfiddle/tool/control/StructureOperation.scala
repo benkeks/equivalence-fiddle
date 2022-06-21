@@ -60,7 +60,7 @@ object StructureOperation {
   /** Some analyzer which returns a relation on nodes. */
   trait StructureRelationAnalyzer extends StructureOperation {
 
-    def analyze(system: Structure.TSStructure): (Relation[NodeID], Option[AlgorithmLogging[NodeID, Structure.ActionLabel, Structure.NodeLabel]])
+    def analyze(system: Structure.TSStructure): (Relation[NodeID], Option[AlgorithmLogging[NodeID]])
 
     /** calls the analyzer and sets the current relation for the structure. */
     override def applyOperation(structure: Structure): Unit = {
