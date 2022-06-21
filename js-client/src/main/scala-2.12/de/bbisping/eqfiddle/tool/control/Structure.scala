@@ -299,19 +299,15 @@ object Structure {
           res <- result.relationItems.find(r => r.left == n1 && r.right == n2)
           AbstractSpectroscopy.SpectroscopyResultItem(_, _, distinctions, preorderings) = res
         } {
+          val dists = distinctions.map(d => d._1.toString() + d._3.map(_._1).mkString("(", ",", ")")).mkString("<br>")
+          val preords = preorderings.map(_._1).mkString("<br>")
           val replay = List(
-            () => AlgorithmLogging.LogRelation(result.toDistinctionRelation(), "Distinguished")
+            () => AlgorithmLogging.LogRelation(result.toPreorderingRelation(), s"Preordered by:<div class='preorderings'>$preords</div>"),
+            () => AlgorithmLogging.LogRelation(result.toDistinctionRelation(), s"Distinguished by:<div class='distinctions'>$dists</div>")
           )
           structure.setReplay(replay)
           structure.main.doAction(StructureDoReplayStep(), structure)
         }
-        // import js.JSConverters._
-        // val resSerialized = for {
-        //   res <- result.relationItems.toJSArray
-        // } yield res.serialize(_.toJSArray, _.toJSDictionary)
-        // println("spectroscopy_result_as_json = " + js.JSON.stringify(resSerialized))
-
-        // val replay = algo.getReplay()
 
         true
       } else {

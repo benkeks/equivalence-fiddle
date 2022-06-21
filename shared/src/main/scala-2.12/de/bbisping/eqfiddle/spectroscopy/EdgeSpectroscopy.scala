@@ -122,11 +122,6 @@ class EdgeSpectroscopy[S, A, L] (
       else
         accumulatedPrices)
 
-    if (AlgorithmLogging.loggingActive) {
-      nodes.foreach { n => logAttacksAndResult(game, n, attackGraph, minPrices(n)) }
-      nodes.foreach { n => logDefenseResult(game, n, minPrices)}
-    }
-
     minPrices
   }
 
