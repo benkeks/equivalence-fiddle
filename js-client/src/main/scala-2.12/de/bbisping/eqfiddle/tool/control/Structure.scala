@@ -305,7 +305,7 @@ object Structure {
           val replay = List(
             () => AlgorithmLogging.LogRelation(result.toPreorderingRelation(), s"Preordered by:<div class='preorderings'>$preords</div>"),
             () => AlgorithmLogging.LogRelation(result.toDistinctionRelation(), s"Distinguished by:<div class='distinctions'>$dists</div>"),
-            () => AlgorithmLogging.LogRelation(result.toPreorderingRelation(), s"Equated by:<div class='equations'>$equations</div>")
+            () => AlgorithmLogging.LogRelation(result.toEquivalencesRelation(), s"Equated by:<div class='equations'>$equations</div>")
           )
           structure.setReplay(replay)
           structure.main.doAction(StructureDoReplayStep(), structure)

@@ -138,6 +138,23 @@ object AbstractSpectroscopy {
       new LabeledRelation(relTuples.toSet)
     }
 
+    def toEquivalencesRelation() = {
+      val undirectedTuples = {
+        for {
+          SpectroscopyResultItem(l, r, _, _) <- relationItems
+          if l != r
+        } yield Set(l, r)
+      }.toSet
+      val relTuples = for {
+        pair <- undirectedTuples
+        orderedPair = pair.toList
+        p = orderedPair(0)
+        q = orderedPair(1)
+        eq <- findEqs(p, q)
+      } yield (p, eq._1, q)
+      new LabeledRelation(relTuples.toSet)
+    }
+
     def foundPreorders(p: S, q: S) = {
       for {
         res <- relationItems
