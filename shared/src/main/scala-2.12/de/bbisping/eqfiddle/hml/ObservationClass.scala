@@ -85,7 +85,7 @@ object ObservationClass {
 
   /** given a group of least distinguishing observation classes, tell what weaker ObservationClasses would be the strongest fit to preorder the distinguished states */
   def getStrongestPreorderClass[A](leastClassifications: Iterable[(String, ObservationClass)]): List[(String, ObservationClass)] = {
-    
+
     val weakerClasses = LTBTS.filterNot { c => leastClassifications.exists(c._2 above _._2) }
     val mostFitting = weakerClasses.filterNot { c => weakerClasses.exists(_._2 strictlyAbove c._2) }
 

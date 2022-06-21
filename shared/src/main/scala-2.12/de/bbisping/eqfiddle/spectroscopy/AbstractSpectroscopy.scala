@@ -125,7 +125,7 @@ object AbstractSpectroscopy {
       val relTuples = for {
         SpectroscopyResultItem(l, r, dists, preords) <- relationItems
         dis <- dists
-        inEqs = dis._3.map(_._1).mkString("(", ",", ")")
+        inEqs = dis._3.map(_._1).mkString(" (", ",", ")")
       } yield (l, dis._1.toString() + inEqs, r)
       new LabeledRelation(relTuples.toSet)
     }
@@ -154,6 +154,17 @@ object AbstractSpectroscopy {
         dis <- dists._3
       } yield dis
     }
+
+    def findEqs(p: S, q: S) = {
+      val distinctionClasses = for {
+        res <- relationItems
+        if (res.left == p && res.right == q) || (res.left == q && res.right == p)
+        dists <- res.distinctions
+        disClass <- dists._3
+      } yield disClass
+      ObservationClass.getStrongestPreorderClass(distinctionClasses)
+    }
+
   }
 
 }
