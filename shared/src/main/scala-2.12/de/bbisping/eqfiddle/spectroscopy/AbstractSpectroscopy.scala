@@ -138,6 +138,22 @@ object AbstractSpectroscopy {
       new LabeledRelation(relTuples.toSet)
     }
 
+    def foundPreorders(p: S, q: S) = {
+      for {
+        res <- relationItems
+        if res.left == p && res.right == q
+        preord <- res.preorderings
+      } yield preord
+    }
+
+    def foundDistinctions(p: S, q: S) = {
+      for {
+        res <- relationItems
+        if res.left == p && res.right == q
+        dists <- res.distinctions
+        dis <- dists._3
+      } yield dis
+    }
   }
 
 }
