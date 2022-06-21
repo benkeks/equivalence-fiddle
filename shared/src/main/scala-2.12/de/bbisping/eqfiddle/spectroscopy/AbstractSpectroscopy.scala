@@ -155,7 +155,7 @@ object AbstractSpectroscopy {
       new LabeledRelation(relTuples.toSet)
     }
 
-    def foundPreorders(p: S, q: S) = {
+    def foundPreorders(p: S, q: S): List[ObservationClass.EquivalenceNotion] = {
       for {
         res <- relationItems
         if res.left == p && res.right == q
@@ -163,7 +163,7 @@ object AbstractSpectroscopy {
       } yield preord
     }
 
-    def foundDistinctions(p: S, q: S) = {
+    def foundDistinctions(p: S, q: S): List[ObservationClass.EquivalenceNotion] = {
       for {
         res <- relationItems
         if res.left == p && res.right == q
@@ -172,7 +172,7 @@ object AbstractSpectroscopy {
       } yield dis
     }
 
-    def findEqs(p: S, q: S) = {
+    def findEqs(p: S, q: S): List[(String, ObservationClass)] = {
       val distinctionClasses = for {
         res <- relationItems
         if (res.left == p && res.right == q) || (res.left == q && res.right == p)
