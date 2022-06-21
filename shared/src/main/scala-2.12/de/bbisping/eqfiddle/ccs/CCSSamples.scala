@@ -128,15 +128,15 @@ P2 = (a.(b.0 + d.0) + a.(c.0 + d.0))
 """
 
   val failureTraceAndImpossibleFutures = """
-P1(x=0, y=0)
-P2(x=600, y=0)
-"b.0 + c.0"(x=-200, y=250)
-"0"(x=300, y=450)
+P1(x=100, y=100)
+P2(x=600, y=100)
+"b.0 + c.0"(x=50, y=250)
+"0"(x=350, y=450)
 "c.0"(x=550, y=300)
-"b.0"(x=200, y=250)
+"b.0"(x=300, y=250)
 
 P1 = (a.b.0 + a.(b.0 + c.0) + a.c.0)
-P2 = (a.b.0 + a.0 + a.c.0)
+P2 = (a.b.0 + a.c.0)
 @comment "P1 is preordered to P2 by failure-trace AND impossible futures"
 @compare "P1,P2"
 """
@@ -196,6 +196,6 @@ R3 = c.(a.a.0 + a.0 + b.0) + c.(a.a.0 + a.0 + b.b.0)
     namedSamples.find(_.slug == slug)
   }
 
-  val default = ltbts1
+  val default = failureTraceAndImpossibleFutures
 
 }

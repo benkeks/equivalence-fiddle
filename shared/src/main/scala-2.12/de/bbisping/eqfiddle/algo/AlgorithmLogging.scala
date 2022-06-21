@@ -5,21 +5,21 @@ import scala.collection.mutable.ListBuffer
 import de.bbisping.eqfiddle.util.Coloring
 import de.bbisping.eqfiddle.util.LabeledRelation
 
-trait AlgorithmLogging[S, A, L] {
+trait AlgorithmLogging[S] {
   
-  private val log = ListBuffer[() => AlgorithmLogging.LogEntry[S, A, L]]()
+  private val log = ListBuffer[() => AlgorithmLogging.LogEntry[S]]()
   
-  private def logAppend[O](f: (O, String) => AlgorithmLogging.LogEntry[S, A, L])(obj: O, comment: String) = {
+  private def logAppend[O](f: (O, String) => AlgorithmLogging.LogEntry[S])(obj: O, comment: String) = {
     if (AlgorithmLogging.loggingActive && log.size < AlgorithmLogging.maxLogLength) {
       log += (() => f(obj, comment))
     }
   }
 
   def logRelation =
-    logAppend(AlgorithmLogging.LogRelation[S, A, L]) _
+    logAppend(AlgorithmLogging.LogRelation[S]) _
 
   def logRichRelation =
-    logAppend(AlgorithmLogging.LogRichRelation[S, A, L]) _
+    logAppend(AlgorithmLogging.LogRichRelation[S]) _
   
   def getReplay() = log toList
 
@@ -32,11 +32,11 @@ trait AlgorithmLogging[S, A, L] {
 
 object AlgorithmLogging {
   
-  abstract class LogEntry[S, A, L]
+  abstract class LogEntry[S]
   
-  case class LogRelation[S, A, L](rel: LabeledRelation[S, String], comment: String) extends LogEntry[S, A, L]
+  case class LogRelation[S](rel: LabeledRelation[S, String], comment: String) extends LogEntry[S]
 
-  case class LogRichRelation[S, A, L](rel: LabeledRelation[(Set[S], String, Set[S]), String], comment: String) extends LogEntry[S, A, L]
+  case class LogRichRelation[S](rel: LabeledRelation[(Set[S], String, Set[S]), String], comment: String) extends LogEntry[S]
   
   var loggingActive = true
   

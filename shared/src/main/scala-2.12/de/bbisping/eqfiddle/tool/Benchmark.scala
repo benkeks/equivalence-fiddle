@@ -55,19 +55,14 @@ object Benchmark extends App {
     esDef.getDeclaration(n2s) map (_.process) foreach (println(_))
 
     val algo = new EdgeSpectroscopy(ltbtsSystem, List(n1, n2))
-    algo.compute()
+    val result = algo.compute()
 
-    val log = for {
-      r <- algo.getReplay()
-    } yield r()
-
-    val distinctionPart = """under ([^<]*)(<br>)?""".r
-
-    log.foreach {
-      case LogRichRelation(_, comment) if comment.startsWith(n1s + " distinguished") =>
-        val distinctions = distinctionPart.findAllMatchIn(comment).map(_.group(1))
-        println(distinctions.mkString("\n"))
-      case _ =>
+    for {
+      res <- result.relationItems
+      if res.left == n1 && res.right == n2
+      (formula, obsClass, notions) <- res.distinctions
+    } {
+      println(formula.toString() + " ∈ " + notions.map(_._1).mkString(" ∩ "))
     }
   }
 }

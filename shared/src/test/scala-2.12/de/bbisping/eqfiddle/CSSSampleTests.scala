@@ -10,13 +10,11 @@ import de.bbisping.eqfiddle.util.Relation
 import de.bbisping.eqfiddle.hml.ObservationClass
 import de.bbisping.eqfiddle.ts.WeakTransitionSystem
 import de.bbisping.eqfiddle.algo.AlgorithmLogging
-import de.bbisping.eqfiddle.algo.AlgorithmLogging.{LogRelation, LogRichRelation}
 import de.bbisping.eqfiddle.spectroscopy.AbstractSpectroscopy
 import de.bbisping.eqfiddle.spectroscopy.PositionalSpectroscopy
 
 trait CSSSampleTests extends AnyFunSpec with should.Matchers  {
-  
-  AlgorithmLogging.loggingActive = true
+
   AlgorithmLogging.debugLogActive = false
 
   private def toSpectrumClassSet(names: Iterable[String]) = (for {
@@ -42,28 +40,15 @@ trait CSSSampleTests extends AnyFunSpec with should.Matchers  {
           val notPreordsStr = notPreords.map(_._1)
 
           val algo = spectroscopyAlgo(sampleSystem, List(n1, n2))
-          algo.compute()
+          val result = algo.compute()
 
-          val log = for {
-            r <- algo.getReplay()
-          } yield r()
-
-          var foundPreorders = Set[String]()
-
-          log.foreach {
-            case LogRichRelation(_, comment) if comment.startsWith(n1 + " distinguished") =>
-              val commentParts = comment.split(Array(',', ' ')).toSet intersect ObservationClass.LTBTSNotionNames
-              val diff = notPreordsStr diff commentParts
-              it ("should be distinguished by " + notPreordsStr.mkString(",")) {
-                diff should be (empty)
-              }
-            case LogRelation(_, comment) if comment.startsWith(n1 + " preordered") =>
-              val commentParts = comment.split(Array(',', ' ')).toSet intersect ObservationClass.LTBTSNotionNames
-              foundPreorders ++= commentParts
-            case _ =>
+          val foundDistinctions = result.foundDistinctions(n1, n2).map(_._1).toSet
+          it ("should be distinguished by " + notPreordsStr.mkString(",")) {
+            (notPreordsStr diff foundDistinctions) should be (empty)
           }
 
-          it ("should only be preordered by " + preordsStr.mkString(",")) {
+          val foundPreorders = result.foundPreorders(n1, n2).map(_._1).toSet
+          it ("should exactly be preordered by " + preordsStr.mkString(",")) {
             (foundPreorders diff preordsStr) should be (empty)
             (preordsStr diff foundPreorders) should be (empty)
           }

@@ -16,7 +16,7 @@ import de.bbisping.eqfiddle.hml.HMLInterpreter
 abstract class AbstractSpectroscopy[S, A, L] (
     val ts: WeakTransitionSystem[S, A, L],
     val nodes: List[S])
-  extends AlgorithmLogging[S, A, L] {
+  extends AlgorithmLogging[S] {
 
   import AbstractSpectroscopy._
 
@@ -56,61 +56,6 @@ abstract class AbstractSpectroscopy[S, A, L] (
     } yield SpectroscopyResultItem(p, q, distinctions, preorders)
 
     SpectroscopyResult(spectroResults.toList)
-  }
-
-  def logAttacksAndResult(game: AbstractSpectroscopyGame[S, A, L], node: GameNode, attackGraph: Relation[GameNode], resultFormulas: Set[HennessyMilnerLogic.Formula[A]]) = {
-    def gameNodeToTuple(n: GameNode) = n match {
-      case game.AttackerObservation(p, qq, afterConj) =>
-        (Set(p), "A", qq)
-      case game.DefenderConjunction(p, qq) =>
-        //TODO: This display does not work anymore with the paritioning approach!
-        (Set(p), "D", qq.flatten.toSet)
-    }
-    
-    val gameRel: Set[((Set[S], String, Set[S]), String, (Set[S], String, Set[S]))] = for {
-      (n1, n2) <- attackGraph.tupleSet
-    } yield (gameNodeToTuple(n1), "", gameNodeToTuple(n2))
-
-    val msg = for {
-      f <- resultFormulas
-      s = gameNodeToTuple(node)
-      p <- s._1.headOption
-      q <- s._3.headOption
-    } yield {
-      p + " distinguished from " + q + " under " + f.classifyNicely() + " preorder by " + f.toString()
-    }
-
-    logRichRelation(new LabeledRelation(gameRel), msg.mkString("<br>\n"))
-
-  }
-
-  def logDefenseResult(game: AbstractSpectroscopyGame[S, A, L], node: GameNode, nodeFormulas: Map[GameNode, Set[HennessyMilnerLogic.Formula[A]]]) = {
-   
-    val bestPreorders = nodeFormulas.mapValues { ffs =>
-      val classes = ffs.flatMap(_.classifyFormula()._2)
-      ObservationClass.getStrongestPreorderClass(classes)
-    }
-
-    val simNodes = for {
-      (gn, preorders) <- bestPreorders
-      if preorders.nonEmpty
-      if gn.isInstanceOf[game.AttackerObservation]
-      if nodeIsRelevantForResults(game, gn)
-      game.AttackerObservation(p, qq, kind) = gn
-      label = preorders.map(_._1).mkString(",")
-      q <- qq
-    } yield (p, label, q)
-    
-    val rel = new LabeledRelation(simNodes.toSet)
-    val game.AttackerObservation(p, qq, _) = node
-
-    for {
-      q <- qq
-      (preorderName, _) <- bestPreorders(node)
-    } {
-      val msg = p + " preordered to " + q + " by " + preorderName
-      logRelation(rel, msg)
-    }
   }
 
   def checkDistinguishing(formula: HennessyMilnerLogic.Formula[A], p: S, q: S) = {
@@ -174,6 +119,69 @@ object AbstractSpectroscopy {
     }
   }
 
-  case class SpectroscopyResult[S, A](val relationItems: List[SpectroscopyResultItem[S, A]])
+  case class SpectroscopyResult[S, A](val relationItems: List[SpectroscopyResultItem[S, A]]) {
+
+    def toDistinctionRelation() = {
+      val relTuples = for {
+        SpectroscopyResultItem(l, r, dists, preords) <- relationItems
+        dis <- dists
+        inEqs = dis._3.map(_._1).mkString(" (", ",", ")")
+      } yield (l, dis._1.toString() + inEqs, r)
+      new LabeledRelation(relTuples.toSet)
+    }
+
+    def toPreorderingRelation() = {
+      val relTuples = for {
+        SpectroscopyResultItem(l, r, dists, preords) <- relationItems
+        pre <- preords
+      } yield (l, pre._1.toString(), r)
+      new LabeledRelation(relTuples.toSet)
+    }
+
+    def toEquivalencesRelation() = {
+      val undirectedTuples = {
+        for {
+          SpectroscopyResultItem(l, r, _, _) <- relationItems
+          if l != r
+        } yield Set(l, r)
+      }.toSet
+      val relTuples = for {
+        pair <- undirectedTuples
+        orderedPair = pair.toList
+        p = orderedPair(0)
+        q = orderedPair(1)
+        eq <- findEqs(p, q)
+      } yield (p, eq._1, q)
+      new LabeledRelation(relTuples.toSet)
+    }
+
+    def foundPreorders(p: S, q: S): List[ObservationClass.EquivalenceNotion] = {
+      for {
+        res <- relationItems
+        if res.left == p && res.right == q
+        preord <- res.preorderings
+      } yield preord
+    }
+
+    def foundDistinctions(p: S, q: S): List[ObservationClass.EquivalenceNotion] = {
+      for {
+        res <- relationItems
+        if res.left == p && res.right == q
+        dists <- res.distinctions
+        dis <- dists._3
+      } yield dis
+    }
+
+    def findEqs(p: S, q: S): List[(String, ObservationClass)] = {
+      val distinctionClasses = for {
+        res <- relationItems
+        if (res.left == p && res.right == q) || (res.left == q && res.right == p)
+        dists <- res.distinctions
+        disClass <- dists._3
+      } yield disClass
+      ObservationClass.getStrongestPreorderClass(distinctionClasses)
+    }
+
+  }
 
 }
