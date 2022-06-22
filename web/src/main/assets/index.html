@@ -1,263 +1,303 @@
 <!DOCTYPE html>
 <html style="height:100%">
-  <head>
-    <meta charset="UTF-8">
-    <title>Linear-Time–Branching-Time Spectroscope</title>
-    <link rel="stylesheet" href="lib/codemirror/lib/codemirror.css"> 
-    <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css">
-    <link rel="stylesheet" href="css/syntax.css"> 
-    <style id="es-graph-style">
-    	.link {
-		  stroke: #333;
-		  stroke-opacity: .6;
-		  stroke-width: 2.5px;
-		  fill: none;
-		}
-		.node {
-		  r: 7;
-		  fill: #777;
-		}
-		.node.selected {
-		  r: 7;
-		  stroke: #343;
-		  stroke-opacity: 1.0;
-		  stroke-width: 3px;
-		}
-		.node.true {
-		  fill: #393;
-		}
-		.node.red {
-		  fill: red;
-		}
-		.node.green {
-		  fill: green;
-		}
-		.node.blue {
-		  fill: blue;
-		}
-		.node.tau {
-		  r: 4;
-		  fill: #333
-		}
-		.node.connection-possible {
-		  r: 10;
-		}
-		.node.deletion-possible {
-		  r: 10;
-		  fill: #a33;
-		}
-		.es-preview-line {
-		  stroke: #888;
-		  stroke-opacity: 0.8;
-		  stroke-width: 3.5px;
-		  display: none;
-		}
-		.es-preview-line.active {
-		  stroke: #888;
-		  stroke-opacity: .8;
-		  stroke-width: 3.5px;
-		  fill: none;
-		  display: inherit;
-		  pointer-events: none;
-		}
-		.es-preview-line.stepto {
-		  stroke: #333;
-		  stroke-width: 3.5px;
-		  marker-end: url(#enabling);
-		}
-		.node-label {
-		  -moz-user-select: none;
-		   -khtml-user-select: none;
-		   -webkit-user-select: none;
-		   -ms-user-select: none;
-		   user-select: none;
-		}
-		
+
+<head>
+  <meta charset="UTF-8">
+  <title>Linear-Time–Branching-Time Spectroscope</title>
+  <link rel="stylesheet" href="lib/codemirror/lib/codemirror.css">
+  <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/syntax.css">
+  <style id="es-graph-style">
+    .link {
+      stroke: #333;
+      stroke-opacity: .6;
+      stroke-width: 2.5px;
+      fill: none;
+    }
+
+    .node {
+      r: 7;
+      fill: #777;
+    }
+
+    .node.selected {
+      r: 7;
+      stroke: #343;
+      stroke-opacity: 1.0;
+      stroke-width: 3px;
+    }
+
+    .node.true {
+      fill: #393;
+    }
+
+    .node.red {
+      fill: red;
+    }
+
+    .node.green {
+      fill: green;
+    }
+
+    .node.blue {
+      fill: blue;
+    }
+
+    .node.tau {
+      r: 4;
+      fill: #333
+    }
+
+    .node.connection-possible {
+      r: 10;
+    }
+
+    .node.deletion-possible {
+      r: 10;
+      fill: #a33;
+    }
+
+    .es-preview-line {
+      stroke: #888;
+      stroke-opacity: 0.8;
+      stroke-width: 3.5px;
+      display: none;
+    }
+
+    .es-preview-line.active {
+      stroke: #888;
+      stroke-opacity: .8;
+      stroke-width: 3.5px;
+      fill: none;
+      display: inherit;
+      pointer-events: none;
+    }
+
+    .es-preview-line.stepto {
+      stroke: #333;
+      stroke-width: 3.5px;
+      marker-end: url(#enabling);
+    }
+
+    .node-label {
+      -moz-user-select: none;
+      -khtml-user-select: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
     .link.relation {
-		  stroke: #149;
-		  stroke-opacity: .6;
-      stroke-dasharray: 5,5;
-		  stroke-width: 2.5px;
-		  fill: none;
-		}
+      stroke: #149;
+      stroke-opacity: .6;
+      stroke-dasharray: 5, 5;
+      stroke-width: 2.5px;
+      fill: none;
+    }
+
     .link.ho.relation {
-		  stroke: #929;
-		  stroke-opacity: .6;
-      stroke-dasharray: 5,5;
-		  stroke-width: 2.5px;
-		  fill: none;
-		}
-		.link-label.relation {
-		  fill: #149;
-		  opacity: .6;
-		}
-		.link-label.ho.relation {
-		  fill: #929;
-		  opacity: .6;
-		}
-		.link-label.relation.A, .link-label.relation.D {
-			opacity: 0;
-		}
-		.relation.violates, .relation.A {
-		  stroke: #b31;
-		}
-		.link.relation.eq {
-			marker-end: none;
-		}
-    </style>
-    <style>
-        .es-problem-gutter {
-          width: 1em;
-        }
-        .es-problem {
-          width: 1em;
-          height: 1em;
-          background-image: url(img/error.png);
-          background-position: center center;
-          background-repeat: no-repeat;
-          margin: auto;
-        }
-        .es-pipeline-current {
-          width: 1em;
-          height: 1em;
-          background-image: url(img/pointer.png);
-          background-position: center center;
-          background-repeat: no-repeat;
-          margin: auto;
-        }
-        .es-pipeline-replay-step {
-          cursor: pointer;
-        }
-        .es-pipeline-replay-step div.preorderings, .es-pipeline-replay-step div.distinctions, .es-pipeline-replay-step div.equations,
-        #es-graph-comment div.preorderings, #es-graph-comment div.distinctions, #es-graph-comment div.equations {
-          padding-left: 20px;
-          cursor: pointer;
-        }
-				
-   		.es-loading {
-   		  width: 16px;
-   		  height: 16px;
-   		  background-image: url(img/spinner.gif);
-   		}
-		#es-graph-frame {
-		  position: relative;
-		}
-		#es-graph {
-		  position: absolute;
-		  left: 0px;
-		  top: 0px;
-		  width: 100%;
-		  height: 100%;
-		}
-		#es-graph-comment {
-		  position: absolute;
-          z-index: 10;
-          opacity: 0.9;
-		}
-		#es-graph-comment.hidden {
-		  display: none;
-		}
-		#es-graph-simulate-download {
-		  float: right;
-		}
-		.CodeMirror {
- 		 height: 100%;
-		}
-		
-		input#es-node-name {
-		  position: absolute;
-		  display: none;
-		}
-		input#es-node-name.active {
-		  display: inline;
-		}
-		.brush .extent {
-		  fill-opacity: .1;
-		  stroke: #fff;
-		  shape-rendering: crispEdges;
-		}
-		
-		.dropdown-submenu {
-		    position: relative;
-		}
-		
-		.dropdown-submenu>.dropdown-menu {
-		    top: 0;
-		    left: 100%;
-		    margin-top: -6px;
-		    margin-left: -1px;
-		    -webkit-border-radius: 0 6px 6px 6px;
-		    -moz-border-radius: 0 6px 6px;
-		    border-radius: 0 6px 6px 6px;
-		}
-		
-		.dropdown-submenu:hover>.dropdown-menu {
-		    display: block;
-		}
-		
-		.dropdown-submenu>a:after {
-		    display: block;
-		    content: " ";
-		    float: right;
-		    width: 0;
-		    height: 0;
-		    border-color: transparent;
-		    border-style: solid;
-		    border-width: 5px 0 5px 5px;
-		    border-left-color: #ccc;
-		    margin-top: 5px;
-		    margin-right: -10px;
-		}
-		
-		.dropdown-submenu:hover>a:after {
-		    border-left-color: #fff;
-		}
-		
-		.dropdown-submenu.pull-left {
-		    float: none;
-		}
-		
-		.dropdown-submenu.pull-left>.dropdown-menu {
-		    left: -100%;
-		    margin-left: 10px;
-		    -webkit-border-radius: 6px 0 6px 6px;
-		    -moz-border-radius: 6px 0 6px 6px;
-		    border-radius: 6px 0 6px 6px;
-		}
-		/* end of bootstrap 3.0 submenu */
-   	</style>
-  </head>
-  <body style="height:100%">
-    
-    <div class="btn-group" >
-		<div class="btn-group" id="es-load">
-			<button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
-				Load <span class="caret"></span>
-			</button>
-			<ul class="dropdown-menu">
-				<li>
-				<input id="es-load-file" type="file" />					
-				</li>
-				<li class="dropdown-header">Examples</li>
-			</ul>
-		</div>
-		<div class="btn-group">
-			<button id="es-export" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
-				Export <span class="caret"></span>
-			</button>
-			<ul class="dropdown-menu">
-			    <!-- <li><i class="fa fa-spinner fa-spin" style="font-size:24px"></i></li> -->
-				<li><a id="es-export-text" href="#">Textual Definition</a></li>
-				<li><a id="es-export-csv" href="#">Transitions as CSV</a></li>
-				<li><a id="es-export-svg" href="#">SVG Picture</a></li>
-			</ul>
-		</div>
-		<!-- <div class="btn-group" id="es-transform">
-			<button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
-				Compute <span class="caret"></span>
-			</button>
-			<ul class="dropdown-menu multi-level default" role="menu" aria-labelledby="dropdownMenu">
-			   <li class="dropdown-submenu">
+      stroke: #929;
+      stroke-opacity: .6;
+      stroke-dasharray: 5, 5;
+      stroke-width: 2.5px;
+      fill: none;
+    }
+
+    .link-label.relation {
+      fill: #149;
+      opacity: .6;
+    }
+
+    .link-label.ho.relation {
+      fill: #929;
+      opacity: .6;
+    }
+
+    .link-label.relation.A,
+    .link-label.relation.D {
+      opacity: 0;
+    }
+
+    .relation.violates,
+    .relation.A {
+      stroke: #b31;
+    }
+
+    .link.relation.eq {
+      marker-end: none;
+    }
+  </style>
+  <style>
+    .es-problem-gutter {
+      width: 1em;
+    }
+
+    .es-problem {
+      width: 1em;
+      height: 1em;
+      background-image: url(img/error.png);
+      background-position: center center;
+      background-repeat: no-repeat;
+      margin: auto;
+    }
+
+    .es-pipeline-current {
+      width: 1em;
+      height: 1em;
+      background-image: url(img/pointer.png);
+      background-position: center center;
+      background-repeat: no-repeat;
+      margin: auto;
+    }
+
+    .es-pipeline-replay-step {
+      cursor: pointer;
+    }
+
+    .es-pipeline-replay-step div.preorderings,
+    .es-pipeline-replay-step div.distinctions,
+    .es-pipeline-replay-step div.equations,
+    #es-graph-comment div.preorderings,
+    #es-graph-comment div.distinctions,
+    #es-graph-comment div.equations {
+      padding-left: 20px;
+      cursor: pointer;
+    }
+
+    .es-loading {
+      width: 16px;
+      height: 16px;
+      background-image: url(img/spinner.gif);
+    }
+
+    #es-graph-frame {
+      position: relative;
+    }
+
+    #es-graph {
+      position: absolute;
+      left: 0px;
+      top: 0px;
+      width: 100%;
+      height: 100%;
+    }
+
+    #es-graph-comment {
+      position: absolute;
+      z-index: 10;
+      opacity: 0.9;
+    }
+
+    #es-graph-comment.hidden {
+      display: none;
+    }
+
+    #es-graph-simulate-download {
+      float: right;
+    }
+
+    .CodeMirror {
+      height: 100%;
+    }
+
+    input#es-node-name {
+      position: absolute;
+      display: none;
+    }
+
+    input#es-node-name.active {
+      display: inline;
+    }
+
+    .brush .extent {
+      fill-opacity: .1;
+      stroke: #fff;
+      shape-rendering: crispEdges;
+    }
+
+    .dropdown-submenu {
+      position: relative;
+    }
+
+    .dropdown-submenu>.dropdown-menu {
+      top: 0;
+      left: 100%;
+      margin-top: -6px;
+      margin-left: -1px;
+      -webkit-border-radius: 0 6px 6px 6px;
+      -moz-border-radius: 0 6px 6px;
+      border-radius: 0 6px 6px 6px;
+    }
+
+    .dropdown-submenu:hover>.dropdown-menu {
+      display: block;
+    }
+
+    .dropdown-submenu>a:after {
+      display: block;
+      content: " ";
+      float: right;
+      width: 0;
+      height: 0;
+      border-color: transparent;
+      border-style: solid;
+      border-width: 5px 0 5px 5px;
+      border-left-color: #ccc;
+      margin-top: 5px;
+      margin-right: -10px;
+    }
+
+    .dropdown-submenu:hover>a:after {
+      border-left-color: #fff;
+    }
+
+    .dropdown-submenu.pull-left {
+      float: none;
+    }
+
+    .dropdown-submenu.pull-left>.dropdown-menu {
+      left: -100%;
+      margin-left: 10px;
+      -webkit-border-radius: 6px 0 6px 6px;
+      -moz-border-radius: 6px 0 6px 6px;
+      border-radius: 6px 0 6px 6px;
+    }
+
+    /* end of bootstrap 3.0 submenu */
+  </style>
+</head>
+
+<body style="height:100%">
+
+  <div class="btn-group">
+    <div class="btn-group" id="es-load">
+      <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+        Load <span class="caret"></span>
+      </button>
+      <ul class="dropdown-menu">
+        <li>
+          <input id="es-load-file" type="file" />
+        </li>
+        <li class="dropdown-header">Examples</li>
+      </ul>
+    </div>
+    <div class="btn-group">
+      <button id="es-export" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+        Export <span class="caret"></span>
+      </button>
+      <ul class="dropdown-menu">
+        <!-- <li><i class="fa fa-spinner fa-spin" style="font-size:24px"></i></li> -->
+        <li><a id="es-export-text" href="#">Textual Definition</a></li>
+        <li><a id="es-export-csv" href="#">Transitions as CSV</a></li>
+        <li><a id="es-export-svg" href="#">SVG Picture</a></li>
+      </ul>
+    </div>
+    <!-- <div class="btn-group" id="es-transform">
+      <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+        Compute <span class="caret"></span>
+      </button>
+      <ul class="dropdown-menu multi-level default" role="menu" aria-labelledby="dropdownMenu">
+         <li class="dropdown-submenu">
                   <a tabindex="-1" href="#">Closures</a>
                   <ul class="dropdown-menu Closures">
                   </ul>
@@ -272,108 +312,83 @@
                   <ul class="dropdown-menu SimBisim">
                   </ul>
                 </li>
-			</ul>
-		</div> -->
-		<div class="btn-group">
-			<button id="es-background" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
-				Background<span class="caret"></span>
-			</button>
-			<ul class="dropdown-menu">
-				<li><a href="https://arxiv.org/abs/2109.15295" target="_blank">Extended Paper: Deciding All Behavioral Equivalences at Once (arXiv 2022, PDF)</a></li>
-				<li><a href="https://link.springer.com/chapter/10.1007%2F978-3-030-72016-2_1" target="_blank">Paper: A Game for Linear-time–Branching-time Spectroscopy (TACAS 2021, PDF)</a></li>
-				<li><a href="https://tubcloud.tu-berlin.de/s/aQsPCBaZkxCjBwW" target="_blank">Talk: A Game for Linear-time–Branching-time Spectroscopy (TACAS 2021, video)</a></li>
-				<li><a href="https://prezi.com/p/_6ipmw7k8i9l/" target="_blank">Prezi: A Game for Linear-time–Branching-time Spectroscopy (TACAS 2021, interactive slides)</a></li>
-				<li><a href="https://concurrency-theory.org/ltbt-spectroscope/code/">Source code (Scala.js)</a></li>
-			  <li class="divider"></li>
-			  <li><a id="es-tool-about" data-toggle="modal" data-target="#es-about" href="#">About the LTBT Spectroscope</a></li>
-			</ul>
-		</div>
-	</div>
-<!-- 
-	<div>
-    	<ul class="nav nav-tabs">
-    		<li class="active"><a id="es-graph-mode-edit" data-toggle="tab" href="#es-graph-tools-edit">Edit</a></li>
-    		<li><a id="es-graph-mode-pipeline" data-toggle="tab" href="#es-graph-tools-pipeline">Pipeline</a></li>
-    	</ul>
-    	<div class="tab-content">
-    		 <div class="tab-pane fade in active" id="es-graph-tools-edit">
-    		 	<ul class="nav nav-pills">
-			    	<li id="es-graph-move" class="active" title="Move nodes"                ><a href="#">&#x2725;</a>
-			    	<li id="es-graph-rename" 			  title="Add / rename nodes"        ><a href="#">&#x25cc;</a></li>
-			    	<li id="es-graph-delete"              title="Delete nodes / connections"><a href="#">&#x2327;</a></li>
-			    	<li id="es-graph-connect-stepto" 	  title="Add step connection"  		><a href="#">-></a></li>
-		    	</ul>
-	    	</div>
-			<div class="tab-pane fade" id="es-graph-tools-pipeline">
-				<ul class="nav nav-pills">
-					<li><a id="es-pipeline-step" href="#">Step</a></li>
-					<li><a id="es-pipeline-step-micro" href="#">MicroStep</a></li>
-					<li><a id="es-pipeline-reset" href="#">Reset</a></li>
-				</ul>
-	    	</div>
-    	</div>
-   	</div> -->
-	
-	<div class="row" style="height: auto; position: absolute; top:45px; bottom: 0px; width: 100%">
-  		<div id="es-main" class="col-sm-6" style="height: 100%">
-	    	<textarea id="es-definition" style="width:100%; height:100%;"></textarea>
-	    </div>
-  		<div id="es-graph-editor" class="col-sm-6 editing" style="height:100%">
-  			<div id="es-graph-comment" class="hidden alert alert-info" role="alert"></div>
-	    	<div id="es-graph-frame" style="width:100%; height:100%; position:relative; left:0px; top:0px;" class="form-inline">
-	    		<svg id="es-graph" >
-				    <defs>
-				        <marker id="stepto"
-				                viewBox="0 0 6 6" 
-				                refX="4" refY="3"
-				                markerWidth="6" 
-				                markerHeight="3"
-				                orient="auto">
-				            <path d="M 0,0 L 0,6 L 6,3 z" />
-					    </marker>
-					    <marker id="relation"
-				                viewBox="0 0 6 6" 
-				                refX="4" refY="3"
-				                markerWidth="6" 
-				                markerHeight="3"
-				                orient="auto">
-										<path d="M 0,0 L 0,6 L 6,3 z" stroke="#aaa" fill="transparent" />
-					    </marker>
-				    </defs>
-		 	   </svg>
-		 	   <input value="" class="form-control" id="es-node-name">
-	    	</div>
-	    </div>
-	</div>
-    
-    <div class="modal fade" id="es-about" role="dialog">
-	    <div class="modal-dialog modal-lg">
-	      <div class="modal-content">
-	        <div class="modal-header">
-	          <button type="button" class="close" data-dismiss="modal">&times;</button>
-	          <h4 class="modal-title">About the Linear-time–Branching-time Spectroscope</h4>
-	        </div>
-	        <div class="modal-body">
-						<p>This is a tool for finding the best ways of distinguishing finite process models.</p>
-						
-						<p>For the theoretical background, check out <a href="https://arxiv.org/abs/2109.15295">Bisping, Jansen, Nestmann (2021): Deciding All Behavioral Equivalences at Once: A Game for Linear-Time--Branching-Time Spectroscopy</a></p>
-            
-	          <p>The LTBT Spectroscope is developed at <a href="https://www.mtv.tu-berlin.de">MTV TU Berlin</a> by:</p>
-	          <ul>
-	          <li>Benjamin Bisping (<a href="mailto:benjamin.bisping@tu-berlin.de">benjamin.bisping@tu-berlin.de</a>)</li>
-	          </ul>
-	        </div>
-	        <div class="modal-footer">
-	          <button type="button" class="btn btn-default" data-dismiss="modal">Cool!</button>
-	        </div>
-	      </div>
-		</div>
+      </ul>
+    </div> -->
+    <div class="btn-group">
+      <button id="es-background" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+        Background<span class="caret"></span>
+      </button>
+      <ul class="dropdown-menu">
+        <li><a href="https://arxiv.org/abs/2109.15295" target="_blank">Extended Paper: Deciding All Behavioral
+            Equivalences at Once (arXiv 2022, PDF)</a></li>
+        <li><a href="https://link.springer.com/chapter/10.1007%2F978-3-030-72016-2_1" target="_blank">Paper: A Game for
+            Linear-time–Branching-time Spectroscopy (TACAS 2021, PDF)</a></li>
+        <li><a href="https://tubcloud.tu-berlin.de/s/aQsPCBaZkxCjBwW" target="_blank">Talk: A Game for
+            Linear-time–Branching-time Spectroscopy (TACAS 2021, video)</a></li>
+        <li><a href="https://prezi.com/p/_6ipmw7k8i9l/" target="_blank">Prezi: A Game for Linear-time–Branching-time
+            Spectroscopy (TACAS 2021, interactive slides)</a></li>
+        <li><a href="https://concurrency-theory.org/ltbt-spectroscope/code/">Source code (Scala.js)</a></li>
+        <li class="divider"></li>
+        <li><a id="es-tool-about" data-toggle="modal" data-target="#es-about" href="#">About the LTBT Spectroscope</a>
+        </li>
+      </ul>
     </div>
-  
-    <script type="text/javascript" src="eqfiddle-client-jsdeps.js"></script>
-    <script type="text/javascript" src="js/cm_transitionsystem_mode.js"></script>
-	<script type="text/javascript" src="eqfiddle-client.js"></script>
-	<script type="text/javascript">TransitionSystemFiddle.main();</script>
-    
-  </body>
+  </div>
+
+  <div class="row" style="height: auto; position: absolute; top:45px; bottom: 0px; width: 100%">
+    <div id="es-main" class="col-sm-6" style="height: 100%">
+      <textarea id="es-definition" style="width:100%; height:100%;"></textarea>
+    </div>
+    <div id="es-graph-editor" class="col-sm-6 editing" style="height:100%">
+      <div id="es-graph-comment" class="hidden alert alert-info" role="alert"></div>
+      <div id="es-graph-frame" style="width:100%; height:100%; position:relative; left:0px; top:0px;"
+        class="form-inline">
+        <svg id="es-graph">
+          <defs>
+            <marker id="stepto" viewBox="0 0 6 6" refX="4" refY="3" markerWidth="6" markerHeight="3" orient="auto">
+              <path d="M 0,0 L 0,6 L 6,3 z" />
+            </marker>
+            <marker id="relation" viewBox="0 0 6 6" refX="4" refY="3" markerWidth="6" markerHeight="3" orient="auto">
+              <path d="M 0,0 L 0,6 L 6,3 z" stroke="#aaa" fill="transparent" />
+            </marker>
+          </defs>
+        </svg>
+        <input value="" class="form-control" id="es-node-name">
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="es-about" role="dialog">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title">About the Linear-time–Branching-time Spectroscope</h4>
+        </div>
+        <div class="modal-body">
+          <p>This is a tool for finding the best ways of distinguishing finite process models.</p>
+
+          <p>For the theoretical background, check out <a href="https://arxiv.org/abs/2109.15295">Bisping, Jansen,
+              Nestmann (2021): Deciding All Behavioral Equivalences at Once: A Game for Linear-Time--Branching-Time
+              Spectroscopy</a></p>
+
+          <p>The LTBT Spectroscope is developed at <a href="https://www.mtv.tu-berlin.de">MTV TU Berlin</a> by:</p>
+          <ul>
+            <li>Benjamin Bisping (<a href="mailto:benjamin.bisping@tu-berlin.de">benjamin.bisping@tu-berlin.de</a>)</li>
+          </ul>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Cool!</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="text/javascript" src="eqfiddle-client-jsdeps.js"></script>
+  <script type="text/javascript" src="js/cm_transitionsystem_mode.js"></script>
+  <script type="text/javascript" src="eqfiddle-client.js"></script>
+  <script type="text/javascript">TransitionSystemFiddle.main();</script>
+
+</body>
+
 </html>
