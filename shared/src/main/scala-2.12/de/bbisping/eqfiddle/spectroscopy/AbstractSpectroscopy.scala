@@ -151,7 +151,7 @@ object AbstractSpectroscopy {
         p = orderedPair(0)
         q = orderedPair(1)
         eq <- findEqs(p, q)
-      } yield (p, eq._1, q)
+      } yield (p, eq._1 + " eq", q)
       new LabeledRelation(relTuples.toSet)
     }
 

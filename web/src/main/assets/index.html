@@ -101,6 +101,9 @@
 		.relation.violates, .relation.A {
 		  stroke: #b31;
 		}
+		.link.relation.eq {
+			marker-end: none;
+		}
     </style>
     <style>
         .es-problem-gutter {
@@ -125,6 +128,12 @@
         .es-pipeline-replay-step {
           cursor: pointer;
         }
+        .es-pipeline-replay-step div.preorderings, .es-pipeline-replay-step div.distinctions, .es-pipeline-replay-step div.equations,
+        #es-graph-comment div.preorderings, #es-graph-comment div.distinctions, #es-graph-comment div.equations {
+          padding-left: 20px;
+          cursor: pointer;
+        }
+				
    		.es-loading {
    		  width: 16px;
    		  height: 16px;
