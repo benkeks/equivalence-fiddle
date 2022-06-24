@@ -38,4 +38,4 @@ The algorithm uses a generalization of the bisimulation game to find all relevan
 
 The LTBT Spectroscope is developed at [MTV TU Berlin](https://www.mtv.tu-berlin.de) by Benjamin Bisping (benjamin.bisping@tu-berlin.de).
 
-The code is subject to the MIT License to be found in `LICENSE`. The full source can be obtained from <https://concurrency-theory.org/ltbt-spectroscope/code/>.
+The code is subject to the MIT License to be found in `LICENSE`. The full source can be obtained from <https://concurrency-theory.org/ltbt-spectroscope/code/> and via [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6726494.svg)](https://doi.org/10.5281/zenodo.6726494).
