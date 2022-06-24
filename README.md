@@ -1,12 +1,12 @@
 # Linear-Time–Branching-Time Spectroscope
 
-This is a tool for finding the best ways of equating / preordering / distinguishing finite process models as described in [Bisping, Jansen, Nestmann, arXiv 2022](https://arxiv.org/abs/2109.15295).
+The “Linear-time–Branching-time Spectroscope” is a web app to find all preorders, equivalences and inequivalences from the (strong) linear-time–branching-time spectrum for small processes as described in [Bisping, Jansen, Nestmann, arXiv 2022](https://doi.org/10.48550/arXiv.2109.15295).
 
 It runs online on https://concurrency-theory.org/ltbt-spectroscope/ .
 
 ![](doc/usage-illustration.gif)
 
-Just input CSS-style processes, give the two processes you want to compare with `@compare "P1,P2"` and click on the gutter next to the compare-statement!
+Just input CCS-style processes, give the two processes you want to compare with `@compare "P1,P2"` and click on the gutter next to the compare-statement!
 
 ## How to build
 
@@ -24,12 +24,15 @@ In order to test that the algorithm determines the expected (in-)equivaences for
 sbt "shared/test"
 ```
 
-To generate distinguishing formulas displayed in Table 2 of the [TACAS 2021 paper](https://link.springer.com/chapter/10.1007%2F978-3-030-72016-2_1):
+To generate distinguishing formulas displayed in Table 2 of the [TACAS 2021 paper](https://doi.org/10.1007/978-3-030-72016-2_1):
 
 ```
 sbt "shared/run"
 ```
 
+## Theoretical background
+
+The algorithm uses a generalization of the bisimulation game to find all relevant distinguishing Hennessy–Milner logic formulas for two compared finite-state processes. Using these, we can give a precise characterization of how much distinguishing power is needed to tell two processes apart—and thus also determine the best fit of equivalences to equate them.
 
 ## Developed by
 
