@@ -63,7 +63,7 @@ lazy val jsClient = (project in file("js-client")).settings(
 ).aggregate(shared).dependsOn(shared).enablePlugins(ScalaJSPlugin, ScalaJSWeb)
 
 lazy val jsApi = (project in file("js-api")).settings(
-  scalaVersion := "2.12.10",
+  scalaVersion := "2.12.13",
   name := "eqfiddle-api",
   ThisBuild / parallelExecution := false,
   scalacOptions ++= scalacOpts,

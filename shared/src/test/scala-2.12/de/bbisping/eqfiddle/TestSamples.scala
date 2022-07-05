@@ -17,12 +17,14 @@ object TestSamples  {
   def nodeLabeling(o: Option[Syntax.NodeDeclaration]) = {
     Interpreting.fromOption(o.map(_.name) orElse(Some("")))
   }
+  def actionStrIsOutput(a: String) = a.endsWith("!")
+  def actionStrToInput(a: String): String = if (actionStrIsOutput(a)) actionStrToInput(a.dropRight(1)) else a
 
   val samples = for {
     Samples.Example(slug, name, src) <- CCSSamples.namedSamples
     parser: Parser = new Parser(src)
     parser.ParseSuccess(esDef, _) = parser.parse
-    interpreter = new Interpreter(esDef, NodeID(_), arrowLabeling, nodeLabeling)
+    interpreter = new Interpreter(esDef, NodeID(_), arrowLabeling, nodeLabeling, actionStrToInput, actionStrIsOutput)
     Interpreting.Success(is) = interpreter.result(new WeakTransitionSystem(_, _, Set()))
   } yield (slug, is.asInstanceOf[WeakTransitionSystem[NodeID, String, String]])
   
