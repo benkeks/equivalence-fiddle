@@ -49,6 +49,7 @@ object Syntax {
   }
   
   case class NodeDeclaration(val name: String, attribs: List[(String, String)], pos: Pos = Pos0) extends Expression(pos) {
+    def attributeDefined(name: String) = attribs.exists(name == _._1)
   }
   
   case class Label(name: String, pos: Pos = Pos0) extends Expression(pos) {

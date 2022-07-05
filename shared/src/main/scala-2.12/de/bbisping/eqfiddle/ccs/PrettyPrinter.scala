@@ -37,7 +37,7 @@ class PrettyPrinter {
     case Parallel(procs, pos) =>
       procs.map(show(_)).mkString("(", " | ", ")")
     case Restrict(names, proc, pos) =>
-      show(proc) + " \\ " + names.map(show(_)).mkString("{", " | ", "}") 
+      show(proc) + " \\ " + names.map(show(_)).mkString("{", ", ", "}") 
     case ProcessName(l, p0) =>
       show(l)
     case Label(l, p0) =>
