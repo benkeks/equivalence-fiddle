@@ -2,7 +2,6 @@ package de.bbisping.eqfiddle.hml
 
 object HennessyMilnerLogic {
 
-
   def getLeastDistinguishing[A](formulas: Set[Formula[A]]): Set[Formula[A]] = {
     val classifications = formulas.map(f => (f, f.classifyFormula()))
     val allClassBounds = classifications.flatMap(_._2._2.map(_._2))
@@ -24,13 +23,10 @@ object HennessyMilnerLogic {
     /** class of this formula if it appears at the top level */
     def getRootClass() = {
       ObservationClass(
-        obsClass.observationHeight,
-        obsClass.conjunctionLevels + (if (!isPositive) 1 else 0),
-        obsClass.maxPositiveDeepBranches,
-        obsClass.maxPositiveBranches,
-        obsClass.negationLevels,
-        obsClass.maxNegatedHeight
-      )
+        conjunctionLevels = obsClass.conjunctionLevels + (if (!isPositive) 1 else 0),
+        immediateConjunctions = if (!isPositive) 1 else 0,
+        immediateClauses = if (this.isInstanceOf[Immediate[A]]) 1 else 0
+      ) lub obsClass
     }
 
     /** names the coarsest notion of equivalence where this formula is part of the distinguishing formulas */
@@ -73,6 +69,7 @@ object HennessyMilnerLogic {
       } else {
         val positiveSubterms = subterms.filter(_.isPositive)
         val positiveFlatCount = positiveSubterms.count(_.obsClass.observationHeight <= 1)
+        val immediateClauseCount = positiveSubterms.count(_.isInstanceOf[Immediate[A]])
 
         ObservationClass(
           observationHeight = subterms.map(_.obsClass.observationHeight).max,
@@ -85,7 +82,9 @@ object HennessyMilnerLogic {
           /** the maximal amount of negations when descending into a formula */
           negationLevels = subterms.map(_.obsClass.negationLevels).max,
           /** maximal observationHeight of negative subformulas */
-          maxNegatedHeight = subterms.map(_.obsClass.maxNegatedHeight).max
+          maxNegatedHeight = subterms.map(_.obsClass.maxNegatedHeight).max,
+          immediateConjunctions = subterms.map(_.obsClass.immediateConjunctions).max,
+          immediateClauses = subterms.map(_.obsClass.immediateClauses + immediateClauseCount).max
         )
       }
     }
@@ -98,8 +97,11 @@ object HennessyMilnerLogic {
 
     override val isPositive = true
     
-    override val obsClass = ObservationClass(andThen.obsClass.observationHeight + 1,
-      andThen.obsClass.conjunctionLevels + (if (!andThen.isPositive) 1 else 0),0,0,0,0) lub andThen.obsClass
+    override val obsClass = ObservationClass(
+      observationHeight = andThen.obsClass.observationHeight + 1,
+      conjunctionLevels = if (!andThen.isPositive) andThen.obsClass.conjunctionLevels + 1 else 0,
+      immediateConjunctions = if (!andThen.isPositive) 1 else 0
+    ) lub andThen.obsClass
 
   }
   case class Negate[A](andThen: Formula[A]) extends Formula[A] {
@@ -107,9 +109,23 @@ object HennessyMilnerLogic {
 
     override val isPositive = false
 
-    override val obsClass = ObservationClass(0, andThen.obsClass.conjunctionLevels + (if (!andThen.isPositive) 1 else 0),
-      0,0,andThen.obsClass.negationLevels + 1,andThen.obsClass.observationHeight) lub andThen.obsClass
+    override val obsClass = ObservationClass(
+      conjunctionLevels = andThen.obsClass.conjunctionLevels + (if (!andThen.isPositive) 1 else 0),
+      negationLevels = andThen.obsClass.negationLevels + 1,
+      maxNegatedHeight = andThen.obsClass.observationHeight
+    ) lub andThen.obsClass
 
   }
 
+  case class Immediate[A](andThen: Formula[A]) extends Formula[A] {
+    override def toString = "!" + andThen.toString
+
+    override val isPositive = andThen.isPositive
+    override val obsClass = ObservationClass(
+      immediateConjunctions = if (andThen.isInstanceOf[And[A]] || andThen.isInstanceOf[Negate[A]])
+        1 + (if (andThen.obsClass.immediateClauses > 0) 1 else 0)
+      else
+        0
+      ) lub andThen.obsClass
+  }
 }

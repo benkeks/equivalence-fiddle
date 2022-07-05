@@ -117,6 +117,12 @@ class WeakTransitionSystem[S, A, L](
     } yield (a, weakPost(s, a))
   } toMap
 
+  def weakPostDelay(s: S): Map[A, Set[S]] = {
+    for {
+      a <- weakEnabled2(s)
+    } yield (a, weakPostDelay(s, a))
+  } toMap
+
   def weakPre(s: S, a: A): Set[S] = {
     val ss1 = silentReachableInverse(s)
     if (silentActions(a)) {

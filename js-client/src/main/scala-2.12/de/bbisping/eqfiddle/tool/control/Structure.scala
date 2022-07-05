@@ -17,7 +17,7 @@ import de.bbisping.eqfiddle.util.Relation
 import de.bbisping.eqfiddle.util.LabeledRelation
 import de.bbisping.eqfiddle.ts.DivergenceInformation
 import de.bbisping.eqfiddle.algo.AlgorithmLogging
-import de.bbisping.eqfiddle.spectroscopy.{AbstractSpectroscopy, PositionalSpectroscopy, EdgeSpectroscopy}
+import de.bbisping.eqfiddle.spectroscopy.{AbstractSpectroscopy, PositionalSpectroscopy, WeakPositionalSpectroscopy, EdgeSpectroscopy}
 
 
 class Structure(val main: Control) extends ModelComponent {
@@ -297,7 +297,7 @@ object Structure {
 
         val begin = Date.now
 
-        val algo = new EdgeSpectroscopy(structure.structure, List(n1, n2))
+        val algo = new WeakPositionalSpectroscopy(structure.structure, List(n1, n2))
         val result = algo.compute()
         println("Spectroscopy took: " + (Date.now - begin) + "ms.")
 
