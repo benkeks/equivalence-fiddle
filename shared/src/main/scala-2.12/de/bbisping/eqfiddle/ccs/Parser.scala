@@ -135,7 +135,7 @@ class Parser(val input: String) extends Parsing {
 
   def nullProcess(in: List[Token]): Parsed[Choice] = in match {
     case LiteralNumber(n, p) :: rest if n == "0" =>
-      ParseSuccess(Choice(Nil, p), rest)
+      ParseSuccess(NullProcess(p), rest)
     case other =>
       ParseFail("Expected null process.", other)
   }

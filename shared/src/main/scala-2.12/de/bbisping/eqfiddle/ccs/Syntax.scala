@@ -86,6 +86,8 @@ object Syntax {
     }
   }
 
+  def NullProcess(pos: Pos = Pos0) = Choice(Nil, pos)
+
   case class Parallel(val procs: List[ProcessExpression], pos: Pos = Pos0) extends ProcessExpression(pos) {
     
     override def toString() = if (procs.isEmpty) {
@@ -104,14 +106,11 @@ object Syntax {
   }
 
   case class ProcessName(val l: Label, pos: Pos = Pos0) extends ProcessExpression(pos) {
-    
     override def toString() = l.toString
   }
 
   
   case class MetaDeclaration(key: String, value: String, pos: Pos = Pos0) extends Expression(pos) {
-
-    
   }
   
   case class Definition(val defs: List[Expression]) extends Expression(Pos0) {

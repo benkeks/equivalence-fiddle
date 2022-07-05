@@ -136,7 +136,11 @@ class Interpreter[S, A, L](
       } yield {
         (a, Syntax.Restrict(names, p, pos))
       }
-    case Syntax.ProcessName(l, _) =>
-      semantics(procEnv)(procEnv(l.name))
+    case Syntax.ProcessName(l, pos) =>
+      semantics(procEnv)(
+        procEnv.getOrElse(
+          l.name,
+          Syntax.Prefix(l, Syntax.NullProcess(pos), pos))
+      )
   }
 }
