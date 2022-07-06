@@ -178,14 +178,15 @@ R3 = c.(a.a.0 + a.0 + b.0) + c.(a.a.0 + a.0 + b.b.0)
 """
 
   val weakBisimCoupledSimParallel = """
-P2A(x=133, y=-622)
-P2B(x=468, y=-615)
-
+P1A = tau.a + tau.b + tau.c
+P1B = tau.a + tau.(tau.b + tau.c)
+@comment "Distinguished by Weak Bisim (eq by coupledsim = weaksim + contrasim)"
+@compare "P1A,P1B" 
 
 P2A = (res!0 | (res.a.0 + res.b.0 + res.c.0)) \ {res}
 P2B = (res1!res2!0 | (res1.res2.a.0 + res1.(res2.b.0 + res2.c.0))) \ {res1, res2}
 
-@comment "Distinguished by Weak Bisim (eq by coupledsim = weaksim + contrasim)"
+@comment "More complicated variant auf P1"
 @compare "P2A,P2B" 
 
 @comment "Pc, Pp Contrasim from https://arxiv.org/pdf/2108.10492.pdf" 
@@ -196,6 +197,8 @@ Pp = (pl.op.sp.aEats | pl.op.sp.bEats | pl!0 | sp!0) \ {pl, sp}
 
 @comment "------- layout --------" 
 
+P2A(x=133, y=-622)
+P2B(x=468, y=-615)
 Pc(x=-92, y=693)
 Pp(x=511, y=590)
 "(pl.sp.aEats | sp.bEats | 0 | op.sp!0) \ {pl,sp}"(x=-56, y=830)
@@ -215,6 +218,7 @@ Pp(x=511, y=590)
 "(sp.aEats | pl.sp.bEats | 0 | sp!0) \ {pl,sp}"(x=97, y=877)
 "(aEats | pl.sp.bEats | 0 | 0) \ {pl,sp}"(x=142, y=1040)
 "(0 | pl.sp.bEats | 0 | 0) \ {pl,sp}"(x=260, y=1157)
+
 """
 
   val strongWeakSims = """

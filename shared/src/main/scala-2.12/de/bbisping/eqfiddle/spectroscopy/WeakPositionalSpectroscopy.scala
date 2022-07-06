@@ -18,9 +18,29 @@ class WeakPositionalSpectroscopy[S, A, L] (
 
   override def buildStrategyFormulas(game: AbstractSpectroscopyGame[S, A, L])(node: GameNode, possibleMoves: Iterable[Set[HennessyMilnerLogic.Formula[A]]]): Set[HennessyMilnerLogic.Formula[A]] = {
     node match {
+      case game.DefenderConjunction(_, _) =>
+        val productMoves =
+          possibleMoves.foldLeft(Seq(Seq[HennessyMilnerLogic.Formula[A]]()))(
+            (b, a) => b.flatMap(i => a.map(j => i ++ Seq(j))))
+        val moveSet = productMoves.map { mv =>
+          val moves = mv.toSet
+          HennessyMilnerLogic.And(moves).asInstanceOf[HennessyMilnerLogic.Formula[A]]
+        }.toSet
+        pruneDominated(moveSet)
+      case game.AttackerObservation(_, _, game.ConjunctMove) =>
+        possibleMoves.flatten.toSet
+      case game.AttackerObservation(_, _, game.NegationMove) =>
+        // val nextMoves = for {
+        //   moveGroup <- possibleMoves
+        //   formula <- moveGroup
+        //   if formula.isPositive
+        // } yield HennessyMilnerLogic.Negate(formula)
+        // pruneDominated(nextMoves.toSet)
+        pruneDominated(possibleMoves.flatten.toSet.map(HennessyMilnerLogic.Negate[A](_)))
+      case game.AttackerObservation(_, _, game.ObservationMove(a)) =>
+        pruneDominated(possibleMoves.flatten.toSet.map(HennessyMilnerLogic.Observe[A](a, _)))
       case game.AttackerObservation(_, _, game.ImmediacyMove) =>
         pruneDominated(possibleMoves.flatten.map(HennessyMilnerLogic.Immediate(_)).toSet)
-      case other => super.buildStrategyFormulas(game)(node, possibleMoves)
     }
   }
 

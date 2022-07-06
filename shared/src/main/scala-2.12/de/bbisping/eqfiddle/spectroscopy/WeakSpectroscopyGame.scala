@@ -36,7 +36,7 @@ class WeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], init: Ite
         if (qq0.size == 1 && moveKind == ConjunctMove) {
           val neg = AttackerObservation(qq0.head, Set(p0), NegationMove)
           dn ++ in ++ List(neg)
-        } else if (moveKind.isInstanceOf[ObservationMove]) { // weak conjunction
+        } else if (moveKind.isInstanceOf[ObservationMove] || moveKind == NegationMove) { // weak conjunction //  || moveKind == NegationMove needed for correct contrasim
           val qq0prime = qq0.flatMap(ts.silentReachable(_))
           val conjMoves = for {
             parts <- Partition.partitioningListsOfSet(qq0prime)

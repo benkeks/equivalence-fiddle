@@ -100,7 +100,7 @@ object ObservationClass {
   }
 
   val SpecialWeakEqs = List(
-    "contrasimulation"->       ObservationClass(INFTY, INFTY,INFTY,    0,INFTY,INFTY,0,0),
+    "contrasimulation"->       ObservationClass(INFTY, INFTY,    0,    0,INFTY,INFTY,0,0),
     "delay-bisimulation"->     ObservationClass(INFTY, INFTY,INFTY,INFTY,INFTY,INFTY,1,0),
     "eta-bisimulation"->       ObservationClass(INFTY, INFTY,INFTY,INFTY,INFTY,INFTY,0,1),
     "branching-bisimulation"-> ObservationClass(INFTY, INFTY,INFTY,INFTY,INFTY,INFTY,1,1)
