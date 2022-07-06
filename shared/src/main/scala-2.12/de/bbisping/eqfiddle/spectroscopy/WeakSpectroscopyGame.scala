@@ -17,6 +17,7 @@ class WeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], init: Ite
         val dn = for {
           (a,pp1) <- ts.post(p0)
           p1 <- pp1
+          if !(moveKind == ImmediacyMove && ts.silentActions(a)) // prohibit immediate tau moves
         } yield {
           AttackerObservation(p1,
             if (moveKind == ImmediacyMove)
