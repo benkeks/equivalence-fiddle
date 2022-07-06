@@ -178,56 +178,185 @@ R3 = c.(a.a.0 + a.0 + b.0) + c.(a.a.0 + a.0 + b.b.0)
 """
 
   val weakBisimCoupledSimParallel = """
-P2A(x=0, y=300)
-P2B(x=600, y=300)
+P2A(x=133, y=-622)
+P2B(x=468, y=-615)
+
 
 P2A = (res!0 | (res.a.0 + res.b.0 + res.c.0)) \ {res}
 P2B = (res1!res2!0 | (res1.res2.a.0 + res1.(res2.b.0 + res2.c.0))) \ {res1, res2}
 
-@comment "Distinguished by Weak Bisim"
-@compare "P2A,P2B"
+@comment "Distinguished by Weak Bisim (eq by coupledsim = weaksim + contrasim)"
+@compare "P2A,P2B" 
+
+@comment "Pc, Pp Contrasim from https://arxiv.org/pdf/2108.10492.pdf" 
+Pc = (pl.sp.aEats | pl.sp.bEats | pl!0 | op.sp!0) \ {pl, sp}
+Pp = (pl.op.sp.aEats | pl.op.sp.bEats | pl!0 | sp!0) \ {pl, sp}
+
+@compare "Pc,Pp"
+
+@comment "------- layout --------" 
+
+Pc(x=-92, y=693)
+Pp(x=511, y=590)
+"(pl.sp.aEats | sp.bEats | 0 | op.sp!0) \ {pl,sp}"(x=-56, y=830)
+"(pl.sp.aEats | pl.sp.bEats | pl!0 | sp!0) \ {pl,sp}"(x=11, y=783)
+"(sp.aEats | pl.sp.bEats | 0 | op.sp!0) \ {pl,sp}"(x=110, y=701)
+"(pl.op.sp.aEats | op.sp.bEats | 0 | sp!0) \ {pl,sp}"(x=402, y=771)
+"(pl.op.sp.aEats | sp.bEats | 0 | sp!0) \ {pl,sp}"(x=426, y=838)
+"(op.sp.aEats | pl.op.sp.bEats | 0 | sp!0) \ {pl,sp}"(x=598, y=729)
+"(pl.op.sp.aEats | bEats | 0 | 0) \ {pl,sp}"(x=414, y=908)
+"(pl.op.sp.aEats | 0 | 0 | 0) \ {pl,sp}"(x=395, y=999)
+"(pl.sp.aEats | sp.bEats | 0 | sp!0) \ {pl,sp}"(x=-55, y=982)
+"(pl.sp.aEats | bEats | 0 | 0) \ {pl,sp}"(x=-5, y=1120)
+"(pl.sp.aEats | 0 | 0 | 0) \ {pl,sp}"(x=50, y=1243)
+"(sp.aEats | pl.op.sp.bEats | 0 | sp!0) \ {pl,sp}"(x=608, y=790)
+"(aEats | pl.op.sp.bEats | 0 | 0) \ {pl,sp}"(x=588, y=867)
+"(0 | pl.op.sp.bEats | 0 | 0) \ {pl,sp}"(x=644, y=987)
+"(sp.aEats | pl.sp.bEats | 0 | sp!0) \ {pl,sp}"(x=97, y=877)
+"(aEats | pl.sp.bEats | 0 | 0) \ {pl,sp}"(x=142, y=1040)
+"(0 | pl.sp.bEats | 0 | 0) \ {pl,sp}"(x=260, y=1157)
+"""
+
+  val strongWeakSims = """
+P1A = (tau.b + a)
+P1B = (P1A + b)
+@comment "Delay bisimilar processes" 
+@compare "P1B, P1A" 
+
+P2A = a.(tau.b + c)
+P2B = (a.b + P2A)
+@comment "Weakly bisimilar but not delay bisim" 
+@compare "P2B, P2A" 
+
+@comment "------- layout --------" 
+
+"0"(x=-23, y=780)
+b(x=424, y=685)
+P2A(x=79, y=116)
+P2B(x=421, y=149)
+P1A(x=-2, y=-26)
+P1B(x=391, y=-154)
+"tau.b + c"(x=242, y=325)
 """
 
   val petersonMutex = """
-B1f = b1rf!B1f + b1wf.B1f + b1wt.B1t
-B1t = b1rt!B1t + b1wf.B1f + b1wt.B1t
-B2f = b2rf!B2f + b2wf.B2f + b2wt.B2t
-B2t = b2rt!B2t + b2wf.B2f + b2wt.B2t
+B1f = (b1rf!B1f + b1wf.B1f + b1wt.B1t)
+B1t = (b1rt!B1t + b1wf.B1f + b1wt.B1t)
+B2f = (b2rf!B2f + b2wf.B2f + b2wt.B2t)
+B2t = (b2rt!B2t + b2wf.B2f + b2wt.B2t)
 
-K1 = kr1!K1 + kw1.K1 + kw2.K2
-K2 = kr2!K2 + kw1.K1 + kw2.K2
+K1 = (kr1!K1 + kw1.K1 + kw2.K2)
+K2 = (kr2!K2 + kw1.K1 + kw2.K2)
 P1 = b1wt!kw2!P11
-P11 = b2rf.P12 + b2rt.(kr2.P11 + kr1.P12)
+P11 = (b2rf.P12 + b2rt.(kr2.P11 + kr1.P12))
 P12 = enter1.exit1.b1wf!P1
 P2 = b2wt!kw1!P21
-P21 = b1rf.P22 + b1rt.(kr1.P21 + kr2.P22)
+P21 = (b1rf.P22 + b1rt.(kr1.P21 + kr2.P22))
 P22 = enter2.exit2.b2wf!P2
 
-Peterson = (P1 | P2 | K1 | B1f | B2f) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}
+Peterson = (P1 | P2 | K1 | B1f | B2f) \ {b1rf, b1wf, b1wt, b1rt, b2rf, b2wf, b2rt, b2wt, kr1, kr2, kw1, kw2}
 
-Spec = enter1.exit1.Spec + enter2.exit2.Spec
-""" // \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}
+Spec = (enter1.exit1.Spec + enter2.exit2.Spec)
 
+@compare "Peterson, Spec"
+
+
+Peterson(x=50, y=-200, main)
+Spec(x=1099, y=-289, main)
+
+"exit2.Spec"(x=1030, y=-107)
+"(P1 | kw1!P21 | K1 | B1f | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-1, y=-81)
+"(kw2!P11 | P2 | K1 | B1t | B2f) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=225, y=-176)
+"(P1 | P2 | K1 | B1f | B2f) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=185, y=32)
+"(kw2!P11 | kw1!P21 | K1 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=61, y=30)
+"(P11 | P2 | K2 | B1t | B2f) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=330, y=-59)
+"(kw2!P11 | b2wf!P2 | K1 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=608, y=100)
+"(P1 | P21 | K1 | B1f | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-150, y=87)
+"(kw2!P11 | P21 | K1 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=14, y=107)
+"(P12 | P2 | K2 | B1t | B2f) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=326, y=10)
+"(kr2.P11 + kr1.P12 | b2wf!P2 | K2 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=437, y=336)
+"(exit1.b1wf!P1 | P2 | K2 | B1t | B2f) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=434, y=96)
+"(P1 | kr1.P21 + kr2.P22 | K1 | B1f | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-89, y=281)
+"(kw2!P11 | P2 | K2 | B1t | B2f) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=143, y=213)
+"(kr2.P11 + kr1.P12 | P21 | K2 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=132, y=278)
+"(kw2!P11 | kw1!P21 | K2 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=118, y=310)
+"(kw2!P11 | kr1.P21 + kr2.P22 | K1 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=6, y=207)
+"(P1 | P22 | K1 | B1f | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-173, y=230)
+"(P1 | exit2.b2wf!P2 | K1 | B1f | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-190, y=388)
+"(P11 | P21 | K2 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=74, y=122)
+"(P1 | kw1!P21 | K2 | B1f | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=290, y=423)
+"""
+
+  val oneShotMutex = """
+B1f = (b1rf!B1f + b1wf.B1f + b1wt.B1t)
+B1t = (b1rt!B1t + b1wf.B1f + b1wt.B1t)
+B2f = (b2rf!B2f + b2wf.B2f + b2wt.B2t)
+B2t = (b2rt!B2t + b2wf.B2f + b2wt.B2t)
+
+K1 = (kr1!K1 + kw1.K1 + kw2.K2)
+K2 = (kr2!K2 + kw1.K1 + kw2.K2)
+P1 = b1wt!kw2!P11
+P11 = (b2rf.P12 + b2rt.(kr2.P11 + kr1.P12))
+P12 = enter1.exit1.0
+P2 = b2wt!kw1!P21
+P21 = (b1rf.P22 + b1rt.(kr1.P21 + kr2.P22))
+P22 = enter2.exit2.0
+
+Peterson = (P1 | P2 | K1 | B1f | B2f) \ {b1rf, b1wf, b1wt, b1rt, b2rf, b2wf, b2rt, b2wt, kr1, kr2, kw1, kw2}
+
+Spec = (enter1.exit1 + enter2.exit2)
+
+@compare "Peterson, Spec" 
+
+@compare "Spec, Peterson"
+
+Peterson(x=50, y=-200, main)
+Spec(x=1099, y=-289, main)
+
+"(P1 | kw1!P21 | K1 | B1f | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-1, y=-81)
+"(kw2!P11 | P2 | K1 | B1t | B2f) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=225, y=-176)
+"(kw2!P11 | kw1!P21 | K1 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=61, y=30)
+"(P11 | P2 | K2 | B1t | B2f) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=330, y=-59)
+"(P1 | P21 | K1 | B1f | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-150, y=87)
+"(P12 | P2 | K2 | B1t | B2f) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=326, y=10)
+"(kr2.P11 + kr1.P12 | P21 | K2 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=132, y=278)
+"(P1 | P22 | K1 | B1f | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-173, y=230)
+"(P11 | P21 | K2 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=74, y=122)
+"0"(x=1252, y=-5)
+exit2(x=1296, y=-152)
+exit1(x=1095, y=-101)
+"(P11 | 0 | K2 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=147, y=618)
+"(kr2.P11 + kr1.P12 | 0 | K2 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=414, y=555)
+"(kw2!P11 | 0 | K1 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=295, y=445)
+"(0 | kw1!P21 | K2 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-229, y=457)
+"(exit1.0 | kw1!P21 | K2 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-83, y=550)
+"""
 
   val namedSamples = List[Samples.Example](
     Samples.Example("ltbts1",
       "Linear Time Branching Time Spectrum 1",
-        ltbts1),
+      ltbts1),
     Samples.Example("neither-failure-sim",
       "Neither failure nor simulation equivalent",
-        notFailureOrSim),
+      notFailureOrSim),
     Samples.Example("ft-and-if",
       "FT as well as IF preordered",
-        failureTraceAndImpossibleFutures),
+      failureTraceAndImpossibleFutures),
     Samples.Example("review-counterexamples",
       "Spurious failure-trace preorderings in original algorithm",
-        reviewCounterexamples),
+      reviewCounterexamples),
     Samples.Example("weak-sims",
-       "Weak Bisim, Coupled, Contrasim",
-         weakBisimCoupledSimParallel),
+      "Weak Bisim, Coupled, Contrasim",
+      weakBisimCoupledSimParallel),
+    Samples.Example("strong-weak-sims",
+      "Eta, Branching, Delay Bisims",
+      strongWeakSims),
     Samples.Example("peterson-mutex",
       "Peterson Mutual exclusion",
-        petersonMutex)
+      petersonMutex),
+    Samples.Example("peterson-mutex-one-shot",
+      "Peterson Mutual exclusion, non-recursive",
+      oneShotMutex)
   )
 
   def getExample(slug: String) = {
