@@ -39,16 +39,16 @@ class WeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], init: Ite
         } else if (moveKind.isInstanceOf[ObservationMove] || moveKind == NegationMove) { // weak conjunction //  || moveKind == NegationMove needed for correct contrasim
           val qq0prime = qq0.flatMap(ts.silentReachable(_))
           val conjMoves = for {
-            parts <- Partition.partitioningListsOfSet(qq0prime)
+            partList <- selectPartitions(qq0prime)
           } yield {
-            DefenderConjunction(p0, parts)
+            DefenderConjunction(p0, partList)
           }
           dn ++ conjMoves ++ List(AttackerObservation(p0, qq0, ImmediacyMove))
         } else if (moveKind == ImmediacyMove) { // strong conjunction
           val conjMoves = for {
-            parts <- Partition.partitioningListsOfSet(qq0)
+            partList <- selectPartitions(qq0)
           } yield {
-            DefenderConjunction(p0, parts)
+            DefenderConjunction(p0, partList)
           }
           dn ++ conjMoves
         } else {
@@ -61,5 +61,19 @@ class WeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], init: Ite
       } yield {
         AttackerObservation(p0, qq0, ConjunctMove)
       }
+  }
+
+  private def selectPartitions(states: Set[S]): TraversableOnce[List[Set[S]]] = {
+    if (states.isEmpty) {
+      List(List())
+    } else {
+      for {
+        //parts <- Partition.partitioningListsOfSet(states)
+        mainPart <- states.subsets()
+        if mainPart.nonEmpty
+      } yield {
+        mainPart :: (states -- mainPart).map(Set(_)).toList
+      }
+    }
   }
 }

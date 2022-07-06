@@ -186,7 +186,7 @@ P1B = tau.a + tau.(tau.b + tau.c)
 P2A = (res!0 | (res.a.0 + res.b.0 + res.c.0)) \ {res}
 P2B = (res1!res2!0 | (res1.res2.a.0 + res1.(res2.b.0 + res2.c.0))) \ {res1, res2}
 
-@comment "More complicated variant auf P1"
+@comment "More complicated variant of P1"
 @compare "P2A,P2B" 
 
 @comment "Pc, Pp Contrasim from https://arxiv.org/pdf/2108.10492.pdf" 

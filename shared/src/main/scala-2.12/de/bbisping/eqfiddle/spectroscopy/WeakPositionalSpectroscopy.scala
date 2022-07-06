@@ -30,13 +30,13 @@ class WeakPositionalSpectroscopy[S, A, L] (
       case game.AttackerObservation(_, _, game.ConjunctMove) =>
         possibleMoves.flatten.toSet
       case game.AttackerObservation(_, _, game.NegationMove) =>
-        // val nextMoves = for {
-        //   moveGroup <- possibleMoves
-        //   formula <- moveGroup
-        //   if formula.isPositive
-        // } yield HennessyMilnerLogic.Negate(formula)
-        // pruneDominated(nextMoves.toSet)
-        pruneDominated(possibleMoves.flatten.toSet.map(HennessyMilnerLogic.Negate[A](_)))
+        val nextMoves = for {
+          moveGroup <- possibleMoves
+          formula <- moveGroup
+          if formula.isPositive
+        } yield HennessyMilnerLogic.Negate(formula)
+        pruneDominated(nextMoves.toSet)
+        //pruneDominated(possibleMoves.flatten.toSet.map(HennessyMilnerLogic.Negate[A](_)))
       case game.AttackerObservation(_, _, game.ObservationMove(a)) =>
         pruneDominated(possibleMoves.flatten.toSet.map(HennessyMilnerLogic.Observe[A](a, _)))
       case game.AttackerObservation(_, _, game.ImmediacyMove) =>
