@@ -100,7 +100,7 @@ object HennessyMilnerLogic {
     override val obsClass = ObservationClass(
       observationHeight = andThen.obsClass.observationHeight + 1,
       conjunctionLevels = if (!andThen.isPositive) andThen.obsClass.conjunctionLevels + 1 else 0,
-      immediateConjunctions = if (!andThen.isPositive) 1 else 0
+      immediateConjunctions = if (!andThen.isPositive || andThen.isInstanceOf[Immediate[A]]) 1 else 0
     ) lub andThen.obsClass
 
   }

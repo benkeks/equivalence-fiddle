@@ -35,7 +35,15 @@ class WeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], init: Ite
         if (qq0.size == 1 && moveKind == ConjunctMove) {
           val neg = AttackerObservation(qq0.head, Set(p0), NegationMove)
           dn ++ in ++ List(neg)
-        } else if (moveKind.isInstanceOf[ObservationMove]) {
+        } else if (moveKind.isInstanceOf[ObservationMove]) { // weak conjunction
+          val qq0prime = qq0.flatMap(ts.silentReachable(_))
+          val conjMoves = for {
+            parts <- Partition.partitioningListsOfSet(qq0prime)
+          } yield {
+            DefenderConjunction(p0, parts)
+          }
+          dn ++ conjMoves ++ List(AttackerObservation(p0, qq0, ImmediacyMove))
+        } else if (moveKind == ImmediacyMove) { // strong conjunction
           val conjMoves = for {
             parts <- Partition.partitioningListsOfSet(qq0)
           } yield {
