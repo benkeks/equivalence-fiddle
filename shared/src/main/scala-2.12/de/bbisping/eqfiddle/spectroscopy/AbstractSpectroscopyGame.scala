@@ -19,6 +19,9 @@ abstract class AbstractSpectroscopyGame[S, A, L](val ts: WeakTransitionSystem[S,
   case object NegationMove extends MoveKind {
     override def toString() = "¬"
   }
+  case object ImmediacyMove extends MoveKind {
+    override def toString() = "!"
+  }
   case object DefenderMove extends MoveKind {
     override def toString() = "*"
   }

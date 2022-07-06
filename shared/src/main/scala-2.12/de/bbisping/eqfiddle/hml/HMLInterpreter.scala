@@ -32,7 +32,7 @@ class HMLInterpreter[S, A, L] (
         } yield makeNode(s, f)
       case HMLAttack(s, Negate(Observe(action, andThen))) =>
         for {
-          s1 <- ts.post(s, action)
+          s1 <- ts.weakPostDelay(s, action)
         } yield makeNode(s1, Negate(andThen))
       case HMLAttack(s, Negate(Negate(andThen))) =>
         List(makeNode(s, andThen))
@@ -42,7 +42,7 @@ class HMLInterpreter[S, A, L] (
         } yield makeNode(s, Negate(f))
       case HMLDefense(s, Observe(action, andThen)) =>
         for {
-          s1 <- ts.post(s, action)
+          s1 <- ts.weakPostDelay(s, action)
         } yield makeNode(s1, andThen)
     }
   }

@@ -2,7 +2,6 @@ package de.bbisping.eqfiddle.hml
 
 object HennessyMilnerLogic {
 
-
   def getLeastDistinguishing[A](formulas: Set[Formula[A]]): Set[Formula[A]] = {
     val classifications = formulas.map(f => (f, f.classifyFormula()))
     val allClassBounds = classifications.flatMap(_._2._2.map(_._2))
@@ -21,16 +20,15 @@ object HennessyMilnerLogic {
 
     def isPositive: Boolean
 
+    def isImmediate: Boolean
+
     /** class of this formula if it appears at the top level */
     def getRootClass() = {
       ObservationClass(
-        obsClass.observationHeight,
-        obsClass.conjunctionLevels + (if (!isPositive) 1 else 0),
-        obsClass.maxPositiveDeepBranches,
-        obsClass.maxPositiveBranches,
-        obsClass.negationLevels,
-        obsClass.maxNegatedHeight
-      )
+        conjunctionLevels = obsClass.conjunctionLevels + (if (!isPositive) 1 else 0),
+        //immediateConjunctions = if (!isPositive) 1 else 0,
+        //immediateClauses = if (this.isImmediate) 1 else 0
+      ) lub obsClass
     }
 
     /** names the coarsest notion of equivalence where this formula is part of the distinguishing formulas */
@@ -66,6 +64,8 @@ object HennessyMilnerLogic {
     }
     override val isPositive = true
 
+    override val isImmediate = false
+
     override val obsClass = {
       
       if (subterms.isEmpty) {
@@ -73,6 +73,7 @@ object HennessyMilnerLogic {
       } else {
         val positiveSubterms = subterms.filter(_.isPositive)
         val positiveFlatCount = positiveSubterms.count(_.obsClass.observationHeight <= 1)
+        val immediateClauseCount = subterms.count(_.isImmediate)
 
         ObservationClass(
           observationHeight = subterms.map(_.obsClass.observationHeight).max,
@@ -85,7 +86,9 @@ object HennessyMilnerLogic {
           /** the maximal amount of negations when descending into a formula */
           negationLevels = subterms.map(_.obsClass.negationLevels).max,
           /** maximal observationHeight of negative subformulas */
-          maxNegatedHeight = subterms.map(_.obsClass.maxNegatedHeight).max
+          maxNegatedHeight = subterms.map(_.obsClass.maxNegatedHeight).max,
+          immediateConjunctions = subterms.map(_.obsClass.immediateConjunctions).max,
+          immediateClauses = (subterms.map(_.obsClass.immediateClauses) + immediateClauseCount).max
         )
       }
     }
@@ -97,19 +100,48 @@ object HennessyMilnerLogic {
     override def toString = "⟨" + action.toString + "⟩" + andThen.toString
 
     override val isPositive = true
-    
-    override val obsClass = ObservationClass(andThen.obsClass.observationHeight + 1,
-      andThen.obsClass.conjunctionLevels + (if (!andThen.isPositive) 1 else 0),0,0,0,0) lub andThen.obsClass
+
+    override val isImmediate = false
+    override val obsClass = ObservationClass(
+      observationHeight = andThen.obsClass.observationHeight + 1,
+      conjunctionLevels = if (!andThen.isPositive) andThen.obsClass.conjunctionLevels + 1 else 0,
+      immediateConjunctions = if (andThen.isImmediate) 1 else 0,
+      //immediateClauses = if (andThen.isImmediate) 1 else 0
+    ) lub andThen.obsClass
 
   }
   case class Negate[A](andThen: Formula[A]) extends Formula[A] {
     override def toString = "¬" + andThen.toString
 
-    override val isPositive = false
+    override val isPositive = !andThen.isPositive
 
-    override val obsClass = ObservationClass(0, andThen.obsClass.conjunctionLevels + (if (!andThen.isPositive) 1 else 0),
-      0,0,andThen.obsClass.negationLevels + 1,andThen.obsClass.observationHeight) lub andThen.obsClass
+    override val isImmediate = andThen.isImmediate
+
+    override val obsClass = ObservationClass(
+      conjunctionLevels = andThen.obsClass.conjunctionLevels + (if (!andThen.isPositive) 1 else 0),
+      negationLevels = andThen.obsClass.negationLevels + 1,
+      maxNegatedHeight = andThen.obsClass.observationHeight
+    ) lub andThen.obsClass
 
   }
 
+  case class Immediate[A](andThen: Formula[A]) extends Formula[A] {
+    override def toString = "!" + andThen.toString
+
+    override val isPositive = andThen.isPositive
+    override val isImmediate = true
+    override val obsClass = ObservationClass(
+      immediateConjunctions =
+        andThen match {
+          case And(subs) if subs.exists(_.isImmediate) => 2
+          case Observe(_, sub) => 0
+          case _ => 1
+        },
+      immediateClauses = 
+        andThen match {
+          case Observe(_, sub) => 1
+          case _ => 0
+        }
+      ) lub andThen.obsClass
+  }
 }
