@@ -86,14 +86,14 @@ class WeakPositionalSpectroscopy[S, A, L] (
     if (attackerWin.contains(aLR)) {
       minFormulas(aLR).foreach { f =>
         debugLog("Distinguished under " + f.classifyFormula() + " preorder by " + f.toString())
-        //checkDistinguishing(f, nodes(0), nodes(1))
+        checkDistinguishing(f, nodes(0), nodes(1))
       }
     }
 
     if (attackerWin.contains(aRL)) {
       minFormulas(aRL).foreach { f =>
         debugLog("Distinguished under " + f.classifyFormula() + " preorder by " + f.toString())
-        //checkDistinguishing(f, nodes(1), nodes(0))
+        checkDistinguishing(f, nodes(1), nodes(0))
       }
     }
     debugLog(graphvizGameWithFormulas(hmlGame, attackerWin, minFormulas))
