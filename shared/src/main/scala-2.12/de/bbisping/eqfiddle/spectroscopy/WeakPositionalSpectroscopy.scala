@@ -18,29 +18,26 @@ class WeakPositionalSpectroscopy[S, A, L] (
 
   override def buildStrategyFormulas(game: AbstractSpectroscopyGame[S, A, L])(node: GameNode, possibleMoves: Iterable[Set[HennessyMilnerLogic.Formula[A]]]): Set[HennessyMilnerLogic.Formula[A]] = {
     node match {
-      case game.DefenderConjunction(_, _) =>
+      case game.DefenderConjunction(_, _, weak) =>
         val productMoves =
           possibleMoves.foldLeft(Seq(Seq[HennessyMilnerLogic.Formula[A]]()))(
             (b, a) => b.flatMap(i => a.map(j => i ++ Seq(j))))
         val moveSet = productMoves.map { mv =>
           val moves = mv.toSet
-          HennessyMilnerLogic.And(moves).asInstanceOf[HennessyMilnerLogic.Formula[A]]
+          if (weak)
+            HennessyMilnerLogic.WeakAnd(moves).asInstanceOf[HennessyMilnerLogic.Formula[A]]
+          else
+            HennessyMilnerLogic.And(moves).asInstanceOf[HennessyMilnerLogic.Formula[A]]
         }.toSet
         pruneDominated(moveSet)
-      case game.AttackerObservation(_, _, game.ConjunctMove) =>
+      case game.AttackerObservation(_, _, game.ConjunctMove) | game.AttackerObservation(_, _, game.WeakConjunctMove) =>
         possibleMoves.flatten.toSet
       case game.AttackerObservation(_, _, game.NegationMove) =>
-        val nextMoves = for {
-          moveGroup <- possibleMoves
-          formula <- moveGroup
-          if formula.isPositive
-        } yield HennessyMilnerLogic.Negate(formula)
-        pruneDominated(nextMoves.toSet)
-        //pruneDominated(possibleMoves.flatten.toSet.map(HennessyMilnerLogic.Negate[A](_)))
+        pruneDominated(possibleMoves.flatten.toSet.map(HennessyMilnerLogic.Negate[A](_)))
       case game.AttackerObservation(_, _, game.ObservationMove(a)) =>
         pruneDominated(possibleMoves.flatten.toSet.map(HennessyMilnerLogic.Observe[A](a, _)))
-      case game.AttackerObservation(_, _, game.ImmediacyMove) =>
-        pruneDominated(possibleMoves.flatten.map(HennessyMilnerLogic.Immediate(_)).toSet)
+      case game.AttackerObservation(_, _, game.WeakObservationMove(a)) =>
+        pruneDominated(possibleMoves.flatten.toSet.map(HennessyMilnerLogic.WeakObserve[A](a, _)))
     }
   }
 

@@ -52,7 +52,7 @@ class SpectroscopyGameEdgeLabeled[S, A, L](ts: WeakTransitionSystem[S, A, L], in
           dn ++ conjMoves
         }
       }
-    case DefenderConjunction(p0, qqPart0) =>
+    case DefenderConjunction(p0, qqPart0, _) =>
       for {
         qq0 <- qqPart0
         // after-conj nodes with singleton qq0 are conflated with usual attacker nodes.

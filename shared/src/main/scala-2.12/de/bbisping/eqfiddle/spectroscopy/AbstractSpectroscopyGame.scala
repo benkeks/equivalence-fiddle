@@ -13,14 +13,17 @@ abstract class AbstractSpectroscopyGame[S, A, L](val ts: WeakTransitionSystem[S,
   case class ObservationMove(a: A) extends MoveKind {
     override def toString() = "⟨" + a + "⟩"
   }
+  case class WeakObservationMove(a: A) extends MoveKind {
+    override def toString() = "⟪" + a + "⟫"
+  }
   case object ConjunctMove extends MoveKind {
     override def toString() = "⋀"
   }
+  case object WeakConjunctMove extends MoveKind {
+    override def toString() = "⨇"
+  }
   case object NegationMove extends MoveKind {
     override def toString() = "¬"
-  }
-  case object ImmediacyMove extends MoveKind {
-    override def toString() = "!"
   }
   case object DefenderMove extends MoveKind {
     override def toString() = "*"
@@ -30,5 +33,5 @@ abstract class AbstractSpectroscopyGame[S, A, L](val ts: WeakTransitionSystem[S,
   val optimizeSymmetryDefWins: Boolean = false
 
   case class AttackerObservation(p: S, qq: Set[S], arrivingMove: MoveKind) extends SimpleGame.AttackerNode
-  case class DefenderConjunction(p: S, qqPart: List[Set[S]]) extends SimpleGame.DefenderNode
+  case class DefenderConjunction(p: S, qqPart: List[Set[S]], weak: Boolean = false) extends SimpleGame.DefenderNode
 }

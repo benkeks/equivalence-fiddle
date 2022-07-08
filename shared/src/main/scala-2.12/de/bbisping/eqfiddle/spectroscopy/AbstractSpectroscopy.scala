@@ -79,7 +79,7 @@ abstract class AbstractSpectroscopy[S, A, L] (
           case game.AttackerObservation(p, qq: Set[_], kind) =>
             val qqString = qq.mkString("{",",","}")
             s"$p, $qqString, $kind"
-          case game.DefenderConjunction(p, qqPart: List[Set[_]]) =>
+          case game.DefenderConjunction(p, qqPart: List[Set[_]], _) =>
             val qqString = qqPart.map(_.mkString("{",",","}")).mkString("/")
             s"$p, $qqString"
           case _ => ""
