@@ -27,6 +27,7 @@ class WeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], init: Ite
           }) ++ (
           for {
             (a,pp1) <- ts.post(p0)
+            if moveKind != NegationMove
             if !ts.silentActions(a) // prohibit immediate tau observations
             p1 <- pp1
           } yield {
