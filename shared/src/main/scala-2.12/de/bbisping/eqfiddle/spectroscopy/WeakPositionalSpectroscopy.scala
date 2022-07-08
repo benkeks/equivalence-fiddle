@@ -11,50 +11,38 @@ import de.bbisping.eqfiddle.util.LabeledRelation
 import de.bbisping.eqfiddle.game.GameGraphVisualizer
 import de.bbisping.eqfiddle.hml.HennessyMilnerLogic
 
-class PositionalSpectroscopy[S, A, L] (
+class WeakPositionalSpectroscopy[S, A, L] (
     ts: WeakTransitionSystem[S, A, L],
     nodes: List[S])
-  extends AbstractSpectroscopy[S, A, L](ts, nodes) {
+  extends PositionalSpectroscopy[S, A, L](ts, nodes) {
 
-  def buildStrategyFormulas(game: AbstractSpectroscopyGame[S, A, L])(node: GameNode, possibleMoves: Iterable[Set[HennessyMilnerLogic.Formula[A]]]): Set[HennessyMilnerLogic.Formula[A]] = {
+  override def buildStrategyFormulas(game: AbstractSpectroscopyGame[S, A, L])(node: GameNode, possibleMoves: Iterable[Set[HennessyMilnerLogic.Formula[A]]]): Set[HennessyMilnerLogic.Formula[A]] = {
     node match {
-      case game.DefenderConjunction(_, _, _) =>
+      case game.DefenderConjunction(_, _, weak) =>
         val productMoves =
           possibleMoves.foldLeft(Seq(Seq[HennessyMilnerLogic.Formula[A]]()))(
             (b, a) => b.flatMap(i => a.map(j => i ++ Seq(j))))
         val moveSet = productMoves.map { mv =>
           val moves = mv.toSet
-          HennessyMilnerLogic.And(moves).asInstanceOf[HennessyMilnerLogic.Formula[A]]
+          if (weak)
+            HennessyMilnerLogic.WeakAnd(moves).asInstanceOf[HennessyMilnerLogic.Formula[A]]
+          else
+            HennessyMilnerLogic.And(moves).asInstanceOf[HennessyMilnerLogic.Formula[A]]
         }.toSet
         pruneDominated(moveSet)
-      case game.AttackerObservation(_, _, game.ConjunctMove) =>
+      case game.AttackerObservation(_, _, game.ConjunctMove) | game.AttackerObservation(_, _, game.WeakConjunctMove) =>
         possibleMoves.flatten.toSet
       case game.AttackerObservation(_, _, game.NegationMove) =>
-        pruneDominated(possibleMoves.flatten.map(HennessyMilnerLogic.Negate(_)).toSet)
+        pruneDominated(possibleMoves.flatten.toSet.map(HennessyMilnerLogic.Negate[A](_)))
       case game.AttackerObservation(_, _, game.ObservationMove(a)) =>
         pruneDominated(possibleMoves.flatten.toSet.map(HennessyMilnerLogic.Observe[A](a, _)))
+      case game.AttackerObservation(_, _, game.WeakObservationMove(a)) =>
+        pruneDominated(possibleMoves.flatten.toSet.map(HennessyMilnerLogic.WeakObserve[A](a, _)))
     }
   }
 
-  def nodeIsRelevantForResults(game: AbstractSpectroscopyGame[S, A, L], gn: GameNode): Boolean = gn match {
-    case game.AttackerObservation(p, qq, kind) => (kind == game.ConjunctMove && qq.size == 1)
-    case _ => false
-  }
-
-  override def pruneDominated(oldFormulas: Set[HennessyMilnerLogic.Formula[A]]) = {
-    val formulaClasses = for {
-      f <- oldFormulas
-    } yield f.getRootClass()
-    for {
-      f <- oldFormulas
-      cl = f.getRootClass()
-      if !formulaClasses.exists(clOther => cl.strictlyAbove(clOther))
-    } yield {
-      f
-    }
-  }
-
-  def buildHML(game: AbstractSpectroscopyGame[S, A, L], win: Set[GameNode], nodes: Set[GameNode]) = {
+  // copied from superclass but referring to new buildStrategyFormulas
+  override def buildHML(game: AbstractSpectroscopyGame[S, A, L], win: Set[GameNode], nodes: Set[GameNode]) = {
 
     val attackGraphBuilder = new AttackGraphBuilder[Set[HennessyMilnerLogic.Formula[A]]]()
 
@@ -83,11 +71,9 @@ class PositionalSpectroscopy[S, A, L] (
     minPrices
   }
 
-  def gameEdgeToLabel(game: AbstractSpectroscopyGame[S, A, L], gn1: GameNode, gn2: GameNode): String = ""
+  override def compute() = {
 
-  def compute() = {
-
-    val hmlGame = new SpectroscopyGame(ts, List((nodes(0), Set(nodes(1))), (nodes(1), Set(nodes(0)))))
+    val hmlGame = new WeakSpectroscopyGame(ts, List((nodes(0), Set(nodes(1))), (nodes(1), Set(nodes(0)))))
 
     debugLog("HML spectroscopy game size: " + hmlGame.discovered.size)
 
