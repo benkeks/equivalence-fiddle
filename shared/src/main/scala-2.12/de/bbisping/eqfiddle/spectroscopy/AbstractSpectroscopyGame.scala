@@ -13,9 +13,6 @@ abstract class AbstractSpectroscopyGame[S, A, L](val ts: WeakTransitionSystem[S,
   case class ObservationMove(a: A) extends MoveKind {
     override def toString() = "⟨" + a + "⟩"
   }
-  case class WeakObservationMove(a: A) extends MoveKind {
-    override def toString() = "⟪" + a + "⟫"
-  }
   case object ConjunctMove extends MoveKind {
     override def toString() = "⋀"
   }

@@ -27,7 +27,7 @@ object HennessyMilnerLogic {
       ObservationClass(
         conjunctionLevels = obsClass.conjunctionLevels + (if (!isPositive) 1 else 0),
         //immediateConjunctions = if (!isPositive) 1 else 0,
-        //immediateClauses = if (this.isImmediate) 1 else 0
+        immediateClauses = if (this.isImmediate) 1 else 0
       ) lub obsClass
     }
 
@@ -114,7 +114,7 @@ object HennessyMilnerLogic {
       } else {
         val positiveSubterms = subterms.filter(_.isPositive)
         val positiveFlatCount = positiveSubterms.count(_.obsClass.observationHeight <= 1)
-        val immediateClauseCount = subterms.count(_.isImmediate)
+        val immediateClauseCount = if (subterms.size > 1) subterms.count(_.isImmediate) else 0
 
         ObservationClass(
           observationHeight = subterms.map(_.obsClass.observationHeight).max,
@@ -147,20 +147,7 @@ object HennessyMilnerLogic {
       observationHeight = andThen.obsClass.observationHeight + 1,
       conjunctionLevels = if (!andThen.isPositive) andThen.obsClass.conjunctionLevels + 1 else 0,
       immediateConjunctions = andThen match { case Observe(_, _) => 2; case _ if andThen.isImmediate => 1; case _ => 0},
-      immediateClauses = 1
-    ) lub andThen.obsClass
-  }
-
-  case class WeakObserve[A](action: A, andThen: Formula[A]) extends Formula[A] {
-    override def toString = "⟪" + action.toString + "⟫" + andThen.toString
-
-    override val isPositive = true
-
-    override val isImmediate = false
-    override val obsClass = ObservationClass(
-      observationHeight = andThen.obsClass.observationHeight + 1,
-      conjunctionLevels = if (!andThen.isPositive) andThen.obsClass.conjunctionLevels + 1 else 0,
-      immediateConjunctions = andThen match { case Observe(_, _) => 2; case _ if andThen.isImmediate => 1; case _ => 0}
+      //immediateClauses = 1
     ) lub andThen.obsClass
   }
 

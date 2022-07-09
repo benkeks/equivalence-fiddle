@@ -36,8 +36,6 @@ class WeakPositionalSpectroscopy[S, A, L] (
         pruneDominated(possibleMoves.flatten.toSet.map(HennessyMilnerLogic.Negate[A](_)))
       case game.AttackerObservation(_, _, game.ObservationMove(a)) =>
         pruneDominated(possibleMoves.flatten.toSet.map(HennessyMilnerLogic.Observe[A](a, _)))
-      case game.AttackerObservation(_, _, game.WeakObservationMove(a)) =>
-        pruneDominated(possibleMoves.flatten.toSet.map(HennessyMilnerLogic.WeakObserve[A](a, _)))
     }
   }
 

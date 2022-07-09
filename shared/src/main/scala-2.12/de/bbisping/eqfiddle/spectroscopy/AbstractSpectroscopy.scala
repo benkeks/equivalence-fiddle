@@ -27,7 +27,7 @@ abstract class AbstractSpectroscopy[S, A, L] (
   def compute(): SpectroscopyResult[S,A]
 
   /* Discards distinguishing formulas that do not contribute “extreme” distinguishing notions of equivalence */
-  val discardLanguageDominatedResults: Boolean = true
+  val discardLanguageDominatedResults: Boolean = false
 
   def nodeIsRelevantForResults(game: AbstractSpectroscopyGame[S, A, L], gn: GameNode): Boolean
 
@@ -79,9 +79,9 @@ abstract class AbstractSpectroscopy[S, A, L] (
           case game.AttackerObservation(p, qq: Set[_], kind) =>
             val qqString = qq.mkString("{",",","}")
             s"$p, $qqString, $kind"
-          case game.DefenderConjunction(p, qqPart: List[Set[_]], _) =>
+          case game.DefenderConjunction(p, qqPart: List[Set[_]], w) =>
             val qqString = qqPart.map(_.mkString("{",",","}")).mkString("/")
-            s"$p, $qqString"
+            s"$p, $qqString" + (if (w) " w" else "")
           case _ => ""
         }).replaceAllLiterally(".0", "") + (if (formulaString != "") s"\\n------\\n$formulaString" else "")
       }
