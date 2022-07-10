@@ -26,7 +26,7 @@ object HennessyMilnerLogic {
     def getRootClass() = {
       ObservationClass(
         conjunctionLevels = obsClass.conjunctionLevels + (if (!isPositive) 1 else 0),
-        //immediateConjunctions = if (!isPositive) 1 else 0,
+        immediateConjunctions = this match { case Observe(_, _) => 2; case _ if this.isImmediate => 1; case _ => 0},
         immediateClauses = if (this.isImmediate) 1 else 0
       ) lub obsClass
     }

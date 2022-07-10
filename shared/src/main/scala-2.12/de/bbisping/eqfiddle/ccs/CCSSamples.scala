@@ -222,6 +222,14 @@ Pp(x=511, y=590)
 """
 
   val strongWeakSims = """
+P0A = tau.a
+P0B = a
+@compare "P0A, P0B"
+
+P00A = a.tau.tau.b
+P00B = tau.a.b
+@compare "P00A, P00B"
+
 P1A = (tau.b + a)
 P1B = (P1A + b)
 @comment "Delay bisimilar processes" 

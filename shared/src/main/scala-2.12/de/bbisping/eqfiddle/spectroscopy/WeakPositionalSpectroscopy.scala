@@ -38,6 +38,18 @@ class WeakPositionalSpectroscopy[S, A, L] (
     }
   }
 
+  override def pruneDominated(oldFormulas: Set[HennessyMilnerLogic.Formula[A]]) = {
+    val formulaClasses = for {
+      f <- oldFormulas
+    } yield f.getRootClass()
+    for {
+      f <- oldFormulas
+      cl = f.obsClass//getRootClass()
+      if !formulaClasses.exists(clOther => cl.strictlyAbove(clOther))
+    } yield {
+      f
+    }
+  }
   // copied from superclass but referring to new buildStrategyFormulas
   override def buildHML(game: AbstractSpectroscopyGame[S, A, L], win: Set[GameNode], nodes: Set[GameNode]) = {
 
