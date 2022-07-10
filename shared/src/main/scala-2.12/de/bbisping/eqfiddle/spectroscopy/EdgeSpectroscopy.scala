@@ -18,7 +18,7 @@ class EdgeSpectroscopy[S, A, L] (
 
   def buildStrategyFormulas(game: AbstractSpectroscopyGame[S, A, L])(node: GameNode, possibleMoves: Iterable[Set[HennessyMilnerLogic.Formula[A]]]):
       Set[HennessyMilnerLogic.Formula[A]] = node match {
-    case game.DefenderConjunction(_, _, _) if possibleMoves.size != 1 =>
+    case game.DefenderConjunction(_, _) if possibleMoves.size != 1 =>
       val productMoves =
         possibleMoves.foldLeft(Seq(Seq[HennessyMilnerLogic.Formula[A]]()))(
           (b, a) => b.flatMap(i => a.map(j => i ++ Seq(j))))

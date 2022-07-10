@@ -41,7 +41,7 @@ class SpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], init: Iterabl
           dn
         }
       }
-    case DefenderConjunction(p0, qqPart0, _) =>
+    case DefenderConjunction(p0, qqPart0) =>
       for {
         qq0 <- qqPart0
       } yield {

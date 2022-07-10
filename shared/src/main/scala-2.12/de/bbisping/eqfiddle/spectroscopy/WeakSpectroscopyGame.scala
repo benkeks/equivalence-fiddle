@@ -17,8 +17,8 @@ class WeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], init: Ite
         val obsMoves = (
           for {
             (a,pp1) <- ts.post(p0)
-            if moveKind == WeakConjunctMove || !(ts.silentActions(a)) // prohibit strong tau observations
             if moveKind != NegationMove // prohibit strong negated observations
+            if !ts.silentActions(a) // prohibit explicit tau moves
             p1 <- pp1
           } yield {
             AttackerObservation(p1,
@@ -27,22 +27,22 @@ class WeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], init: Ite
             )
           }
         )
-        val negMoves = if (qq0.size == 1 && (moveKind == ConjunctMove || moveKind == WeakConjunctMove)) {
+        val etaLoop = if (qq0.nonEmpty && moveKind != PassingMove) {
+          val qq1 = qq0.flatMap(ts.silentReachable(_))
+          for {
+            p1 <- ts.silentReachable(p0)
+          } yield AttackerObservation(p1, qq1, PassingMove)
+        } else {
+          List()
+        }
+        val negMoves = if (qq0.size == 1 && (moveKind == ConjunctMove)) {
           List(AttackerObservation(qq0.head, Set(p0), NegationMove))
         } else {
           List()
         }
         val p0prime = ts.silentReachable(p0)
-        val qq0prime = qq0.flatMap(ts.silentReachable(_))
         val conjMoves = (
-          for {
-            partList <- selectPartitions(qq0prime).toList
-            p00 <- p0prime
-          } yield {
-            DefenderConjunction(p00, partList, weak = true)
-          }
-        ) ++ (
-          if (moveKind.isInstanceOf[ObservationMove]) {
+          if (moveKind.isInstanceOf[ObservationMove] || moveKind == PassingMove) {
             for {
               partList <- selectPartitions(qq0)
             } yield {
@@ -52,14 +52,13 @@ class WeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], init: Ite
             List()
           }
         )
-        obsMoves ++ negMoves ++ conjMoves
+        obsMoves ++ etaLoop ++ negMoves ++ conjMoves
       }
-    case DefenderConjunction(p0, qqPart0, weak) =>
+    case DefenderConjunction(p0, qqPart0) =>
       for {
         qq0 <- qqPart0
-        post = if (weak) WeakConjunctMove else ConjunctMove
       } yield {
-        AttackerObservation(p0, qq0, post)
+        AttackerObservation(p0, qq0, ConjunctMove)
       }
   }
 
