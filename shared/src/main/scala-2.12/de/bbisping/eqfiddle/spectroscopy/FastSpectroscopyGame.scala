@@ -36,7 +36,7 @@ class FastSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L])
               }
             }
           case DefenderConjunction(p1, qq1) =>
-            List(ObservationClassFast(conjunctionLevels = sP.observationHeight) lub sP)
+            List(ObservationClassFast(conjunctionLevels = sP.conjunctionLevels + 1) lub sP)
         }
       succPrices.flatten
     case defNode: DefenderConjunction =>
