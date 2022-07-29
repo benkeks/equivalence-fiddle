@@ -1,7 +1,7 @@
 
 package de.bbisping.eqfiddle.game
 
-abstract class GameGraphVisualizer(game: SimpleGame with GameDiscovery) {
+abstract class GameGraphVisualizer(game: SimpleGame with AbstractGameDiscovery) {
 
   def nodeToID(gn: SimpleGame.GameNode): String
   def nodeToString(gn: SimpleGame.GameNode): String

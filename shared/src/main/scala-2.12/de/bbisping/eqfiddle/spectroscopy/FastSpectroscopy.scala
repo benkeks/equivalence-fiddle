@@ -7,6 +7,7 @@ import de.bbisping.eqfiddle.game.SimpleGame
 import de.bbisping.eqfiddle.game.SimpleGame.GameNode
 import de.bbisping.eqfiddle.hml.HennessyMilnerLogic
 import de.bbisping.eqfiddle.hml.HMLInterpreter
+import de.bbisping.eqfiddle.game.GameGraphVisualizer
 
 class FastSpectroscopy[S, A, L] (
     ts: WeakTransitionSystem[S, A, L],
@@ -33,8 +34,7 @@ class FastSpectroscopy[S, A, L] (
               val possibleRestoredActions = for {
                 (a, pp1) <- ts.post(p0)
                 if pp1 contains p1
-                qqq1 <- ts.post(qq0).get(a)
-                if qq1 == qqq1
+                if qq1 == ts.post(qq0,a)
               } yield a
               val newPriceBound = ObservationClassFast(price.observationHeight - 1, price.conjunctionLevels, price.maxPositiveConjunctHeight, price.maxNegativeConjunctHeight)
               for {
@@ -71,10 +71,12 @@ class FastSpectroscopy[S, A, L] (
       case defNode: game.DefenderConjunction =>
         val possibleMoves = for {
           s <- game.successors(node)
-          sP <- game.attackerVictoryPrices(s)
-          if sP strictlyBelow price // ensure descent
-        } yield buildHMLWitness(game, s, price)
-
+          sP = game.attackerVictoryPrices(s)
+        } yield if (sP.exists(_ below price)) {
+          buildHMLWitness(game, s, price)
+        } else {
+          Set()
+        }
         val productMoves =
           possibleMoves.foldLeft(Seq(Seq[HennessyMilnerLogic.Formula[A]]()))(
             (b, a) => b.flatMap(i => a.map(j => i ++ Seq(j))))
@@ -99,8 +101,6 @@ class FastSpectroscopy[S, A, L] (
 
     debugLog("HML spectroscopy game size: " + hmlGame.discovered.size)
 
-    debugLog("Best prices: " + hmlGame.attackerVictoryPrices)
-
     for {
       bestPrice <- hmlGame.attackerVictoryPrices(init.head)
       witnessFormula <- buildHMLWitness(hmlGame, init.head, bestPrice)
@@ -108,6 +108,18 @@ class FastSpectroscopy[S, A, L] (
       debugLog("Distinguished under " + witnessFormula.classifyFormula() + " preorder by " + witnessFormula.toString())
       checkDistinguishing(witnessFormula, nodes(0), nodes(1))
     }
+
+    val distinguishingNodeFormulas = for {
+      (node, pricedFormulas) <- distinguishingFormulas
+        .toSet[((GameNode, ObservationClassFast), Set[HennessyMilnerLogic.Formula[A]])]
+        .groupBy(kv => kv._1._1)
+      formulas = for {
+        (_, formulasForPrice) <- pricedFormulas
+        f <- formulasForPrice
+      } yield f
+    } yield (node, formulas)
+
+    debugLog(graphvizGameWithFormulas(hmlGame, hmlGame.attackerVictoryPrices.toMap, distinguishingNodeFormulas))
 
     AbstractSpectroscopy.SpectroscopyResult[S,A](List())
     // val attackerWin = hmlGame.computeWinningRegion()
@@ -141,5 +153,38 @@ class FastSpectroscopy[S, A, L] (
     if (!check(p) || check(q)) {
       System.err.println("Formula " + formula.toString() + " is no sound distinguishing formula! " + check)
     }
+  }
+
+  def graphvizGameWithFormulas(
+      game: FastSpectroscopyGame[S, A, L],
+      attackerVictoryPrices: Map[GameNode, Set[ObservationClassFast]],
+      formulas: Map[GameNode, Set[HennessyMilnerLogic.Formula[A]]]
+  ) = {
+    val visualizer = new GameGraphVisualizer(game) {
+
+      def nodeToID(gn: GameNode): String = gn.hashCode().toString()
+
+      def nodeToString(gn: GameNode): String = {
+        val priceString = attackerVictoryPrices.getOrElse(gn,Set()).map(_.toTuple).mkString(" / ")
+        val formulaString = formulas.getOrElse(gn,Set()).mkString("\\n").replaceAllLiterally("⟩⊤","⟩")
+        (gn match {
+          case game.AttackerObservation(p, qq: Set[_], kind) =>
+            val qqString = qq.mkString("{",",","}")
+            s"$p, $qqString, $kind"
+          case game.DefenderConjunction(p, qq: Set[_]) =>
+            val qqString = qq.mkString("{",",","}")
+            s"$p, $qqString"
+          case _ => ""
+        }).replaceAllLiterally(".0", "") +
+         (if (priceString != "") s"\\n------\\n$priceString" else "") +
+         (if (formulaString != "") s"\\n------\\n$formulaString" else "")
+      }
+
+      def edgeToLabel(gn1: GameNode, gn2: GameNode) = ""//gameEdgeToLabel(game, gn1, gn2)
+    }
+
+    val attackerWin = attackerVictoryPrices.filter(_._2.nonEmpty).keySet.toSet
+
+    visualizer.outputDot(attackerWin)
   }
 }

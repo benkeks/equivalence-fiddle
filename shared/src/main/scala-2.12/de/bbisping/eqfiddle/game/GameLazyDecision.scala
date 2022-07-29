@@ -1,10 +1,10 @@
 package de.bbisping.eqfiddle.game
 
-trait GameLazyDecision[P] {
+trait GameLazyDecision[P] extends AbstractGameDiscovery {
   self: SimpleGame =>
 
   /** part of the game that can be reached from the initial nodes starting in the `initialNodes`. (warning: mutable!) */
-  val discovered = collection.mutable.Set[GameNode]()
+  override val discovered = collection.mutable.Set[GameNode]()
 
   override def predecessors(gn: GameNode): Iterable[GameNode] = computedPredecessors(gn)
   private val computedPredecessors = collection.mutable.Map[GameNode, Set[GameNode]]() withDefaultValue Set()
@@ -69,9 +69,7 @@ trait GameLazyDecision[P] {
         val updatedPrice = computeCurrentPrice(currNode)
         if (priceUpdate(currNode, updatedPrice) ) {
           // propagate a new win
-          println(todo)
           predecessors(currNode).foreach(n =>
-            //if (!(todo contains n))
             n +=: todo)
         }
       }
