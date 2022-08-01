@@ -10,7 +10,7 @@ object HennessyMilnerLogic {
       (f, (_, namedClassBounds)) <- classifications
       classBounds = namedClassBounds.map(_._2)
       // just keep formulas where one of the classifications is dominated by no other classification
-      if classBounds.exists(classBound => !allClassBounds.exists(_ strictlyBelow classBound))
+      if classBounds.exists(classBound => !allClassBounds.exists(_ < classBound))
     } yield f
   }
 
@@ -38,7 +38,7 @@ object HennessyMilnerLogic {
       var currentMax = List[ObservationClass]()
       val leastClassifications = for {
         (name, cl) <- classifications
-        if !currentMax.exists(cl.above(_))
+        if !currentMax.exists(cl >= _)
       } yield {
         currentMax = cl :: currentMax
         (name, cl)

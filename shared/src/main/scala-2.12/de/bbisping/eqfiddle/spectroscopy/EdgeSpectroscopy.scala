@@ -83,13 +83,13 @@ class EdgeSpectroscopy[S, A, L] (
       f <- oldFormulas
       cl = f.getRootClass()
       if f.isInstanceOf[HennessyMilnerLogic.Observe[_]] &&
-          !observationFormulaClasses.exists(clOther => cl.strictlyAbove(clOther)) ||
+          !observationFormulaClasses.exists(clOther => cl > clOther) ||
         f.isInstanceOf[HennessyMilnerLogic.Negate[_]] &&
-          !negationFormulaClasses.exists(clOther => cl.strictlyAbove(clOther)) ||
+          !negationFormulaClasses.exists(clOther => cl > clOther) ||
         f.isInstanceOf[HennessyMilnerLogic.And[_]] &&
-          !observationFormulaClasses.exists(clOther => cl.strictlyAbove(clOther)) &&
-          !negationFormulaClasses.exists(clOther => cl.strictlyAbove(clOther)) &&
-          !conjunctionFormulaClasses.exists(clOther => cl.strictlyAbove(clOther))
+          !observationFormulaClasses.exists(clOther => cl > clOther) &&
+          !negationFormulaClasses.exists(clOther => cl > clOther) &&
+          !conjunctionFormulaClasses.exists(clOther => cl > clOther)
     } yield {
       f
     }

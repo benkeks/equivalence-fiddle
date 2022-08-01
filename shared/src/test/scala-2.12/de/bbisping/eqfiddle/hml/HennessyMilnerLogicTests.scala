@@ -34,7 +34,7 @@ class HennessyMilnerLogicTests extends AnyFunSpec with should.Matchers  {
       Observe("a", Observe("a", True[String])),
       Observe("b", Observe("b", True[String]))))
     it(conj1a + " should be cheaper than " + conj1b) {
-      (conj1a.obsClass strictlyBelow conj1b.obsClass) should be (true)
+      (conj1a.obsClass < conj1b.obsClass) should be (true)
     }
   }
 

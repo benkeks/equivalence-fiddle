@@ -48,7 +48,7 @@ class PositionalSpectroscopy[S, A, L] (
     for {
       f <- oldFormulas
       cl = f.getRootClass()
-      if !formulaClasses.exists(clOther => cl.strictlyAbove(clOther))
+      if !formulaClasses.exists(clOther => cl > clOther)
     } yield {
       f
     }
