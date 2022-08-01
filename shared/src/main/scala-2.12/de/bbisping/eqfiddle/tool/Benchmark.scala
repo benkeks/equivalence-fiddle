@@ -64,7 +64,7 @@ object Benchmark extends App {
       if res.left == n1 && res.right == n2
       (formula, obsClass, notions) <- res.distinctions
     } {
-      println(formula.toString() + " ∈ " + notions.map(_._1).mkString(" ∩ "))
+      println(formula.toString() + " ∈ " + notions.map(_.name).mkString(" ∩ "))
     }
   }
 }

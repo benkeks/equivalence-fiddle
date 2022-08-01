@@ -306,9 +306,9 @@ object Structure {
           res <- result.relationItems.find(r => r.left == n1 && r.right == n2)
           AbstractSpectroscopy.SpectroscopyResultItem(_, _, distinctions, preorderings) = res
         } {
-          val dists = distinctions.map(d => d._1.toString() + d._3.map(_._1).mkString(" (", ",", ")")).mkString("<br>")
-          val preords = preorderings.map(_._1).mkString("<br>")
-          val equations = result.findEqs(n1, n2).map(_._1).mkString("<br>")
+          val dists = distinctions.map(d => d._1.toString() + d._3.map(_.name).mkString(" (", ",", ")")).mkString("<br>")
+          val preords = preorderings.map(_.name).mkString("<br>")
+          val equations = result.findEqs(n1, n2).map(_.name).mkString("<br>")
           val replay = List(
             () => AlgorithmLogging.LogRelation(result.toPreorderingRelation(), s"Preordered by:<div class='preorderings'>$preords</div>"),
             () => AlgorithmLogging.LogRelation(result.toDistinctionRelation(), s"Distinguished by:<div class='distinctions'>$dists</div>"),

@@ -9,46 +9,59 @@ case class ObservationClassFast(
   maxPositiveConjunctHeight: Int = 0,
   /** the maximal height of negative branches (observationHeight)*/
   maxNegativeConjunctHeight: Int = 0
-) {
-  def lub(that: ObservationClassFast) = ObservationClassFast(
-    Integer.max(this.observationHeight, that.observationHeight),
-    Integer.max(this.conjunctionLevels, that.conjunctionLevels),
-    Integer.max(this.maxPositiveConjunctHeight, that.maxPositiveConjunctHeight),
-    Integer.max(this.maxNegativeConjunctHeight, that.maxNegativeConjunctHeight)
-  )
+) extends ObservationClass {
 
-  def glb(that: ObservationClassFast) = ObservationClassFast(
-    Integer.min(this.observationHeight, that.observationHeight),
-    Integer.min(this.conjunctionLevels, that.conjunctionLevels),
-    Integer.min(this.maxPositiveConjunctHeight, that.maxPositiveConjunctHeight),
-    Integer.min(this.maxNegativeConjunctHeight, that.maxNegativeConjunctHeight)
-  )
+  override def tryCompareTo[B >: ObservationClass](that: B)(implicit evidence$1: B => PartiallyOrdered[B]): Option[Int] = {
+    that match {
+      case that: ObservationClassFast =>
+        if (this == that) {
+          Some(0)
+        } else if (
+            this.observationHeight >= that.observationHeight &&
+            this.conjunctionLevels >= that.conjunctionLevels &&
+            this.maxPositiveConjunctHeight >= that.maxPositiveConjunctHeight &&
+            this.maxNegativeConjunctHeight >= that.maxNegativeConjunctHeight) {
+          Some(1)
+        } else if (
+            this.observationHeight <= that.observationHeight &&
+            this.conjunctionLevels <= that.conjunctionLevels &&
+            this.maxPositiveConjunctHeight <= that.maxPositiveConjunctHeight &&
+            this.maxNegativeConjunctHeight <= that.maxNegativeConjunctHeight) {
+          Some(-1)
+        } else {
+          None
+        }
+      case _ => None
+    }
+  }
 
-  def above(that: ObservationClassFast) = (
-    this.observationHeight >= that.observationHeight &&
-    this.conjunctionLevels >= that.conjunctionLevels &&
-    this.maxPositiveConjunctHeight >= that.maxPositiveConjunctHeight &&
-    this.maxNegativeConjunctHeight >= that.maxNegativeConjunctHeight
-  )
+  override def lub[B >: ObservationClassFast](that: B): B = that match {
+    case that: ObservationClassFast =>
+      ObservationClassFast(
+        Integer.max(this.observationHeight, that.observationHeight),
+        Integer.max(this.conjunctionLevels, that.conjunctionLevels),
+        Integer.max(this.maxPositiveConjunctHeight, that.maxPositiveConjunctHeight),
+        Integer.max(this.maxNegativeConjunctHeight, that.maxNegativeConjunctHeight)
+      )
+    case _ => this
+  }
 
-  def strictlyAbove(that: ObservationClassFast) = (this != that) && (this above that)
+  override def glb[B >: ObservationClassFast](that: B): B = that match {
+    case that: ObservationClassFast =>
+      ObservationClassFast(
+        Integer.min(this.observationHeight, that.observationHeight),
+        Integer.min(this.conjunctionLevels, that.conjunctionLevels),
+        Integer.min(this.maxPositiveConjunctHeight, that.maxPositiveConjunctHeight),
+        Integer.min(this.maxNegativeConjunctHeight, that.maxNegativeConjunctHeight)
+      )
+    case _ => this
+  }
 
-  def below(that: ObservationClassFast) = (
-    this.observationHeight <= that.observationHeight &&
-    this.conjunctionLevels <= that.conjunctionLevels &&
-    this.maxPositiveConjunctHeight <= that.maxPositiveConjunctHeight &&
-    this.maxNegativeConjunctHeight <= that.maxNegativeConjunctHeight
-  )
-
-  def strictlyBelow(that: ObservationClassFast) = (this != that) && (this below that)
-
-  def toTuple = (observationHeight, conjunctionLevels, maxPositiveConjunctHeight, maxNegativeConjunctHeight)
+  override def toTuple = (observationHeight, conjunctionLevels, maxPositiveConjunctHeight, maxNegativeConjunctHeight)
 }
 
 object ObservationClassFast {
   val INFTY = Integer.MAX_VALUE
-
-  type EquivalenceNotion = (String, ObservationClassFast)
 
   // observationHeight, conjunctionLevels, maxPosHeight, maxNegHeight
   // The Linear-time Branching-time Spectrum
@@ -64,19 +77,19 @@ object ObservationClassFast {
     "bisimulation" ->       ObservationClassFast(INFTY, INFTY,INFTY,INFTY)
   )
 
-  val LTBTS = BaseLTBTS
+  val LTBTS = Spectrum.fromTuples(BaseLTBTS)
 
-  val LTBTSNotionNames = LTBTS.map(_._1).toSet
 
-  def getSpectrumClass(name: String) = LTBTS.find(_._1 == name)
+  implicit class FastClassifiedFormula[A](formula: HennessyMilnerLogic.Formula[A]) extends ObservationClass.ClassifiedFormula[A] {
 
-  /** given a group of least distinguishing observation classes, tell what weaker ObservationClasses would be the strongest fit to preorder the distinguished states */
-  def getStrongestPreorderClass[A](leastClassifications: Iterable[(String, ObservationClassFast)]): List[(String, ObservationClassFast)] = {
+    override def isImmediate = formula.isImmediate
 
-    val weakerClasses = LTBTS.filterNot { c => leastClassifications.exists(c._2 above _._2) }
-    val mostFitting = weakerClasses.filterNot { c => weakerClasses.exists(_._2 strictlyAbove c._2) }
+    override def isPositive = formula.isPositive
 
-    mostFitting.toList
+    override def obsClass: ObservationClassFast = ObservationClassFast()
+
+    override def getRootClass() = obsClass
+
   }
+
 }
-  

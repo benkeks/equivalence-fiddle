@@ -10,14 +10,18 @@ import de.bbisping.eqfiddle.algo.AlgorithmLogging
 import de.bbisping.eqfiddle.util.LabeledRelation
 import de.bbisping.eqfiddle.game.GameGraphVisualizer
 import de.bbisping.eqfiddle.hml.HennessyMilnerLogic
+import de.bbisping.eqfiddle.hml.ObservationClassWeak
+import de.bbisping.eqfiddle.hml.ObservationClassWeak.WeaklyClassifiedFormula
 
 class EdgeSpectroscopy[S, A, L] (
     ts: WeakTransitionSystem[S, A, L],
     nodes: List[S])
   extends AbstractSpectroscopy[S, A, L](ts, nodes) {
 
-  def buildStrategyFormulas(game: AbstractSpectroscopyGame[S, A, L])(node: GameNode, possibleMoves: Iterable[Set[HennessyMilnerLogic.Formula[A]]]):
-      Set[HennessyMilnerLogic.Formula[A]] = node match {
+  override val spectrum = ObservationClassWeak.LTBTS
+
+  def buildStrategyFormulas(game: AbstractSpectroscopyGame[S, A, L])(node: GameNode, possibleMoves: Iterable[Set[WeaklyClassifiedFormula[A]]]):
+      Set[WeaklyClassifiedFormula[A]] = node match {
     case game.DefenderConjunction(_, _) if possibleMoves.size != 1 =>
       val productMoves =
         possibleMoves.foldLeft(Seq(Seq[HennessyMilnerLogic.Formula[A]]()))(
@@ -25,9 +29,9 @@ class EdgeSpectroscopy[S, A, L] (
       productMoves.map { mv =>
         val moves = mv.toSet
         if (moves.size == 1) {
-          moves.head
+          WeaklyClassifiedFormula(moves.head)
         } else {
-          HennessyMilnerLogic.And(moves).asInstanceOf[HennessyMilnerLogic.Formula[A]]
+          WeaklyClassifiedFormula(HennessyMilnerLogic.And(moves))
         }
       }.toSet
     case _ =>
@@ -44,7 +48,7 @@ class EdgeSpectroscopy[S, A, L] (
     case _ => false
   }
 
-  def moveToHML(game: SpectroscopyGameEdgeLabeled[S, A, L])(n1: GameNode, n2: GameNode, ff: Set[HennessyMilnerLogic.Formula[A]]): Set[HennessyMilnerLogic.Formula[A]] = {
+  def moveToHML(game: SpectroscopyGameEdgeLabeled[S, A, L])(n1: GameNode, n2: GameNode, ff: Set[WeaklyClassifiedFormula[A]]): Set[WeaklyClassifiedFormula[A]] = {
     val kind = game.recordedMoveEdges(n1, n2)
 
     kind match {
@@ -54,15 +58,15 @@ class EdgeSpectroscopy[S, A, L] (
         for {
           f <- ff
           if !f.isInstanceOf[HennessyMilnerLogic.Negate[_]]
-        } yield HennessyMilnerLogic.Negate(f)
+        } yield WeaklyClassifiedFormula(HennessyMilnerLogic.Negate(f))
       case game.ObservationMove(a) =>
-        ff.map(HennessyMilnerLogic.Observe(a, _))
+        ff.map(f => WeaklyClassifiedFormula(HennessyMilnerLogic.Observe(a, f)))
       case game.DefenderMove =>
         ff
     }
   }
 
-  override def pruneDominated(oldFormulas: Set[HennessyMilnerLogic.Formula[A]]) = {
+  override def pruneDominated(oldFormulas: Set[WeaklyClassifiedFormula[A]]) = {
     val observationFormulaClasses = for {
       f <- oldFormulas
       if f.isInstanceOf[HennessyMilnerLogic.Observe[_]]
@@ -97,11 +101,11 @@ class EdgeSpectroscopy[S, A, L] (
 
   def buildHML(game: SpectroscopyGameEdgeLabeled[S, A, L], win: Set[GameNode], nodes: Set[GameNode]) = {
 
-    val attackGraphBuilder = new AttackGraphBuilder[Set[HennessyMilnerLogic.Formula[A]]]()
+    val attackGraphBuilder = new AttackGraphBuilder[Set[WeaklyClassifiedFormula[A]]]()
 
     val attackGraph = attackGraphBuilder.buildAttackGraph(game, win, nodes)
 
-    val accumulatedPrices: Map[GameNode, Set[HennessyMilnerLogic.Formula[A]]] = attackGraphBuilder.accumulatePrices(
+    val accumulatedPrices: Map[GameNode, Set[WeaklyClassifiedFormula[A]]] = attackGraphBuilder.accumulatePrices(
       graph = attackGraph,
       priceCons = moveToHML(game) _,
       pricePick = buildStrategyFormulas(game) _,
@@ -113,12 +117,12 @@ class EdgeSpectroscopy[S, A, L] (
       gn <- game.discovered
       if gn.isInstanceOf[game.AttackerObservation] && !win(gn)
       if nodeIsRelevantForResults(game, gn)
-    } yield (gn, Set[HennessyMilnerLogic.Formula[A]]())
+    } yield (gn, Set[WeaklyClassifiedFormula[A]]())
 
     val minPrices =
       bisimilarNodes.toMap ++
       (if (discardLanguageDominatedResults)
-        accumulatedPrices.mapValues(HennessyMilnerLogic.getLeastDistinguishing(_))
+        accumulatedPrices.mapValues(ff => spectrum.getLeastDistinguishing(ff))
       else
         accumulatedPrices)
 
@@ -143,14 +147,14 @@ class EdgeSpectroscopy[S, A, L] (
 
     if (attackerWin.contains(aLR)) {
       minFormulas(aLR).foreach { f =>
-        debugLog("Distinguished under " + f.classifyFormula() + " preorder by " + f.toString())
+        debugLog("Distinguished under " + spectrum.classifyFormula(f) + " preorder by " + f.toString())
         checkDistinguishing(f, nodes(0), nodes(1))
       }
     }
 
     if (attackerWin.contains(aRL)) {
       minFormulas(aRL).foreach { f =>
-        debugLog("Distinguished under " + f.classifyFormula() + " preorder by " + f.toString())
+        debugLog("Distinguished under " + spectrum.classifyFormula(f) + " preorder by " + f.toString())
         checkDistinguishing(f, nodes(1), nodes(0))
       }
     }

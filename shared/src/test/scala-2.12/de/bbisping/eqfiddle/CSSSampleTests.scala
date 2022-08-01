@@ -12,14 +12,17 @@ import de.bbisping.eqfiddle.ts.WeakTransitionSystem
 import de.bbisping.eqfiddle.algo.AlgorithmLogging
 import de.bbisping.eqfiddle.spectroscopy.AbstractSpectroscopy
 import de.bbisping.eqfiddle.spectroscopy.PositionalSpectroscopy
+import de.bbisping.eqfiddle.hml.Spectrum
 
-trait CSSSampleTests extends AnyFunSpec with should.Matchers  {
+trait CSSSampleTests[OC <: ObservationClass] extends AnyFunSpec with should.Matchers  {
 
   AlgorithmLogging.debugLogActive = false
 
+  def spectrum: Spectrum[OC]
+
   private def toSpectrumClassSet(names: Iterable[String]) = (for {
     n <- names
-    cl <- ObservationClass.getSpectrumClass(n)
+    cl <- spectrum.getSpectrumClass.get(n)
   } yield cl).toSet
 
   def runTest(
@@ -36,18 +39,18 @@ trait CSSSampleTests extends AnyFunSpec with should.Matchers  {
         describe("for " + n1s + " <= " + n2s) {
           val n1 = NodeID(n1s)
           val n2 = NodeID(n2s)
-          val preordsStr = preords.map(_._1)
-          val notPreordsStr = notPreords.map(_._1)
+          val preordsStr = preords.map(_.name)
+          val notPreordsStr = notPreords.map(_.name)
 
           val algo = spectroscopyAlgo(sampleSystem, List(n1, n2))
           val result = algo.compute()
 
-          val foundDistinctions = result.foundDistinctions(n1, n2).map(_._1).toSet
+          val foundDistinctions = result.foundDistinctions(n1, n2).map(_.name).toSet
           it ("should be distinguished by " + notPreordsStr.mkString(",")) {
             (notPreordsStr diff foundDistinctions) should be (empty)
           }
 
-          val foundPreorders = result.foundPreorders(n1, n2).map(_._1).toSet
+          val foundPreorders = result.foundPreorders(n1, n2).map(_.name).toSet
           it ("should exactly be preordered by " + preordsStr.mkString(",")) {
             (foundPreorders diff preordsStr) should be (empty)
             (preordsStr diff foundPreorders) should be (empty)
