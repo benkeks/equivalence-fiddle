@@ -108,19 +108,20 @@ object ObservationClassStrong {
         val positiveSubterms = subterms.filter(_.isPositive)
         val positiveFlatCount = positiveSubterms.count(formulaObsClass(_).observationHeight <= 1)
         val immediateClauseCount = subterms.count(_.isImmediate)
+        val subtermObsClass = subterms.map(formulaObsClass(_))
 
         ObservationClassStrong(
-          observationHeight = subterms.map(formulaObsClass(_).observationHeight).max,
+          observationHeight = subtermObsClass.map(_.observationHeight).max,
           /** the maximal amount of conjunctions when descending into a formula */
-          conjunctionLevels = subterms.map(formulaObsClass(_).conjunctionLevels).max + 1,
+          conjunctionLevels = subtermObsClass.map(_.conjunctionLevels).max + 1,
           /** the maximal amount of positive deep branches (observationHeight > 1)*/
-          maxPositiveDeepBranches = (subterms.map(formulaObsClass(_).maxPositiveDeepBranches) + (positiveSubterms.size - positiveFlatCount)).max,
+          maxPositiveDeepBranches = (subtermObsClass.map(_.maxPositiveDeepBranches) + (positiveSubterms.size - positiveFlatCount)).max,
           /** the maximal amount of positive branches */
-          maxPositiveBranches = (subterms.map(formulaObsClass(_).maxPositiveBranches) + positiveSubterms.size).max,
+          maxPositiveBranches = (subtermObsClass.map(_.maxPositiveBranches) + positiveSubterms.size).max,
           /** the maximal amount of negations when descending into a formula */
-          negationLevels = subterms.map(formulaObsClass(_).negationLevels).max,
+          negationLevels = subtermObsClass.map(_.negationLevels).max,
           /** maximal observationHeight of negative subformulas */
-          maxNegatedHeight = subterms.map(formulaObsClass(_).maxNegatedHeight).max
+          maxNegatedHeight = subtermObsClass.map(_.maxNegatedHeight).max
         )
       }
     case Negate(andThen) =>
