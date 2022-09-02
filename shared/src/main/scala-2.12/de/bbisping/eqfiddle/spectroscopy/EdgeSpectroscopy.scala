@@ -10,18 +10,18 @@ import de.bbisping.eqfiddle.algo.AlgorithmLogging
 import de.bbisping.eqfiddle.util.LabeledRelation
 import de.bbisping.eqfiddle.game.GameGraphVisualizer
 import de.bbisping.eqfiddle.hml.HennessyMilnerLogic
-import de.bbisping.eqfiddle.hml.ObservationClassWeak
-import de.bbisping.eqfiddle.hml.ObservationClassWeak.WeaklyClassifiedFormula
+import de.bbisping.eqfiddle.hml.ObservationClassStrong
+import de.bbisping.eqfiddle.hml.ObservationClassStrong.StronglyClassifiedFormula
 
 class EdgeSpectroscopy[S, A, L] (
     ts: WeakTransitionSystem[S, A, L],
     nodes: List[S])
-  extends AbstractSpectroscopy[S, A, L](ts, nodes) {
+  extends AbstractSpectroscopy[S, A, L, StronglyClassifiedFormula[A]](ts, nodes) {
 
-  override val spectrum = ObservationClassWeak.LTBTS
+  override val spectrum = ObservationClassStrong.LTBTS
 
-  def buildStrategyFormulas(game: AbstractSpectroscopyGame[S, A, L])(node: GameNode, possibleMoves: Iterable[Set[WeaklyClassifiedFormula[A]]]):
-      Set[WeaklyClassifiedFormula[A]] = node match {
+  def buildStrategyFormulas(game: AbstractSpectroscopyGame[S, A, L])(node: GameNode, possibleMoves: Iterable[Set[StronglyClassifiedFormula[A]]]):
+      Set[StronglyClassifiedFormula[A]] = node match {
     case game.DefenderConjunction(_, _) if possibleMoves.size != 1 =>
       val productMoves =
         possibleMoves.foldLeft(Seq(Seq[HennessyMilnerLogic.Formula[A]]()))(
@@ -29,9 +29,9 @@ class EdgeSpectroscopy[S, A, L] (
       productMoves.map { mv =>
         val moves = mv.toSet
         if (moves.size == 1) {
-          WeaklyClassifiedFormula(moves.head)
+          StronglyClassifiedFormula(moves.head)
         } else {
-          WeaklyClassifiedFormula(HennessyMilnerLogic.And(moves))
+          StronglyClassifiedFormula(HennessyMilnerLogic.And(moves))
         }
       }.toSet
     case _ =>
@@ -48,7 +48,7 @@ class EdgeSpectroscopy[S, A, L] (
     case _ => false
   }
 
-  def moveToHML(game: SpectroscopyGameEdgeLabeled[S, A, L])(n1: GameNode, n2: GameNode, ff: Set[WeaklyClassifiedFormula[A]]): Set[WeaklyClassifiedFormula[A]] = {
+  def moveToHML(game: SpectroscopyGameEdgeLabeled[S, A, L])(n1: GameNode, n2: GameNode, ff: Set[StronglyClassifiedFormula[A]]): Set[StronglyClassifiedFormula[A]] = {
     val kind = game.recordedMoveEdges(n1, n2)
 
     kind match {
@@ -58,15 +58,15 @@ class EdgeSpectroscopy[S, A, L] (
         for {
           f <- ff
           if !f.isInstanceOf[HennessyMilnerLogic.Negate[_]]
-        } yield WeaklyClassifiedFormula(HennessyMilnerLogic.Negate(f))
+        } yield StronglyClassifiedFormula(HennessyMilnerLogic.Negate(f))
       case game.ObservationMove(a) =>
-        ff.map(f => WeaklyClassifiedFormula(HennessyMilnerLogic.Observe(a, f)))
+        ff.map(f => StronglyClassifiedFormula(HennessyMilnerLogic.Observe(a, f)))
       case game.DefenderMove =>
         ff
     }
   }
 
-  override def pruneDominated(oldFormulas: Set[WeaklyClassifiedFormula[A]]) = {
+  override def pruneDominated(oldFormulas: Set[StronglyClassifiedFormula[A]]) = {
     val observationFormulaClasses = for {
       f <- oldFormulas
       if f.isInstanceOf[HennessyMilnerLogic.Observe[_]]
@@ -101,11 +101,11 @@ class EdgeSpectroscopy[S, A, L] (
 
   def buildHML(game: SpectroscopyGameEdgeLabeled[S, A, L], win: Set[GameNode], nodes: Set[GameNode]) = {
 
-    val attackGraphBuilder = new AttackGraphBuilder[Set[WeaklyClassifiedFormula[A]]]()
+    val attackGraphBuilder = new AttackGraphBuilder[Set[StronglyClassifiedFormula[A]]]()
 
     val attackGraph = attackGraphBuilder.buildAttackGraph(game, win, nodes)
 
-    val accumulatedPrices: Map[GameNode, Set[WeaklyClassifiedFormula[A]]] = attackGraphBuilder.accumulatePrices(
+    val accumulatedPrices: Map[GameNode, Set[StronglyClassifiedFormula[A]]] = attackGraphBuilder.accumulatePrices(
       graph = attackGraph,
       priceCons = moveToHML(game) _,
       pricePick = buildStrategyFormulas(game) _,
@@ -117,7 +117,7 @@ class EdgeSpectroscopy[S, A, L] (
       gn <- game.discovered
       if gn.isInstanceOf[game.AttackerObservation] && !win(gn)
       if nodeIsRelevantForResults(game, gn)
-    } yield (gn, Set[WeaklyClassifiedFormula[A]]())
+    } yield (gn, Set[StronglyClassifiedFormula[A]]())
 
     val minPrices =
       bisimilarNodes.toMap ++

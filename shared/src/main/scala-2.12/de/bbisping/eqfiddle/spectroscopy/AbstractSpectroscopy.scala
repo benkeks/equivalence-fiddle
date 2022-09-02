@@ -11,25 +11,24 @@ import de.bbisping.eqfiddle.util.LabeledRelation
 import de.bbisping.eqfiddle.game.GameGraphVisualizer
 import de.bbisping.eqfiddle.hml.HennessyMilnerLogic
 import de.bbisping.eqfiddle.hml.ObservationClass
+import de.bbisping.eqfiddle.hml.ObservationClass.ClassifiedFormula
 import de.bbisping.eqfiddle.hml.Spectrum
-import de.bbisping.eqfiddle.hml.ObservationClassWeak
-import de.bbisping.eqfiddle.hml.ObservationClassWeak.WeaklyClassifiedFormula
 import de.bbisping.eqfiddle.hml.HMLInterpreter
 
-abstract class AbstractSpectroscopy[S, A, L] (
+abstract class AbstractSpectroscopy[S, A, L, CF <: ClassifiedFormula[A]] (
     val ts: WeakTransitionSystem[S, A, L],
     val nodes: List[S])
   extends AlgorithmLogging[S] {
 
   import AbstractSpectroscopy._
 
-  def spectrum: Spectrum[ObservationClassWeak]
+  def spectrum: Spectrum[ObservationClass]
 
-  def buildStrategyFormulas(game: AbstractSpectroscopyGame[S, A, L])(node: GameNode, possibleMoves: Iterable[Set[WeaklyClassifiedFormula[A]]]): Set[WeaklyClassifiedFormula[A]]
+  def buildStrategyFormulas(game: AbstractSpectroscopyGame[S, A, L])(node: GameNode, possibleMoves: Iterable[Set[CF]]): Set[CF]
 
-  def pruneDominated(oldFormulas: Set[WeaklyClassifiedFormula[A]]): Set[WeaklyClassifiedFormula[A]]
+  def pruneDominated(oldFormulas: Set[CF]): Set[CF]
 
-  def compute(): SpectroscopyResult[S, A, ObservationClassWeak, WeaklyClassifiedFormula[A]]
+  def compute(): SpectroscopyResult[S, A, ObservationClass, CF]
 
   /* Discards distinguishing formulas that do not contribute “extreme” distinguishing notions of equivalence */
   val discardLanguageDominatedResults: Boolean = false
@@ -38,10 +37,10 @@ abstract class AbstractSpectroscopy[S, A, L] (
 
   def collectSpectroscopyResult(
     game: AbstractSpectroscopyGame[S, A, L],
-    nodeFormulas: Map[GameNode, Set[WeaklyClassifiedFormula[A]]])
-  : SpectroscopyResult[S, A, ObservationClassWeak, WeaklyClassifiedFormula[A]] = {
+    nodeFormulas: Map[GameNode, Set[CF]])
+  : SpectroscopyResult[S, A, ObservationClass, CF] = {
     
-    val bestPreorders: Map[GameNode,List[Spectrum.EquivalenceNotion[ObservationClassWeak]]] = nodeFormulas.mapValues { ffs =>
+    val bestPreorders: Map[GameNode,List[Spectrum.EquivalenceNotion[ObservationClass]]] = nodeFormulas.mapValues { ffs =>
       val classes = ffs.flatMap(spectrum.classifyFormula(_)._2)
       spectrum.getStrongestPreorderClass(classes)
     }
@@ -56,14 +55,14 @@ abstract class AbstractSpectroscopy[S, A, L] (
       distinctionFormulas = nodeFormulas(gn)
       distinctions = for {
         f <- distinctionFormulas.toList
-        (price, eqs) = spectrum.classifyFormula[WeaklyClassifiedFormula[A]](f)
+        (price, eqs) = spectrum.classifyFormula[CF](f)
       } yield (f, price, eqs)
-    } yield SpectroscopyResultItem[S, A, ObservationClassWeak, WeaklyClassifiedFormula[A]](p, q, distinctions, preorders)
+    } yield SpectroscopyResultItem[S, A, ObservationClass, CF](p, q, distinctions, preorders)
 
     SpectroscopyResult(spectroResults.toList, spectrum)
   }
 
-  def checkDistinguishing(formula: WeaklyClassifiedFormula[A], p: S, q: S) = {
+  def checkDistinguishing(formula: CF, p: S, q: S) = {
     val hmlInterpreter = new HMLInterpreter(ts)
     val check = hmlInterpreter.isTrueAt(formula, List(p, q))
     if (!check(p) || check(q)) {
@@ -73,7 +72,7 @@ abstract class AbstractSpectroscopy[S, A, L] (
 
   def gameEdgeToLabel(game: AbstractSpectroscopyGame[S, A, L], gn1: GameNode, gn2: GameNode): String
 
-  def graphvizGameWithFormulas(game: AbstractSpectroscopyGame[S, A, L], win: Set[GameNode], formulas: Map[GameNode, Set[WeaklyClassifiedFormula[A]]]) = {
+  def graphvizGameWithFormulas(game: AbstractSpectroscopyGame[S, A, L], win: Set[GameNode], formulas: Map[GameNode, Set[CF]]) = {
     val visualizer = new GameGraphVisualizer(game) {
 
       def nodeToID(gn: GameNode): String = gn.hashCode().toString()
@@ -101,7 +100,7 @@ abstract class AbstractSpectroscopy[S, A, L] (
 
 object AbstractSpectroscopy {
 
-  case class SpectroscopyResultItem[S, A, OC <: ObservationClass, OF <: ObservationClass.ClassifiedFormula[A]](
+  case class SpectroscopyResultItem[S, A, +OC <: ObservationClass, +OF <: ObservationClass.ClassifiedFormula[A]](
     left: S,
     right: S,
     distinctions: List[(OF, OC, List[Spectrum.EquivalenceNotion[OC]])],
@@ -124,7 +123,7 @@ object AbstractSpectroscopy {
     }
   }
 
-  case class SpectroscopyResult[S, A, OC <: ObservationClass, OF <: ObservationClass.ClassifiedFormula[A]](
+  case class SpectroscopyResult[S, A, +OC <: ObservationClass, +OF <: ObservationClass.ClassifiedFormula[A]](
       val relationItems: List[SpectroscopyResultItem[S, A, OC, OF]], val spectrum: Spectrum[OC]) {
 
     def toDistinctionRelation() = {

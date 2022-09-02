@@ -2,11 +2,12 @@ package de.bbisping.eqfiddle
 
 import de.bbisping.eqfiddle.spectroscopy.PositionalSpectroscopy
 import de.bbisping.eqfiddle.spectroscopy.EdgeSpectroscopy
-import de.bbisping.eqfiddle.hml.ObservationClassWeak
+import de.bbisping.eqfiddle.hml.ObservationClassStrong
+import de.bbisping.eqfiddle.hml.ObservationClassStrong.StronglyClassifiedFormula
 
 
-class EdgeCaseTests extends CSSSampleTests[ObservationClassWeak] {
-  override val spectrum = ObservationClassWeak.LTBTS
+class EdgeCaseTests extends CSSSampleTests[ObservationClassStrong, StronglyClassifiedFormula[String]] {
+  override val spectrum = ObservationClassStrong.LTBTS
   
   val reviewSystem = TestSamples.samples.find(_._1 == "review-counterexamples").get._2
 

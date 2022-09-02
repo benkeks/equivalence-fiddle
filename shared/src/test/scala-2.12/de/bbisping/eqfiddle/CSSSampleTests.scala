@@ -8,13 +8,14 @@ import org.scalatest.matchers.should
 import de.bbisping.eqfiddle.tool.model.NodeID
 import de.bbisping.eqfiddle.util.Relation
 import de.bbisping.eqfiddle.hml.ObservationClass
+import de.bbisping.eqfiddle.hml.ObservationClass.ClassifiedFormula
 import de.bbisping.eqfiddle.ts.WeakTransitionSystem
 import de.bbisping.eqfiddle.algo.AlgorithmLogging
 import de.bbisping.eqfiddle.spectroscopy.AbstractSpectroscopy
 import de.bbisping.eqfiddle.spectroscopy.PositionalSpectroscopy
 import de.bbisping.eqfiddle.hml.Spectrum
 
-trait CSSSampleTests[OC <: ObservationClass] extends AnyFunSpec with should.Matchers  {
+trait CSSSampleTests[OC <: ObservationClass, CF <: ClassifiedFormula[String]] extends AnyFunSpec with should.Matchers  {
 
   AlgorithmLogging.debugLogActive = false
 
@@ -28,7 +29,7 @@ trait CSSSampleTests[OC <: ObservationClass] extends AnyFunSpec with should.Matc
   def runTest(
       sampleSystem: WeakTransitionSystem[NodeID,String,String],
       sampleNames: List[(String, String, List[String], List[String])],
-      spectroscopyAlgo: (WeakTransitionSystem[NodeID,String,String], List[NodeID]) => AbstractSpectroscopy[NodeID,String,String],
+      spectroscopyAlgo: (WeakTransitionSystem[NodeID,String,String], List[NodeID]) => AbstractSpectroscopy[NodeID,String,String,CF],
       title: String) = {
     val samples = sampleNames.map {
       case (n1, n2, preords, notPreords) =>

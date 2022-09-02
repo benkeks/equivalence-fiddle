@@ -1,18 +1,18 @@
 package de.bbisping.eqfiddle.hml
 
 object Spectrum {
-  case class EquivalenceNotion[OC <: ObservationClass](name: String, obsClass: OC)
+  case class EquivalenceNotion[+OC <: ObservationClass](name: String, obsClass: OC)
 
   def fromTuples[OC <: ObservationClass](pairs: List[(String, OC)]) = {
     new Spectrum(pairs.map(p => EquivalenceNotion(p._1, p._2)))
   }
 }
 
-case class Spectrum[OC <: ObservationClass](notions: List[Spectrum.EquivalenceNotion[OC]]) {
+case class Spectrum[+OC <: ObservationClass](notions: List[Spectrum.EquivalenceNotion[OC]]) {
   import Spectrum._
 
   /** given a group of least distinguishing observation classes, tell what weaker ObservationClasses would be the strongest fit to preorder the distinguished states */
-  def getStrongestPreorderClass[A](leastClassifications: Iterable[EquivalenceNotion[OC]]): List[EquivalenceNotion[OC]] = {
+  def getStrongestPreorderClass[A](leastClassifications: Iterable[EquivalenceNotion[ObservationClass]]): List[EquivalenceNotion[OC]] = {
 
     val weakerClasses = notions.filterNot { c => leastClassifications.exists(c.obsClass >= _.obsClass) }
     val mostFitting = weakerClasses.filterNot { c => weakerClasses.exists(_.obsClass > c.obsClass) }

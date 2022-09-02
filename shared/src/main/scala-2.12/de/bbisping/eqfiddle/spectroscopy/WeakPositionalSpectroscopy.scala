@@ -16,7 +16,7 @@ import de.bbisping.eqfiddle.hml.ObservationClassWeak.WeaklyClassifiedFormula
 class WeakPositionalSpectroscopy[S, A, L] (
     ts: WeakTransitionSystem[S, A, L],
     nodes: List[S])
-  extends PositionalSpectroscopy[S, A, L](ts, nodes) {
+  extends AbstractSpectroscopy[S, A, L, WeaklyClassifiedFormula[A]](ts, nodes) {
 
   override val spectrum = ObservationClassWeak.LTBTS
 
@@ -54,8 +54,8 @@ class WeakPositionalSpectroscopy[S, A, L] (
       f
     }
   }
-  // copied from superclass but referring to new buildStrategyFormulas
-  override def buildHML(game: AbstractSpectroscopyGame[S, A, L], win: Set[GameNode], nodes: Set[GameNode]) = {
+
+  def buildHML(game: AbstractSpectroscopyGame[S, A, L], win: Set[GameNode], nodes: Set[GameNode]) = {
 
     val attackGraphBuilder = new AttackGraphBuilder[Set[WeaklyClassifiedFormula[A]]]()
 
@@ -83,6 +83,13 @@ class WeakPositionalSpectroscopy[S, A, L] (
 
     minPrices
   }
+
+  def nodeIsRelevantForResults(game: AbstractSpectroscopyGame[S, A, L], gn: GameNode): Boolean = gn match {
+    case game.AttackerObservation(p, qq, kind) => (kind == game.ConjunctMove && qq.size == 1)
+    case _ => false
+  }
+
+  def gameEdgeToLabel(game: AbstractSpectroscopyGame[S, A, L], gn1: GameNode, gn2: GameNode): String = ""
 
   override def compute() = {
 
