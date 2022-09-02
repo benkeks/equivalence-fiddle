@@ -126,65 +126,58 @@ object ObservationClassWeak {
     "strong-bisimulation" ->   ObservationClassWeak(INFTY, INFTY,INFTY,INFTY,INFTY,INFTY,INFTY,INFTY)
   )
 
-  val LTBTS = Spectrum.fromTuples(WeakLTBTS ++ SpecialWeakEqs)
+  val LTBTS = Spectrum.fromTuples(WeakLTBTS ++ SpecialWeakEqs, getFormulaRootClass)
 
-  implicit class WeaklyClassifiedFormula[A](formula: HennessyMilnerLogic.Formula[A]) extends ObservationClass.ClassifiedFormula[A] {
+  def formulaObsClass(formula: HennessyMilnerLogic.Formula[_]): ObservationClassWeak = formula match {
+    case And(subterms) =>
+      if (subterms.isEmpty) {
+        ObservationClassWeak()
+      } else {
+        val positiveSubterms = subterms.filter(_.isPositive)
+        val positiveFlatCount = positiveSubterms.count(formulaObsClass(_).observationHeight <= 1)
+        val immediateClauseCount = subterms.count(_.isImmediate)
 
-    override def isImmediate = formula.isImmediate
-
-    override def isPositive = formula.isPositive
-
-    override def obsClass: ObservationClassWeak = formula match {
-      case And(subterms) =>
-        if (subterms.isEmpty) {
-          ObservationClassWeak()
-        } else {
-          val positiveSubterms = subterms.filter(_.isPositive)
-          val positiveFlatCount = positiveSubterms.count(_.obsClass.observationHeight <= 1)
-          val immediateClauseCount = subterms.count(_.isImmediate)
-
-          ObservationClassWeak(
-            observationHeight = subterms.map(_.obsClass.observationHeight).max,
-            /** the maximal amount of conjunctions when descending into a formula */
-            conjunctionLevels = subterms.map(_.obsClass.conjunctionLevels).max + 1,
-            /** the maximal amount of positive deep branches (observationHeight > 1)*/
-            maxPositiveDeepBranches = (subterms.map(_.obsClass.maxPositiveDeepBranches) + (positiveSubterms.size - positiveFlatCount)).max,
-            /** the maximal amount of positive branches */
-            maxPositiveBranches = (subterms.map(_.obsClass.maxPositiveBranches) + positiveSubterms.size).max,
-            /** the maximal amount of negations when descending into a formula */
-            negationLevels = subterms.map(_.obsClass.negationLevels).max,
-            /** maximal observationHeight of negative subformulas */
-            maxNegatedHeight = subterms.map(_.obsClass.maxNegatedHeight).max,
-            immediateConjunctions = (subterms.map(_.obsClass.immediateConjunctions)).max,
-            immediateClauses = (subterms.map(_.obsClass.immediateClauses) + immediateClauseCount).max
-          )
-        }
-      case Negate(andThen) =>
-        val andThenClass = andThen.obsClass.asInstanceOf[ObservationClassWeak]
         ObservationClassWeak(
-          conjunctionLevels = andThenClass.conjunctionLevels + (if (!andThen.isPositive) 1 else 0),
-          negationLevels = andThenClass.negationLevels + 1,
-          maxNegatedHeight = andThenClass.observationHeight
-        ) lub andThenClass
-      case Observe(action, andThen) =>
-        val andThenClass = andThen.obsClass.asInstanceOf[ObservationClassWeak]
-        ObservationClassWeak(
-          observationHeight = andThenClass.observationHeight + 1,
-          conjunctionLevels = if (!andThen.isPositive) andThenClass.conjunctionLevels + 1 else 0,
-          immediateConjunctions = andThen match { case Observe(_, _) => 2; case And(subs) if subs.exists(_.isImmediate) => 2; case _ if andThen.isImmediate => 1; case _ => 0},
-        ) lub andThenClass
-      case Pass(andThen) =>
-        andThen.obsClass
-    }
-
-    /** class of this formula if it appears at the top level */
-    override def getRootClass() = {
+          observationHeight = subterms.map(formulaObsClass(_).observationHeight).max,
+          /** the maximal amount of conjunctions when descending into a formula */
+          conjunctionLevels = subterms.map(formulaObsClass(_).conjunctionLevels).max + 1,
+          /** the maximal amount of positive deep branches (observationHeight > 1)*/
+          maxPositiveDeepBranches = (subterms.map(formulaObsClass(_).maxPositiveDeepBranches) + (positiveSubterms.size - positiveFlatCount)).max,
+          /** the maximal amount of positive branches */
+          maxPositiveBranches = (subterms.map(formulaObsClass(_).maxPositiveBranches) + positiveSubterms.size).max,
+          /** the maximal amount of negations when descending into a formula */
+          negationLevels = subterms.map(formulaObsClass(_).negationLevels).max,
+          /** maximal observationHeight of negative subformulas */
+          maxNegatedHeight = subterms.map(formulaObsClass(_).maxNegatedHeight).max,
+          immediateConjunctions = (subterms.map(formulaObsClass(_).immediateConjunctions)).max,
+          immediateClauses = (subterms.map(formulaObsClass(_).immediateClauses) + immediateClauseCount).max
+        )
+      }
+    case Negate(andThen) =>
+      val andThenClass = formulaObsClass(andThen)
       ObservationClassWeak(
-        conjunctionLevels = obsClass.asInstanceOf[ObservationClassWeak].conjunctionLevels + (if (!isPositive) 1 else 0),
-        immediateConjunctions = formula match { case HennessyMilnerLogic.Observe(_, _) => 2; case _ if formula.isImmediate => 1; case _ => 0},
-        immediateClauses = if (formula.isImmediate) 1 else 0
-      ) lub obsClass
-    }
+        conjunctionLevels = andThenClass.conjunctionLevels + (if (!andThen.isPositive) 1 else 0),
+        negationLevels = andThenClass.negationLevels + 1,
+        maxNegatedHeight = andThenClass.observationHeight
+      ) lub andThenClass
+    case Observe(action, andThen) =>
+      val andThenClass = formulaObsClass(andThen)
+      ObservationClassWeak(
+        observationHeight = andThenClass.observationHeight + 1,
+        conjunctionLevels = if (!andThen.isPositive) andThenClass.conjunctionLevels + 1 else 0,
+        immediateConjunctions = andThen match { case Observe(_, _) => 2; case And(subs) if subs.exists(_.isImmediate) => 2; case _ if andThen.isImmediate => 1; case _ => 0},
+      ) lub andThenClass
+    case Pass(andThen) =>
+      formulaObsClass(andThen)
+  }
 
+  /** class of this formula if it appears at the top level */
+  def getFormulaRootClass(f: HennessyMilnerLogic.Formula[_]) = {
+    val fc = formulaObsClass(f)
+    ObservationClassWeak(
+      conjunctionLevels = fc.asInstanceOf[ObservationClassWeak].conjunctionLevels + (if (!f.isPositive) 1 else 0),
+      immediateConjunctions = f match { case HennessyMilnerLogic.Observe(_, _) => 2; case _ if f.isImmediate => 1; case _ => 0},
+      immediateClauses = if (f.isImmediate) 1 else 0
+    ) lub fc
   }
 }

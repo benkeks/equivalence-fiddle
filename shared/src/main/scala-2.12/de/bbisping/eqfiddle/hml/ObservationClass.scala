@@ -10,13 +10,4 @@ trait ObservationClass extends PartiallyOrdered[ObservationClass] {
 }
 
 object ObservationClass {
-
-  trait ClassifiedFormula[A] extends HennessyMilnerLogic.Formula[A] {
-
-    def obsClass: ObservationClass
-
-    /** class of this formula if it appears at the top level */
-    def getRootClass(): ObservationClass
-
-  }
 }

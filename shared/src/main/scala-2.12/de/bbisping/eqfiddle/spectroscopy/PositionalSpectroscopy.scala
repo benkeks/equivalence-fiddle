@@ -10,17 +10,20 @@ import de.bbisping.eqfiddle.algo.AlgorithmLogging
 import de.bbisping.eqfiddle.util.LabeledRelation
 import de.bbisping.eqfiddle.game.GameGraphVisualizer
 import de.bbisping.eqfiddle.hml.HennessyMilnerLogic
+import de.bbisping.eqfiddle.hml.HennessyMilnerLogic.Formula
 import de.bbisping.eqfiddle.hml.ObservationClassStrong
-import de.bbisping.eqfiddle.hml.ObservationClassStrong.StronglyClassifiedFormula
 
 class PositionalSpectroscopy[S, A, L] (
     ts: WeakTransitionSystem[S, A, L],
     nodes: List[S])
-  extends AbstractSpectroscopy[S, A, L, StronglyClassifiedFormula[A]](ts, nodes) {
+  extends AbstractSpectroscopy[S, A, L, Formula[A]](ts, nodes) {
 
   override val spectrum = ObservationClassStrong.LTBTS
 
-  def buildStrategyFormulas(game: AbstractSpectroscopyGame[S, A, L])(node: GameNode, possibleMoves: Iterable[Set[StronglyClassifiedFormula[A]]]): Set[StronglyClassifiedFormula[A]] = {
+  def buildStrategyFormulas
+    (game: AbstractSpectroscopyGame[S, A, L])
+    (node: GameNode, possibleMoves: Iterable[Set[Formula[A]]])
+  : Set[Formula[A]] = {
     node match {
       case game.DefenderConjunction(_, _) =>
         val productMoves =
@@ -28,15 +31,17 @@ class PositionalSpectroscopy[S, A, L] (
             (b, a) => b.flatMap(i => a.map(j => i ++ Seq(j))))
         val moveSet = productMoves.map { mv =>
           val moves = mv.toSet
-          StronglyClassifiedFormula(HennessyMilnerLogic.And(moves))
+          HennessyMilnerLogic.And(moves).asInstanceOf[HennessyMilnerLogic.Formula[A]]
         }.toSet
         pruneDominated(moveSet)
       case game.AttackerObservation(_, _, game.ConjunctMove) =>
         possibleMoves.flatten.toSet
       case game.AttackerObservation(_, _, game.NegationMove) =>
-        pruneDominated(possibleMoves.flatten.map(f => StronglyClassifiedFormula(HennessyMilnerLogic.Negate(f))).toSet)
+        pruneDominated(possibleMoves.flatten.toSet[HennessyMilnerLogic.Formula[A]].map(
+          f => HennessyMilnerLogic.Negate(f).asInstanceOf[HennessyMilnerLogic.Formula[A]])
+        ).toSet
       case game.AttackerObservation(_, _, game.ObservationMove(a)) =>
-        pruneDominated(possibleMoves.flatten.toSet[StronglyClassifiedFormula[A]].map(f => StronglyClassifiedFormula(HennessyMilnerLogic.Observe[A](a, f))))
+        pruneDominated(possibleMoves.flatten.toSet.map(f => HennessyMilnerLogic.Observe[A](a, f)))
     }
   }
 
@@ -45,13 +50,13 @@ class PositionalSpectroscopy[S, A, L] (
     case _ => false
   }
 
-  override def pruneDominated(oldFormulas: Set[StronglyClassifiedFormula[A]]) = {
+  override def pruneDominated(oldFormulas: Set[Formula[A]]) = {
     val formulaClasses = for {
       f <- oldFormulas
-    } yield f.getRootClass()
+    } yield spectrum.classifier(f)
     for {
       f <- oldFormulas
-      cl = f.getRootClass()
+      cl = spectrum.classifier(f)
       if !formulaClasses.exists(clOther => cl > clOther)
     } yield {
       f
@@ -60,11 +65,11 @@ class PositionalSpectroscopy[S, A, L] (
 
   def buildHML(game: AbstractSpectroscopyGame[S, A, L], win: Set[GameNode], nodes: Set[GameNode]) = {
 
-    val attackGraphBuilder = new AttackGraphBuilder[Set[StronglyClassifiedFormula[A]]]()
+    val attackGraphBuilder = new AttackGraphBuilder[Set[Formula[A]]]()
 
     val attackGraph = attackGraphBuilder.buildAttackGraph(game, win, nodes)
 
-    val accumulatedPrices: Map[GameNode, Set[StronglyClassifiedFormula[A]]] = attackGraphBuilder.accumulateNodePrices(
+    val accumulatedPrices: Map[GameNode, Set[Formula[A]]] = attackGraphBuilder.accumulateNodePrices(
       graph = attackGraph,
       pricePick = buildStrategyFormulas(game) _,
       supPrice = Set(),
@@ -75,7 +80,7 @@ class PositionalSpectroscopy[S, A, L] (
       gn <- game.discovered
       if gn.isInstanceOf[game.AttackerObservation] && !win(gn)
       if nodeIsRelevantForResults(game, gn)
-    } yield (gn, Set[StronglyClassifiedFormula[A]]())
+    } yield (gn, Set[Formula[A]]())
 
     val minPrices =
       bisimilarNodes.toMap ++

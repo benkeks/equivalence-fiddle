@@ -8,14 +8,14 @@ import org.scalatest.matchers.should
 import de.bbisping.eqfiddle.tool.model.NodeID
 import de.bbisping.eqfiddle.util.Relation
 import de.bbisping.eqfiddle.hml.ObservationClass
-import de.bbisping.eqfiddle.hml.ObservationClass.ClassifiedFormula
 import de.bbisping.eqfiddle.ts.WeakTransitionSystem
 import de.bbisping.eqfiddle.algo.AlgorithmLogging
 import de.bbisping.eqfiddle.spectroscopy.AbstractSpectroscopy
 import de.bbisping.eqfiddle.spectroscopy.PositionalSpectroscopy
 import de.bbisping.eqfiddle.hml.Spectrum
+import de.bbisping.eqfiddle.hml.HennessyMilnerLogic
 
-trait CSSSampleTests[OC <: ObservationClass, CF <: ClassifiedFormula[String]] extends AnyFunSpec with should.Matchers  {
+trait CSSSampleTests[OC <: ObservationClass, CF <: HennessyMilnerLogic.Formula[String]] extends AnyFunSpec with should.Matchers  {
 
   AlgorithmLogging.debugLogActive = false
 

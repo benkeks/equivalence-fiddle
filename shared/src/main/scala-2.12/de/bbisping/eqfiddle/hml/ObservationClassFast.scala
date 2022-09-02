@@ -77,19 +77,10 @@ object ObservationClassFast {
     "bisimulation" ->       ObservationClassFast(INFTY, INFTY,INFTY,INFTY)
   )
 
-  val LTBTS = Spectrum.fromTuples(BaseLTBTS)
+  val LTBTS = Spectrum.fromTuples(BaseLTBTS, getFormulaRootClass)
 
+  def formulaObsClass(f: HennessyMilnerLogic.Formula[_]): ObservationClassFast = ObservationClassFast()
 
-  implicit class FastClassifiedFormula[A](formula: HennessyMilnerLogic.Formula[A]) extends ObservationClass.ClassifiedFormula[A] {
-
-    override def isImmediate = formula.isImmediate
-
-    override def isPositive = formula.isPositive
-
-    override def obsClass: ObservationClassFast = ObservationClassFast()
-
-    override def getRootClass() = obsClass
-
-  }
+  def getFormulaRootClass(f: HennessyMilnerLogic.Formula[_]) = formulaObsClass(f)
 
 }

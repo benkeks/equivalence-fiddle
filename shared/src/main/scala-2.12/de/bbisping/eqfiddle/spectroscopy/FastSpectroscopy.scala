@@ -9,7 +9,6 @@ import de.bbisping.eqfiddle.hml.HennessyMilnerLogic
 import de.bbisping.eqfiddle.hml.HMLInterpreter
 import de.bbisping.eqfiddle.game.GameGraphVisualizer
 import de.bbisping.eqfiddle.hml.ObservationClassFast
-import de.bbisping.eqfiddle.hml.ObservationClassFast.FastClassifiedFormula
 
 class FastSpectroscopy[S, A, L] (
     ts: WeakTransitionSystem[S, A, L],
@@ -90,7 +89,7 @@ class FastSpectroscopy[S, A, L] (
     }
   })
 
-  def compute(): AbstractSpectroscopy.SpectroscopyResult[S, A, ObservationClassFast, FastClassifiedFormula[A]] = {
+  def compute(): AbstractSpectroscopy.SpectroscopyResult[S, A, ObservationClassFast, HennessyMilnerLogic.Formula[A]] = {
 
     val hmlGame = new FastSpectroscopyGame(ts)
 
@@ -108,7 +107,7 @@ class FastSpectroscopy[S, A, L] (
       bestPrice <- hmlGame.attackerVictoryPrices(init.head)
       witnessFormula <- buildHMLWitness(hmlGame, init.head, bestPrice)
     } {
-      debugLog("Distinguished under " + spectrum.classifyFormula(FastClassifiedFormula(witnessFormula)) + " preorder by " + witnessFormula.toString())
+      debugLog("Distinguished under " + spectrum.classifyFormula(witnessFormula) + " preorder by " + witnessFormula.toString())
       checkDistinguishing(witnessFormula, nodes(0), nodes(1))
     }
 
@@ -124,7 +123,7 @@ class FastSpectroscopy[S, A, L] (
 
     debugLog(graphvizGameWithFormulas(hmlGame, hmlGame.attackerVictoryPrices.toMap, distinguishingNodeFormulas))
 
-    AbstractSpectroscopy.SpectroscopyResult[S, A, ObservationClassFast, FastClassifiedFormula[A]](List(), spectrum)
+    AbstractSpectroscopy.SpectroscopyResult[S, A, ObservationClassFast, HennessyMilnerLogic.Formula[A]](List(), spectrum)
     // val attackerWin = hmlGame.computeWinningRegion()
     // val aLR = hmlGame.AttackerObservation(nodes(0), Set(nodes(1)), hmlGame.ConjunctMove)
     // val aRL = hmlGame.AttackerObservation(nodes(1), Set(nodes(0)), hmlGame.ConjunctMove)

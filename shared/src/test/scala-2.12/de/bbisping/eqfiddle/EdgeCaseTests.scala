@@ -3,10 +3,9 @@ package de.bbisping.eqfiddle
 import de.bbisping.eqfiddle.spectroscopy.PositionalSpectroscopy
 import de.bbisping.eqfiddle.spectroscopy.EdgeSpectroscopy
 import de.bbisping.eqfiddle.hml.ObservationClassStrong
-import de.bbisping.eqfiddle.hml.ObservationClassStrong.StronglyClassifiedFormula
+import de.bbisping.eqfiddle.hml.HennessyMilnerLogic
 
-
-class EdgeCaseTests extends CSSSampleTests[ObservationClassStrong, StronglyClassifiedFormula[String]] {
+class EdgeCaseTests extends CSSSampleTests[ObservationClassStrong, HennessyMilnerLogic.Formula[String]] {
   override val spectrum = ObservationClassStrong.LTBTS
   
   val reviewSystem = TestSamples.samples.find(_._1 == "review-counterexamples").get._2

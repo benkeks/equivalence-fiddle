@@ -98,60 +98,53 @@ object ObservationClassStrong {
     "bisimulation" ->       ObservationClassStrong(INFTY, INFTY,INFTY,INFTY,INFTY,INFTY)
   )
 
-  val LTBTS = Spectrum.fromTuples(BaseLTBTS)
+  val LTBTS = Spectrum.fromTuples(BaseLTBTS, getFormulaRootClass)
 
-  implicit class StronglyClassifiedFormula[A](formula: HennessyMilnerLogic.Formula[A]) extends ObservationClass.ClassifiedFormula[A] {
+  def formulaObsClass(formula: HennessyMilnerLogic.Formula[_]): ObservationClassStrong = formula match {
+    case And(subterms) =>
+      if (subterms.isEmpty) {
+        ObservationClassStrong()
+      } else {
+        val positiveSubterms = subterms.filter(_.isPositive)
+        val positiveFlatCount = positiveSubterms.count(formulaObsClass(_).observationHeight <= 1)
+        val immediateClauseCount = subterms.count(_.isImmediate)
 
-    override def isImmediate = formula.isImmediate
-
-    override def isPositive = formula.isPositive
-
-    override def obsClass: ObservationClassStrong = formula match {
-      case And(subterms) =>
-        if (subterms.isEmpty) {
-          ObservationClassStrong()
-        } else {
-          val positiveSubterms = subterms.filter(_.isPositive)
-          val positiveFlatCount = positiveSubterms.count(_.obsClass.observationHeight <= 1)
-          val immediateClauseCount = subterms.count(_.isImmediate)
-
-          ObservationClassStrong(
-            observationHeight = subterms.map(_.obsClass.observationHeight).max,
-            /** the maximal amount of conjunctions when descending into a formula */
-            conjunctionLevels = subterms.map(_.obsClass.conjunctionLevels).max + 1,
-            /** the maximal amount of positive deep branches (observationHeight > 1)*/
-            maxPositiveDeepBranches = (subterms.map(_.obsClass.maxPositiveDeepBranches) + (positiveSubterms.size - positiveFlatCount)).max,
-            /** the maximal amount of positive branches */
-            maxPositiveBranches = (subterms.map(_.obsClass.maxPositiveBranches) + positiveSubterms.size).max,
-            /** the maximal amount of negations when descending into a formula */
-            negationLevels = subterms.map(_.obsClass.negationLevels).max,
-            /** maximal observationHeight of negative subformulas */
-            maxNegatedHeight = subterms.map(_.obsClass.maxNegatedHeight).max
-          )
-        }
-      case Negate(andThen) =>
-        val andThenClass = andThen.obsClass.asInstanceOf[ObservationClassStrong]
         ObservationClassStrong(
-          conjunctionLevels = andThenClass.conjunctionLevels + (if (!andThen.isPositive) 1 else 0),
-          negationLevels = andThenClass.negationLevels + 1,
-          maxNegatedHeight = andThenClass.observationHeight
-        ) lub andThenClass
-      case Observe(action, andThen) =>
-        val andThenClass = andThen.obsClass.asInstanceOf[ObservationClassStrong]
-        ObservationClassStrong(
-          observationHeight = andThenClass.observationHeight + 1,
-          conjunctionLevels = if (!andThen.isPositive) andThenClass.conjunctionLevels + 1 else 0,
-        ) lub andThenClass
-      case Pass(andThen) =>
-        andThen.obsClass
-    }
+          observationHeight = subterms.map(formulaObsClass(_).observationHeight).max,
+          /** the maximal amount of conjunctions when descending into a formula */
+          conjunctionLevels = subterms.map(formulaObsClass(_).conjunctionLevels).max + 1,
+          /** the maximal amount of positive deep branches (observationHeight > 1)*/
+          maxPositiveDeepBranches = (subterms.map(formulaObsClass(_).maxPositiveDeepBranches) + (positiveSubterms.size - positiveFlatCount)).max,
+          /** the maximal amount of positive branches */
+          maxPositiveBranches = (subterms.map(formulaObsClass(_).maxPositiveBranches) + positiveSubterms.size).max,
+          /** the maximal amount of negations when descending into a formula */
+          negationLevels = subterms.map(formulaObsClass(_).negationLevels).max,
+          /** maximal observationHeight of negative subformulas */
+          maxNegatedHeight = subterms.map(formulaObsClass(_).maxNegatedHeight).max
+        )
+      }
+    case Negate(andThen) =>
+      val andThenClass = formulaObsClass(andThen)
+      ObservationClassStrong(
+        conjunctionLevels = andThenClass.conjunctionLevels + (if (!andThen.isPositive) 1 else 0),
+        negationLevels = andThenClass.negationLevels + 1,
+        maxNegatedHeight = andThenClass.observationHeight
+      ) lub andThenClass
+    case Observe(action, andThen) =>
+      val andThenClass = formulaObsClass(andThen)
+      ObservationClassStrong(
+        observationHeight = andThenClass.observationHeight + 1,
+        conjunctionLevels = if (!andThen.isPositive) andThenClass.conjunctionLevels + 1 else 0,
+      ) lub andThenClass
+    case Pass(andThen) =>
+      formulaObsClass(andThen)
+  }
 
     /** class of this formula if it appears at the top level */
-    override def getRootClass() = {
-      ObservationClassStrong(
-        conjunctionLevels = obsClass.asInstanceOf[ObservationClassStrong].conjunctionLevels + (if (!isPositive) 1 else 0)
-      ) lub obsClass
-    }
-
+  def getFormulaRootClass(formula: HennessyMilnerLogic.Formula[_]) = {
+    val fc = formulaObsClass(formula)
+    ObservationClassStrong(
+      conjunctionLevels = fc.conjunctionLevels + (if (!formula.isPositive) 1 else 0)
+    ) lub fc
   }
 }

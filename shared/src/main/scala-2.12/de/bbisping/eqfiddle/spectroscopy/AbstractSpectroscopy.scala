@@ -11,11 +11,10 @@ import de.bbisping.eqfiddle.util.LabeledRelation
 import de.bbisping.eqfiddle.game.GameGraphVisualizer
 import de.bbisping.eqfiddle.hml.HennessyMilnerLogic
 import de.bbisping.eqfiddle.hml.ObservationClass
-import de.bbisping.eqfiddle.hml.ObservationClass.ClassifiedFormula
 import de.bbisping.eqfiddle.hml.Spectrum
 import de.bbisping.eqfiddle.hml.HMLInterpreter
 
-abstract class AbstractSpectroscopy[S, A, L, CF <: ClassifiedFormula[A]] (
+abstract class AbstractSpectroscopy[S, A, L, CF <: HennessyMilnerLogic.Formula[A]] (
     val ts: WeakTransitionSystem[S, A, L],
     val nodes: List[S])
   extends AlgorithmLogging[S] {
@@ -100,7 +99,7 @@ abstract class AbstractSpectroscopy[S, A, L, CF <: ClassifiedFormula[A]] (
 
 object AbstractSpectroscopy {
 
-  case class SpectroscopyResultItem[S, A, +OC <: ObservationClass, +OF <: ObservationClass.ClassifiedFormula[A]](
+  case class SpectroscopyResultItem[S, A, +OC <: ObservationClass, +OF <: HennessyMilnerLogic.Formula[A]](
     left: S,
     right: S,
     distinctions: List[(OF, OC, List[Spectrum.EquivalenceNotion[OC]])],
@@ -123,7 +122,7 @@ object AbstractSpectroscopy {
     }
   }
 
-  case class SpectroscopyResult[S, A, +OC <: ObservationClass, +OF <: ObservationClass.ClassifiedFormula[A]](
+  case class SpectroscopyResult[S, A, +OC <: ObservationClass, +OF <:HennessyMilnerLogic.Formula[A]](
       val relationItems: List[SpectroscopyResultItem[S, A, OC, OF]], val spectrum: Spectrum[OC]) {
 
     def toDistinctionRelation() = {

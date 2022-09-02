@@ -3,12 +3,14 @@ package de.bbisping.eqfiddle.hml
 object Spectrum {
   case class EquivalenceNotion[+OC <: ObservationClass](name: String, obsClass: OC)
 
-  def fromTuples[OC <: ObservationClass](pairs: List[(String, OC)]) = {
-    new Spectrum(pairs.map(p => EquivalenceNotion(p._1, p._2)))
+  def fromTuples[OC <: ObservationClass](pairs: List[(String, OC)], classifier: HennessyMilnerLogic.Formula[_] => OC) = {
+    new Spectrum(pairs.map(p => EquivalenceNotion(p._1, p._2)), classifier)
   }
 }
 
-case class Spectrum[+OC <: ObservationClass](notions: List[Spectrum.EquivalenceNotion[OC]]) {
+case class Spectrum[+OC <: ObservationClass](
+    notions: List[Spectrum.EquivalenceNotion[OC]],
+    classifier: HennessyMilnerLogic.Formula[_] => OC) {
   import Spectrum._
 
   /** given a group of least distinguishing observation classes, tell what weaker ObservationClasses would be the strongest fit to preorder the distinguished states */
@@ -25,8 +27,8 @@ case class Spectrum[+OC <: ObservationClass](notions: List[Spectrum.EquivalenceN
   val notionNames = getSpectrumClass.values
 
   /** names the coarsest notion of equivalence where this formula is part of the distinguishing formulas */
-  def classifyFormula[CF <: ObservationClass.ClassifiedFormula[_]](f: CF): (OC, List[EquivalenceNotion[OC]]) = {
-    val balancedClass = f.getRootClass().asInstanceOf[OC]
+  def classifyFormula[CF <: HennessyMilnerLogic.Formula[_]](f: CF): (OC, List[EquivalenceNotion[OC]]) = {
+    val balancedClass = classifier(f)
     val classifications = notions.filter(en => (balancedClass lub en.obsClass) == en.obsClass)
     var currentMax = List[OC]()
     val leastClassifications = for {
@@ -39,12 +41,12 @@ case class Spectrum[+OC <: ObservationClass](notions: List[Spectrum.EquivalenceN
     (balancedClass, leastClassifications)
   }
 
-  def classifyNicely[A](f: ObservationClass.ClassifiedFormula[A]) = {
+  def classifyNicely(f: HennessyMilnerLogic.Formula[_]) = {
     val (_, classifications) = classifyFormula(f)
     classifications.map(_.name).mkString(",")
   }
 
-  def getLeastDistinguishing[CF <: ObservationClass.ClassifiedFormula[_]](formulas: Set[CF]): Set[CF] = {
+  def getLeastDistinguishing[CF <: HennessyMilnerLogic.Formula[_]](formulas: Set[CF]): Set[CF] = {
     val classifications = formulas.map(f => (f, classifyFormula(f)))
     val allClassBounds = classifications.flatMap(_._2._2.map(_.obsClass))
 

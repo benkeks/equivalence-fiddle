@@ -3,10 +3,10 @@ package de.bbisping.eqfiddle
 import de.bbisping.eqfiddle.spectroscopy.PositionalSpectroscopy
 import de.bbisping.eqfiddle.spectroscopy.EdgeSpectroscopy
 import de.bbisping.eqfiddle.hml.ObservationClassStrong
-import de.bbisping.eqfiddle.hml.ObservationClassStrong.StronglyClassifiedFormula
+import de.bbisping.eqfiddle.hml.HennessyMilnerLogic
 
 
-class LTBTSTests extends CSSSampleTests[ObservationClassStrong, StronglyClassifiedFormula[String]] {
+class LTBTSTests extends CSSSampleTests[ObservationClassStrong, HennessyMilnerLogic.Formula[String]] {
 
   override val spectrum = ObservationClassStrong.LTBTS
 
