@@ -298,7 +298,7 @@ object Structure {
 
         val begin = Date.now
 
-        val algo = new PositionalSpectroscopy(structure.structure, List(n1, n2))
+        val algo = new FastSpectroscopy(structure.structure, List(n1, n2))
         val result = algo.compute()
         println("Spectroscopy took: " + (Date.now - begin) + "ms.")
 

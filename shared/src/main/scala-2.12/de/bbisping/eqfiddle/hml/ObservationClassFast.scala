@@ -79,7 +79,36 @@ object ObservationClassFast {
 
   val LTBTS = Spectrum.fromTuples(BaseLTBTS, getFormulaRootClass)
 
-  def formulaObsClass(f: HennessyMilnerLogic.Formula[_]): ObservationClassFast = ObservationClassFast()
+  def formulaObsClass(f: HennessyMilnerLogic.Formula[_]): ObservationClassFast = f match {
+    case HennessyMilnerLogic.And(subterms) =>
+      if (subterms.isEmpty) {
+        ObservationClassFast()
+      } else {
+        val (positiveSubterms, negativeSubterms) = subterms.partition(_.isPositive)
+        val subtermObsClass = subterms.map(formulaObsClass(_))
+
+        ObservationClassFast(
+          observationHeight = subtermObsClass.map(_.observationHeight).max,
+          conjunctionLevels = subtermObsClass.map(_.conjunctionLevels).max + 1,
+          maxPositiveConjunctHeight =
+            (positiveSubterms.map(formulaObsClass(_).observationHeight) ++ subtermObsClass.map(_.maxPositiveConjunctHeight)).max,
+          maxNegativeConjunctHeight =
+            (negativeSubterms.map(formulaObsClass(_).observationHeight) ++ subtermObsClass.map(_.maxNegativeConjunctHeight)).max
+        )
+      }
+    case HennessyMilnerLogic.Negate(andThen) =>
+      formulaObsClass(andThen)
+    case HennessyMilnerLogic.Observe(action, andThen) =>
+      val andThenClass = formulaObsClass(andThen)
+      ObservationClassFast(
+        observationHeight = andThenClass.observationHeight + 1
+      ) lub andThenClass
+    case HennessyMilnerLogic.Pass(andThen) =>
+      formulaObsClass(andThen)
+  }
+    
+    
+     ObservationClassFast()
 
   def getFormulaRootClass(f: HennessyMilnerLogic.Formula[_]) = formulaObsClass(f)
 

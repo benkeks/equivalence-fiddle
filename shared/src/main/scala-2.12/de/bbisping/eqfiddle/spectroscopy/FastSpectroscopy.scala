@@ -3,12 +3,12 @@ package de.bbisping.eqfiddle.spectroscopy
 import de.bbisping.eqfiddle.ts.WeakTransitionSystem
 import de.bbisping.eqfiddle.algo.AlgorithmLogging
 import de.bbisping.eqfiddle.hml.ObservationClassFast
+import de.bbisping.eqfiddle.hml.Spectrum
 import de.bbisping.eqfiddle.game.SimpleGame
 import de.bbisping.eqfiddle.game.SimpleGame.GameNode
 import de.bbisping.eqfiddle.hml.HennessyMilnerLogic
 import de.bbisping.eqfiddle.hml.HMLInterpreter
 import de.bbisping.eqfiddle.game.GameGraphVisualizer
-import de.bbisping.eqfiddle.hml.ObservationClassFast
 
 class FastSpectroscopy[S, A, L] (
     ts: WeakTransitionSystem[S, A, L],
@@ -123,31 +123,28 @@ class FastSpectroscopy[S, A, L] (
 
     debugLog(graphvizGameWithFormulas(hmlGame, hmlGame.attackerVictoryPrices.toMap, distinguishingNodeFormulas))
 
-    AbstractSpectroscopy.SpectroscopyResult[S, A, ObservationClassFast, HennessyMilnerLogic.Formula[A]](List(), spectrum)
-    // val attackerWin = hmlGame.computeWinningRegion()
-    // val aLR = hmlGame.AttackerObservation(nodes(0), Set(nodes(1)), hmlGame.ConjunctMove)
-    // val aRL = hmlGame.AttackerObservation(nodes(1), Set(nodes(0)), hmlGame.ConjunctMove)
+    val bestPreorders: Map[GameNode,List[Spectrum.EquivalenceNotion[ObservationClassFast]]] =
+      distinguishingNodeFormulas.mapValues { ffs =>
+      val classes = ffs.flatMap(spectrum.classifyFormula(_)._2)
+      spectrum.getStrongestPreorderClass(classes)
+    }
 
-    // val minFormulas = buildHML(hmlGame, attackerWin, Set(aLR, aRL))
+    val spectroResults = for {
+      gn <- hmlGame.discovered
+      if gn.isInstanceOf[hmlGame.AttackerObservation]
+      hmlGame.AttackerObservation(p, qq, kind) = gn
+      if qq.size == 1
+      q <- qq
+      preorders <- bestPreorders.get(gn)
+      distinctionFormulas = distinguishingNodeFormulas(gn)
+      distinctions = for {
+        f <- distinctionFormulas.toList
+        (price, eqs) = spectrum.classifyFormula(f)
+      } yield (f, price, eqs)
+    } yield AbstractSpectroscopy.SpectroscopyResultItem[S, A, ObservationClassFast, HennessyMilnerLogic.Formula[A]](p, q, distinctions, preorders)
 
-    // if (attackerWin.contains(aLR)) {
-    //   minFormulas(aLR).foreach { f =>
-    //     debugLog("Distinguished under " + f.classifyFormula() + " preorder by " + f.toString())
-    //     checkDistinguishing(f, nodes(0), nodes(1))
-    //   }
-    // }
-
-    // if (attackerWin.contains(aRL)) {
-    //   minFormulas(aRL).foreach { f =>
-    //     debugLog("Distinguished under " + f.classifyFormula() + " preorder by " + f.toString())
-    //     checkDistinguishing(f, nodes(1), nodes(0))
-    //   }
-    // }
-    // debugLog(graphvizGameWithFormulas(hmlGame, attackerWin, minFormulas))
-
-    //collectSpectroscopyResult(hmlGame, minFormulas)
+    AbstractSpectroscopy.SpectroscopyResult[S, A, ObservationClassFast, HennessyMilnerLogic.Formula[A]](spectroResults.toList, spectrum)
   }
-
 
   def checkDistinguishing(formula: HennessyMilnerLogic.Formula[A], p: S, q: S) = {
     val hmlInterpreter = new HMLInterpreter(ts)
