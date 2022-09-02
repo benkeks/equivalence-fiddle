@@ -8,7 +8,8 @@ import de.bbisping.eqfiddle.algo.AlgorithmLogging
 import de.bbisping.eqfiddle.ts.WeakTransitionSystem
 import de.bbisping.eqfiddle.util.LabeledRelation
 import de.bbisping.eqfiddle.spectroscopy.helpers.CytoscapeHelpers
-import de.bbisping.eqfiddle.hml.ObservationClass
+import de.bbisping.eqfiddle.hml.ObservationClassStrong
+import de.bbisping.eqfiddle.hml.Spectrum
 
 object EquivalenceSpectroscopeAPI {
 
@@ -80,7 +81,7 @@ object EquivalenceSpectroscopeAPI {
   @JSExportTopLevel("LTBTS")
   def LTBTS() = {
     val classes = for {
-      (name, obsClass) <- ObservationClass.LTBTS
+      Spectrum.EquivalenceNotion(name, obsClass) <- ObservationClassStrong.LTBTS.notions
     } yield (name, obsClass.toTuple.productIterator.toIterable.toJSArray)
     classes.toMap.toJSDictionary
   }
