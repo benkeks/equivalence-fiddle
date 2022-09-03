@@ -325,6 +325,46 @@ object Structure {
     }
   }
 
+  case class StructureMinimize(resetReplay: Boolean = true) extends StructureAction {
+
+    override def implementStructure(structure: Structure) = {
+      if (resetReplay) {
+        structure.setReplay(List())
+      }
+
+      val begin = Date.now
+
+      val states = structure.structure.nodes.toList
+      val algo = new FastSpectroscopy(structure.structure, states)
+      val result = algo.compute()
+      println("Minimization Spectroscopy took: " + (Date.now - begin) + "ms.")
+
+      val eqs = for {
+        p <- states
+        q <- states
+        if p != q
+        eq = result.findEqs(p, q)
+        if eq.nonEmpty
+      } yield (p, q, eq)
+
+      val equivMessages = for {
+        (p, q, eq) <- eqs
+        eqString = eq.map(_.name).mkString("<br>")
+      } yield s"$p and $q eq by:<div class='equations'>$eqString</div>"
+
+      val resultRelation = result.toEquivalencesRelation()
+
+      val replay = for {
+        eqMsg <- equivMessages
+      } yield () => AlgorithmLogging.LogRelation(resultRelation, eqMsg)
+
+      structure.setReplay(replay)
+      structure.main.doAction(StructureDoReplayStep(), structure)
+
+      true
+    }
+  }
+
   case class StructureDoReplayStep(goToStep: Int = -1) extends StructureAction {
     override def implementStructure(structure: Structure) = {
       if (goToStep >= 0) structure.currentReplayStep = goToStep

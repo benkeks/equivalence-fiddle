@@ -93,8 +93,18 @@ class FastSpectroscopy[S, A, L] (
 
     val hmlGame = new FastSpectroscopyGame(ts)
 
-    val init = List(hmlGame.AttackerObservation(nodes(0), Set(nodes(1))), hmlGame.AttackerObservation(nodes(1), Set(nodes(0))))
-    def instantAttackerWin(gn: GameNode) = gn match {case hmlGame.DefenderConjunction(_, qq) if qq.isEmpty => List(ObservationClassFast()); case _ => List()}
+    val comparedPairs = for {
+      n1i <- 0 until nodes.length
+      n2j <- (n1i + 1) until nodes.length
+    } yield (nodes(n1i), nodes(n2j))
+
+    val init = for {
+      (p, q) <- comparedPairs
+    } yield hmlGame.AttackerObservation(p, Set(q))
+
+    def instantAttackerWin(gn: GameNode) = gn match {
+      case hmlGame.DefenderConjunction(_, qq) if qq.isEmpty => List(ObservationClassFast()); case _ => List()
+    }
 
     hmlGame.populateGame(
       init,
@@ -104,11 +114,13 @@ class FastSpectroscopy[S, A, L] (
     debugLog("HML spectroscopy game size: " + hmlGame.discovered.size)
 
     for {
-      bestPrice <- hmlGame.attackerVictoryPrices(init.head)
-      witnessFormula <- buildHMLWitness(hmlGame, init.head, bestPrice)
+      gn <- init
+      hmlGame.AttackerObservation(p, qq, _) = gn
+      bestPrice <- hmlGame.attackerVictoryPrices(gn)
+      witnessFormula <- buildHMLWitness(hmlGame, gn, bestPrice)
     } {
       debugLog("Distinguished under " + spectrum.classifyFormula(witnessFormula) + " preorder by " + witnessFormula.toString())
-      checkDistinguishing(witnessFormula, nodes(0), nodes(1))
+      checkDistinguishing(witnessFormula, p, qq.head)
     }
 
     val distinguishingNodeFormulas = for {

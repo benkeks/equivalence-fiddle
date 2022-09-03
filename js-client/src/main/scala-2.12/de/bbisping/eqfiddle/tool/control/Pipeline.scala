@@ -46,8 +46,8 @@ class Pipeline(val main: Control) extends ModelComponent {
     broadcast(Pipeline.PipelineStatusChange(List(Pipeline.CurrentLine(currentStep))))
   }
   
-  def runMetaRunner(meta: String, info: String, line: Int) = {
-    if ("compare" == meta) {
+  def runMetaRunner(meta: String, info: String, line: Int): Boolean = meta match {
+    case "compare" =>
       val states = info.split(",").map(_.trim())
       if (states.length == 2) {
         broadcast(Pipeline.PipelineStatusChange(List(Pipeline.CurrentLine(line))))
@@ -56,9 +56,12 @@ class Pipeline(val main: Control) extends ModelComponent {
       } else {
         false
       }
-    } else {
+    case "minimize" =>
+      broadcast(Pipeline.PipelineStatusChange(List(Pipeline.CurrentLine(line))))
+      main.dispatchAction(Structure.StructureMinimize())
+      true
+    case _ =>
       false
-    }
   }
 
   def notify(change: ModelComponent.Change) = change match {
