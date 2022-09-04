@@ -46,7 +46,7 @@ class FastSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L])
       val productMoves =
         possibleMoves.reduceLeft(
           (b, a) => b.flatMap(i => a.map(j => i lub j)))
-      println(defNode + "(" + attackerVictoryPrices(defNode) + ") -> " + possibleMoves + " => " + productMoves)
+      //println(defNode + "(" + attackerVictoryPrices(defNode) + ") -> " + possibleMoves + " => " + productMoves)
       productMoves.toSet
   }
 
