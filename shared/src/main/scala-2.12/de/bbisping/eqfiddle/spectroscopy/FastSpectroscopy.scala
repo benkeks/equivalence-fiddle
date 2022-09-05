@@ -100,7 +100,8 @@ class FastSpectroscopy[S, A, L] (
 
     val init = for {
       (p, q) <- comparedPairs
-    } yield hmlGame.AttackerObservation(p, Set(q))
+      start <- List(hmlGame.AttackerObservation(p, Set(q)), hmlGame.AttackerObservation(q, Set(p)))
+    } yield start
 
     def instantAttackerWin(gn: GameNode) = gn match {
       case hmlGame.DefenderConjunction(_, qq) if qq.isEmpty => List(ObservationClassFast()); case _ => List()

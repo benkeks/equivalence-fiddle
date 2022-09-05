@@ -125,6 +125,13 @@ object AbstractSpectroscopy {
   case class SpectroscopyResult[S, A, +OC <: ObservationClass, +OF <:HennessyMilnerLogic.Formula[A]](
       val relationItems: List[SpectroscopyResultItem[S, A, OC, OF]], val spectrum: Spectrum[OC]) {
 
+    def resultFor(p: S, q: S) = {
+      for {
+        res <- relationItems
+        if res.left == p && res.right == q
+      } yield res
+    }
+
     def toDistinctionRelation() = {
       val relTuples = for {
         SpectroscopyResultItem(l, r, dists, preords) <- relationItems
@@ -159,18 +166,31 @@ object AbstractSpectroscopy {
       new LabeledRelation(relTuples.toSet)
     }
 
+    def toDistancesRelation[OCC >: OC](): LabeledRelation[S,List[OCC]] = {
+      val undirectedResults = relationItems.groupBy(r => Set(r.left, r.right))
+      val undirectedDistinctions = for {
+        (pq, results) <- undirectedResults
+        if pq.size == 2
+      } yield (pq, results.flatMap(_.distinctions.map(_._2)))
+      val relTuples = for {
+        (pq, dist) <- undirectedDistinctions
+        orderedPair = pq.toList
+        p = orderedPair(0)
+        q = orderedPair(1)
+      } yield (p, dist.map(_.asInstanceOf[OCC]), q)
+      new LabeledRelation(relTuples.toSet)
+    }
+
     def foundPreorders(p: S, q: S): List[Spectrum.EquivalenceNotion[OC]] = {
       for {
-        res <- relationItems
-        if res.left == p && res.right == q
+        res <- resultFor(p, q)
         preord <- res.preorderings
       } yield preord
     }
 
     def foundDistinctions(p: S, q: S): List[Spectrum.EquivalenceNotion[OC]] = {
       for {
-        res <- relationItems
-        if res.left == p && res.right == q
+        res <- resultFor(p, q)
         dists <- res.distinctions
         dis <- dists._3
       } yield dis
