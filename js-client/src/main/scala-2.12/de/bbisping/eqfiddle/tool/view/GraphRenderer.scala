@@ -48,10 +48,10 @@ class GraphRenderer(val main: Control)
   setEditingBehavior("es-graph-move")
   
   val force = d3.layout.force[GraphNode, NodeLink] ()
-      .charge(-300.0)
-      .chargeDistance(200.0)
+      .charge(300.0)
+      .chargeDistance(100.0)
       .linkStrength(0.3)
-      .size((400.0, 400.0))
+      .size((700.0, 700.0))
       .gravity(.2)
       .nodes(nodes)
       .links(links)
@@ -109,8 +109,6 @@ class GraphRenderer(val main: Control)
       l = ll.map(_._2).mkString(", ")
     } yield new NodeLink(Symbol("relation ho"), l, en1.toSet, en2.toSet, (e1, l, e2))
 
-    println(relationMetaLinks)
-    
     (nodes, nodeLinks ++ relationLinks, relationMetaLinks)
   }
   
@@ -177,11 +175,24 @@ class GraphRenderer(val main: Control)
         .text((_: GraphNode).nameId.name)
     nodeLabelUp.exit().remove()
     nodeLabelViews = layerMeta.selectAll(".node-label")
-    
+
+    nodes.foreach(_.positionStealTarget = None)
+    for {
+      (ee1, l, ee2) <- baseRelation
+      if l == "eq"
+      e1 <- ee1
+      e2 <- ee2
+      n1 <- nodes.find(_.nameId == e1)
+      n2 <- nodes.find(_.nameId == e2)
+    } {
+      n2.positionStealTarget = Some(n1)
+    }
+
     force.linkDistance((l: NodeLink, d: Double) => l.kind match {
-      case _ => 150.0
+      case _ => 15.0
     })
-    
+    force.alpha(1)
+
     force.on("tick", updateViews _)
     
     force.start()
@@ -208,7 +219,7 @@ class GraphRenderer(val main: Control)
     links foreach { d: NodeLink =>
       d.updateDirAndCenter()
     }
-    
+
     nodeViews
       .attr("cx", ((d: GraphNode, i: Int) => d.x))
       .attr("cy", ((d: GraphNode, i: Int) => d.y))

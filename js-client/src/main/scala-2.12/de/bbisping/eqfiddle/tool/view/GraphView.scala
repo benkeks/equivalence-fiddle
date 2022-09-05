@@ -24,7 +24,8 @@ object GraphView {
   }
   class GraphNode(
       var nameId: NodeID,
-      var meta: Structure.NodeLabel)
+      var meta: Structure.NodeLabel,
+      var positionStealTarget: Option[Linkable] = None)
     extends Node with Linkable {
     
     GraphNode.count = GraphNode.count + 1
@@ -55,23 +56,29 @@ object GraphView {
     }
     
     def updatePos() = {
-      if (fixedPermanently && fixed.get <= 1.5) {
+      if ((fixedPermanently || positionStealTarget.nonEmpty) && fixed.get <= 1.5) {
         fixed = 1
-        for (tarX <- meta.x; currX <- x.toOption) {
+        for {
+          tarX <- positionStealTarget.map(_.centerX) orElse meta.x
+          currX <- x.toOption
+        } {
           val xDiff = tarX - currX
-          if (Math.abs(xDiff) < 2.0) {
+          if (Math.abs(xDiff) < 6.0) {
             x = UndefOr.any2undefOrA(tarX)
           } else {
-            x = UndefOr.any2undefOrA(currX + 2.0 * Math.signum(xDiff))
+            x = UndefOr.any2undefOrA(currX + 5.0 * Math.signum(xDiff))
             fixed = 0
           }
         }
-        for (tarY <- meta.y; currY <- y.toOption) {
+        for {
+          tarY <- positionStealTarget.map(_.centerY) orElse meta.y
+          currY <- y.toOption
+        } {
           val yDiff = tarY - currY
-          if (Math.abs(yDiff) < 2.0) {
+          if (Math.abs(yDiff) < 6.0) {
             y = UndefOr.any2undefOrA(tarY)
           } else {
-            y = UndefOr.any2undefOrA(currY + 2.0 * Math.signum(yDiff))
+            y = UndefOr.any2undefOrA(currY + 5.0 * Math.signum(yDiff))
             fixed = 0
           }
         }
