@@ -106,10 +106,13 @@ object ObservationClassFast {
     case HennessyMilnerLogic.Pass(andThen) =>
       formulaObsClass(andThen)
   }
-    
-    
-     ObservationClassFast()
 
-  def getFormulaRootClass(f: HennessyMilnerLogic.Formula[_]) = formulaObsClass(f)
+  def getFormulaRootClass(f: HennessyMilnerLogic.Formula[_]) = {
+    if (f.isPositive) {
+      formulaObsClass(f)
+    } else {
+      formulaObsClass(HennessyMilnerLogic.And(Set(f)))
+    }
+  }
 
 }
