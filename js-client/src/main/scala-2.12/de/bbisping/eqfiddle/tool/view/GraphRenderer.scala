@@ -48,11 +48,11 @@ class GraphRenderer(val main: Control)
   setEditingBehavior("es-graph-move")
   
   val force = d3.layout.force[GraphNode, NodeLink] ()
-      .charge(300.0)
-      .chargeDistance(100.0)
+      .charge(-100.0)
+      .chargeDistance(150.0)
       .linkStrength(0.3)
       .size((700.0, 700.0))
-      .gravity(.2)
+      .gravity(.02)
       .nodes(nodes)
       .links(links)
       
@@ -189,7 +189,7 @@ class GraphRenderer(val main: Control)
     }
 
     force.linkDistance((l: NodeLink, d: Double) => l.kind match {
-      case _ => 15.0
+      case _ => 80.0
     })
     force.alpha(1)
 
