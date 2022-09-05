@@ -166,12 +166,12 @@ object AbstractSpectroscopy {
       new LabeledRelation(relTuples.toSet)
     }
 
-    def toDistancesRelation[OCC >: OC](): LabeledRelation[S,List[OCC]] = {
+    def toDistancesRelation[OCC >: OC](): LabeledRelation[S,Set[OCC]] = {
       val undirectedResults = relationItems.groupBy(r => Set(r.left, r.right))
       val undirectedDistinctions = for {
         (pq, results) <- undirectedResults
         if pq.size == 2
-      } yield (pq, results.flatMap(_.distinctions.map(_._2)))
+      } yield (pq, results.flatMap(_.distinctions.map(_._2)).toSet)
       val relTuples = for {
         (pq, dist) <- undirectedDistinctions
         orderedPair = pq.toList

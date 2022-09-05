@@ -20,6 +20,7 @@ import de.bbisping.eqfiddle.algo.AlgorithmLogging
 import de.bbisping.eqfiddle.spectroscopy.{AbstractSpectroscopy, PositionalSpectroscopy, WeakPositionalSpectroscopy, EdgeSpectroscopy}
 import de.bbisping.eqfiddle.spectroscopy.FastSpectroscopy
 import de.bbisping.eqfiddle.hml.ObservationClassFast
+import de.bbisping.eqfiddle.hml.Spectrum
 
 
 class Structure(val main: Control) extends ModelComponent {
@@ -341,17 +342,20 @@ object Structure {
       println("Minimization Spectroscopy took: " + (Date.now - begin) + "ms.")
 
       val distRel = result.toDistancesRelation()
-      val lubDists = distRel.tupleSet.map { case (l, dists, r) => (l, dists.reduce(_ lub _), r) }
+      val lubDists = distRel.tupleSet//.map { case (l, dists, r) => (l, dists.reduce(_ lub _), r) }
 
-      val eqLevels = lubDists.groupBy(_._2)
+      val eqLevels =
+        distRel.labels.map(result.spectrum.getStrongestPreorderClassFromClass(_))
+        .flatten.toSet[Spectrum.EquivalenceNotion[ObservationClassFast]].toList.sortBy(_.obsClass.toTuple).reverse
 
       val replay = for {
-        (clBound, eqs) <- eqLevels//equivMessages
+        Spectrum.EquivalenceNotion(name, obsClass) <- eqLevels//equivMessages
         resultRelation = for {
           (p, d, q) <- lubDists
-          if d >= clBound
+          if !d.exists(_ <= obsClass)
         } yield (p, "eq", q)
-      } yield () => AlgorithmLogging.LogRelation(new LabeledRelation(resultRelation), clBound.toString())
+        msg = obsClass.toTuple.toString() + " " + name
+      } yield () => AlgorithmLogging.LogRelation(new LabeledRelation(resultRelation), msg)
 
       structure.setReplay(replay.toList)
       structure.main.doAction(StructureDoReplayStep(), structure)

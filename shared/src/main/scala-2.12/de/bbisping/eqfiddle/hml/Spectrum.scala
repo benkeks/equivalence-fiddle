@@ -14,9 +14,13 @@ case class Spectrum[+OC <: ObservationClass](
   import Spectrum._
 
   /** given a group of least distinguishing observation classes, tell what weaker ObservationClasses would be the strongest fit to preorder the distinguished states */
-  def getStrongestPreorderClass[A](leastClassifications: Iterable[EquivalenceNotion[ObservationClass]]): List[EquivalenceNotion[OC]] = {
+  def getStrongestPreorderClass(leastClassifications: Iterable[EquivalenceNotion[ObservationClass]]): List[EquivalenceNotion[OC]] = {
+    getStrongestPreorderClassFromClass(leastClassifications.map(_.obsClass))
+  }
 
-    val weakerClasses = notions.filterNot { c => leastClassifications.exists(c.obsClass >= _.obsClass) }
+  def getStrongestPreorderClassFromClass(leastClassifications: Iterable[ObservationClass]): List[EquivalenceNotion[OC]] = {
+
+    val weakerClasses = notions.filterNot { c => leastClassifications.exists(c.obsClass >= _) }
     val mostFitting = weakerClasses.filterNot { c => weakerClasses.exists(_.obsClass > c.obsClass) }
 
     mostFitting.toList
