@@ -344,6 +344,24 @@ exit1(x=1095, y=-101)
 "(exit1.0 | kw1!P21 | K2 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-83, y=550)
 """
 
+  val diverseEquivalences = """
+P1(x=400, y=150)
+P2(x=600, y=150)
+"0"(x=600, y=660)
+c(x=700, y=400)
+"a + b.c"(x=500, y=500)
+"a + b + b.c"(x=600, y=400)
+"a.(a + b.c) + a.(a + b + b.c)"(x=400, y=300)
+"a.(a + b + b.c)"(x=600, y=300)
+
+P1 = b.(a.(a + b.c) + a.(a + b + b.c))
+P2 = (b.a.(a + b + b.c) + b.c)
+
+@compare "P1,P2"
+
+@minimize
+"""
+
   val namedSamples = List[Samples.Example](
     Samples.Example("ltbts1",
       "Linear Time Branching Time Spectrum 1",
@@ -357,6 +375,9 @@ exit1(x=1095, y=-101)
     Samples.Example("review-counterexamples",
       "Spurious failure-trace preorderings in original algorithm",
       reviewCounterexamples),
+    Samples.Example("diverse-eqs",
+      "Diverse Equivalences",
+      diverseEquivalences),
     Samples.Example("weak-sims",
       "Weak Bisim, Coupled, Contrasim",
       weakBisimCoupledSimParallel),
