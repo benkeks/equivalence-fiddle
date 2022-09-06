@@ -148,7 +148,7 @@ class FastSpectroscopy[S, A, L] (
     debugLog(graphvizGameWithFormulas(hmlGame, hmlGame.attackerVictoryPrices.toMap, distinguishingNodeFormulasExtended))
 
     val bestPreorders: Map[GameNode,List[Spectrum.EquivalenceNotion[ObservationClassFast]]] =
-      distinguishingNodeFormulasExtendedExtended.mapValues { ffs =>
+      distinguishingNodeFormulasExtended.mapValues { ffs =>
       val classes = ffs.flatMap(spectrum.classifyFormula(_)._2)
       spectrum.getStrongestPreorderClass(classes)
     }
