@@ -137,7 +137,8 @@ class FastSpectroscopy[S, A, L] (
 
     val bisimilarNodes = for {
       gn <- hmlGame.discovered
-      if gn.isInstanceOf[hmlGame.AttackerObservation] && !distinguishingNodeFormulas.isDefinedAt(gn)
+      if (gn match { case hmlGame.AttackerObservation(_, qq, postConj) => qq.size == 1 && !postConj; case _ => false }) &&
+        !hmlGame.attackerVictoryPrices.isDefinedAt(gn)
       //TODO: Restrict to relevant
     } yield (gn, Set[HennessyMilnerLogic.Formula[A]]())
 
