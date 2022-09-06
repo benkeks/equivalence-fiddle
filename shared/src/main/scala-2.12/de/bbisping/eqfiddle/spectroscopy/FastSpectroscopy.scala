@@ -17,7 +17,8 @@ class FastSpectroscopy[S, A, L] (
 
   val spectrum = ObservationClassFast.LTBTS
 
-  val distinguishingFormulas = collection.mutable.Map[(GameNode, ObservationClassFast), Set[HennessyMilnerLogic.Formula[A]]]()
+  val distinguishingFormulas =
+    collection.mutable.Map[(GameNode, ObservationClassFast), Set[HennessyMilnerLogic.Formula[A]]]()
 
   def buildHMLWitness(game: FastSpectroscopyGame[S, A, L], node: GameNode, price: ObservationClassFast): Set[HennessyMilnerLogic.Formula[A]]
     = distinguishingFormulas.getOrElseUpdate((node, price), {
@@ -134,10 +135,18 @@ class FastSpectroscopy[S, A, L] (
       } yield f
     } yield (node, formulas)
 
-    debugLog(graphvizGameWithFormulas(hmlGame, hmlGame.attackerVictoryPrices.toMap, distinguishingNodeFormulas))
+    val bisimilarNodes = for {
+      gn <- hmlGame.discovered
+      if gn.isInstanceOf[hmlGame.AttackerObservation] && !distinguishingNodeFormulas.isDefinedAt(gn)
+      //TODO: Restrict to relevant
+    } yield (gn, Set[HennessyMilnerLogic.Formula[A]]())
+
+    val distinguishingNodeFormulasExtended = distinguishingNodeFormulas ++ bisimilarNodes
+
+    debugLog(graphvizGameWithFormulas(hmlGame, hmlGame.attackerVictoryPrices.toMap, distinguishingNodeFormulasExtended))
 
     val bestPreorders: Map[GameNode,List[Spectrum.EquivalenceNotion[ObservationClassFast]]] =
-      distinguishingNodeFormulas.mapValues { ffs =>
+      distinguishingNodeFormulasExtended.mapValues { ffs =>
       val classes = ffs.flatMap(spectrum.classifyFormula(_)._2)
       spectrum.getStrongestPreorderClass(classes)
     }
@@ -149,7 +158,7 @@ class FastSpectroscopy[S, A, L] (
       if qq.size == 1
       q <- qq
       preorders <- bestPreorders.get(gn)
-      distinctionFormulas = distinguishingNodeFormulas(gn)
+      distinctionFormulas = distinguishingNodeFormulasExtended(gn)
       distinctions = for {
         f <- distinctionFormulas.toList
         (price, eqs) = spectrum.classifyFormula(f)
