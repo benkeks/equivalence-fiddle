@@ -354,7 +354,7 @@ object Structure {
           (p, d, q) <- lubDists
           if !d.exists(_ <= obsClass)
         } yield (p, "eq", q)
-        msg = obsClass.toTuple.toString() + " " + name
+        msg = obsClass.toTuple.toString().replace(Int.MaxValue.toString(), "∞") + " " + name
       } yield () => AlgorithmLogging.LogRelation(new LabeledRelation(resultRelation), msg)
 
       structure.setReplay(replay.toList)
