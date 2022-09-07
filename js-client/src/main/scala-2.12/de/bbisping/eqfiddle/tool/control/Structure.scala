@@ -338,7 +338,7 @@ object Structure {
 
       val states = structure.structure.nodes.toList
       val algo = new FastSpectroscopy(structure.structure, states)
-      val result = algo.compute()
+      val result = algo.compute(computeFormulas = false)
       println("Minimization Spectroscopy took: " + (Date.now - begin) + "ms.")
 
       val distRel = result.toDistancesRelation()

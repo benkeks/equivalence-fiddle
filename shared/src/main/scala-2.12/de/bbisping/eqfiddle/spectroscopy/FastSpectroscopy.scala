@@ -91,7 +91,9 @@ class FastSpectroscopy[S, A, L] (
     }
   })
 
-  def compute(): AbstractSpectroscopy.SpectroscopyResult[S, A, ObservationClassFast, HennessyMilnerLogic.Formula[A]] = {
+  def compute(
+      computeFormulas: Boolean = true
+    ): AbstractSpectroscopy.SpectroscopyResult[S, A, ObservationClassFast, HennessyMilnerLogic.Formula[A]] = {
 
     val hmlGame = new FastSpectroscopyGame(ts)
 
@@ -116,58 +118,88 @@ class FastSpectroscopy[S, A, L] (
 
     debugLog("HML spectroscopy game size: " + hmlGame.discovered.size)
 
-    for {
-      gn <- init
-      hmlGame.AttackerObservation(p, qq, _) = gn
-      bestPrice <- hmlGame.attackerVictoryPrices(gn)
-      witnessFormula <- buildHMLWitness(hmlGame, gn, bestPrice)
-    } {
-      debugLog("Distinguished under " + spectrum.classifyFormula(witnessFormula) + " preorder by " + witnessFormula.toString())
-      checkDistinguishing(witnessFormula, p, qq.head)
+    if (computeFormulas) {
+      for {
+        gn <- init
+        hmlGame.AttackerObservation(p, qq, _) = gn
+        bestPrice <- hmlGame.attackerVictoryPrices(gn)
+        witnessFormula <- buildHMLWitness(hmlGame, gn, bestPrice)
+      } {
+        debugLog("Distinguished under " + spectrum.classifyFormula(witnessFormula) + " preorder by " + witnessFormula.toString())
+        checkDistinguishing(witnessFormula, p, qq.head)
+      }
+      val distinguishingNodeFormulas = for {
+        (node, pricedFormulas) <- distinguishingFormulas
+          .toSet[((GameNode, ObservationClassFast), Set[HennessyMilnerLogic.Formula[A]])]
+          .groupBy(kv => kv._1._1)
+        formulas = for {
+          (_, formulasForPrice) <- pricedFormulas
+          f <- formulasForPrice
+        } yield f
+      } yield (node, formulas)
+
+      val bisimilarNodes = for {
+        gn <- hmlGame.discovered
+        if (gn match { case hmlGame.AttackerObservation(_, qq, postConj) => qq.size == 1 && !postConj; case _ => false }) &&
+          !hmlGame.attackerVictoryPrices.isDefinedAt(gn)
+      } yield (gn, Set[HennessyMilnerLogic.Formula[A]]())
+
+      val distinguishingNodeFormulasExtended = distinguishingNodeFormulas ++ bisimilarNodes
+
+      debugLog(graphvizGameWithFormulas(hmlGame, hmlGame.attackerVictoryPrices.toMap, distinguishingNodeFormulasExtended))
+
+      val bestPreorders: Map[GameNode,List[Spectrum.EquivalenceNotion[ObservationClassFast]]] =
+        distinguishingNodeFormulasExtended.mapValues { ffs =>
+        val classes = ffs.flatMap(spectrum.classifyFormula(_)._2)
+        spectrum.getStrongestPreorderClass(classes)
+      }
+
+      val spectroResults = for {
+        gn <- hmlGame.discovered
+        if gn.isInstanceOf[hmlGame.AttackerObservation]
+        hmlGame.AttackerObservation(p, qq, kind) = gn
+        if !kind && qq.size == 1
+        q <- qq
+        preorders <- bestPreorders.get(gn)
+        distinctionFormulas = distinguishingNodeFormulasExtended(gn)
+        distinctions = for {
+          f <- distinctionFormulas.toList
+          (price, eqs) = spectrum.classifyFormula(f)
+        } yield (f, price, eqs)
+      } yield AbstractSpectroscopy.SpectroscopyResultItem[S, A, ObservationClassFast, HennessyMilnerLogic.Formula[A]](p, q, distinctions, preorders)
+
+      AbstractSpectroscopy.SpectroscopyResult[S, A, ObservationClassFast, HennessyMilnerLogic.Formula[A]](spectroResults.toList, spectrum)
+    } else {
+      for {
+        gn <- init
+        hmlGame.AttackerObservation(p, qq, _) = gn
+        bestPrice <- hmlGame.attackerVictoryPrices(gn)
+      } {
+        //distinguishingFormulas((gn, bestPrice)) = Set(HennessyMilnerLogic.True[A])
+      }
+
+      debugLog(graphvizGameWithFormulas(hmlGame, hmlGame.attackerVictoryPrices.toMap, Map()))
+
+      val bestPreorders: Map[GameNode,(Set[ObservationClassFast],List[Spectrum.EquivalenceNotion[ObservationClassFast]])] =
+        hmlGame.attackerVictoryPrices.toMap.mapValues { fcs =>
+        (fcs, spectrum.getStrongestPreorderClassFromClass(fcs))
+      }
+
+      val spectroResults = for {
+        gn <- hmlGame.discovered
+        if gn.isInstanceOf[hmlGame.AttackerObservation]
+        hmlGame.AttackerObservation(p, qq, kind) = gn
+        if !kind && qq.size == 1
+        q <- qq
+        (prices, preorders) <- bestPreorders.get(gn)
+        distinctions = for {
+          price <- prices
+        } yield (HennessyMilnerLogic.True[A], price, spectrum.classifyClass(price))
+      } yield AbstractSpectroscopy.SpectroscopyResultItem[S, A, ObservationClassFast, HennessyMilnerLogic.Formula[A]](p, q, distinctions.toList, preorders)
+
+      AbstractSpectroscopy.SpectroscopyResult[S, A, ObservationClassFast, HennessyMilnerLogic.Formula[A]](spectroResults.toList, spectrum)
     }
 
-    val distinguishingNodeFormulas = for {
-      (node, pricedFormulas) <- distinguishingFormulas
-        .toSet[((GameNode, ObservationClassFast), Set[HennessyMilnerLogic.Formula[A]])]
-        .groupBy(kv => kv._1._1)
-      formulas = for {
-        (_, formulasForPrice) <- pricedFormulas
-        f <- formulasForPrice
-      } yield f
-    } yield (node, formulas)
-
-    val bisimilarNodes = for {
-      gn <- hmlGame.discovered
-      if (gn match { case hmlGame.AttackerObservation(_, qq, postConj) => qq.size == 1 && !postConj; case _ => false }) &&
-        !hmlGame.attackerVictoryPrices.isDefinedAt(gn)
-      //TODO: Restrict to relevant
-    } yield (gn, Set[HennessyMilnerLogic.Formula[A]]())
-
-    val distinguishingNodeFormulasExtended = distinguishingNodeFormulas ++ bisimilarNodes
-
-    debugLog(graphvizGameWithFormulas(hmlGame, hmlGame.attackerVictoryPrices.toMap, distinguishingNodeFormulasExtended))
-
-    val bestPreorders: Map[GameNode,List[Spectrum.EquivalenceNotion[ObservationClassFast]]] =
-      distinguishingNodeFormulasExtended.mapValues { ffs =>
-      val classes = ffs.flatMap(spectrum.classifyFormula(_)._2)
-      spectrum.getStrongestPreorderClass(classes)
-    }
-
-    val spectroResults = for {
-      gn <- hmlGame.discovered
-      if gn.isInstanceOf[hmlGame.AttackerObservation]
-      hmlGame.AttackerObservation(p, qq, kind) = gn
-      if !kind && qq.size == 1
-      q <- qq
-      preorders <- bestPreorders.get(gn)
-      distinctionFormulas = distinguishingNodeFormulasExtended(gn)
-      distinctions = for {
-        f <- distinctionFormulas.toList
-        (price, eqs) = spectrum.classifyFormula(f)
-      } yield (f, price, eqs)
-    } yield AbstractSpectroscopy.SpectroscopyResultItem[S, A, ObservationClassFast, HennessyMilnerLogic.Formula[A]](p, q, distinctions, preorders)
-
-    AbstractSpectroscopy.SpectroscopyResult[S, A, ObservationClassFast, HennessyMilnerLogic.Formula[A]](spectroResults.toList, spectrum)
   }
 
   def checkDistinguishing(formula: HennessyMilnerLogic.Formula[A], p: S, q: S) = {
