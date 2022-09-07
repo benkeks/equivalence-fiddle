@@ -35,6 +35,8 @@ class FastSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L])
                 List()
               }
             }
+          case DefenderConjunction(p1, qq1) if qq1.isEmpty =>
+            List(ObservationClassFast())
           case DefenderConjunction(p1, qq1) =>
             List(ObservationClassFast(conjunctionLevels = sP.conjunctionLevels + 1) lub sP)
         }

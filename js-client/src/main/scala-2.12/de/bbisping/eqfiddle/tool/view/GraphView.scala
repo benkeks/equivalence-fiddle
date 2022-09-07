@@ -63,10 +63,10 @@ object GraphView {
           currX <- x.toOption
         } {
           val xDiff = tarX - currX
-          if (Math.abs(xDiff) < 6.0) {
+          if (Math.abs(xDiff) < 15.0) {
             x = UndefOr.any2undefOrA(tarX)
           } else {
-            x = UndefOr.any2undefOrA(currX + 5.0 * Math.signum(xDiff))
+            x = UndefOr.any2undefOrA(currX + 10.0 * Math.signum(xDiff))
             fixed = 0
           }
         }
@@ -75,10 +75,10 @@ object GraphView {
           currY <- y.toOption
         } {
           val yDiff = tarY - currY
-          if (Math.abs(yDiff) < 6.0) {
+          if (Math.abs(yDiff) < 15.0) {
             y = UndefOr.any2undefOrA(tarY)
           } else {
-            y = UndefOr.any2undefOrA(currY + 5.0 * Math.signum(yDiff))
+            y = UndefOr.any2undefOrA(currY + 10.0 * Math.signum(yDiff))
             fixed = 0
           }
         }

@@ -157,7 +157,7 @@ class FastSpectroscopy[S, A, L] (
       gn <- hmlGame.discovered
       if gn.isInstanceOf[hmlGame.AttackerObservation]
       hmlGame.AttackerObservation(p, qq, kind) = gn
-      if qq.size == 1
+      if !kind && qq.size == 1
       q <- qq
       preorders <- bestPreorders.get(gn)
       distinctionFormulas = distinguishingNodeFormulasExtended(gn)
