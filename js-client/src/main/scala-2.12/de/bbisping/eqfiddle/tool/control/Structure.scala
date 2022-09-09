@@ -376,6 +376,53 @@ object Structure {
     }
   }
 
+  case class StructureCharacterize(node: NodeID, resetReplay: Boolean = true) extends StructureAction {
+
+    override def implementStructure(structure: Structure) = {
+      if (resetReplay) {
+        structure.setReplay(List())
+      }
+
+      if (structure.structure.nodes(node)) {
+
+        val begin = Date.now
+
+        val algo = new FastSpectroscopy(structure.structure)
+
+        val comparedPairs = for {
+          n2 <- structure.structure.nodes
+        } yield (node, n2)
+
+        val result = algo.compute(comparedPairs, computeFormulas = false)
+        println("Characterization Spectroscopy took: " + (Date.now - begin) + "ms.")
+
+        for {
+          res <- result.relationItems//.find(r => r.left == n1 && r.right == n2)
+          AbstractSpectroscopy.SpectroscopyResultItem(_, _, distinctions, preorderings) = res
+        } {
+          val dists = distinctions.map(d => d._1.toString() + d._3.map(_.name).mkString(" (", ",", ")")).mkString("<br>")
+          val preords = preorderings.map(_.name).mkString("<br>")
+          //val equations = result.findEqs(n1, n2).map(_.name).mkString("<br>")
+          val replay = List(
+            () => AlgorithmLogging.LogRelation(result.toPreorderingRelation(), s"Preordered by:<div class='preorderings'>$preords</div>"),
+            () => AlgorithmLogging.LogRelation(result.toDistinctionRelation(), s"Distinguished by:<div class='distinctions'>$dists</div>"),
+            //() => AlgorithmLogging.LogRelation(result.toEquivalencesRelation(), s"Equated by:<div class='equations'>$equations</div>")
+          )
+          structure.setReplay(replay)
+          structure.main.doAction(StructureDoReplayStep(), structure)
+        }
+
+        true
+      } else {
+        structure.setReplay(List(
+          () => AlgorithmLogging.LogRelation(LabeledRelation[NodeID, String](), s"Unknown state ‹$node›.")
+        ))
+        structure.main.doAction(StructureDoReplayStep(), structure)
+        false
+      }
+    }
+  }
+
   case class StructureDoReplayStep(goToStep: Int = -1) extends StructureAction {
     override def implementStructure(structure: Structure) = {
       if (goToStep >= 0) structure.currentReplayStep = goToStep

@@ -60,6 +60,10 @@ class Pipeline(val main: Control) extends ModelComponent {
       broadcast(Pipeline.PipelineStatusChange(List(Pipeline.CurrentLine(line))))
       main.dispatchAction(Structure.StructureMinimize())
       true
+    case "characterize" =>
+      broadcast(Pipeline.PipelineStatusChange(List(Pipeline.CurrentLine(line))))
+      main.dispatchAction(Structure.StructureCharacterize(NodeID(info.trim())))
+      true
     case _ =>
       false
   }
