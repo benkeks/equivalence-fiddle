@@ -322,6 +322,12 @@ object Structure {
 
         true
       } else {
+        val unknownState = if (!structure.structure.nodes(n1)) n1 else n2
+        val replay = List(
+          () => AlgorithmLogging.LogRelation(LabeledRelation[NodeID, String](), s"Unknown state ‹$unknownState›.")
+        )
+        structure.setReplay(replay)
+        structure.main.doAction(StructureDoReplayStep(), structure)
         false
       }
     }
