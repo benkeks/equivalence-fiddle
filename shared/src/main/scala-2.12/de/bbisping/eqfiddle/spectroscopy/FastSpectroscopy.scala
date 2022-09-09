@@ -11,8 +11,7 @@ import de.bbisping.eqfiddle.hml.HMLInterpreter
 import de.bbisping.eqfiddle.game.GameGraphVisualizer
 
 class FastSpectroscopy[S, A, L] (
-    ts: WeakTransitionSystem[S, A, L],
-    nodes: List[S])
+    ts: WeakTransitionSystem[S, A, L])
   extends AlgorithmLogging[S] {
 
   val spectrum = ObservationClassFast.LTBTS
@@ -92,15 +91,11 @@ class FastSpectroscopy[S, A, L] (
   })
 
   def compute(
+      comparedPairs: Iterable[(S,S)],
       computeFormulas: Boolean = true
     ): AbstractSpectroscopy.SpectroscopyResult[S, A, ObservationClassFast, HennessyMilnerLogic.Formula[A]] = {
 
     val hmlGame = new FastSpectroscopyGame(ts)
-
-    val comparedPairs = for {
-      n1i <- 0 until nodes.length
-      n2j <- (n1i + 1) until nodes.length
-    } yield (nodes(n1i), nodes(n2j))
 
     val init = for {
       (p, q) <- comparedPairs
@@ -173,9 +168,8 @@ class FastSpectroscopy[S, A, L] (
       for {
         gn <- init
         hmlGame.AttackerObservation(p, qq, _) = gn
-        bestPrice <- hmlGame.attackerVictoryPrices(gn)
       } {
-        //distinguishingFormulas((gn, bestPrice)) = Set(HennessyMilnerLogic.True[A])
+        hmlGame.attackerVictoryPrices(gn)
       }
 
       debugLog(graphvizGameWithFormulas(hmlGame, hmlGame.attackerVictoryPrices.toMap, Map()))

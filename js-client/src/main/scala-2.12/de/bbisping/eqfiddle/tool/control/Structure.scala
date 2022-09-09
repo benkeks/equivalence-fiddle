@@ -300,8 +300,8 @@ object Structure {
 
         val begin = Date.now
 
-        val algo = new FastSpectroscopy(structure.structure, List(n1, n2))
-        val result = algo.compute()
+        val algo = new FastSpectroscopy(structure.structure)
+        val result = algo.compute(List((n1, n2)))
         println("Spectroscopy took: " + (Date.now - begin) + "ms.")
 
         for {
@@ -337,8 +337,14 @@ object Structure {
       val begin = Date.now
 
       val states = structure.structure.nodes.toList
-      val algo = new FastSpectroscopy(structure.structure, states)
-      val result = algo.compute(computeFormulas = false)
+      val algo = new FastSpectroscopy(structure.structure)
+
+      val comparedPairs = for {
+        n1i <- 0 until states.length
+        n2j <- (n1i + 1) until states.length
+      } yield (states(n1i), states(n2j))
+
+      val result = algo.compute(comparedPairs, computeFormulas = false)
       println("Minimization Spectroscopy took: " + (Date.now - begin) + "ms.")
 
       val distRel = result.toDistancesRelation()
