@@ -48,8 +48,8 @@ class FastSpectroscopy[S, A, L] (
             case game.AttackerObservation(p1, qq1, postConj1) if postConj0 =>
               {
                 if (Set(p1) == qq0 && Set(p0) == qq1 && sP.exists(price.maxNegativeConjunctHeight >= _.observationHeight)) { // side swap
-                  val newPrice = ObservationClassFast(Math.max(price.observationHeight, price.maxNegativeConjunctHeight),
-                    price.conjunctionLevels, Math.max(price.observationHeight, price.maxNegativeConjunctHeight), price.maxNegativeConjunctHeight)
+                  val newPrice = ObservationClassFast(Math.min(price.observationHeight, price.maxNegativeConjunctHeight),
+                    price.conjunctionLevels, price.maxPositiveConjunctHeight, price.maxNegativeConjunctHeight)
                   for {
                     postForm <- buildHMLWitness(game, s, newPrice)
                   } yield HennessyMilnerLogic.Negate(postForm)
@@ -57,10 +57,10 @@ class FastSpectroscopy[S, A, L] (
                   Set[HennessyMilnerLogic.Formula[A]]()
                 }
               } ++ {
-                val newPrice = ObservationClassFast(Math.max(price.observationHeight, price.maxPositiveConjunctHeight),
+                val newPrice = ObservationClassFast(Math.min(price.observationHeight, price.maxPositiveConjunctHeight),
                   price.conjunctionLevels, price.maxPositiveConjunctHeight, price.maxNegativeConjunctHeight)
                 if (p0 == p1 && qq0 == qq1 && sP.exists(price.maxPositiveConjunctHeight >= _.observationHeight)) { // no side swap (= positive branch)
-                  buildHMLWitness(game, s, price)
+                  buildHMLWitness(game, s, newPrice)
                 } else {
                   Set[HennessyMilnerLogic.Formula[A]]()
                 }
