@@ -172,6 +172,15 @@ class FastSpectroscopy[S, A, L] (
         hmlGame.attackerVictoryPrices(gn)
       }
 
+      // handle bisimilar nodes
+      val bisimilarNodes = for {
+        gn <- hmlGame.discovered
+        if (gn match { case hmlGame.AttackerObservation(_, qq, postConj) => qq.size == 1 && !postConj; case _ => false }) &&
+          !hmlGame.attackerVictoryPrices.isDefinedAt(gn)
+      } {
+        hmlGame.attackerVictoryPrices(gn) = Set()
+      }
+
       debugLog(graphvizGameWithFormulas(hmlGame, hmlGame.attackerVictoryPrices.toMap, Map()))
 
       val bestPreorders: Map[GameNode,(Set[ObservationClassFast],List[Spectrum.EquivalenceNotion[ObservationClassFast]])] =
