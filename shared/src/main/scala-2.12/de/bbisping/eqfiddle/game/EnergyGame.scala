@@ -30,7 +30,7 @@ trait EnergyGame extends SimpleGame with GameLazyDecision[EnergyGame.Energy] {
 
 object EnergyGame {
 
-  case class Energy(val vector: List[Int]) extends PartiallyOrdered[Energy] {
+  case class Energy(val vector: IndexedSeq[Int]) extends PartiallyOrdered[Energy] {
 
     def dim() = vector.length
 
@@ -43,10 +43,9 @@ object EnergyGame {
           if (this == that) {
             Some(0)
           } else {
-            val compares = (this.vector zip that.vector)
-            if (compares.forall { case (l, r) => l >= r } ) {
+            if (vector.indices.forall(i => this.vector(i) >= that.vector(i))) {
               Some(1)
-            } else if (compares.forall { case (l, r) => l <= r } ) {
+            } else if (vector.indices.forall(i => this.vector(i) <= that.vector(i))) {
               Some(-1)
             } else {
               None
@@ -57,24 +56,26 @@ object EnergyGame {
     }
 
     def lub(that: Energy): Energy = {
-      Energy((this.vector zip that.vector).map(pair => Math.max(pair._1, pair._2)))
+      Energy(IndexedSeq.tabulate(vector.length)(i => Math.max(this.vector(i), that.vector(i))))
     }
 
     def glb(that: Energy): Energy = {
-      Energy((this.vector zip that.vector).map(pair => Math.min(pair._1, pair._2)))
+      Energy(IndexedSeq.tabulate(vector.length)(i => Math.min(this.vector(i), that.vector(i))))
     }
   }
 
   def zeroEnergy(dim: Int) = {
-    Energy(List.fill[Int](dim)(0))
+    Energy(IndexedSeq.fill[Int](dim)(0))
   }
 
   def spikeEnergy(dim: Int, spikePos: Int, spikeVal: Int) = {
-    Energy(List.tabulate(dim)(i => if (i == spikePos) spikeVal else 0))
+    Energy(IndexedSeq.tabulate(dim)(i => if (i == spikePos) spikeVal else 0))
   }
 
-  case class EnergyUpdate(val updates: List[Int]) {
+  case class EnergyUpdate(val updates: IndexedSeq[Int]) {
     /* non-positive Ints = relative updates; positive Ints = min of current row with other row of number... */
+
+    def this(ups: Int*) = this(ups.toIndexedSeq)
 
     private val isZero = updates.forall(_ == 0)
 

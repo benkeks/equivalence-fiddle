@@ -182,7 +182,7 @@ class FastSpectroscopy[S, A, L] (
         hmlGame.attackerVictoryPrices(gn) = Set()
       }
 
-      debugLog(graphvizGameWithFormulas(hmlGame, hmlGame.attackerVictoryPrices.toMap, Map()))
+      //debugLog(graphvizGameWithFormulas(hmlGame, hmlGame.attackerVictoryPrices.toMap, Map()))
 
       val bestPreorders: Map[GameNode,(Set[ObservationClassFast],List[Spectrum.EquivalenceNotion[ObservationClassFast]])] =
         hmlGame.attackerVictoryPrices.toMap.mapValues { energies =>
