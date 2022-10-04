@@ -15,6 +15,8 @@ trait GameLazyDecision[P] extends AbstractGameDiscovery {
   /* set for nodes that are won by the attacker with the minimal attacker victory prices */
   val attackerVictoryPrices = collection.mutable.Map[GameNode, Set[P]]() withDefaultValue Set()
 
+  def isAttackerWinningPrice(gn: GameNode, p: P) = attackerVictoryPrices(gn).exists(mwp => mwp == p || priceIsBetter(mwp, p))
+
   /* price p1 is strictly better than p2 for an attacker win */
   def priceIsBetter(p1: P, p2: P): Boolean
 

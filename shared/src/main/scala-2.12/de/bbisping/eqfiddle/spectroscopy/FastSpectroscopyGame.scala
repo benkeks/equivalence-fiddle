@@ -4,7 +4,6 @@ import de.bbisping.eqfiddle.game.SimpleGame
 import de.bbisping.eqfiddle.game.GameLazyDecision
 import de.bbisping.eqfiddle.hml.ObservationClassFast
 import de.bbisping.eqfiddle.ts.WeakTransitionSystem
-import de.bbisping.eqfiddle.util.Partition
 
 class FastSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L])
   extends SimpleGame with GameLazyDecision[ObservationClassFast] {

@@ -6,6 +6,8 @@ import de.bbisping.eqfiddle.hml.ObservationClassFast
 import de.bbisping.eqfiddle.hml.Spectrum
 import de.bbisping.eqfiddle.game.SimpleGame
 import de.bbisping.eqfiddle.game.SimpleGame.GameNode
+import de.bbisping.eqfiddle.game.EnergyGame
+import de.bbisping.eqfiddle.game.EnergyGame.Energy
 import de.bbisping.eqfiddle.hml.HennessyMilnerLogic
 import de.bbisping.eqfiddle.hml.HMLInterpreter
 import de.bbisping.eqfiddle.game.GameGraphVisualizer
@@ -17,65 +19,62 @@ class FastSpectroscopy[S, A, L] (
   val spectrum = ObservationClassFast.LTBTS
 
   val distinguishingFormulas =
-   
-    collection.mutable.Map[(GameNode, ObservationClassFast), Set[HennessyMilnerLogic.Formula[A]]]()
+    collection.mutable.Map[(GameNode, Energy), Set[HennessyMilnerLogic.Formula[A]]]()
 
-  def buildHMLWitness(game: FastSpectroscopyGame[S, A, L], node: GameNode, price: ObservationClassFast): Set[HennessyMilnerLogic.Formula[A]]
+  def buildHMLWitness(game: EnergySpectroscopyGame[S, A, L], node: GameNode, price: Energy): Set[HennessyMilnerLogic.Formula[A]]
     = distinguishingFormulas.getOrElseUpdate((node, price), {
     //debugLog(s"exploring: $node, $price" )
     node match {
-      case game.AttackerObservation(p0, qq0, false) if qq0.isEmpty =>
+      case game.AttackerObservation(p0, qq0) if qq0.isEmpty =>
         Set(HennessyMilnerLogic.True)
-      case game.AttackerObservation(p0, qq0, postConj0) =>
+      case game.AttackerObservation(p0, qq0) =>
         val successorFormulas =
           for {
             s <- game.successors(node)
-            sP = game.attackerVictoryPrices(s)
-            //currP <- currentVictoryPrices
-            if sP.exists(_ < price) // ensure descent
+            update = game.weight(node, s)
+            newPrice = update.applyEnergyUpdate(price)
+            if game.isAttackerWinningPrice(s, newPrice)
           } yield s match {
-            case game.AttackerObservation(p1, qq1, postConj1) if !postConj0 && sP.exists(_.observationHeight < price.observationHeight) =>
+            case game.AttackerObservation(p1, qq1) =>
               val possibleRestoredActions = for {
                 (a, pp1) <- ts.post(p0)
                 if pp1 contains p1
                 if qq1 == ts.post(qq0,a)
               } yield a
-              val newPriceBound = ObservationClassFast(price.observationHeight - 1, price.conjunctionLevels, price.maxPositiveConjunctHeight, price.maxNegativeConjunctHeight)
               for {
                 a <- possibleRestoredActions.headOption.toSet[A] // just take first option
-                postForm <- buildHMLWitness(game, s, newPriceBound)
+                postForm <- buildHMLWitness(game, s, newPrice)
               } yield HennessyMilnerLogic.Observe(a, postForm)
-            case game.AttackerObservation(p1, qq1, postConj1) if postConj0 =>
-              {
-                if (Set(p1) == qq0 && Set(p0) == qq1 && sP.exists(price.maxNegativeConjunctHeight >= _.observationHeight)) { // side swap
-                  val newPrice = ObservationClassFast(Math.min(price.observationHeight, price.maxNegativeConjunctHeight),
-                    price.conjunctionLevels, price.maxPositiveConjunctHeight, price.maxNegativeConjunctHeight)
-                  for {
-                    postForm <- buildHMLWitness(game, s, newPrice)
-                  } yield HennessyMilnerLogic.Negate(postForm)
-                } else {
-                  Set[HennessyMilnerLogic.Formula[A]]()
-                }
-              } ++ {
-                val newPrice = ObservationClassFast(Math.min(price.observationHeight, price.maxPositiveConjunctHeight),
-                  price.conjunctionLevels, price.maxPositiveConjunctHeight, price.maxNegativeConjunctHeight)
-                if (p0 == p1 && qq0 == qq1 && sP.exists(price.maxPositiveConjunctHeight >= _.observationHeight)) { // no side swap (= positive branch)
-                  buildHMLWitness(game, s, newPrice)
-                } else {
-                  Set[HennessyMilnerLogic.Formula[A]]()
-                }
-              }
             case game.DefenderConjunction(p1, qq1) =>
-              val newPriceBound = ObservationClassFast(price.observationHeight, price.conjunctionLevels - 1, price.maxPositiveConjunctHeight, price.maxNegativeConjunctHeight)
-              buildHMLWitness(game, s, newPriceBound)
+              buildHMLWitness(game, s, newPrice)
             case _ => Set()
           }
         successorFormulas.toSet.flatten
-      case defNode: game.DefenderConjunction =>
+      case game.AttackerClause(p0, q0) =>
+        val successorFormulas = for {
+          s <- game.successors(node)
+          update = game.weight(node, s)
+          newPrice = update.applyEnergyUpdate(price)
+          if game.isAttackerWinningPrice(s, newPrice)
+        } yield {
+          s match {
+            case game.AttackerObservation(p1, qq1) =>
+              if (p0 == p1) {
+                buildHMLWitness(game, s, newPrice)
+              } else {
+                for {
+                  postForm <- buildHMLWitness(game, s, newPrice)
+                } yield HennessyMilnerLogic.Negate(postForm)
+              }
+            }
+          }
+        successorFormulas.toSet.flatten
+      case game.DefenderConjunction(_, _) =>
         val possibleMoves = for {
           s <- game.successors(node)
-          sP = game.attackerVictoryPrices(s)
-        } yield if (sP.exists(_ <= price)) {
+          update = game.weight(node, s)
+          newPrice = update.applyEnergyUpdate(price)
+        } yield if (game.isAttackerWinningPrice(s, newPrice)) {
           buildHMLWitness(game, s, price)
         } else {
           Set()
@@ -95,15 +94,17 @@ class FastSpectroscopy[S, A, L] (
       computeFormulas: Boolean = true
     ): AbstractSpectroscopy.SpectroscopyResult[S, A, ObservationClassFast, HennessyMilnerLogic.Formula[A]] = {
 
-    val hmlGame = new FastSpectroscopyGame(ts)
+    val hmlGame = new EnergySpectroscopyGame(ts)
 
     val init = for {
       (p, q) <- comparedPairs
       start <- List(hmlGame.AttackerObservation(p, Set(q)), hmlGame.AttackerObservation(q, Set(p)))
     } yield start
 
+    val zeroEnergySet = Set(EnergyGame.zeroEnergy(4))
+
     def instantAttackerWin(gn: GameNode) = gn match {
-      case hmlGame.DefenderConjunction(_, qq) if qq.isEmpty => List(ObservationClassFast()); case _ => List()
+      case hmlGame.DefenderConjunction(_, qq) if qq.isEmpty => zeroEnergySet; case _ => Set.empty
     }
 
     hmlGame.populateGame(
@@ -116,7 +117,7 @@ class FastSpectroscopy[S, A, L] (
     if (computeFormulas) {
       for {
         gn <- init
-        hmlGame.AttackerObservation(p, qq, _) = gn
+        hmlGame.AttackerObservation(p, qq) = gn
         bestPrice <- hmlGame.attackerVictoryPrices(gn)
         witnessFormula <- buildHMLWitness(hmlGame, gn, bestPrice)
       } {
@@ -125,7 +126,7 @@ class FastSpectroscopy[S, A, L] (
       }
       val distinguishingNodeFormulas = for {
         (node, pricedFormulas) <- distinguishingFormulas
-          .toSet[((GameNode, ObservationClassFast), Set[HennessyMilnerLogic.Formula[A]])]
+          .toSet[((GameNode, Energy), Set[HennessyMilnerLogic.Formula[A]])]
           .groupBy(kv => kv._1._1)
         formulas = for {
           (_, formulasForPrice) <- pricedFormulas
@@ -135,7 +136,7 @@ class FastSpectroscopy[S, A, L] (
 
       val bisimilarNodes = for {
         gn <- hmlGame.discovered
-        if (gn match { case hmlGame.AttackerObservation(_, qq, postConj) => qq.size == 1 && !postConj; case _ => false }) &&
+        if (gn match { case hmlGame.AttackerObservation(_, qq) => qq.size == 1; case _ => false }) &&
           !hmlGame.attackerVictoryPrices.isDefinedAt(gn)
       } yield (gn, Set[HennessyMilnerLogic.Formula[A]]())
 
@@ -152,8 +153,8 @@ class FastSpectroscopy[S, A, L] (
       val spectroResults = for {
         gn <- hmlGame.discovered
         if gn.isInstanceOf[hmlGame.AttackerObservation]
-        hmlGame.AttackerObservation(p, qq, kind) = gn
-        if !kind && qq.size == 1
+        hmlGame.AttackerObservation(p, qq) = gn
+        if qq.size == 1
         q <- qq
         preorders <- bestPreorders.get(gn)
         distinctionFormulas = distinguishingNodeFormulasExtended(gn)
@@ -167,7 +168,7 @@ class FastSpectroscopy[S, A, L] (
     } else {
       for {
         gn <- init
-        hmlGame.AttackerObservation(p, qq, _) = gn
+        hmlGame.AttackerObservation(p, qq) = gn
       } {
         hmlGame.attackerVictoryPrices(gn)
       }
@@ -175,7 +176,7 @@ class FastSpectroscopy[S, A, L] (
       // handle bisimilar nodes
       val bisimilarNodes = for {
         gn <- hmlGame.discovered
-        if (gn match { case hmlGame.AttackerObservation(_, qq, postConj) => qq.size == 1 && !postConj; case _ => false }) &&
+        if (gn match { case hmlGame.AttackerObservation(_, qq) => qq.size == 1; case _ => false }) &&
           !hmlGame.attackerVictoryPrices.isDefinedAt(gn)
       } {
         hmlGame.attackerVictoryPrices(gn) = Set()
@@ -184,15 +185,17 @@ class FastSpectroscopy[S, A, L] (
       debugLog(graphvizGameWithFormulas(hmlGame, hmlGame.attackerVictoryPrices.toMap, Map()))
 
       val bestPreorders: Map[GameNode,(Set[ObservationClassFast],List[Spectrum.EquivalenceNotion[ObservationClassFast]])] =
-        hmlGame.attackerVictoryPrices.toMap.mapValues { fcs =>
+        hmlGame.attackerVictoryPrices.toMap.mapValues { energies =>
+        // 1 offset in conjunctions between prices and energy metric...
+        val fcs = energies.map(e => ObservationClassFast(e(0), e(1) - 1, e(2), e(3)))
         (fcs, spectrum.getStrongestPreorderClassFromClass(fcs))
       }
 
       val spectroResults = for {
         gn <- hmlGame.discovered
         if gn.isInstanceOf[hmlGame.AttackerObservation]
-        hmlGame.AttackerObservation(p, qq, kind) = gn
-        if !kind && qq.size == 1
+        hmlGame.AttackerObservation(p, qq) = gn
+        if qq.size == 1
         q <- qq
         (prices, preorders) <- bestPreorders.get(gn)
         distinctions = for {
@@ -214,8 +217,8 @@ class FastSpectroscopy[S, A, L] (
   }
 
   def graphvizGameWithFormulas(
-      game: FastSpectroscopyGame[S, A, L],
-      attackerVictoryPrices: Map[GameNode, Set[ObservationClassFast]],
+      game: EnergySpectroscopyGame[S, A, L],
+      attackerVictoryPrices: Map[GameNode, Set[Energy]],
       formulas: Map[GameNode, Set[HennessyMilnerLogic.Formula[A]]]
   ) = {
     val visualizer = new GameGraphVisualizer(game) {
@@ -223,12 +226,14 @@ class FastSpectroscopy[S, A, L] (
       def nodeToID(gn: GameNode): String = gn.hashCode().toString()
 
       def nodeToString(gn: GameNode): String = {
-        val priceString = attackerVictoryPrices.getOrElse(gn,Set()).map(_.toTuple).mkString(" / ")
+        val priceString = attackerVictoryPrices.getOrElse(gn,Set()).map(_.vector).mkString(" / ")
         val formulaString = formulas.getOrElse(gn,Set()).mkString("\\n").replaceAllLiterally("⟩⊤","⟩")
         (gn match {
-          case game.AttackerObservation(p, qq: Set[_], kind) =>
+          case game.AttackerObservation(p, qq: Set[_]) =>
             val qqString = qq.mkString("{",",","}")
-            s"$p, $qqString, $kind"
+            s"$p, $qqString"
+          case game.AttackerClause(p, q) =>
+            s"$p, $q"
           case game.DefenderConjunction(p, qq: Set[_]) =>
             val qqString = qq.mkString("{",",","}")
             s"$p, $qqString"
