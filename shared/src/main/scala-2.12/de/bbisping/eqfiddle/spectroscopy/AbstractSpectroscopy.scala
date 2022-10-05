@@ -206,6 +206,10 @@ object AbstractSpectroscopy {
       spectrum.getStrongestPreorderClass(distinctionClasses)
     }
 
+    def printStats(): String = {
+      s"Relation Items: ${relationItems.size}"
+    }
+
   }
 
 }

@@ -94,6 +94,9 @@ class FastSpectroscopy[S, A, L] (
       computeFormulas: Boolean = true
     ): AbstractSpectroscopy.SpectroscopyResult[S, A, ObservationClassFast, HennessyMilnerLogic.Formula[A]] = {
 
+
+    debugLog(s"Start spectroscopy on ${ts.nodes.size} node transition system with ${comparedPairs.size} compared pairs.")
+
     val hmlGame = new EnergySpectroscopyGame(ts)
 
     val init = for {
@@ -107,9 +110,11 @@ class FastSpectroscopy[S, A, L] (
       case hmlGame.DefenderConjunction(_, qq) if qq.isEmpty => zeroEnergySet; case _ => Set.empty
     }
 
+    debugLog("HML spectroscopy game construction ...")
+
     hmlGame.populateGame(
       init,
-      hmlGame.computeSuccessors(_),
+      (gns => hmlGame.computeSuccessors(gns)),
       instantAttackerWin(_))
 
     debugLog("HML spectroscopy game size: " + hmlGame.discovered.size)
