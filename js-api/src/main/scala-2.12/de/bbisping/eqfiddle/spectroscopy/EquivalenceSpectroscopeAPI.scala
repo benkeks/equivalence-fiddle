@@ -70,8 +70,8 @@ object EquivalenceSpectroscopeAPI {
   @JSExportTopLevel("performSpectroscopy")
   def performSpectroscopy(lts: WeakTS, p1: String, p2: String) = {
     AlgorithmLogging.debugLogActive = false
-    val algo = new PositionalSpectroscopy(lts, List(p1, p2))
-    val result = algo.compute()
+    val algo = new PositionalSpectroscopy(lts)
+    val result = algo.compute(List((p1, p2)))
 
     for {
       res <- result.relationItems.toJSArray
