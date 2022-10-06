@@ -13,17 +13,21 @@ trait GameLazyDecision[P] extends AbstractGameDiscovery {
   private val computedSuccessors = collection.mutable.Map[GameNode, Set[GameNode]]() withDefaultValue Set()
 
   /* set for nodes that are won by the attacker with the minimal attacker victory prices */
-  val attackerVictoryPrices = collection.mutable.Map[GameNode, Set[P]]() withDefaultValue Set()
+  val attackerVictoryPrices = collection.mutable.Map[GameNode, List[P]]() withDefaultValue List()
 
-  def isAttackerWinningPrice(gn: GameNode, p: P) = attackerVictoryPrices(gn).exists(mwp => mwp == p || priceIsBetter(mwp, p))
+  def isAttackerWinningPrice(gn: GameNode, p: P) = attackerVictoryPrices(gn).exists(mwp => priceIsBetterOrEq(mwp, p))
 
   /* price p1 is strictly better than p2 for an attacker win */
   def priceIsBetter(p1: P, p2: P): Boolean
 
+  /* price p1 is better than or equivalent to p2 for an attacker win */
+  def priceIsBetterOrEq(p1: P, p2: P): Boolean
+
+
   private def priceUpdate(node: GameNode, newPrices: Iterable[P]) = {
     // assumes old and new price sets not to contain any dominated prices
     val oldPrices = attackerVictoryPrices(node)
-    val interestingNewPrices = newPrices.filterNot(p => oldPrices.exists(op => priceIsBetter(op, p) || op == p))
+    val interestingNewPrices = newPrices.filterNot(p => oldPrices.exists(op => priceIsBetterOrEq(op, p)))
     if (interestingNewPrices.nonEmpty) {
       val interestingOldPrices = oldPrices.filterNot(p => interestingNewPrices.exists(priceIsBetter(_, p)))
       attackerVictoryPrices(node) = interestingOldPrices ++ interestingNewPrices
@@ -40,7 +44,7 @@ trait GameLazyDecision[P] extends AbstractGameDiscovery {
       discoverSuccessors: GameNode => Iterable[GameNode],
       instantAttackerWin: GameNode => Iterable[P]) = {
 
-    val todo = new collection.mutable.Queue[GameNode]()
+    val todo = collection.mutable.Queue[GameNode]()
     val visited = collection.mutable.Set[GameNode]()
     todo ++= initialNodes
     discovered ++= initialNodes
@@ -58,7 +62,7 @@ trait GameLazyDecision[P] extends AbstractGameDiscovery {
         if (!(visited contains currNode)) {
           visited += currNode
           val succs = discoverSuccessors(currNode)
-          computedSuccessors(currNode) ++= succs
+          computedSuccessors(currNode) = succs.toSet
           for {
             gn <- succs
           } {
@@ -72,10 +76,60 @@ trait GameLazyDecision[P] extends AbstractGameDiscovery {
         val updatedPrice = computeCurrentPrice(currNode)
         if (priceUpdate(currNode, updatedPrice) ) {
           // propagate a new win
-          predecessors(currNode).foreach(n =>
-            n +=: todo)
+          predecessors(currNode).foreach(_ +=: todo)
         }
       }
     }
   }
+
+//   def populateGame(
+//       initialNodes: Iterable[GameNode],
+//       discoverSuccessors: GameNode => Iterable[GameNode],
+//       instantAttackerWin: GameNode => Iterable[P]) = {
+
+//     var todo = collection.parallel.mutable.ParSeq[GameNode]() //.mutable.Queue[GameNode]()
+//     val visited = collection.mutable.Set[GameNode]()
+//     todo ++= initialNodes
+//     discovered ++= initialNodes
+
+//     while (todo.nonEmpty) {
+//       //if (todo.size % 100 == 0)
+//         println(todo.size)
+//       todo = todo.flatMap { currNode =>
+//         val instaWin = instantAttackerWin(currNode)
+//         if (instaWin.nonEmpty) {
+//           if (priceUpdate(currNode, instaWin)) {
+//             // propagate a new win
+//             //predecessors(currNode).foreach(newTodo += _)//(_ +=: todo)
+//             predecessors(currNode)
+//           } else {
+//             List()
+//           }
+//         } else {
+//           val newTodoItems = if (!(visited contains currNode)) {
+//             visited += currNode
+//             val succs = discoverSuccessors(currNode)
+//             computedSuccessors(currNode) ++= succs
+//             (for {
+//               gn <- succs
+//             } yield {
+//               computedPredecessors(gn) += currNode
+//               if (!(discovered contains gn)) {
+//                 discovered += gn
+//                 Some(gn)
+//               } else None
+//             }).flatten
+//           } else List()
+//           val updatedPrice = computeCurrentPrice(currNode)
+//           if (priceUpdate(currNode, updatedPrice) ) {
+//             // propagate a new win
+//             //.foreach(n => newTodo += n)//n +=: todo)
+//             newTodoItems ++ predecessors(currNode)
+//           } else {
+//             newTodoItems
+//           }
+//         }
+//       }
+//     }
+//   }
 }

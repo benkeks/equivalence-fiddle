@@ -53,6 +53,7 @@ class VeryLargeTransitionSystems(val useSpectro: Int = 0) {
     val system = new BuildQuotientSystem(loadedSystem, strongBisim).build()
 
     println(s"Strong bisim minimized system: ${system.nodes.size}")
+    val startTime = System.nanoTime()
 
     val states = system.nodes.toList
 
@@ -64,17 +65,22 @@ class VeryLargeTransitionSystems(val useSpectro: Int = 0) {
     val algo = new FastSpectroscopy(system)
 
     val result = algo.compute(comparedPairs, computeFormulas = false)
+    printTiming(startTime, "Spectroscopy")
 
-    println(result.printStats())
+    //println(result.printStats())
     println(
       (result.spectrum.notions.map(_.name) zip
-      result.toQuotients(result.spectrum.notions, Math.min).map(_.universeSize())).mkString("\n"))
+      result.toQuotients(result.spectrum.notions, Math.min).map(_.universeSize())).mkString("  "))
   }
 
 
   def run(): Unit = {
-    for (i <- List(0,1,2,3,4,5,6)) {
+    for (i <- List(0,1,2,4,5,6)) {
       listMinimizations(vltsSamplesMedium(i))
     }
+  }
+
+  def printTiming(startTime: Long, text: String) = {
+    println(s"$text took ${(System.nanoTime() - startTime) / 1000000}ms")
   }
 }

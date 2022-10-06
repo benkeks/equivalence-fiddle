@@ -47,7 +47,8 @@ class EnergySpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L])
         List()
       } else {
         val conjMoves = List(DefenderConjunction(p0, qq0))
-        if (qq0.isEmpty && optimizeAttackerWins) {
+        if (optimizeAttackerWins && qq0.isEmpty) {
+          // prioritize instant wins because of stuck defender
           conjMoves
         } else {
           val dn = for {
@@ -58,7 +59,12 @@ class EnergySpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L])
               qq0.flatMap(ts.post(_, a))
             )
           }
-          dn ++ conjMoves
+          if (optimizeAttackerWins && dn.exists(_.qq.isEmpty)) {
+            // prioritize successful enabledness attacks over any deeper or wider attack
+            dn.filter(_.qq.isEmpty)
+          } else {
+            dn ++ conjMoves
+          }
         }
       }
     case AttackerClause(p0, q0) =>

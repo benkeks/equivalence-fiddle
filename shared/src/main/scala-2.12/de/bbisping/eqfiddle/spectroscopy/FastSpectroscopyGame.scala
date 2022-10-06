@@ -10,6 +10,7 @@ class FastSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L])
 
   /* price p1 is strictly better than p2 for an attacker win */
   override def priceIsBetter(p1: ObservationClassFast, p2: ObservationClassFast): Boolean = p1 < p2
+  override def priceIsBetterOrEq(p1: ObservationClassFast, p2: ObservationClassFast): Boolean = p1 <= p2
 
   override def computeCurrentPrice(node: GameNode): Iterable[ObservationClassFast] = node match {
     case AttackerObservation(p0, qq0, postConj0) =>

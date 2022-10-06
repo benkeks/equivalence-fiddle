@@ -63,6 +63,8 @@ class EdgeSpectroscopy[S, A, L] (
         ff.map(f => HennessyMilnerLogic.Observe(a, f))
       case game.DefenderMove =>
         ff
+      case _ =>
+        ff
     }
   }
 

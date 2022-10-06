@@ -184,7 +184,7 @@ class FastSpectroscopy[S, A, L] (
         if (gn match { case hmlGame.AttackerObservation(_, qq) => qq.size == 1; case _ => false }) &&
           !hmlGame.attackerVictoryPrices.isDefinedAt(gn)
       } {
-        hmlGame.attackerVictoryPrices(gn) = Set()
+        hmlGame.attackerVictoryPrices(gn) = List()//Set()//collection.mutable.Set()
       }
 
       //debugLog(graphvizGameWithFormulas(hmlGame, hmlGame.attackerVictoryPrices.toMap, Map()))
@@ -192,7 +192,7 @@ class FastSpectroscopy[S, A, L] (
       val bestPreorders: Map[GameNode,(Set[ObservationClassFast],List[Spectrum.EquivalenceNotion[ObservationClassFast]])] =
         hmlGame.attackerVictoryPrices.toMap.mapValues { energies =>
         // 1 offset in conjunctions between prices and energy metric...
-        val fcs = energies.map(e => ObservationClassFast(e(0), e(1) - 1, e(2), e(3)))
+        val fcs = energies.toSet[Energy].map(e => ObservationClassFast(e(0), e(1) - 1, e(2), e(3)))
         (fcs, spectrum.getStrongestPreorderClassFromClass(fcs))
       }
 
@@ -223,7 +223,7 @@ class FastSpectroscopy[S, A, L] (
 
   def graphvizGameWithFormulas(
       game: EnergySpectroscopyGame[S, A, L],
-      attackerVictoryPrices: Map[GameNode, Set[Energy]],
+      attackerVictoryPrices: Map[GameNode, Iterable[Energy]],
       formulas: Map[GameNode, Set[HennessyMilnerLogic.Formula[A]]]
   ) = {
     val visualizer = new GameGraphVisualizer(game) {

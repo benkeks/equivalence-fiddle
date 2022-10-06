@@ -8,6 +8,8 @@ trait EnergyGame extends SimpleGame with GameLazyDecision[EnergyGame.Energy] {
 
   override def priceIsBetter(p1: Energy, p2: Energy): Boolean = p1 < p2
 
+  override def priceIsBetterOrEq(p1: Energy, p2: Energy): Boolean = p1 <= p2
+
   override def computeCurrentPrice(node: GameNode): Iterable[Energy] = {
     node match {
       case an: AttackerNode =>
@@ -35,7 +37,7 @@ object EnergyGame {
   private val EnergyLower = Some(-1)
   private val EnergyHigher = Some(1)
 
-  case class Energy(val vector: IndexedSeq[Int]) extends PartiallyOrdered[Energy] {
+  case class Energy(val vector: Array[Int]) extends PartiallyOrdered[Energy] {
 
     def dim() = vector.length
 
@@ -46,7 +48,7 @@ object EnergyGame {
     override def tryCompareTo[B >: Energy](that: B)(implicit evidence$1: B => PartiallyOrdered[B]): Option[Int] = {
       that match {
         case that: Energy =>
-          if (this == that) {
+          if (this.vector sameElements that.vector) {
             EnergySame
           } else {
             if (vector.indices.forall(i => this.vector(i) >= that.vector(i))) {
@@ -62,20 +64,20 @@ object EnergyGame {
     }
 
     def lub(that: Energy): Energy = {
-      Energy(IndexedSeq.tabulate(vector.length)(i => Math.max(this.vector(i), that.vector(i))))
+      Energy(Array.tabulate(vector.length)(i => Math.max(this.vector(i), that.vector(i))))
     }
 
     def glb(that: Energy): Energy = {
-      Energy(IndexedSeq.tabulate(vector.length)(i => Math.min(this.vector(i), that.vector(i))))
+      Energy(Array.tabulate(vector.length)(i => Math.min(this.vector(i), that.vector(i))))
     }
   }
 
   def zeroEnergy(dim: Int) = {
-    Energy(IndexedSeq.fill[Int](dim)(0))
+    Energy(Array.fill[Int](dim)(0))
   }
 
   def spikeEnergy(dim: Int, spikePos: Int, spikeVal: Int) = {
-    Energy(IndexedSeq.tabulate(dim)(i => if (i == spikePos) spikeVal else 0))
+    Energy(Array.tabulate(dim)(i => if (i == spikePos) spikeVal else 0))
   }
 
   case class EnergyUpdate(
@@ -83,12 +85,12 @@ object EnergyGame {
        * - non-positive Ints = relative updates
        * - positive Ints = min of current row with other row of number (starting to count at index 1)
       */
-      val updates: IndexedSeq[Int],
+      val updates: Array[Int],
       /** bound height of energy lattice */
       energyCap: Int = 3 // Int.MaxValue
     ) {
 
-    def this(ups: Int*) = this(ups.toIndexedSeq)
+    def this(ups: Int*) = this(ups.toArray)
 
     private val isZero = updates.forall(_ == 0)
 
