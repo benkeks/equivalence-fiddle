@@ -5,14 +5,14 @@ import de.bbisping.eqfiddle.game.EnergyGame
 import de.bbisping.eqfiddle.hml.ObservationClassFast
 import de.bbisping.eqfiddle.ts.WeakTransitionSystem
 
-class EnergySpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L])
+class EnergySpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], energyCap: Int = Int.MaxValue)
   extends SimpleGame with EnergyGame {
 
-  private val NoEnergyUpdate = new EnergyGame.EnergyUpdate(0,0,0,0)
-  private val ObsEnergyUpdate = new EnergyGame.EnergyUpdate(-1,0,0,0)
-  private val ConjEnergyUpdate = new EnergyGame.EnergyUpdate(0,-1,0,0)
-  private val PosClauseEnergyUpdate = new EnergyGame.EnergyUpdate(0,0,1,0)
-  private val NegClauseEnergyUpdate = new EnergyGame.EnergyUpdate(0,0,0,1)
+  private val NoEnergyUpdate = new EnergyGame.EnergyUpdate(Array(0,0,0,0), energyCap = energyCap)
+  private val ObsEnergyUpdate = new EnergyGame.EnergyUpdate(Array(-1,0,0,0), energyCap = energyCap)
+  private val ConjEnergyUpdate = new EnergyGame.EnergyUpdate(Array(0,-1,0,0), energyCap = energyCap)
+  private val PosClauseEnergyUpdate = new EnergyGame.EnergyUpdate(Array(0,0,1,0), energyCap = energyCap)
+  private val NegClauseEnergyUpdate = new EnergyGame.EnergyUpdate(Array(0,0,0,1), energyCap = energyCap)
   
   override def weight(gn1: GameNode, gn2: GameNode): EnergyGame.EnergyUpdate = gn1 match {
     case AttackerObservation(p0, qq0) =>

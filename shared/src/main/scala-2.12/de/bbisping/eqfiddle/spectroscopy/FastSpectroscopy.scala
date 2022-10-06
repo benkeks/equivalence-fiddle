@@ -97,7 +97,7 @@ class FastSpectroscopy[S, A, L] (
 
     debugLog(s"Start spectroscopy on ${ts.nodes.size} node transition system with ${comparedPairs.size} compared pairs.")
 
-    val hmlGame = new EnergySpectroscopyGame(ts)
+    val hmlGame = new EnergySpectroscopyGame(ts, energyCap = if (computeFormulas) Int.MaxValue else 3)
 
     val init = for {
       (p, q) <- comparedPairs
