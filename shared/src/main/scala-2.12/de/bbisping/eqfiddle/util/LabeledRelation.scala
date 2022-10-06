@@ -156,7 +156,19 @@ class LabeledRelation[E, L](val rep: Map[E, Map[L, Set[E]]]) {
   }
   
   def isReflexiveSomewhere = tupleSet.exists{case (e1, _, e2) => e1 == e2}
-  
+
+  /** If relation (restricted to selected labels) is an equivalence relation, outputs an equivalent "coloring" of E */
+  def toQuotientColoring(labelFilter: L => Boolean, representative: (E, E) => E): Coloring[E] = {
+    val colors = lhs.groupBy { e1 =>
+      val post = for {
+        (l, ee2) <- rep(e1)
+        if labelFilter(l)
+      } yield ee2.reduce(representative)
+      post.fold(e1)(representative) // if the relation is irreflexive, a loop will be assumed anyways
+    }
+    Coloring.fromPartition(colors.values)
+  }
+
   def toGraphString() = {
     val list = (lhs ++ rhs).toIndexedSeq
     val idFor = list.indices.map(i => (list(i), i)).toMap
@@ -181,7 +193,7 @@ class LabeledRelation[E, L](val rep: Map[E, Map[L, Set[E]]]) {
     case t: LabeledRelation[E, L] => rep == t.rep
     case _ => false
   }
-  
+
   override def hashCode = rep.hashCode
 }
 

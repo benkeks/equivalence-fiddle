@@ -13,6 +13,7 @@ import de.bbisping.eqfiddle.hml.HennessyMilnerLogic
 import de.bbisping.eqfiddle.hml.ObservationClass
 import de.bbisping.eqfiddle.hml.Spectrum
 import de.bbisping.eqfiddle.hml.HMLInterpreter
+import de.bbisping.eqfiddle.util.Coloring
 
 abstract class AbstractSpectroscopy[S, A, L, CF <: HennessyMilnerLogic.Formula[A]] (
     val ts: WeakTransitionSystem[S, A, L],
@@ -179,6 +180,18 @@ object AbstractSpectroscopy {
         q = orderedPair(1)
       } yield (p, dist.map(_.asInstanceOf[OCC]), q)
       new LabeledRelation(relTuples.toSet)
+    }
+
+    def toQuotients(eqs: Iterable[Spectrum.EquivalenceNotion[ObservationClass]], rep: (S, S) => S): Iterable[Coloring[S]] = {
+      val distances = toDistancesRelation().symmetricClosure
+      for {
+        eq <- eqs
+      } yield {
+        distances.toQuotientColoring(
+          dist => !dist.exists(d => d <= eq.obsClass),
+          rep
+        )
+      }
     }
 
     def foundPreorders(p: S, q: S): List[Spectrum.EquivalenceNotion[OC]] = {

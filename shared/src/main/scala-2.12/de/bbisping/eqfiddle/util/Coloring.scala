@@ -5,6 +5,8 @@ import scala.collection.mutable.HashMap
 case class Coloring[E](val colors: Map[E, Coloring.Color] = Map()) {
   
   lazy val universe = colors.values.toSet
+
+  def universeSize() = universe.size
   
   lazy val partitions = 
     colors.toSet[(E, Coloring.Color)].groupBy(_._2).mapValues(_.map(_._1))
@@ -105,7 +107,7 @@ object Coloring {
   
   type Color = Int
   
-  def fromPartition[E](sets: Set[Set[E]]) = {
+  def fromPartition[E](sets: Iterable[Set[E]]) = {
     val c = for {
       (s, idx) <- sets.zipWithIndex
       e <- s
