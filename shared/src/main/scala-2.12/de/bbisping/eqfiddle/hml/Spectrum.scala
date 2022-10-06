@@ -28,7 +28,7 @@ case class Spectrum[+OC <: ObservationClass](
 
   val getSpectrumClass = notions.map(en => (en.name, en)).toMap
 
-  val notionNames = getSpectrumClass.values
+  val notionNames = getSpectrumClass.keySet
 
   /** names the coarsest notion of equivalence where this formula is part of the distinguishing formulas */
   def classifyFormula[CF <: HennessyMilnerLogic.Formula[_]](f: CF): (OC, List[EquivalenceNotion[OC]]) = {

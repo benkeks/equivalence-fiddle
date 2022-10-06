@@ -14,6 +14,7 @@ import de.bbisping.eqfiddle.spectroscopy.AbstractSpectroscopy
 import de.bbisping.eqfiddle.spectroscopy.PositionalSpectroscopy
 import de.bbisping.eqfiddle.hml.Spectrum
 import de.bbisping.eqfiddle.hml.HennessyMilnerLogic
+import de.bbisping.eqfiddle.spectroscopy.SpectroscopyInterface
 
 trait CSSSampleTests[OC <: ObservationClass, CF <: HennessyMilnerLogic.Formula[String]] extends AnyFunSpec with should.Matchers  {
 
@@ -29,7 +30,7 @@ trait CSSSampleTests[OC <: ObservationClass, CF <: HennessyMilnerLogic.Formula[S
   def runTest(
       sampleSystem: WeakTransitionSystem[NodeID,String,String],
       sampleNames: List[(String, String, List[String], List[String])],
-      spectroscopyAlgo: (WeakTransitionSystem[NodeID,String,String], List[NodeID]) => AbstractSpectroscopy[NodeID,String,String,CF],
+      spectroscopyAlgo: (WeakTransitionSystem[NodeID,String,String]) => SpectroscopyInterface[NodeID,String,String,CF],
       title: String) = {
     val samples = sampleNames.map {
       case (n1, n2, preords, notPreords) =>
@@ -40,11 +41,13 @@ trait CSSSampleTests[OC <: ObservationClass, CF <: HennessyMilnerLogic.Formula[S
         describe("for " + n1s + " <= " + n2s) {
           val n1 = NodeID(n1s)
           val n2 = NodeID(n2s)
-          val preordsStr = preords.map(_.name)
-          val notPreordsStr = notPreords.map(_.name)
 
-          val algo = spectroscopyAlgo(sampleSystem, List(n1, n2))
-          val result = algo.compute()
+          val algo = spectroscopyAlgo(sampleSystem)
+
+          val preordsStr = preords.map(_.name)
+          val notPreordsStr = notPreords.map(_.name).intersect(algo.spectrum.notionNames)
+
+          val result = algo.compute(List((n1, n2)))
 
           val foundDistinctions = result.foundDistinctions(n1, n2).map(_.name).toSet
           it ("should be distinguished by " + notPreordsStr.mkString(",")) {
@@ -53,6 +56,7 @@ trait CSSSampleTests[OC <: ObservationClass, CF <: HennessyMilnerLogic.Formula[S
 
           val foundPreorders = result.foundPreorders(n1, n2).map(_.name).toSet
           it ("should exactly be preordered by " + preordsStr.mkString(",")) {
+            if (!(preordsStr subsetOf algo.spectrum.notionNames)) cancel(s"$preordsStr do not apply for $title spectrum")
             (foundPreorders diff preordsStr) should be (empty)
             (preordsStr diff foundPreorders) should be (empty)
           }

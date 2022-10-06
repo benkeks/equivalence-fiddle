@@ -14,7 +14,7 @@ import de.bbisping.eqfiddle.game.GameGraphVisualizer
 
 class FastSpectroscopy[S, A, L] (
     ts: WeakTransitionSystem[S, A, L])
-  extends AlgorithmLogging[S] {
+  extends SpectroscopyInterface[S, A, L, HennessyMilnerLogic.Formula[A]] with AlgorithmLogging[S] {
 
   val spectrum = ObservationClassFast.LTBTS
 
@@ -90,9 +90,15 @@ class FastSpectroscopy[S, A, L] (
   })
 
   def compute(
+      comparedPairs: Iterable[(S,S)]
+    ): SpectroscopyInterface.SpectroscopyResult[S, A, ObservationClassFast, HennessyMilnerLogic.Formula[A]] = {
+    compute(comparedPairs, computeFormulas = true)
+  }
+
+  def compute(
       comparedPairs: Iterable[(S,S)],
       computeFormulas: Boolean = true
-    ): AbstractSpectroscopy.SpectroscopyResult[S, A, ObservationClassFast, HennessyMilnerLogic.Formula[A]] = {
+    ): SpectroscopyInterface.SpectroscopyResult[S, A, ObservationClassFast, HennessyMilnerLogic.Formula[A]] = {
 
 
     debugLog(s"Start spectroscopy on ${ts.nodes.size} node transition system with ${comparedPairs.size} compared pairs.")
@@ -167,9 +173,9 @@ class FastSpectroscopy[S, A, L] (
           f <- distinctionFormulas.toList
           (price, eqs) = spectrum.classifyFormula(f)
         } yield (f, price, eqs)
-      } yield AbstractSpectroscopy.SpectroscopyResultItem[S, A, ObservationClassFast, HennessyMilnerLogic.Formula[A]](p, q, distinctions, preorders)
+      } yield SpectroscopyInterface.SpectroscopyResultItem[S, A, ObservationClassFast, HennessyMilnerLogic.Formula[A]](p, q, distinctions, preorders)
 
-      AbstractSpectroscopy.SpectroscopyResult[S, A, ObservationClassFast, HennessyMilnerLogic.Formula[A]](spectroResults.toList, spectrum)
+      SpectroscopyInterface.SpectroscopyResult[S, A, ObservationClassFast, HennessyMilnerLogic.Formula[A]](spectroResults.toList, spectrum)
     } else {
       for {
         gn <- init
@@ -206,9 +212,9 @@ class FastSpectroscopy[S, A, L] (
         distinctions = for {
           price <- prices
         } yield (HennessyMilnerLogic.True[A], price, spectrum.classifyClass(price))
-      } yield AbstractSpectroscopy.SpectroscopyResultItem[S, A, ObservationClassFast, HennessyMilnerLogic.Formula[A]](p, q, distinctions.toList, preorders)
+      } yield SpectroscopyInterface.SpectroscopyResultItem[S, A, ObservationClassFast, HennessyMilnerLogic.Formula[A]](p, q, distinctions.toList, preorders)
 
-      AbstractSpectroscopy.SpectroscopyResult[S, A, ObservationClassFast, HennessyMilnerLogic.Formula[A]](spectroResults.toList, spectrum)
+      SpectroscopyInterface.SpectroscopyResult[S, A, ObservationClassFast, HennessyMilnerLogic.Formula[A]](spectroResults.toList, spectrum)
     }
 
   }

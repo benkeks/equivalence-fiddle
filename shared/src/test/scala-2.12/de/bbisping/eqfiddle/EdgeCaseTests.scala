@@ -2,6 +2,7 @@ package de.bbisping.eqfiddle
 
 import de.bbisping.eqfiddle.spectroscopy.PositionalSpectroscopy
 import de.bbisping.eqfiddle.spectroscopy.EdgeSpectroscopy
+import de.bbisping.eqfiddle.spectroscopy.FastSpectroscopy
 import de.bbisping.eqfiddle.hml.ObservationClassStrong
 import de.bbisping.eqfiddle.hml.HennessyMilnerLogic
 
@@ -15,6 +16,7 @@ class EdgeCaseTests extends CSSSampleTests[ObservationClassStrong, HennessyMilne
     ("L2", "R2", List("readiness", "simulation"), List("failure-trace", "impossible-future"))
   )
 
-  runTest(reviewSystem, sampleNames, new PositionalSpectroscopy(_, _), "(positional)")
-  runTest(reviewSystem, sampleNames, new EdgeSpectroscopy(_, _), "(edge-labeled)")
+  runTest(reviewSystem, sampleNames, new PositionalSpectroscopy(_), "(positional)")
+  runTest(reviewSystem, sampleNames, new EdgeSpectroscopy(_), "(edge-labeled)")
+  runTest(reviewSystem, sampleNames, new FastSpectroscopy(_), "(energy-labeled)")
 }

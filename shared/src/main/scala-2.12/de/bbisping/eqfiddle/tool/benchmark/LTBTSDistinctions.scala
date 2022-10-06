@@ -55,13 +55,12 @@ class LTBTSDistinctions(val useSpectro: Int = 0) {
       esDef.getDeclaration(n2s) map (_.process) foreach (println(_))
 
       val result = {
-        if (useSpectro == 0) {
-          val algo = new FastSpectroscopy(ltbtsSystem)
-          algo.compute(List((n1, n2)))
+        val algo = if (useSpectro == 0) {
+          new FastSpectroscopy(ltbtsSystem)
         } else {
-          val algo = new EdgeSpectroscopy(ltbtsSystem, List(n1, n2))
-          algo.compute()
+          new EdgeSpectroscopy(ltbtsSystem)
         }
+        algo.compute(List((n1, n2)))
       }
 
       for {

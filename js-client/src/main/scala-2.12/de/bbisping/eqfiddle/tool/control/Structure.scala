@@ -21,6 +21,7 @@ import de.bbisping.eqfiddle.spectroscopy.{AbstractSpectroscopy, PositionalSpectr
 import de.bbisping.eqfiddle.spectroscopy.FastSpectroscopy
 import de.bbisping.eqfiddle.hml.ObservationClassFast
 import de.bbisping.eqfiddle.hml.Spectrum
+import de.bbisping.eqfiddle.spectroscopy.SpectroscopyInterface
 
 
 class Structure(val main: Control) extends ModelComponent {
@@ -306,7 +307,7 @@ object Structure {
 
         for {
           res <- result.relationItems.find(r => r.left == n1 && r.right == n2)
-          AbstractSpectroscopy.SpectroscopyResultItem(_, _, distinctions, preorderings) = res
+          SpectroscopyInterface.SpectroscopyResultItem(_, _, distinctions, preorderings) = res
         } {
           val dists = distinctions.map(d => d._1.toString() + d._3.map(_.name).mkString(" (", ",", ")")).mkString("<br>")
           val preords = preorderings.map(_.name).mkString("<br>")
@@ -398,7 +399,7 @@ object Structure {
 
         for {
           res <- result.relationItems//.find(r => r.left == n1 && r.right == n2)
-          AbstractSpectroscopy.SpectroscopyResultItem(_, _, distinctions, preorderings) = res
+          SpectroscopyInterface.SpectroscopyResultItem(_, _, distinctions, preorderings) = res
         } {
           val dists = distinctions.map(d => d._1.toString() + d._3.map(_.name).mkString(" (", ",", ")")).mkString("<br>")
           val preords = preorderings.map(_.name).mkString("<br>")

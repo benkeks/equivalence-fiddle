@@ -2,6 +2,7 @@ package de.bbisping.eqfiddle
 
 import de.bbisping.eqfiddle.spectroscopy.PositionalSpectroscopy
 import de.bbisping.eqfiddle.spectroscopy.EdgeSpectroscopy
+import de.bbisping.eqfiddle.spectroscopy.FastSpectroscopy
 import de.bbisping.eqfiddle.hml.ObservationClassStrong
 import de.bbisping.eqfiddle.hml.HennessyMilnerLogic
 
@@ -35,6 +36,7 @@ class LTBTSTests extends CSSSampleTests[ObservationClassStrong, HennessyMilnerLo
     ("R50", "L50", List("ready-trace", "impossible-future"), List("possible-future", "simulation"))
   )
 
-  runTest(ltbtsSystem, sampleNames, new PositionalSpectroscopy(_, _), "(positional)")
-  runTest(ltbtsSystem, sampleNames, new EdgeSpectroscopy(_, _), "(edge-labeled)")
+  runTest(ltbtsSystem, sampleNames, new PositionalSpectroscopy(_), "(positional)")
+  runTest(ltbtsSystem, sampleNames, new EdgeSpectroscopy(_), "(edge-labeled)")
+  runTest(ltbtsSystem, sampleNames, new FastSpectroscopy(_), "(energy-labeled)")
 }

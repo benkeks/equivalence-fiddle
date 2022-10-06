@@ -16,7 +16,7 @@ import de.bbisping.eqfiddle.hml.ObservationClassWeak
 class WeakPositionalSpectroscopy[S, A, L] (
     ts: WeakTransitionSystem[S, A, L],
     nodes: List[S])
-  extends AbstractSpectroscopy[S, A, L, Formula[A]](ts, nodes) {
+  extends AbstractSpectroscopy[S, A, L, Formula[A]](ts) {
 
   override val spectrum = ObservationClassWeak.LTBTS
 
@@ -91,9 +91,16 @@ class WeakPositionalSpectroscopy[S, A, L] (
 
   def gameEdgeToLabel(game: AbstractSpectroscopyGame[S, A, L], gn1: GameNode, gn2: GameNode): String = ""
 
-  override def compute() = {
+  def compute(
+      comparedPairs: Iterable[(S,S)]
+    ) = {
+  
+    val init = for {
+      (p, q) <- comparedPairs
+      start <- List((p, Set(q)), (q, Set(p)))
+    } yield start
 
-    val hmlGame = new WeakSpectroscopyGame(ts, List((nodes(0), Set(nodes(1))), (nodes(1), Set(nodes(0)))))
+    val hmlGame = new WeakSpectroscopyGame(ts, init)
 
     debugLog("HML spectroscopy game size: " + hmlGame.discovered.size)
 

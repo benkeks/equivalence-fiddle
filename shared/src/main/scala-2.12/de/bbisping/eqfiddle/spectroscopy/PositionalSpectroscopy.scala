@@ -14,9 +14,8 @@ import de.bbisping.eqfiddle.hml.HennessyMilnerLogic.Formula
 import de.bbisping.eqfiddle.hml.ObservationClassStrong
 
 class PositionalSpectroscopy[S, A, L] (
-    ts: WeakTransitionSystem[S, A, L],
-    nodes: List[S])
-  extends AbstractSpectroscopy[S, A, L, Formula[A]](ts, nodes) {
+    ts: WeakTransitionSystem[S, A, L])
+  extends AbstractSpectroscopy[S, A, L, Formula[A]](ts) {
 
   override val spectrum = ObservationClassStrong.LTBTS
 
@@ -94,31 +93,34 @@ class PositionalSpectroscopy[S, A, L] (
 
   def gameEdgeToLabel(game: AbstractSpectroscopyGame[S, A, L], gn1: GameNode, gn2: GameNode): String = ""
 
-  def compute() = {
+  def compute(
+      comparedPairs: Iterable[(S,S)]
+    ) = {
+  
+    val init = for {
+      (p, q) <- comparedPairs
+      start <- List((p, Set(q)), (q, Set(p)))
+    } yield start
 
-    val hmlGame = new SpectroscopyGame(ts, List((nodes(0), Set(nodes(1))), (nodes(1), Set(nodes(0)))))
+    val hmlGame = new SpectroscopyGame(ts, init)
 
     debugLog("HML spectroscopy game size: " + hmlGame.discovered.size)
 
     val attackerWin = hmlGame.computeWinningRegion()
-    val aLR = hmlGame.AttackerObservation(nodes(0), Set(nodes(1)), hmlGame.ConjunctMove)
-    val aRL = hmlGame.AttackerObservation(nodes(1), Set(nodes(0)), hmlGame.ConjunctMove)
 
-    val minFormulas = buildHML(hmlGame, attackerWin, Set(aLR, aRL))
+    val attackerStarts = for { (p,q) <- comparedPairs; (l,r) <- List((p,q), (q,p)) } yield hmlGame.AttackerObservation(l, Set(r), hmlGame.ConjunctMove)
 
-    if (attackerWin.contains(aLR)) {
-      minFormulas(aLR).foreach { f =>
-        debugLog("Distinguished under " + spectrum.classifyFormula(f) + " preorder by " + f.toString())
-        checkDistinguishing(f, nodes(0), nodes(1))
+    val minFormulas = buildHML(hmlGame, attackerWin, attackerStarts.toSet)
+
+    for (aLR @ hmlGame.AttackerObservation(l, rr, hmlGame.ConjunctMove) <- attackerStarts) {
+      if (attackerWin.contains(aLR)) {
+        minFormulas(aLR).foreach { f =>
+          debugLog("Distinguished under " + spectrum.classifyFormula(f) + " preorder by " + f.toString())
+          checkDistinguishing(f, l, rr.head)
+        }
       }
     }
 
-    if (attackerWin.contains(aRL)) {
-      minFormulas(aRL).foreach { f =>
-        debugLog("Distinguished under " + spectrum.classifyFormula(f) + " preorder by " + f.toString())
-        checkDistinguishing(f, nodes(1), nodes(0))
-      }
-    }
     debugLog(graphvizGameWithFormulas(hmlGame, attackerWin, minFormulas))
 
     collectSpectroscopyResult(hmlGame, minFormulas)
