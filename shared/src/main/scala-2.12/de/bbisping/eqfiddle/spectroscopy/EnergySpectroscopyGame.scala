@@ -34,7 +34,8 @@ class EnergySpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L])
   }
 
   /* This will abort the game construction in nodes where the attacker cannot win because p is contained in qq. */
-  val optimizeSymmetryDefWins: Boolean = false
+  val optimizeSymmetryDefWins: Boolean = true
+  val optimizeAttackerWins: Boolean = true
 
   case class AttackerObservation(p: S, qq: Set[S]) extends SimpleGame.AttackerNode
   case class AttackerClause(p: S, q: S) extends SimpleGame.AttackerNode
@@ -46,15 +47,19 @@ class EnergySpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L])
         List()
       } else {
         val conjMoves = List(DefenderConjunction(p0, qq0))
-        val dn = for {
-          (a,pp1) <- ts.post(p0)
-          p1 <- pp1
-        } yield {
-          AttackerObservation(p1,
-            qq0.flatMap(ts.post(_, a))
-          )
+        if (qq0.isEmpty && optimizeAttackerWins) {
+          conjMoves
+        } else {
+          val dn = for {
+            (a,pp1) <- ts.post(p0)
+            p1 <- pp1
+          } yield {
+            AttackerObservation(p1,
+              qq0.flatMap(ts.post(_, a))
+            )
+          }
+          dn ++ conjMoves
         }
-        dn ++ conjMoves
       }
     case AttackerClause(p0, q0) =>
       val neg = AttackerObservation(q0, Set(p0))

@@ -30,23 +30,29 @@ trait EnergyGame extends SimpleGame with GameLazyDecision[EnergyGame.Energy] {
 
 object EnergyGame {
 
+  // hard code values to prevent spamming of object creation in comparisons
+  private val EnergySame = Some(0)
+  private val EnergyLower = Some(-1)
+  private val EnergyHigher = Some(1)
+
   case class Energy(val vector: IndexedSeq[Int]) extends PartiallyOrdered[Energy] {
 
     def dim() = vector.length
 
     def apply(n: Int) = vector(n)
 
+
     /* assumes that only energies of equal length are being compared */
     override def tryCompareTo[B >: Energy](that: B)(implicit evidence$1: B => PartiallyOrdered[B]): Option[Int] = {
       that match {
         case that: Energy =>
           if (this == that) {
-            Some(0)
+            EnergySame
           } else {
             if (vector.indices.forall(i => this.vector(i) >= that.vector(i))) {
-              Some(1)
+              EnergyHigher
             } else if (vector.indices.forall(i => this.vector(i) <= that.vector(i))) {
-              Some(-1)
+              EnergyLower
             } else {
               None
             }
@@ -72,8 +78,15 @@ object EnergyGame {
     Energy(IndexedSeq.tabulate(dim)(i => if (i == spikePos) spikeVal else 0))
   }
 
-  case class EnergyUpdate(val updates: IndexedSeq[Int]) {
-    /* non-positive Ints = relative updates; positive Ints = min of current row with other row of number... */
+  case class EnergyUpdate(
+      /** component updates
+       * - non-positive Ints = relative updates
+       * - positive Ints = min of current row with other row of number (starting to count at index 1)
+      */
+      val updates: IndexedSeq[Int],
+      /** bound height of energy lattice */
+      energyCap: Int = 3 // Int.MaxValue
+    ) {
 
     def this(ups: Int*) = this(ups.toIndexedSeq)
 
@@ -100,7 +113,7 @@ object EnergyGame {
           (u, i) <- updates.zipWithIndex
         } yield {
           if (u <= 0) {
-            e(i) - u
+            Math.min(e(i) - u, energyCap)
           } else {
             e(i)
           }

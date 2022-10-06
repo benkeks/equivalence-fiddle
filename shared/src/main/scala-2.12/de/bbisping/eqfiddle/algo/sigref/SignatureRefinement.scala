@@ -33,7 +33,6 @@ abstract class SignatureRefinement[S, A, L] (
   def computePartition() = {
 
     var size = 1
-    println("start sigref")
     while ({
       
       val signatures = for {
@@ -56,12 +55,10 @@ abstract class SignatureRefinement[S, A, L] (
       size = colorMap.size
       //logRelation(Relation.fromColoring(partition), "refinement "+size)
       
-      println(size)
+      debugLog(s"sigref: $size")
       
       oldSize != size
     }) {}
-    
-    println("sigref complete")
     
     partition
   }

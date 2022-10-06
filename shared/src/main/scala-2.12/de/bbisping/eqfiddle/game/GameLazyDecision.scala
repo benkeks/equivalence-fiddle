@@ -46,6 +46,7 @@ trait GameLazyDecision[P] extends AbstractGameDiscovery {
     discovered ++= initialNodes
 
     while (todo.nonEmpty) {
+      //if (todo.size % 100 == 0) println(todo.size)
       val currNode = todo.dequeue()
       val instaWin = instantAttackerWin(currNode)
       if (instaWin.nonEmpty) {
