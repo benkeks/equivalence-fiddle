@@ -23,6 +23,7 @@ trait GameLazyDecision[P] extends AbstractGameDiscovery {
   /* price p1 is better than or equivalent to p2 for an attacker win */
   def priceIsBetterOrEq(p1: P, p2: P): Boolean
 
+  def showSuccessors(): String = computedSuccessors.toString
 
   private def priceUpdate(node: GameNode, newPrices: Iterable[P]) = {
     // assumes old and new price sets not to contain any dominated prices
@@ -30,7 +31,7 @@ trait GameLazyDecision[P] extends AbstractGameDiscovery {
     val interestingNewPrices = newPrices.filterNot(p => oldPrices.exists(op => priceIsBetterOrEq(op, p)))
     if (interestingNewPrices.nonEmpty) {
       val interestingOldPrices = oldPrices.filterNot(p => interestingNewPrices.exists(priceIsBetter(_, p)))
-      attackerVictoryPrices(node) = interestingOldPrices ++ interestingNewPrices
+      attackerVictoryPrices(node) = interestingOldPrices ++ interestingNewPrices.filterNot(p => interestingNewPrices.exists(op => priceIsBetter(op, p)))
       true
     } else {
       false
