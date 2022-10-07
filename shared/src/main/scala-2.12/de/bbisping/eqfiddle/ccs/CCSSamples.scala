@@ -351,13 +351,17 @@ P2(x=600, y=150)
 c(x=700, y=400)
 "a + b.c"(x=500, y=500)
 "a + b + b.c"(x=600, y=400)
-"a.(a + b.c) + a.(a + b + b.c)"(x=400, y=300)
-"a.(a + b + b.c)"(x=600, y=300)
+S0(x=600, y=300)
+"a.(a + b.c) + S0"(x=450, y=300)
+S1(x=400, y=400)
 
-P1 = b.(a.(a + b.c) + a.(a + b + b.c))
-P2 = (b.a.(a + b + b.c) + b.c)
+P1 = b.(a.(a + b.c) + S0)
+P2 = (b.S0 + b.c)
+S0 = a.(a + b + b.c)
+S1 = a.(a + b.c)
 
-@compare "P1,P2"
+@compare "P1,P2" 
+@compare "S0,S1"
 
 @minimize
 """
