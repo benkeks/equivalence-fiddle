@@ -27,7 +27,7 @@ abstract class GameGraphVisualizer(game: SimpleGame with AbstractGameDiscovery) 
     } yield s"$nodeID [shape=$shape, color=$color, style=$style, label=" + "\"" + nodeLabel +"\"]"
 
     "digraph rel{" +
-      nodeOutput.mkString(";") +
+      nodeOutput.mkString("", ";", ";") +
       edgeOutput.mkString(";") +
       "}"
   }

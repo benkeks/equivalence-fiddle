@@ -57,7 +57,7 @@ case class Spectrum[+OC <: ObservationClass](
     classifications.map(_.name).mkString(",")
   }
 
-  def getLeastDistinguishing[CF <: HennessyMilnerLogic.Formula[_]](formulas: Set[CF]): Set[CF] = {
+  def getLeastDistinguishing[CF <: HennessyMilnerLogic.Formula[_]](formulas: Iterable[CF]): Iterable[CF] = {
     val classifications = formulas.map(f => (f, classifyFormula(f)))
     val allClassBounds = classifications.flatMap(_._2._2.map(_.obsClass))
 

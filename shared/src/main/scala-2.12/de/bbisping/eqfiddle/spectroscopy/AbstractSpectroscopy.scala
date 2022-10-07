@@ -34,7 +34,7 @@ abstract class AbstractSpectroscopy[S, A, L, CF <: HennessyMilnerLogic.Formula[A
 
   def collectSpectroscopyResult(
     game: AbstractSpectroscopyGame[S, A, L],
-    nodeFormulas: Map[GameNode, Set[CF]])
+    nodeFormulas: Map[GameNode, Iterable[CF]])
   : SpectroscopyResult[S, A, ObservationClass, CF] = {
     
     val bestPreorders: Map[GameNode,List[Spectrum.EquivalenceNotion[ObservationClass]]] = nodeFormulas.mapValues { ffs =>
@@ -69,7 +69,7 @@ abstract class AbstractSpectroscopy[S, A, L, CF <: HennessyMilnerLogic.Formula[A
 
   def gameEdgeToLabel(game: AbstractSpectroscopyGame[S, A, L], gn1: GameNode, gn2: GameNode): String
 
-  def graphvizGameWithFormulas(game: AbstractSpectroscopyGame[S, A, L], win: Set[GameNode], formulas: Map[GameNode, Set[CF]]) = {
+  def graphvizGameWithFormulas(game: AbstractSpectroscopyGame[S, A, L], win: Set[GameNode], formulas: Map[GameNode, Iterable[CF]]) = {
     val visualizer = new GameGraphVisualizer(game) {
 
       def nodeToID(gn: GameNode): String = gn.hashCode().toString()

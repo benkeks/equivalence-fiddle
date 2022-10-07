@@ -129,6 +129,12 @@ object EnergyGame {
         minSources.fold(Energy(newRelativeEnergies))(_ lub _)
       }
     }
+
+    override def toString(): String = {
+      updates.zipWithIndex.map {
+        case (u, i) => if (u <= 0) u.toString() else s"min{${u + 1},${i + 1}}"
+      }.mkString("(", ",", ")")
+    }
   }
   
 }
