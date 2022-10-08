@@ -37,7 +37,7 @@ object EnergyGame {
   private val EnergyLower = Some(-1)
   private val EnergyHigher = Some(1)
 
-  case class Energy(val vector: Array[Int]) extends PartiallyOrdered[Energy] {
+  case class Energy(val vector: IndexedSeq[Int]) extends PartiallyOrdered[Energy] {
 
     def dim() = vector.length
 
@@ -64,20 +64,20 @@ object EnergyGame {
     }
 
     def lub(that: Energy): Energy = {
-      Energy(Array.tabulate(vector.length)(i => Math.max(this.vector(i), that.vector(i))))
+      Energy(IndexedSeq.tabulate(vector.length)(i => Math.max(this.vector(i), that.vector(i))))
     }
 
     def glb(that: Energy): Energy = {
-      Energy(Array.tabulate(vector.length)(i => Math.min(this.vector(i), that.vector(i))))
+      Energy(IndexedSeq.tabulate(vector.length)(i => Math.min(this.vector(i), that.vector(i))))
     }
   }
 
   def zeroEnergy(dim: Int) = {
-    Energy(Array.fill[Int](dim)(0))
+    Energy(IndexedSeq.fill[Int](dim)(0))
   }
 
   def spikeEnergy(dim: Int, spikePos: Int, spikeVal: Int) = {
-    Energy(Array.tabulate(dim)(i => if (i == spikePos) spikeVal else 0))
+    Energy(IndexedSeq.tabulate(dim)(i => if (i == spikePos) spikeVal else 0))
   }
 
   case class EnergyUpdate(
@@ -85,12 +85,12 @@ object EnergyGame {
        * - non-positive Ints = relative updates
        * - positive Ints = min of current row with other row of number (starting to count at index 1)
       */
-      val updates: Array[Int],
+      val updates: IndexedSeq[Int],
       /** bound height of energy lattice */
       energyCap: Int = 3 // Int.MaxValue
     ) {
 
-    def this(ups: Int*) = this(ups.toArray)
+    def this(ups: Int*) = this(ups.toIndexedSeq)
 
     private val isZero = updates.forall(_ == 0)
 
@@ -124,7 +124,7 @@ object EnergyGame {
           (u, i) <- updates.zipWithIndex
           if (u > 0)
         } yield {
-          spikeEnergy(e.dim, i, e(u - 1))
+          spikeEnergy(e.dim, u - 1, e(i))
         }
         minSources.fold(Energy(newRelativeEnergies))(_ lub _)
       }
@@ -132,7 +132,7 @@ object EnergyGame {
 
     override def toString(): String = {
       updates.zipWithIndex.map {
-        case (u, i) => if (u <= 0) u.toString() else s"min{${u + 1},${i + 1}}"
+        case (u, i) => if (u <= 0) u.toString() else s"min{$u,${i + 1}}"
       }.mkString("(", ",", ")")
     }
   }

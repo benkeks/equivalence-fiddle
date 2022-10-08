@@ -11,8 +11,8 @@ class EnergySpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], energyC
   private val NoEnergyUpdate = new EnergyGame.EnergyUpdate(Array(0,0,0,0), energyCap = energyCap)
   private val ObsEnergyUpdate = new EnergyGame.EnergyUpdate(Array(-1,0,0,0), energyCap = energyCap)
   private val ConjEnergyUpdate = new EnergyGame.EnergyUpdate(Array(0,-1,0,0), energyCap = energyCap)
-  private val PosClauseEnergyUpdate = new EnergyGame.EnergyUpdate(Array(0,0,1,0), energyCap = energyCap)
-  private val NegClauseEnergyUpdate = new EnergyGame.EnergyUpdate(Array(0,0,0,1), energyCap = energyCap)
+  private val PosClauseEnergyUpdate = new EnergyGame.EnergyUpdate(Array(3,0,0,0), energyCap = energyCap)
+  private val NegClauseEnergyUpdate = new EnergyGame.EnergyUpdate(Array(4,0,0,0), energyCap = energyCap)
   
   override def weight(gn1: GameNode, gn2: GameNode): EnergyGame.EnergyUpdate = gn1 match {
     case AttackerObservation(p0, qq0) =>
