@@ -37,7 +37,7 @@ object EnergyGame {
   private val EnergyLower = Some(-1)
   private val EnergyHigher = Some(1)
 
-  case class Energy(val vector: IndexedSeq[Int]) extends PartiallyOrdered[Energy] {
+  final class Energy private(val vector: IndexedSeq[Int]) extends PartiallyOrdered[Energy] {
 
     def dim() = vector.length
 
@@ -48,7 +48,7 @@ object EnergyGame {
     override def tryCompareTo[B >: Energy](that: B)(implicit evidence$1: B => PartiallyOrdered[B]): Option[Int] = {
       that match {
         case that: Energy =>
-          if (this.vector sameElements that.vector) {
+          if (this.vector == that.vector) {
             EnergySame
           } else {
             if (vector.indices.forall(i => this.vector(i) >= that.vector(i))) {
@@ -64,7 +64,11 @@ object EnergyGame {
     }
 
     def lub(that: Energy): Energy = {
-      Energy(IndexedSeq.tabulate(vector.length)(i => Math.max(this.vector(i), that.vector(i))))
+      if (this.dim() == 4) {
+        Energy(Math.max(this(0), that(0)), Math.max(this(1), that(1)), Math.max(this(2), that(2)), Math.max(this(3), that(3)))
+      } else {
+        Energy(IndexedSeq.tabulate(vector.length)(i => Math.max(this.vector(i), that.vector(i))))
+      }
     }
 
     def glb(that: Energy): Energy = {
@@ -72,22 +76,62 @@ object EnergyGame {
     }
   }
 
-  def zeroEnergy(dim: Int) = {
-    Energy(IndexedSeq.fill[Int](dim)(0))
+  object Energy {
+    val EnergyCeiling = 3
+    val EnergyDims = 4
+    val EnergyCache = Array.ofDim[Energy](EnergyCeiling + 1, EnergyCeiling + 1, EnergyCeiling + 1, EnergyCeiling + 1)
+    for {
+      u <- 0 to EnergyCeiling
+      v <- 0 to EnergyCeiling
+      w <- 0 to EnergyCeiling
+      x <- 0 to EnergyCeiling
+    } {
+      EnergyCache(u)(v)(w)(x) = new Energy(IndexedSeq(u,v,w,x))
+    }
+
+    def apply(u: Int, v: Int, w: Int, x: Int): Energy = {
+      if (u <= EnergyCeiling && v <= EnergyCeiling && w <= EnergyCeiling && x <= EnergyCeiling) {
+        EnergyCache(u)(v)(w)(x)
+      } else {
+        new Energy(IndexedSeq(u,v,w,x))
+      }
+    }
+
+    def apply(vector: IndexedSeq[Int]): Energy = {
+      if (vector.size == 4) {
+        apply(vector(0), vector(1), vector(2), vector(3))
+      } else {
+        new Energy(vector)
+      }
+    }
+
+    def zeroEnergy(dim: Int) = {
+      if (dim == 4) Energy(0,0,0,0) else new Energy(IndexedSeq.fill[Int](dim)(0))
+    }
+
+    def spikeEnergy(dim: Int, spikePos: Int, spikeVal: Int) = {
+      if (dim == 4) {
+        spikePos match {
+          case 0 => Energy(spikeVal, 0,0,0)
+          case 1 => Energy(0, spikeVal,0,0)
+          case 2 => Energy(0,0, spikeVal,0)
+          case 3 => Energy(0,0,0, spikeVal)
+        }
+      } else {
+        new Energy(IndexedSeq.tabulate(dim)(i => if (i == spikePos) spikeVal else 0))
+      }
+    }
+
   }
 
-  def spikeEnergy(dim: Int, spikePos: Int, spikeVal: Int) = {
-    Energy(IndexedSeq.tabulate(dim)(i => if (i == spikePos) spikeVal else 0))
-  }
-
-  case class EnergyUpdate(
+  final case class EnergyUpdate(
       /** component updates
        * - non-positive Ints = relative updates
        * - positive Ints = min of current row with other row of number (starting to count at index 1)
       */
       val updates: IndexedSeq[Int],
       /** bound height of energy lattice */
-      energyCap: Int = 3 // Int.MaxValue
+      energyCap: Int = Int.MaxValue
     ) {
 
     def this(ups: Int*) = this(ups.toIndexedSeq)
@@ -124,7 +168,7 @@ object EnergyGame {
           (u, i) <- updates.zipWithIndex
           if (u > 0)
         } yield {
-          spikeEnergy(e.dim, u - 1, e(i))
+          Energy.spikeEnergy(e.dim, u - 1, e(i))
         }
         minSources.fold(Energy(newRelativeEnergies))(_ lub _)
       }

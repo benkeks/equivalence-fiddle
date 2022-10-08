@@ -28,6 +28,11 @@ class VeryLargeTransitionSystems(val useSpectro: Int = 0) {
     "shared/src/test/assets/vlts/vasy_25_25.csv"
   )
 
+  val easyExamples = List(0,1,2,4,5,6)
+  val hardExamples = List(3,7)
+
+  val tableOutput = true
+
   def arrowLabeling(o: Option[Syntax.Label]) = {
     Interpreting.fromOption(o.map(_.name) orElse(Some("")))
   }
@@ -39,20 +44,24 @@ class VeryLargeTransitionSystems(val useSpectro: Int = 0) {
 
   def listMinimizations(fileName: String) = {
 
-    println(fileName)
+    print(fileName)
 
     val Some(loadedSystem) = new CSVTSLoader(fileName).result()
 
+    output("States", loadedSystem.nodes.size.toString)
+    output("Transitions", loadedSystem.step.size.toString)
     // val parser: Parser = new Parser(CCSSamples.ltbts1)
     // val parser.ParseSuccess(esDef, _) = parser.parse
     // val interpreter = new Interpreter(esDef, NodeID(_).hash, arrowLabeling, nodeLabeling, actionToInput, actionIsOutput)
     // val Interpreting.Success(is) = interpreter.result(new WeakTransitionSystem(_, _, Set()))
     // val loadedSystem = is.asInstanceOf[WeakTransitionSystem[Int, String, String]]
 
+    val minStartTime = System.nanoTime()
     val strongBisim = new Bisimilarity(loadedSystem).computePartition()
     val system = new BuildQuotientSystem(loadedSystem, strongBisim).build()
+    printTiming(minStartTime, "Bisim minimization")
 
-    println(s"Strong bisim minimized system: ${system.nodes.size}")
+    output("Strong bisim minimized system", system.nodes.size.toString)
     val startTime = System.nanoTime()
 
     val states = system.nodes.toList
@@ -67,20 +76,32 @@ class VeryLargeTransitionSystems(val useSpectro: Int = 0) {
     val result = algo.compute(comparedPairs, computeFormulas = false)
     printTiming(startTime, "Spectroscopy")
 
-    //println(result.printStats())
-    println(
+    if (tableOutput) {
       (result.spectrum.notions.map(_.name) zip
-      result.toQuotients(result.spectrum.notions, Math.min).map(_.universeSize())).mkString("  "))
+        result.toQuotients(result.spectrum.notions, Math.min).map(_.universeSize())).foreach {case (notion, quotient) => output(notion, quotient.toString)}
+        println()
+    } else {
+      println(
+        (result.spectrum.notions.map(_.name) zip
+          result.toQuotients(result.spectrum.notions, Math.min).map(_.universeSize())).mkString("  "))
+    }
+  }
+
+  def output(msg: String, data: String, suffix: String = "") = {
+    if (tableOutput)
+      print(", " + data)
+    else
+      println(msg + ": " + data + suffix)
   }
 
 
   def run(): Unit = {
-    for (i <- List(0,1,2,4,5,6)) {
+    for (i <- easyExamples ++ hardExamples) {
       listMinimizations(vltsSamplesMedium(i))
     }
   }
 
   def printTiming(startTime: Long, text: String) = {
-    println(s"$text took ${(System.nanoTime() - startTime) / 1000000}ms")
+    output(s"$text took", ((System.nanoTime() - startTime) / 1000000).toString(), "ms")
   }
 }

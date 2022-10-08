@@ -49,7 +49,7 @@ trait CSSSampleTests[OC <: ObservationClass, CF <: HennessyMilnerLogic.Formula[S
 
           val result = algo.compute(List((n1, n2)))
 
-          val foundDistinctions = result.foundDistinctions(n1, n2).map(_.name).toSet
+          val foundDistinctions = result.foundDistinctions(n1, n2).map(d => d.name match { case "2failure" => "failure"; case "2trace" => "trace"; case n => n } ).toSet
           it ("should be distinguished by " + notPreordsStr.mkString(",")) {
             (notPreordsStr diff foundDistinctions) should be (empty)
           }

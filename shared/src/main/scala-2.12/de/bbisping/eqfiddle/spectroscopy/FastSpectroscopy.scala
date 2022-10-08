@@ -110,7 +110,7 @@ class FastSpectroscopy[S, A, L] (
       start <- List(hmlGame.AttackerObservation(p, Set(q)), hmlGame.AttackerObservation(q, Set(p)))
     } yield start
 
-    val zeroEnergySet = Set(EnergyGame.zeroEnergy(4))
+    val zeroEnergySet = Set(Energy.zeroEnergy(4))
 
     def instantAttackerWin(gn: GameNode) = gn match {
       case hmlGame.DefenderConjunction(_, qq) if qq.isEmpty => zeroEnergySet; case _ => Set.empty
