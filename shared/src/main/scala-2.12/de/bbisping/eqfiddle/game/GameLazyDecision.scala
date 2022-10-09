@@ -25,6 +25,8 @@ trait GameLazyDecision[P] extends AbstractGameDiscovery {
 
   def showSuccessors(): String = computedSuccessors.toString
 
+  def gameSize(): (Int, Int) = (discovered.size, computedSuccessors.values.map(_.size).sum)
+
   private def priceUpdate(node: GameNode, newPrices: Iterable[P]) = {
     // assumes old and new price sets not to contain any dominated prices
     val oldPrices = attackerVictoryPrices(node)

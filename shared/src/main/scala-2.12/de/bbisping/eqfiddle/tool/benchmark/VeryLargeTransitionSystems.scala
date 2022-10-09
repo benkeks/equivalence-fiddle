@@ -29,7 +29,7 @@ class VeryLargeTransitionSystems(val useSpectro: Int = 0) {
   )
 
   val easyExamples = List(0,1,2,4,5,6,9)
-  val hardExamples = List(3,7)
+  val hardExamples = List(3,7,8)
 
   val tableOutput = true
 
@@ -78,8 +78,11 @@ class VeryLargeTransitionSystems(val useSpectro: Int = 0) {
 
     val algo = new FastSpectroscopy(system)
 
-    val result = algo.compute(comparedPairs, computeFormulas = false)
+    val result = algo.compute(comparedPairs, computeFormulas = false, saveGameSize = true)
     printTiming(startTime, "Spectroscopy")
+
+    output("Game positions", algo.gameSize._1.toString)
+    output("Game moves", algo.gameSize._2.toString)
 
     if (tableOutput) {
       (result.spectrum.notions.map(_.name) zip

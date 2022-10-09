@@ -21,6 +21,8 @@ class FastSpectroscopy[S, A, L] (
   val distinguishingFormulas =
     collection.mutable.Map[(GameNode, Energy), Iterable[HennessyMilnerLogic.Formula[A]]]()
 
+  var gameSize = (0, 0)
+
   def buildHMLWitness(game: EnergySpectroscopyGame[S, A, L], node: GameNode, price: Energy): Iterable[HennessyMilnerLogic.Formula[A]]
     = distinguishingFormulas.getOrElseUpdate((node, price), {
     //debugLog(s"exploring: $node, $price" )
@@ -97,7 +99,8 @@ class FastSpectroscopy[S, A, L] (
 
   def compute(
       comparedPairs: Iterable[(S,S)],
-      computeFormulas: Boolean = true
+      computeFormulas: Boolean = true,
+      saveGameSize: Boolean = false
     ): SpectroscopyInterface.SpectroscopyResult[S, A, ObservationClassFast, HennessyMilnerLogic.Formula[A]] = {
 
 
@@ -175,6 +178,8 @@ class FastSpectroscopy[S, A, L] (
         } yield (f, price, eqs)
       } yield SpectroscopyInterface.SpectroscopyResultItem[S, A, ObservationClassFast, HennessyMilnerLogic.Formula[A]](p, q, distinctions, preorders)
 
+      if (saveGameSize) gameSize = hmlGame.gameSize()
+
       SpectroscopyInterface.SpectroscopyResult[S, A, ObservationClassFast, HennessyMilnerLogic.Formula[A]](spectroResults.toList, spectrum)
     } else {
       for {
@@ -211,6 +216,8 @@ class FastSpectroscopy[S, A, L] (
           price <- prices
         } yield (HennessyMilnerLogic.True[A], price, spectrum.classifyClass(price))
       } yield SpectroscopyInterface.SpectroscopyResultItem[S, A, ObservationClassFast, HennessyMilnerLogic.Formula[A]](p, q, distinctions.toList, preorders)
+
+      if (saveGameSize) gameSize = hmlGame.gameSize()
 
       SpectroscopyInterface.SpectroscopyResult[S, A, ObservationClassFast, HennessyMilnerLogic.Formula[A]](spectroResults.toList, spectrum)
     }
