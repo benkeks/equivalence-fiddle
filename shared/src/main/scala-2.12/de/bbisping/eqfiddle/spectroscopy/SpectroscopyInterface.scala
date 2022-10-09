@@ -99,8 +99,8 @@ object SpectroscopyInterface {
       new LabeledRelation(relTuples.toSet)
     }
 
-    def toQuotients(eqs: Iterable[Spectrum.EquivalenceNotion[ObservationClass]], rep: (S, S) => S): Iterable[Coloring[S]] = {
-      val distances = toDistancesRelation().symmetricClosure
+    def toQuotients(eqs: Iterable[Spectrum.EquivalenceNotion[ObservationClass]], rep: (S, S) => S, initialApproximation: Iterable[(S,S)]): Iterable[Coloring[S]] = {
+      val distances = toDistancesRelation().symmetricReflexiveClosure(initialApproximation.map(_._1), Set())
       for {
         eq <- eqs
       } yield {

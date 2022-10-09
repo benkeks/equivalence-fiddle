@@ -123,7 +123,11 @@ class LabeledRelation[E, L](val rep: Map[E, Map[L, Set[E]]]) {
   def symmetricClosure = {
     new LabeledRelation(tupleSet ++ tupleSet.map { case (e1, l, e2) => (e2, l, e1) })
   }
-  
+
+  def symmetricReflexiveClosure(reflexiveOn: Iterable[E], reflexiveEdge: L) = {
+    new LabeledRelation(tupleSet ++ tupleSet.map { case (e1, l, e2) => (e2, l, e1) } ++ reflexiveOn.map(e => (e, reflexiveEdge, e)))
+  }
+
   def isSymmetric = tupleSet.forall {
     case (e1, l, e2) => tupleSet contains (e2, l, e1)
   }

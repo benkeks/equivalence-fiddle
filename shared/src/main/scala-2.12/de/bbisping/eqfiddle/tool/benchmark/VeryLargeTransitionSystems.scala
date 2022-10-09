@@ -28,7 +28,7 @@ class VeryLargeTransitionSystems(val useSpectro: Int = 0) {
     "shared/src/test/assets/vlts/vasy_25_25.csv"
   )
 
-  val easyExamples = List(0,1,2,4,5,6)
+  val easyExamples = List(0,1,2,4,5,6,9)
   val hardExamples = List(3,7)
 
   val tableOutput = true
@@ -65,11 +65,16 @@ class VeryLargeTransitionSystems(val useSpectro: Int = 0) {
     val startTime = System.nanoTime()
 
     val states = system.nodes.toList
+    val stateGroups = states.groupBy(system.enabled(_))
 
-    val comparedPairs = for {
-      n1i <- 0 until states.length
-      n2j <- (n1i + 1) until states.length
-    } yield (states(n1i), states(n2j))
+    val comparedPairs = {
+      for {
+        group <- stateGroups.values
+        n1i <- 0 until group.length
+        n2j <- (n1i) until group.length
+      } yield (group(n1i), group(n2j))
+    }
+    output("Initial pairs", comparedPairs.size.toString())
 
     val algo = new FastSpectroscopy(system)
 
@@ -78,12 +83,12 @@ class VeryLargeTransitionSystems(val useSpectro: Int = 0) {
 
     if (tableOutput) {
       (result.spectrum.notions.map(_.name) zip
-        result.toQuotients(result.spectrum.notions, Math.min).map(_.universeSize())).foreach {case (notion, quotient) => output(notion, quotient.toString)}
+        result.toQuotients(result.spectrum.notions, Math.min, comparedPairs).map(_.universeSize())).foreach {case (notion, quotient) => output(notion, quotient.toString)}
         println()
     } else {
       println(
         (result.spectrum.notions.map(_.name) zip
-          result.toQuotients(result.spectrum.notions, Math.min).map(_.universeSize())).mkString("  "))
+          result.toQuotients(result.spectrum.notions, Math.min, comparedPairs).map(_.universeSize())).mkString("  "))
     }
   }
 
