@@ -30,7 +30,7 @@ jobs:
     - name: Deploy CI
       uses: burnett01/rsync-deployments@5.2
       with:
-        switches: -avzr --mkpath --delete
+        switches: -avzr --delete
         path: web/target/web/stage/
         remote_path: /www/htdocs/${{ secrets.CI_USER }}/${{ secrets.CI_DEPLOY_PATH }}/${{ github.head_ref || github.ref_name }}/
         remote_host: ${{ secrets.CI_DEPLOY_PATH }}
