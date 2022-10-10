@@ -27,6 +27,15 @@ jobs:
       run: sbt webStage
     - name: Compile JS api
       run: sbt "jsApi/fullOptJS"
+    - name: Deploy CI
+      uses: burnett01/rsync-deployments@5.2
+      with:
+        switches: -avzr --mkpath --delete
+        path: web/target/web/stage/
+        remote_path: /www/htdocs/${{ secrets.CI_USER }}/${{ secrets.CI_DEPLOY_PATH }}/${{ github.head_ref || github.ref_name }}/
+        remote_host: ${{ secrets.CI_DEPLOY_PATH }}
+        remote_user: ssh-${{ secrets.CI_USER }}
+        remote_key: ${{ secrets.CI_PRIVKEY }}
     - name: Archive production webclient artifact
       uses: actions/upload-artifact@v3
       with:
