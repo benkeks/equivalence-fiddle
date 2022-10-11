@@ -1,0 +1,11 @@
+system, states, transitions, bisimtime, bisimquot, initialpairs, spectrotime, spectropos, spectromoves, enabledness, 2trace, 2bisim, trace, failure, readiness, impossible-future, possible-future, simulation, ready-simulation, bisimulation
+shared/src/test/assets/vlts/vasy_0_1.csv, 289, 1224, 65, 9, 30, 88, 259, 506, 3, 5, 5, 9, 9, 9, 9, 9, 9, 9, 9
+shared/src/test/assets/vlts/vasy_1_4.csv, 1183, 4464, 99, 28, 88, 36, 508, 895, 8, 12, 12, 28, 28, 28, 28, 28, 28, 28, 28
+shared/src/test/assets/vlts/vasy_5_9.csv, 5486, 9392, 234, 145, 232, 52, 1097, 1508, 109, 128, 128, 145, 145, 145, 145, 145, 145, 145, 145
+shared/src/test/assets/vlts/cwi_3_14.csv, 3996, 14552, 1078, 62, 1832, 303, 10920, 17878, 3, 4, 4, 62, 62, 62, 62, 62, 62, 62, 62
+shared/src/test/assets/vlts/vasy_8_24.csv, 8879, 24411, 863, 416, 2625, 1032, 31972, 66671, 177, 262, 265, 416, 416, 416, 416, 416, 416, 416, 416
+shared/src/test/assets/vlts/vasy_8_38.csv, 8921, 38424, 1545, 219, 837, 115, 5225, 8273, 115, 202, 202, 219, 219, 219, 219, 219, 219, 219, 219
+shared/src/test/assets/vlts/vasy_25_25.csv, 25217, 25216, 599, 25217, 25217, 305, 25217, 0, 25217, 25217, 25217, 25217, 25217, 25217, 25217, 25217, 25217, 25217, 25217
+shared/src/test/assets/vlts/cwi_1_2.csv, 1952, 2387, 186, 1132, 481735, 235167, 6717092, 16536727, 9, 17, 17, 1132, 1132, 1132, 1132, 1132, 1132, 1132, 1132
+shared/src/test/assets/vlts/vasy_10_56.csv, 10849, 56156, 4000, 2112, 239878, 164172, 1717564, 5095712, 14, 51, 51, 2112, 2112, 2112, 2112, 2112, 2112, 2112, 2112
+shared/src/test/assets/vlts/vasy_18_73.csv, 18746, 73043, 3547, 4087, 17242,,,,,,,,

@@ -68,7 +68,7 @@ object ObservationClassFast {
   val BaseLTBTS = List(
     "enabledness" ->        ObservationClassFast(    1,     0,    0,    0),
     "2traces" ->            ObservationClassFast(    2,     0,    0,    0),
-    "2failure" ->           ObservationClassFast(    2,     1,    0,    1),
+    "2bisimulation" ->      ObservationClassFast(    2,     3,    2,    2),
     "traces" ->             ObservationClassFast(INFTY,     0,    0,    0),
     "failure" ->            ObservationClassFast(INFTY,     1,    0,    1),
     "readiness" ->          ObservationClassFast(INFTY,     1,    1,    1),

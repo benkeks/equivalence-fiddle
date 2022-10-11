@@ -20,6 +20,8 @@ class EdgeSpectroscopy[S, A, L] (
 
   override val spectrum = ObservationClassStrong.LTBTS
 
+  var gameSize = (0,0)
+
   def buildStrategyFormulas(game: AbstractSpectroscopyGame[S, A, L])(node: GameNode, possibleMoves: Iterable[Set[Formula[A]]]):
       Set[Formula[A]] = node match {
     case game.DefenderConjunction(_, _) if possibleMoves.size != 1 =>
@@ -135,8 +137,11 @@ class EdgeSpectroscopy[S, A, L] (
     game.asInstanceOf[SpectroscopyGameEdgeLabeled[S, A, L]].recordedMoveEdges(gn1, gn2).toString()
   }
 
+  override def compute(comparedPairs: Iterable[(S,S)]) = compute(comparedPairs, false)
+
   def compute(
-      comparedPairs: Iterable[(S,S)]
+      comparedPairs: Iterable[(S,S)],
+      saveGameSize: Boolean = false,
     ) = {
   
     val init = for {
@@ -147,6 +152,10 @@ class EdgeSpectroscopy[S, A, L] (
     val hmlGame = new SpectroscopyGameEdgeLabeled(ts, init)
 
     debugLog("HML spectroscopy game size: " + hmlGame.discovered.size)
+
+    if (saveGameSize) {
+      gameSize = (hmlGame.discovered.size, hmlGame.successorNum.values.sum)
+    }
 
     val attackerWin = hmlGame.computeWinningRegion()
     
