@@ -6,6 +6,8 @@ object CCSSamples {
   val ltbts1 = """
 @hint "compare processes by clicking on the gutter next to the @compare statements!"
 
+@minimize
+
 L13(x=-200,y=500)
 R13(x=300,y=500)
 L13 = a.b.0 + a.0
@@ -400,6 +402,6 @@ S1 = a.(a + b.c)
     namedSamples.find(_.slug == slug)
   }
 
-  val default = failureTraceAndImpossibleFutures
+  val default = diverseEquivalences
 
 }
