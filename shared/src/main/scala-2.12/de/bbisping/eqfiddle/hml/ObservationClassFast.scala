@@ -67,8 +67,8 @@ object ObservationClassFast {
   // The Linear-time Branching-time Spectrum
   val BaseLTBTS = List(
     "enabledness" ->        ObservationClassFast(    1,     0,    0,    0),
-    "2traces" ->            ObservationClassFast(    2,     0,    0,    0),
-    "2bisimulation" ->      ObservationClassFast(    2,     3,    2,    2),
+    //"2traces" ->            ObservationClassFast(    2,     0,    0,    0),
+    //"2bisimulation" ->      ObservationClassFast(    2,     2,    2,    2),
     "traces" ->             ObservationClassFast(INFTY,     0,    0,    0),
     "failure" ->            ObservationClassFast(INFTY,     1,    0,    1),
     "readiness" ->          ObservationClassFast(INFTY,     1,    1,    1),
