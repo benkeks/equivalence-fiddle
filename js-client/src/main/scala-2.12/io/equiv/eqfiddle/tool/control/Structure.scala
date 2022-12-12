@@ -302,8 +302,10 @@ object Structure {
 
         val begin = Date.now
 
-        val algo = new FastSpectroscopy(new WeakTransitionSaturation(structure.structure).compute())
-        val result = algo.compute(List((n1, n2)), computeFormulas = false)
+        val preprocessed = new WeakTransitionSaturation(structure.structure).compute()
+        println("Preprocessed: " + preprocessed)
+        val algo = new FastSpectroscopy(preprocessed)
+        val result = algo.compute(List((n1, n2)), computeFormulas = true)
         println("Spectroscopy took: " + (Date.now - begin) + "ms.")
 
         for {
@@ -345,7 +347,10 @@ object Structure {
       val begin = Date.now
 
       val states = structure.structure.nodes.toList
-      val algo = new FastSpectroscopy(new WeakTransitionSaturation(structure.structure).compute())
+
+      val preprocessed = new WeakTransitionSaturation(structure.structure).compute()
+      println("Preprocessed: " + preprocessed)
+      val algo = new FastSpectroscopy(preprocessed)
 
       val comparedPairs = for {
         n1i <- 0 until states.length
