@@ -22,6 +22,7 @@ import io.equiv.eqfiddle.spectroscopy.FastSpectroscopy
 import io.equiv.eqfiddle.hml.ObservationClassFast
 import io.equiv.eqfiddle.hml.Spectrum
 import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
+import io.equiv.eqfiddle.algo.WeakTransitionSaturation
 
 
 class Structure(val main: Control) extends ModelComponent {
@@ -301,8 +302,8 @@ object Structure {
 
         val begin = Date.now
 
-        val algo = new FastSpectroscopy(structure.structure)
-        val result = algo.compute(List((n1, n2)))
+        val algo = new FastSpectroscopy(new WeakTransitionSaturation(structure.structure).compute())
+        val result = algo.compute(List((n1, n2)), computeFormulas = false)
         println("Spectroscopy took: " + (Date.now - begin) + "ms.")
 
         for {
@@ -344,7 +345,7 @@ object Structure {
       val begin = Date.now
 
       val states = structure.structure.nodes.toList
-      val algo = new FastSpectroscopy(structure.structure)
+      val algo = new FastSpectroscopy(new WeakTransitionSaturation(structure.structure).compute())
 
       val comparedPairs = for {
         n1i <- 0 until states.length

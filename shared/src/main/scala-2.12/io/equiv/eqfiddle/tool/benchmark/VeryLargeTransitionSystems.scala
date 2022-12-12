@@ -12,10 +12,12 @@ import io.equiv.eqfiddle.spectroscopy.EdgeSpectroscopy
 import io.equiv.eqfiddle.spectroscopy.FastSpectroscopy
 import io.equiv.eqfiddle.algo.transform.BuildQuotientSystem
 import io.equiv.eqfiddle.algo.sigref.Bisimilarity
+import io.equiv.eqfiddle.algo.WeakTransitionSaturation
 
 class VeryLargeTransitionSystems(val useSpectro: Int = 0) {
 
   val vltsSamplesMedium = Seq(
+    "shared/src/test/assets/other/peterson_mutex.csv",
     "shared/src/test/assets/vlts/vasy_0_1.csv", //   289,   1224,  no tau,  2
     "shared/src/test/assets/vlts/vasy_1_4.csv", //  1183,   4464,    1213,  6
     "shared/src/test/assets/vlts/vasy_5_9.csv",
@@ -57,8 +59,9 @@ class VeryLargeTransitionSystems(val useSpectro: Int = 0) {
     // val loadedSystem = is.asInstanceOf[WeakTransitionSystem[Int, String, String]]
 
     val minStartTime = System.nanoTime()
-    val strongBisim = new Bisimilarity(loadedSystem).computePartition()
-    val system = new BuildQuotientSystem(loadedSystem, strongBisim).build()
+    val weakSystem = new WeakTransitionSaturation(loadedSystem).compute()
+    val strongBisim = new Bisimilarity(weakSystem).computePartition()
+    val system = weakSystem //new BuildQuotientSystem(weakSystem, strongBisim).build()
     printTiming(minStartTime, "Bisim minimization")
 
     output("Strong bisim minimized system", system.nodes.size.toString)
@@ -104,7 +107,7 @@ class VeryLargeTransitionSystems(val useSpectro: Int = 0) {
 
 
   def run(): Unit = {
-    for (i <- easyExamples ++ hardExamples) {
+    for (i <- List(0)) {//easyExamples ++ hardExamples) {
       listMinimizations(vltsSamplesMedium(i))
     }
   }
