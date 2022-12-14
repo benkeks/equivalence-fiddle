@@ -118,6 +118,14 @@ object SpectroscopyInterface {
       } yield preord
     }
 
+    def foundImpliedPreorders(eqs: Iterable[Spectrum.EquivalenceNotion[ObservationClass]], p: S, q: S): Iterable[Spectrum.EquivalenceNotion[ObservationClass]] = {
+      val preords = foundPreorders(p, q)
+      for {
+        eq <- eqs
+        if preords.exists(p => eq.obsClass <= p.obsClass)
+      } yield eq
+    }
+
     def foundDistinctions(p: S, q: S): List[Spectrum.EquivalenceNotion[OC]] = {
       for {
         res <- resultFor(p, q)
