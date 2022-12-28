@@ -47,6 +47,9 @@ class FastSpectroscopy[S, A, L] (
                 a <- possibleRestoredActions.headOption.toList // just take first option
                 postForm <- buildHMLWitness(game, s, newPrice)
               } yield HennessyMilnerLogic.Observe(a, postForm)
+            case game.AttackerLocalObservation(p1, qq1) =>
+              Set()
+              // TODO
             case game.DefenderConjunction(p1, qq1) =>
               buildHMLWitness(game, s, newPrice)
             case _ => Set()
@@ -113,7 +116,7 @@ class FastSpectroscopy[S, A, L] (
       start <- List(hmlGame.AttackerObservation(p, Set(q)), hmlGame.AttackerObservation(q, Set(p)))
     } yield start
 
-    val zeroEnergySet = Set(Energy.zeroEnergy(4))
+    val zeroEnergySet = Set(Energy.zeroEnergy(6))
 
     def instantAttackerWin(gn: GameNode) = gn match {
       case hmlGame.DefenderConjunction(_, qq) if qq.isEmpty => zeroEnergySet; case _ => Set.empty
