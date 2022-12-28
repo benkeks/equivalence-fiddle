@@ -23,6 +23,11 @@ object HennessyMilnerLogic {
     override val isPositive = true
 
     override val isImmediate = subterms.nonEmpty
+
+    def mergeWith(other: Formula[A]) = other match {
+      case And(subterms) => And(this.subterms ++ subterms)
+      case miscellaneous => And(this.subterms + miscellaneous)
+    }
   }
 
   def True[A]: And[A] = And[A](Set())
