@@ -1,10 +1,14 @@
 # Linear-Time–Branching-Time Spectroscope
 
-The “Linear-time–Branching-time Spectroscope” is a web app to find all preorders, equivalences and inequivalences from the (strong) linear-time–branching-time spectrum for small processes.
+The “Linear-time–Branching-time Spectroscope” is a web app to find all preorders, equivalences and inequivalences from the (strong) linear-time–branching-time spectrum for small processes as described in [Bisping, Jansen, Nestmann, arXiv 2022](https://doi.org/10.48550/arXiv.2109.15295).
+
+It runs online on https://concurrency-theory.org/ltbt-spectroscope/ .
 
 ![](doc/usage-illustration.gif)
 
 Just input CCS-style processes, give the two processes you want to compare with `@compare "P1,P2"` and click on the gutter next to the compare-statement!
+
+To explore possible minimizations of the system, write `@minimize` and click on the gutter!
 
 ## How to build
 
@@ -31,3 +35,9 @@ sbt "shared/run"
 ## Theoretical background
 
 The algorithm uses a generalization of the bisimulation game to find all relevant distinguishing Hennessy–Milner logic formulas for two compared finite-state processes. Using these, we can give a precise characterization of how much distinguishing power is needed to tell two processes apart—and thus also determine the best fit of equivalences to equate them.
+
+## Developed by
+
+The LTBT Spectroscope is developed at [MTV TU Berlin](https://www.mtv.tu-berlin.de) by Benjamin Bisping (benjamin.bisping@tu-berlin.de).
+
+The code is subject to the MIT License to be found in `LICENSE`. The full source can be obtained from <https://concurrency-theory.org/ltbt-spectroscope/code/> and via [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6726494.svg)](https://doi.org/10.5281/zenodo.6726494).

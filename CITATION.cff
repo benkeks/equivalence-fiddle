@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: Linear-Time—Branching-Time Spectroscope
+authors:
+  - family-names: Bisping
+    given-names: Benjamin
+    orcid: https://orcid.org/0000-0002-0637-0171
+version: v0.2.0
+date-released: 2022-06-24
+identifiers:
+  - description: "Snapshot of the Linear-Time–Branching-Time Spectroscope v0.2.0"
+    type: doi
+    value: "10.5281/zenodo.6726494"
+license: MIT
+repository-code: "https://github.com/benkeks/equivalence-fiddle"
