@@ -8,6 +8,8 @@ It runs online on https://concurrency-theory.org/ltbt-spectroscope/ .
 
 Just input CCS-style processes, give the two processes you want to compare with `@compare "P1,P2"` and click on the gutter next to the compare-statement!
 
+To explore possible minimizations of the system, write `@minimize` and click on the gutter!
+
 ## How to build
 
 The project can be built using `sbt` by.
@@ -24,7 +26,7 @@ In order to test that the algorithm determines the expected (in-)equivaences for
 sbt "shared/test"
 ```
 
-To generate distinguishing formulas displayed in Table 2 of the [TACAS 2021 paper](https://doi.org/10.1007/978-3-030-72016-2_1):
+To perform benchmarks, run:
 
 ```
 sbt "shared/run"

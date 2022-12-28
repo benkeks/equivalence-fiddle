@@ -14,6 +14,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Create code archive
+      run: zip -r code.zip doc js-api js-client project shared web .sbtopts build.sbt README.md
     - name: Set up JDK 11
       uses: actions/setup-java@v2
       with:
@@ -27,6 +29,19 @@ jobs:
       run: sbt webStage
     - name: Compile JS api
       run: sbt "jsApi/fullOptJS"
+    - name: Add code archive to web deployment
+      run: mv code.zip web/target/web/stage/
+    - name: Deploy CI
+      uses: burnett01/rsync-deployments@5.2
+      with:
+        switches: -avzr --delete
+        path: web/target/web/stage/
+        remote_path: /www/htdocs/${{ secrets.CI_USER }}/${{ secrets.CI_DEPLOY_PATH }}/${{ github.head_ref || github.ref_name }}/
+        remote_host: ${{ secrets.CI_DEPLOY_PATH }}
+        remote_user: ssh-${{ secrets.CI_USER }}
+        remote_key: ${{ secrets.CI_PRIVKEY }}
+    - name: Remove code archive from artifact
+      run: rm web/target/web/stage/code.zip
     - name: Archive production webclient artifact
       uses: actions/upload-artifact@v3
       with:
