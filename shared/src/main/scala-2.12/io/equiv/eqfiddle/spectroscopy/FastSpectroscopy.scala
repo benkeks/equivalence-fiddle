@@ -48,11 +48,57 @@ class FastSpectroscopy[S, A, L] (
                 postForm <- buildHMLWitness(game, s, newPrice)
               } yield HennessyMilnerLogic.Observe(a, postForm)
             case game.AttackerLocalObservation(p1, qq1) =>
-              Set()
-              // TODO
+              val p0enabled = ts.enabled(p0)
+              val relevantDisabling = for {
+                q0 <- qq0
+                if !qq1.contains(q0)
+                a <- ts.enabled(q0).find(!p0enabled.contains(_))
+              } yield {
+                HennessyMilnerLogic.Negate(
+                  HennessyMilnerLogic.Observe(a, HennessyMilnerLogic.True)
+                ).asInstanceOf[HennessyMilnerLogic.Formula[A]]
+              }
+              for {
+                revival <- buildHMLWitness(game, s, newPrice)
+              } yield HennessyMilnerLogic.And(relevantDisabling).mergeWith(revival)
             case game.DefenderConjunction(p1, qq1) =>
               buildHMLWitness(game, s, newPrice)
             case _ => Set()
+          }
+        successorFormulas.flatten.toSet
+      case game.AttackerLocalObservation(p0, qq0) =>
+        val successorFormulas =
+          for {
+            s <- game.successors(node)
+            update = game.weight(node, s)
+            newPrice = update.applyEnergyUpdate(price)
+            if game.isAttackerWinningPrice(s, newPrice)
+          } yield s match {
+            case game.AttackerObservation(p1, qq1) =>
+              val possibleRestoredActions = for {
+                (a, pp1) <- ts.post(p0)
+                if pp1 contains p1
+                if qq1 == ts.post(qq0,a)
+              } yield a
+              for {
+                a <- possibleRestoredActions.headOption.toList // just take first option
+                postForm <- buildHMLWitness(game, s, newPrice)
+              } yield HennessyMilnerLogic.Observe(a, postForm)
+            case game.AttackerLocalObservation(p1, qq1) =>
+              val p0enabled = ts.enabled(p0)
+              val relevantEnabling = for {
+                q0 <- qq0
+                if !qq1.contains(q0)
+                a <- p0enabled.find(!ts.enabled(q0).contains(_))
+              } yield {
+                HennessyMilnerLogic.Observe(a, HennessyMilnerLogic.True).asInstanceOf[HennessyMilnerLogic.Formula[A]]
+              }
+              for {
+                revival <- buildHMLWitness(game, s, newPrice)
+              } yield HennessyMilnerLogic.And(relevantEnabling).mergeWith(revival)
+            case game.DefenderConjunction(p1, qq1) =>
+              buildHMLWitness(game, s, newPrice)
+            // other options should not appear
           }
         successorFormulas.flatten.toSet
       case game.AttackerClause(p0, q0) =>

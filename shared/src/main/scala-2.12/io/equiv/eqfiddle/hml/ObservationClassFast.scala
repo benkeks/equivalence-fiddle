@@ -100,7 +100,7 @@ object ObservationClassFast {
       if (subterms.isEmpty) {
         ObservationClassFast()
       } else {
-        val (positiveSubterms, negativeSubterms) = subterms.partition(_.isPositive)
+        val (positiveSubterms, negativeSubterms) = subterms.toList.partition(_.isPositive)
         val (positiveFlat, positiveDeep) = positiveSubterms.map(formulaObsClass(_)).partition(_.observationHeight <= 1)
         val (negativeFlat, negativeDeep) = negativeSubterms.map(formulaObsClass(_)).partition(_.observationHeight <= 1)
         val allClasses = positiveDeep ++ positiveFlat ++ negativeDeep ++ negativeFlat
@@ -123,9 +123,9 @@ object ObservationClassFast {
             observationHeight = allClasses.map(_.observationHeight).max,
             conjunctionLevels = allClasses.map(_.conjunctionLevels).max + 1,
             maxFailureHeight =
-              if (negativeFlat.nonEmpty) Math.max(revivalDepth, allClasses.map(_.maxFailureHeight).max) else allClasses.map(_.maxFailureHeight).max,
+              if (negativeFlat.nonEmpty) Integer.max(revivalDepth, allClasses.map(_.maxFailureHeight).max) else allClasses.map(_.maxFailureHeight).max,
             maxReadinessHeight =
-              if (positiveFlat.nonEmpty) Math.max(revivalDepth, allClasses.map(_.maxReadinessHeight).max) else allClasses.map(_.maxReadinessHeight).max,
+              if (positiveFlat.nonEmpty) Integer.max(revivalDepth, allClasses.map(_.maxReadinessHeight).max) else allClasses.map(_.maxReadinessHeight).max,
             deepNegativeConjunctionLevels = allClasses.map(_.deepNegativeConjunctionLevels).max,
             deepPositiveConjunctionLevels = allClasses.map(_.deepPositiveConjunctionLevels).max,
           )
