@@ -47,7 +47,7 @@ class FastSpectroscopy[S, A, L] (
                 a <- possibleRestoredActions.headOption.toList // just take first option
                 postForm <- buildHMLWitness(game, s, newPrice)
               } yield HennessyMilnerLogic.Observe(a, postForm)
-            case game.AttackerLocalObservation(p1, qq1) =>
+            case game.DefenderTestFailureObservability(p1, qq1) =>
               val p0enabled = ts.enabled(p0)
               val relevantDisabling = for {
                 q0 <- qq0
@@ -61,6 +61,18 @@ class FastSpectroscopy[S, A, L] (
               for {
                 revival <- buildHMLWitness(game, s, newPrice)
               } yield HennessyMilnerLogic.And(relevantDisabling).mergeWith(revival)
+            case game.DefenderTestReadinessObservability(p1, qq1) =>
+              val p0enabled = ts.enabled(p0)
+              val relevantEnabling = for {
+                q0 <- qq0
+                if !qq1.contains(q0)
+                a <- p0enabled.find(!ts.enabled(q0).contains(_))
+              } yield {
+                HennessyMilnerLogic.Observe(a, HennessyMilnerLogic.True).asInstanceOf[HennessyMilnerLogic.Formula[A]]
+              }
+              for {
+                revival <- buildHMLWitness(game, s, newPrice)
+              } yield HennessyMilnerLogic.And(relevantEnabling).mergeWith(revival)
             case game.DefenderConjunction(p1, qq1) =>
               buildHMLWitness(game, s, newPrice)
             case _ => Set()
@@ -84,7 +96,7 @@ class FastSpectroscopy[S, A, L] (
                 a <- possibleRestoredActions.headOption.toList // just take first option
                 postForm <- buildHMLWitness(game, s, newPrice)
               } yield HennessyMilnerLogic.Observe(a, postForm)
-            case game.AttackerLocalObservation(p1, qq1) =>
+            case game.DefenderTestReadinessObservability(p1, qq1) =>
               val p0enabled = ts.enabled(p0)
               val relevantEnabling = for {
                 q0 <- qq0
@@ -137,6 +149,17 @@ class FastSpectroscopy[S, A, L] (
           val moves = mv.toSet
           HennessyMilnerLogic.And(moves).asInstanceOf[HennessyMilnerLogic.Formula[A]]
         }
+      case game.DefenderTestFailureObservability(_, _) | game.DefenderTestReadinessObservability(_, _) =>
+        val successorFormulas = for {
+          s <- game.successors(node)
+          if s.isInstanceOf[game.AttackerLocalObservation]
+          update = game.weight(node, s)
+          newPrice = update.applyEnergyUpdate(price)
+          if game.isAttackerWinningPrice(s, newPrice)
+        } yield {
+          buildHMLWitness(game, s, newPrice)
+        }
+        successorFormulas.flatten
     }
   })
 
@@ -297,11 +320,20 @@ class FastSpectroscopy[S, A, L] (
           case game.AttackerObservation(p, qq: Set[_]) =>
             val qqString = qq.mkString("{",",","}")
             s"$p, $qqString"
+          case game.AttackerLocalObservation(p, qq: Set[_]) =>
+            val qqString = qq.mkString("{",",","}")
+            s"$p, $qqString (Revival)"
           case game.AttackerClause(p, q) =>
             s"$p, $q"
           case game.DefenderConjunction(p, qq: Set[_]) =>
             val qqString = qq.mkString("{",",","}")
             s"$p, $qqString"
+          case game.DefenderTestFailureObservability(p, qq: Set[_]) =>
+            val qqString = qq.mkString("{",",","}")
+            s"$p, $qqString (Failure)"
+          case game.DefenderTestReadinessObservability(p, qq: Set[_]) =>
+            val qqString = qq.mkString("{",",","}")
+            s"$p, $qqString (Ready)"
           case _ => ""
         }).replaceAllLiterally(".0", "") +
          (if (priceString != "") s"\\n------\\n$priceString" else "") +
