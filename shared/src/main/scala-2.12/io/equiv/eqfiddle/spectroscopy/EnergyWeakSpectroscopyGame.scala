@@ -38,6 +38,8 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
       gn2 match {
         case AttackerObservation(p1, qq1) =>
           ObsEnergyUpdate
+        case AttackerDelayedObservation(p1, qq1) =>
+          NoEnergyUpdate
         case DefenderConjunction(p1, qq1) =>
           ConjEnergyUpdate
         case DefenderBranchingConjunction(p1, a, p2, qq1) =>
@@ -92,7 +94,7 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
             p1 <- pp1
           } yield if (ts.silentActions(a)) {
             // stuttering
-            AttackerDelayedObservation(p0, qq0)
+            AttackerDelayedObservation(p1, qq0)
           } else {
             // (delayed) observation
             AttackerObservation(p1, qq0.flatMap(ts.post(_, a)))
@@ -121,7 +123,7 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
       val qq1 = qq0.flatMap(ts.post(_, a))
       List(
         DefenderConjunction(p0, qq0),
-        AttackerDelayedObservation(p1, qq1)
+        AttackerObservation(p1, qq1)
       )
   }
 }

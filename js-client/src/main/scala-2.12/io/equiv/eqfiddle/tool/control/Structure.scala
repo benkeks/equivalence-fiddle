@@ -23,6 +23,7 @@ import io.equiv.eqfiddle.hml.ObservationClassFast
 import io.equiv.eqfiddle.hml.Spectrum
 import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
 import io.equiv.eqfiddle.algo.WeakTransitionSaturation
+import io.equiv.eqfiddle.spectroscopy.EnergyWeakSpectroscopy
 
 
 class Structure(val main: Control) extends ModelComponent {
@@ -304,8 +305,8 @@ object Structure {
 
         val preprocessed = new WeakTransitionSaturation(structure.structure).compute()
         println("Preprocessed: " + preprocessed)
-        val algo = new FastSpectroscopy(preprocessed)
-        val result = algo.compute(List((n1, n2)), computeFormulas = true)
+        val algo = new EnergyWeakSpectroscopy(preprocessed)
+        val result = algo.compute(List((n1, n2)), computeFormulas = false)
         println("Spectroscopy took: " + (Date.now - begin) + "ms.")
 
         for {
