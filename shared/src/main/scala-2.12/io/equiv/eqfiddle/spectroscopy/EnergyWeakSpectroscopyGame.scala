@@ -13,6 +13,7 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
   private val BranchingObsEnergyUpdate  = new EnergyGame.EnergyUpdate(Array(-1,-1, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
   private val ConjEnergyUpdate          = new EnergyGame.EnergyUpdate(Array( 0, 0,-1, 0, 0, 0, 0, 0), energyCap = energyCap)
   private val ImmediateConjEnergyUpdate = new EnergyGame.EnergyUpdate(Array( 0, 0,-1,-1, 0, 0, 0, 0), energyCap = energyCap)
+  private val BranchingConjEnergyUpdate = new EnergyGame.EnergyUpdate(Array( 6, 0,-1, 0, 0, 0, 0, 0), energyCap = energyCap)
   private val NegClauseEnergyUpdate     = new EnergyGame.EnergyUpdate(Array( 7, 0, 0, 0, 0, 0, 0,-1), energyCap = energyCap)
   private val PosClauseEnergyUpdate     = new EnergyGame.EnergyUpdate(Array( 6, 0, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
 
@@ -44,7 +45,7 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
         case DefenderConjunction(p1, qq1) =>
           ConjEnergyUpdate
         case DefenderBranchingConjunction(p1, a, p2, qq1) =>
-          ConjEnergyUpdate
+          BranchingConjEnergyUpdate
       }
     case AttackerClause(p0, q0) =>
       gn2 match {
@@ -53,13 +54,20 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
         case AttackerObservation(p1, qq1) if qq1 contains p0 =>
           NegClauseEnergyUpdate
       }
-    case AttackerBranchingClause(p0, a, p1, q0) =>
+    case DefenderBranchingConjunction(p0, a, p1, qq0) =>
       gn2 match {
-        case AttackerObservation(_, _) =>
+        case DefenderConjunction(p1, qq1) =>
           BranchingObsEnergyUpdate
         case _ =>
           NoEnergyUpdate
       }
+    // case AttackerBranchingClause(p0, a, p1, q0) =>
+    //   gn2 match {
+    //     case AttackerObservation(_, _) =>
+    //       BranchingObsEnergyUpdate
+    //     case _ =>
+    //       NoEnergyUpdate
+    //   }
     case _ =>
       NoEnergyUpdate
   }
@@ -126,10 +134,10 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
         AttackerClause(p0, q1)
       }
     case DefenderBranchingConjunction(p0, a, p1, qq0) =>
-      for {
+      (for {
         q0 <- qq0
       } yield {
-        AttackerBranchingClause(p0, a, p1, q0)
-      }
+        AttackerBranchingClause(p0, a, p1, q0).asInstanceOf[GameNode]
+      }) + DefenderConjunction(p0, Set.empty)
   }
 }
