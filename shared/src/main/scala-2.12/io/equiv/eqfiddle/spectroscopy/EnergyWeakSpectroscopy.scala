@@ -91,7 +91,22 @@ class EnergyWeakSpectroscopy[S, A, L] (
             }
           }
         successorFormulas.flatten
-      case game.DefenderConjunction(_, _) =>
+      case game.AttackerBranchingClause(p0, a, p1, q0) =>
+        for {
+          s <- game.successors(node)
+          update = game.weight(node, s)
+          newPrice = update.applyEnergyUpdate(price)
+          if game.isAttackerWinningPrice(s, newPrice)
+          subformula <- buildHMLWitness(game, s, newPrice)
+        } yield {
+          s match {
+            case game.AttackerObservation(_, _) =>
+              HennessyMilnerLogic.Observe(a, subformula)
+            case _ =>
+              subformula
+          }
+        }
+      case game.DefenderConjunction(_, _) | game.DefenderBranchingConjunction(_, _, _, _) =>
         val possibleMoves = for {
           s <- game.successors(node)
           update = game.weight(node, s)
@@ -108,23 +123,6 @@ class EnergyWeakSpectroscopy[S, A, L] (
           val moves = mv.toSet
           HennessyMilnerLogic.And(moves).asInstanceOf[HennessyMilnerLogic.Formula[A]]
         }
-      case game.DefenderBranchingConjunction(p0, a, p1, qq0) =>
-        val conjuncts = for {
-          s <- game.successors(node)
-          update = game.weight(node, s)
-          newPrice = update.applyEnergyUpdate(price)
-          subformula <- buildHMLWitness(game, s, newPrice)
-        } yield s match {
-          case game.DefenderConjunction(_, _) =>
-            subformula
-          case game.AttackerObservation(_, _) =>
-            HennessyMilnerLogic.Observe(a, subformula)
-        }
-        Set(
-          conjuncts
-            .foldLeft(HennessyMilnerLogic.And(Set[HennessyMilnerLogic.Formula[A]]()))(_.mergeWith(_))
-            .asInstanceOf[HennessyMilnerLogic.Formula[A]]
-        )
     }
   })
 
