@@ -111,6 +111,7 @@ class EnergyWeakSpectroscopy[S, A, L] (
           s <- game.successors(node)
           update = game.weight(node, s)
           newPrice = update.applyEnergyUpdate(price)
+          if !s.isInstanceOf[game.DefenderConjunction]
         } yield if (game.isAttackerWinningPrice(s, newPrice)) {
           buildHMLWitness(game, s, newPrice)
         } else {

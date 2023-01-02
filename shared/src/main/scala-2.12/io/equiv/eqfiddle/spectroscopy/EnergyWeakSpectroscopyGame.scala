@@ -61,13 +61,6 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
         case _ =>
           NoEnergyUpdate
       }
-    // case AttackerBranchingClause(p0, a, p1, q0) =>
-    //   gn2 match {
-    //     case AttackerObservation(_, _) =>
-    //       BranchingObsEnergyUpdate
-    //     case _ =>
-    //       NoEnergyUpdate
-    //   }
     case _ =>
       NoEnergyUpdate
   }
@@ -110,6 +103,7 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
           }
           val branchingConjs = for {
             (a,pp1) <- ts.post(p0)
+            if qq0.size > 1
             p1 <- pp1
             if !ts.silentActions(a)
           } yield {
