@@ -81,6 +81,7 @@ object ObservationClassFast {
     "enabledness" ->        ObservationClassFast(    1,     0,    0,    0,    0,    0),
     "traces" ->             ObservationClassFast(INFTY,     0,    0,    0,    0,    0),
     "failure" ->            ObservationClassFast(INFTY,     1,    0,    0,    1,    1),
+    "revivals" ->           ObservationClassFast(INFTY,     1,    1,    0,    1,    1),
     "readiness" ->          ObservationClassFast(INFTY,     1,    1,    1,    1,    1),
     "failure-trace" ->      ObservationClassFast(INFTY, INFTY,INFTY,    0,    1,    1),
     "ready-trace" ->        ObservationClassFast(INFTY, INFTY,INFTY,    1,    1,    1),
@@ -101,33 +102,20 @@ object ObservationClassFast {
         ObservationClassFast()
       } else {
         val (positiveSubterms, negativeSubterms) = subterms.toList.partition(_.isPositive)
-        val (positiveFlat, positiveDeep) = positiveSubterms.map(formulaObsClass(_)).partition(_.observationHeight <= 1)
-        val (negativeFlat, negativeDeep) = negativeSubterms.map(formulaObsClass(_)).partition(_.observationHeight <= 1)
-        val allClasses = positiveDeep ++ positiveFlat ++ negativeDeep ++ negativeFlat
+        val positiveClasses = positiveSubterms.map(formulaObsClass(_))
+        val negativeClasses = negativeSubterms.map(formulaObsClass(_))
+        val revivalClass = if (positiveClasses.nonEmpty) Some(positiveClasses.maxBy(_.observationHeight)) else None
+        val otherPositiveClasses = positiveClasses diff revivalClass.toList
+        val allClasses = positiveClasses ++ negativeClasses
 
-        if (allClasses.isEmpty || negativeDeep.nonEmpty || positiveDeep.size > 1) {
-          ObservationClassFast(
-            observationHeight = allClasses.map(_.observationHeight).max,
-            conjunctionLevels = allClasses.map(_.conjunctionLevels).max + 1,
-            revivalHeight = allClasses.map(_.revivalHeight).max,
-            positiveConjHeight = (allClasses.map(_.positiveConjHeight) ++ (positiveFlat ++ positiveDeep).map(_.observationHeight)).max,
-            negativeConjHeight = (allClasses.map(_.negativeConjHeight) ++ (negativeFlat ++ negativeDeep).map(_.observationHeight)).max,
-            negationLevels = allClasses.map(_.negationLevels).max,
-          )
-        } else {
-          // this conjunction can be understood as a local observation
-          val revivalDepth = (positiveDeep.headOption orElse positiveFlat.headOption).map(_.observationHeight).getOrElse(0)
-          ObservationClassFast(
-            observationHeight = allClasses.map(_.observationHeight).max,
-            conjunctionLevels = allClasses.map(_.conjunctionLevels).max + 1,
-            revivalHeight = Integer.max(revivalDepth, allClasses.map(_.revivalHeight).max),
-            positiveConjHeight =
-              if (positiveFlat.nonEmpty) Integer.max(1, allClasses.map(_.positiveConjHeight).max) else allClasses.map(_.positiveConjHeight).max,
-            negativeConjHeight =
-              if (negativeFlat.nonEmpty) Integer.max(1, allClasses.map(_.negativeConjHeight).max) else allClasses.map(_.negativeConjHeight).max,
-            negationLevels = allClasses.map(_.negationLevels).max,
-          )
-        }
+        ObservationClassFast(
+          observationHeight = allClasses.map(_.observationHeight).max,
+          conjunctionLevels = allClasses.map(_.conjunctionLevels).max + 1,
+          revivalHeight = Integer.max(revivalClass.map(_.observationHeight).getOrElse(0), allClasses.map(_.revivalHeight).max),
+          positiveConjHeight = (allClasses.map(_.positiveConjHeight) ++ otherPositiveClasses.map(_.observationHeight)).max,
+          negativeConjHeight = (allClasses.map(_.negativeConjHeight) ++ negativeClasses.map(_.observationHeight)).max,
+          negationLevels = allClasses.map(_.negationLevels).max,
+        )
       }
     case HennessyMilnerLogic.Negate(andThen) =>
       val andThenClass = formulaObsClass(andThen)

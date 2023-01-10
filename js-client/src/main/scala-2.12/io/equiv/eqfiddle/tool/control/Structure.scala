@@ -17,14 +17,12 @@ import io.equiv.eqfiddle.util.Relation
 import io.equiv.eqfiddle.util.LabeledRelation
 import io.equiv.eqfiddle.ts.DivergenceInformation
 import io.equiv.eqfiddle.algo.AlgorithmLogging
-import io.equiv.eqfiddle.spectroscopy.{AbstractSpectroscopy, PositionalSpectroscopy, WeakPositionalSpectroscopy, EdgeSpectroscopy}
+import io.equiv.eqfiddle.spectroscopy.{AbstractSpectroscopy, PositionalSpectroscopy, WeakPositionalSpectroscopy, EdgeSpectroscopy, EnergyWeakSpectroscopy}
 import io.equiv.eqfiddle.spectroscopy.FastSpectroscopy
 import io.equiv.eqfiddle.hml.ObservationClassFast
 import io.equiv.eqfiddle.hml.Spectrum
 import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
 import io.equiv.eqfiddle.algo.WeakTransitionSaturation
-import io.equiv.eqfiddle.spectroscopy.EnergyWeakSpectroscopy
-
 
 class Structure(val main: Control) extends ModelComponent {
 
@@ -305,8 +303,8 @@ object Structure {
 
         //val preprocessed = new WeakTransitionSaturation(structure.structure).compute()
         //println("Preprocessed: " + preprocessed)
-        val algo = new EnergyWeakSpectroscopy(structure.structure)
-        val result = algo.compute(List((n1, n2)), computeFormulas = false)
+        val algo = new FastSpectroscopy(structure.structure)
+        val result = algo.compute(List((n1, n2)), computeFormulas = true)
         println("Spectroscopy took: " + (Date.now - begin) + "ms.")
 
         for {
