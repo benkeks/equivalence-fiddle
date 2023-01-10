@@ -11,9 +11,8 @@ class EnergySpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], energyC
   private val NoEnergyUpdate        = new EnergyGame.EnergyUpdate(Array( 0,0,0,0,0,0), energyCap = energyCap)
   private val ObsEnergyUpdate       = new EnergyGame.EnergyUpdate(Array(-1,0,0,0,0,0), energyCap = energyCap)
   private val ConjEnergyUpdate      = new EnergyGame.EnergyUpdate(Array(0,-1,0,0,0,0), energyCap = energyCap)
-  private val LocalObsEnergyUpdate  = new EnergyGame.EnergyUpdate(Array(-1,-1,0,0,0,0), energyCap = energyCap)
-  private val TestFailureEnergyUpdate = new EnergyGame.EnergyUpdate(Array(0,0,0,0,-1,-1), energyCap = energyCap)
-  private val TestReadinessEnergyUpdate = new EnergyGame.EnergyUpdate(Array(0,0,0,-1,0,0), energyCap = energyCap)
+  private val TestFailureEnergyUpdate = new EnergyGame.EnergyUpdate(Array(-1,0,0,0,-1,-1), energyCap = energyCap)
+  private val TestReadinessEnergyUpdate = new EnergyGame.EnergyUpdate(Array(-1,0,0,-1,0,0), energyCap = energyCap)
   private val RevivalEnergyUpdate   = new EnergyGame.EnergyUpdate(Array(3,0,0,0,0,0), energyCap = energyCap)
   private val NegClauseEnergyUpdate = new EnergyGame.EnergyUpdate(Array(5,0,0,0,0,-1), energyCap = energyCap)
   private val PosClauseEnergyUpdate = new EnergyGame.EnergyUpdate(Array(4,0,0,0,0,0), energyCap = energyCap)
@@ -35,9 +34,9 @@ class EnergySpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], energyC
         case AttackerObservation(p1, qq1) =>
           ObsEnergyUpdate
         case DefenderTestFailureObservability(p1, qq1) =>
-          LocalObsEnergyUpdate
+          ConjEnergyUpdate
         case DefenderTestReadinessObservability(p1, qq1) =>
-          LocalObsEnergyUpdate
+          ConjEnergyUpdate
         case DefenderConjunction(p1, qq1) =>
           ConjEnergyUpdate
       }
@@ -61,6 +60,13 @@ class EnergySpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], energyC
           RevivalEnergyUpdate
         case DefenderConjunction(p1, qq1) =>
           TestReadinessEnergyUpdate
+      }
+    case AttackerLocalObservation(p, qq) =>
+      gn2 match {
+        case AttackerObservation(p1, qq1) =>
+          ObsEnergyUpdate
+        case _ =>
+          NoEnergyUpdate
       }
     case _ =>
       NoEnergyUpdate
