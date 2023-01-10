@@ -3,7 +3,7 @@ package io.equiv.eqfiddle.hml
 case class ObservationClassEnergyWeak(
   /** the maximal observation depth of the subformulas (⊤ has height 0, negation and conjunction are neutral wrt. height) */
   observationHeight: Int = 0,
-  /** number of branching observations among the observationHeight levels */
+  /** are there branching observations among the observationHeight levels */
   branchingObservations: Int = 0,
   /** the maximal amount of conjunctions when descending into a formula */
   conjunctionLevels: Int = 0,
