@@ -306,7 +306,7 @@ object Structure {
         //val preprocessed = new WeakTransitionSaturation(structure.structure).compute()
         //println("Preprocessed: " + preprocessed)
         val algo = new EnergyWeakSpectroscopy(structure.structure)
-        val result = algo.compute(List((n1, n2)), computeFormulas = true)
+        val result = algo.compute(List((n1, n2)), computeFormulas = false)
         println("Spectroscopy took: " + (Date.now - begin) + "ms.")
 
         for {

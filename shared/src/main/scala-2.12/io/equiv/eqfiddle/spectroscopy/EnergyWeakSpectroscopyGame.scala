@@ -117,10 +117,17 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
       val pos = AttackerObservation(p0, Set(q0))
       List(pos, neg)
     case AttackerBranchingClause(p0, a, p1, q0) =>
-      List(
-        AttackerClause(p0, q0),
-        AttackerObservation(p1, ts.post(q0, a))
-      )
+      val qq1 = ts.post(q0, a)
+      if (qq1.nonEmpty) {
+        List(
+          AttackerClause(p0, q0),
+          AttackerObservation(p1, qq1)
+        )
+      } else {
+        List(
+          AttackerObservation(p1, qq1)
+        )
+      }
     case DefenderConjunction(p0, qq0) =>
       for {
         q1 <- qq0
