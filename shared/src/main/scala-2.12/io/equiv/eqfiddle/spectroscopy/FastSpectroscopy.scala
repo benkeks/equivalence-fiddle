@@ -272,8 +272,7 @@ class FastSpectroscopy[S, A, L] (
 
       val bestPreorders: Map[GameNode,(Set[ObservationClassFast],List[Spectrum.EquivalenceNotion[ObservationClassFast]])] =
         hmlGame.attackerVictoryPrices.toMap.mapValues { energies =>
-        // 1 offset in conjunctions between prices and energy metric...
-        val fcs = energies.toSet[Energy].map(e => ObservationClassFast(e(0), e(1) - 1, e(2), e(3)))
+        val fcs = energies.toSet[Energy].map(e => ObservationClassFast(e(0), e(1), e(2), e(3), e(4), e(5)))
         (fcs, spectrum.getStrongestPreorderClassFromClass(fcs))
       }
 
