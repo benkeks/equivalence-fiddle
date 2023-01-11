@@ -347,9 +347,9 @@ object Structure {
 
       val states = structure.structure.nodes.toList
 
-      val preprocessed = new WeakTransitionSaturation(structure.structure).compute()
-      println("Preprocessed: " + preprocessed)
-      val algo = new FastSpectroscopy(preprocessed)
+      // val preprocessed = new WeakTransitionSaturation(structure.structure).compute()
+      // println("Preprocessed: " + preprocessed)
+      val algo = new FastSpectroscopy(structure.structure)
 
       val comparedPairs = for {
         n1i <- 0 until states.length

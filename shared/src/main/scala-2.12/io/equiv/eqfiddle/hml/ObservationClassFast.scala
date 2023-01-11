@@ -78,15 +78,15 @@ object ObservationClassFast {
   // observationHeight, conjunctionLevels, revivalHeight, positiveConjHeight, negativeConjHeight, negationLevels
   // The Linear-time Branching-time Spectrum
   val BaseLTBTS = List(
-    "enabledness" ->        ObservationClassFast(    1,     0,    0,    0,    0,    0),
-    "traces" ->             ObservationClassFast(INFTY,     0,    0,    0,    0,    0),
-    "failure" ->            ObservationClassFast(INFTY,     1,    0,    0,    1,    1),
-    "revivals" ->           ObservationClassFast(INFTY,     1,    1,    0,    1,    1),
-    "readiness" ->          ObservationClassFast(INFTY,     1,    1,    1,    1,    1),
+    "enabledness" ->        ObservationClassFast(    1,     1,    0,    0,    0,    0),
+    "traces" ->             ObservationClassFast(INFTY,     1,    0,    0,    0,    0),
+    "failure" ->            ObservationClassFast(INFTY,     2,    0,    0,    1,    1),
+    "revivals" ->           ObservationClassFast(INFTY,     2,    1,    0,    1,    1),
+    "readiness" ->          ObservationClassFast(INFTY,     2,    1,    1,    1,    1),
     "failure-trace" ->      ObservationClassFast(INFTY, INFTY,INFTY,    0,    1,    1),
     "ready-trace" ->        ObservationClassFast(INFTY, INFTY,INFTY,    1,    1,    1),
-    "impossible-future" ->  ObservationClassFast(INFTY,     1,    0,    0,INFTY,    1),
-    "possible-future" ->    ObservationClassFast(INFTY,     1,INFTY,INFTY,INFTY,    1),
+    "impossible-future" ->  ObservationClassFast(INFTY,     2,    0,    0,INFTY,    1),
+    "possible-future" ->    ObservationClassFast(INFTY,     2,INFTY,INFTY,INFTY,    1),
     "simulation" ->         ObservationClassFast(INFTY, INFTY,INFTY,INFTY,    0,    0),
     "ready-simulation" ->   ObservationClassFast(INFTY, INFTY,INFTY,INFTY,    1,    1),
     "2-nested-simulation"-> ObservationClassFast(INFTY, INFTY,INFTY,INFTY,INFTY,    1),
@@ -99,7 +99,7 @@ object ObservationClassFast {
   def formulaObsClass(f: HennessyMilnerLogic.Formula[_]): ObservationClassFast = f match {
     case HennessyMilnerLogic.And(subterms) =>
       if (subterms.isEmpty) {
-        ObservationClassFast()
+        ObservationClassFast(conjunctionLevels = 1)
       } else {
         val (positiveSubterms, negativeSubterms) = subterms.toList.partition(_.isPositive)
         val positiveClasses = positiveSubterms.map(formulaObsClass(_))
