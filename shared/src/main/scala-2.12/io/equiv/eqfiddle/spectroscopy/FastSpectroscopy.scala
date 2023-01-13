@@ -47,70 +47,9 @@ class FastSpectroscopy[S, A, L] (
                 a <- possibleRestoredActions.headOption.toList // just take first option
                 postForm <- buildHMLWitness(game, s, newPrice)
               } yield HennessyMilnerLogic.Observe(a, postForm)
-            case game.DefenderTestFailureObservability(p1, qq1) =>
-              val p0enabled = ts.enabled(p0)
-              val relevantDisabling = for {
-                q0 <- qq0
-                if !qq1.contains(q0)
-                a <- ts.enabled(q0).find(!p0enabled.contains(_))
-              } yield {
-                HennessyMilnerLogic.Negate(
-                  HennessyMilnerLogic.Observe(a, HennessyMilnerLogic.True)
-                ).asInstanceOf[HennessyMilnerLogic.Formula[A]]
-              }
-              for {
-                revival <- buildHMLWitness(game, s, newPrice)
-              } yield HennessyMilnerLogic.And(relevantDisabling).mergeWith(revival)
-            case game.DefenderTestReadinessObservability(p1, qq1) =>
-              val p0enabled = ts.enabled(p0)
-              val relevantEnabling = for {
-                q0 <- qq0
-                if !qq1.contains(q0)
-                a <- p0enabled.find(!ts.enabled(q0).contains(_))
-              } yield {
-                HennessyMilnerLogic.Observe(a, HennessyMilnerLogic.True).asInstanceOf[HennessyMilnerLogic.Formula[A]]
-              }
-              for {
-                revival <- buildHMLWitness(game, s, newPrice)
-              } yield HennessyMilnerLogic.And(relevantEnabling).mergeWith(revival)
-            case game.DefenderConjunction(p1, qq1) =>
+            case game.DefenderConjunction(_, _, _) =>
               buildHMLWitness(game, s, newPrice)
             case _ => Set()
-          }
-        successorFormulas.flatten.toSet
-      case game.AttackerLocalObservation(p0, qq0) =>
-        val successorFormulas =
-          for {
-            s <- game.successors(node)
-            update = game.weight(node, s)
-            newPrice = update.applyEnergyUpdate(price)
-            if game.isAttackerWinningPrice(s, newPrice)
-          } yield s match {
-            case game.AttackerObservation(p1, qq1) =>
-              val possibleRestoredActions = for {
-                (a, pp1) <- ts.post(p0)
-                if pp1 contains p1
-                if qq1 == ts.post(qq0,a)
-              } yield a
-              for {
-                a <- possibleRestoredActions.headOption.toList // just take first option
-                postForm <- buildHMLWitness(game, s, newPrice)
-              } yield HennessyMilnerLogic.Observe(a, postForm)
-            case game.DefenderTestReadinessObservability(p1, qq1) =>
-              val p0enabled = ts.enabled(p0)
-              val relevantEnabling = for {
-                q0 <- qq0
-                if !qq1.contains(q0)
-                a <- p0enabled.find(!ts.enabled(q0).contains(_))
-              } yield {
-                HennessyMilnerLogic.Observe(a, HennessyMilnerLogic.True).asInstanceOf[HennessyMilnerLogic.Formula[A]]
-              }
-              for {
-                revival <- buildHMLWitness(game, s, newPrice)
-              } yield HennessyMilnerLogic.And(relevantEnabling).mergeWith(revival)
-            case game.DefenderConjunction(p1, qq1) =>
-              buildHMLWitness(game, s, newPrice)
-            // other options should not appear
           }
         successorFormulas.flatten.toSet
       case game.AttackerClause(p0, q0) =>
@@ -132,7 +71,7 @@ class FastSpectroscopy[S, A, L] (
             }
           }
         successorFormulas.flatten
-      case game.DefenderConjunction(_, _) =>
+      case game.DefenderConjunction(_, _, _) =>
         val possibleMoves = for {
           s <- game.successors(node)
           update = game.weight(node, s)
@@ -149,17 +88,6 @@ class FastSpectroscopy[S, A, L] (
           val moves = mv.toSet
           HennessyMilnerLogic.And(moves).asInstanceOf[HennessyMilnerLogic.Formula[A]]
         }
-      case game.DefenderTestFailureObservability(_, _) | game.DefenderTestReadinessObservability(_, _) =>
-        val successorFormulas = for {
-          s <- game.successors(node)
-          if s.isInstanceOf[game.AttackerLocalObservation]
-          update = game.weight(node, s)
-          newPrice = update.applyEnergyUpdate(price)
-          if game.isAttackerWinningPrice(s, newPrice)
-        } yield {
-          buildHMLWitness(game, s, newPrice)
-        }
-        successorFormulas.flatten
     }
   })
 
@@ -188,7 +116,7 @@ class FastSpectroscopy[S, A, L] (
     val zeroEnergySet = Set(Energy.zeroEnergy(6))
 
     def instantAttackerWin(gn: GameNode) = gn match {
-      case hmlGame.DefenderConjunction(_, qq) if qq.isEmpty => zeroEnergySet; case _ => Set.empty
+      case hmlGame.DefenderConjunction(_, qqS, qqR) if qqS.isEmpty && qqR.isEmpty => zeroEnergySet; case _ => Set.empty
     }
 
     debugLog("HML spectroscopy game construction ...")
@@ -319,20 +247,12 @@ class FastSpectroscopy[S, A, L] (
           case game.AttackerObservation(p, qq: Set[_]) =>
             val qqString = qq.mkString("{",",","}")
             s"$p, $qqString"
-          case game.AttackerLocalObservation(p, qq: Set[_]) =>
-            val qqString = qq.mkString("{",",","}")
-            s"$p, $qqString (Revival)"
           case game.AttackerClause(p, q) =>
             s"$p, $q"
-          case game.DefenderConjunction(p, qq: Set[_]) =>
-            val qqString = qq.mkString("{",",","}")
-            s"$p, $qqString"
-          case game.DefenderTestFailureObservability(p, qq: Set[_]) =>
-            val qqString = qq.mkString("{",",","}")
-            s"$p, $qqString (Failure)"
-          case game.DefenderTestReadinessObservability(p, qq: Set[_]) =>
-            val qqString = qq.mkString("{",",","}")
-            s"$p, $qqString (Ready)"
+          case game.DefenderConjunction(p, qqS: Set[_], qqR: Set[_]) =>
+            val qqSString = qqS.mkString("{",",","}")
+            val qqRString = qqR.mkString("{",",","}")
+            s"$p, $qqSString, $qqRString"
           case _ => ""
         }).replaceAllLiterally(".0", "") +
          (if (priceString != "") s"\\n------\\n$priceString" else "") +
