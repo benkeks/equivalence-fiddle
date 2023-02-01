@@ -41,19 +41,24 @@ object EnergyGame {
 
     def dim() = vector.length
 
+    val indices = 0 until vector.length
+
     def apply(n: Int) = vector(n)
 
+    override val hashCode: Int = {
+      indices.fold(0){ (hash, i) => (hash << 3) ^ vector(i) }
+    }
 
     /* assumes that only energies of equal length are being compared */
     override def tryCompareTo[B >: Energy](that: B)(implicit evidence$1: B => PartiallyOrdered[B]): Option[Int] = {
       that match {
         case that: Energy =>
-          if (vector.indices.forall(i => this.vector(i) == that.vector(i))) { //this.vector == that.vector) {
+          if (indices.forall(i => this.vector(i) == that.vector(i))) { //this.vector == that.vector) {
             EnergySame
           } else {
-            if (vector.indices.forall(i => this.vector(i) >= that.vector(i))) {
+            if (indices.forall(i => this.vector(i) >= that.vector(i))) {
               EnergyHigher
-            } else if (vector.indices.forall(i => this.vector(i) <= that.vector(i))) {
+            } else if (indices.forall(i => this.vector(i) <= that.vector(i))) {
               EnergyLower
             } else {
               None
@@ -63,11 +68,20 @@ object EnergyGame {
       }
     }
 
+    override def equals(that: Any): Boolean = that match {
+      case that: Energy =>
+        this.dim == that.dim && indices.forall(i => this.vector(i) == that.vector(i))
+      case _ =>
+        false
+    }
+
     def lub(that: Energy): Energy = {
       if (this.dim() == 4) {
         Energy(Math.max(this(0), that(0)), Math.max(this(1), that(1)), Math.max(this(2), that(2)), Math.max(this(3), that(3)))
       } else {
-        Energy(Array.tabulate(vector.length)(i => Math.max(this.vector(i), that.vector(i))))
+        val newEnergy = new Array[Int](dim)
+        indices.foreach { i => newEnergy(i) = Math.max(this.vector(i), that.vector(i)) }
+        Energy(newEnergy)
       }
     }
 
@@ -106,7 +120,7 @@ object EnergyGame {
     }
 
     def zeroEnergy(dim: Int) = {
-      if (dim == 4) Energy(0,0,0,0) else new Energy(Array.fill[Int](dim)(0))
+      if (dim == 4) Energy(0,0,0,0) else new Energy(new Array[Int](dim))
     }
 
     def spikeEnergy(dim: Int, spikePos: Int, spikeVal: Int) = {
@@ -118,7 +132,9 @@ object EnergyGame {
           case 3 => Energy(0,0,0, spikeVal)
         }
       } else {
-        new Energy(Array.tabulate(dim)(i => if (i == spikePos) spikeVal else 0))
+        val spikeArray = new Array[Int](dim)
+        spikeArray(spikePos) = spikeVal
+        new Energy(spikeArray)
       }
     }
 
@@ -155,22 +171,23 @@ object EnergyGame {
       if (isZero) {
         e
       } else {
-        val newRelativeEnergies = for {
-          (u, i) <- updates.zipWithIndex
-        } yield {
-          if (u <= 0) {
-            Math.min(e(i) - u, energyCap)
+        val newEnergies = new Array[Int](updates.length)
+        for {
+          i <- 0 until updates.length
+        } {
+          newEnergies(i) = if (updates(i) <= 0) {
+            Math.min(e(i) - updates(i), energyCap)
           } else {
             e(i)
           }
         }
-        val minSources = for {
-          (u, i) <- updates.zipWithIndex
-          if (u > 0)
-        } yield {
-          Energy.spikeEnergy(e.dim, u - 1, e(i))
+        for {
+          i <- 0 until updates.length
+          if (updates(i) > 0)
+        } {
+          newEnergies(updates(i) - 1) = Math.max(newEnergies(updates(i) - 1), e(i))
         }
-        minSources.fold(Energy(newRelativeEnergies))(_ lub _)
+        Energy(newEnergies)
       }
     }
 
