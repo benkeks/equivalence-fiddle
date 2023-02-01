@@ -65,11 +65,14 @@ class EnergySpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], energyC
             val offerChallengedQ = qq0.filter(q0 => ts.enabled(p0) subsetOf ts.enabled(q0))
             val readyChallengedQ = failChallengedQ intersect offerChallengedQ
             Set(
-              DefenderConjunction(p0, qq0, Set.empty),
-              DefenderConjunction(p0, qq0 -- failChallengedQ, failChallengedQ),
-              DefenderConjunction(p0, qq0 -- offerChallengedQ, offerChallengedQ),
-              DefenderConjunction(p0, qq0 -- readyChallengedQ, readyChallengedQ)
-            )
+              DefenderConjunction(p0, qq0, Set.empty)
+            ) ++ {
+              if (failChallengedQ.size < qq0.size) Set(DefenderConjunction(p0, qq0 -- failChallengedQ, failChallengedQ)) else Set()
+            } ++ {
+              if (offerChallengedQ.size < qq0.size) Set(DefenderConjunction(p0, qq0 -- offerChallengedQ, offerChallengedQ)) else Set()
+            } ++ {
+              if (readyChallengedQ.size < qq0.size) Set(DefenderConjunction(p0, qq0 -- readyChallengedQ, readyChallengedQ)) else Set()
+            }
           } else {
             for {
               qqS <- qq0.subsets()
