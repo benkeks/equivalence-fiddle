@@ -23,6 +23,8 @@ import io.equiv.eqfiddle.hml.ObservationClassFast
 import io.equiv.eqfiddle.hml.Spectrum
 import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
 import io.equiv.eqfiddle.algo.WeakTransitionSaturation
+import io.equiv.eqfiddle.algo.sigref.Bisimilarity
+import io.equiv.eqfiddle.algo.transform.BuildQuotientSystem
 
 class Structure(val main: Control) extends ModelComponent {
 
@@ -301,9 +303,12 @@ object Structure {
 
         val begin = Date.now
 
-        //val preprocessed = new WeakTransitionSaturation(structure.structure).compute()
-        //println("Preprocessed: " + preprocessed)
+        // val loadedSystem = new WeakTransitionSaturation(structure.structure).compute()
+        // val strongBisim = new Bisimilarity(loadedSystem).computePartition()
+        // val preprocessed = new BuildQuotientSystem(loadedSystem, strongBisim).build()
+        // println(preprocessed.step.toGraphString())
         val algo = new FastSpectroscopy(structure.structure)
+
         val result = algo.compute(List((n1, n2)), computeFormulas = true)
         println("Spectroscopy took: " + (Date.now - begin) + "ms.")
 
@@ -347,8 +352,10 @@ object Structure {
 
       val states = structure.structure.nodes.toList
 
-      // val preprocessed = new WeakTransitionSaturation(structure.structure).compute()
-      // println("Preprocessed: " + preprocessed)
+      // val loadedSystem = new WeakTransitionSaturation(structure.structure).compute()
+      // val strongBisim = new Bisimilarity(loadedSystem).computePartition()
+      // val preprocessed = new BuildQuotientSystem(loadedSystem, strongBisim).build()
+      // println(preprocessed.step.toGraphString())
       val algo = new FastSpectroscopy(structure.structure)
 
       val comparedPairs = for {
