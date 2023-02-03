@@ -141,6 +141,8 @@ class EdgeSpectroscopy[S, A, L] (
 
   def compute(
       comparedPairs: Iterable[(S,S)],
+      /* the implementation will ignore this configuration as it NEEDs to compute formulas to work */
+      computeFormulas: Boolean = true,
       saveGameSize: Boolean = false,
     ) = {
   
