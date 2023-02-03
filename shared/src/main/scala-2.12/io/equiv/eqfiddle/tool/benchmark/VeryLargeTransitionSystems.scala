@@ -17,8 +17,7 @@ import io.equiv.eqfiddle.algo.transform.RemoveLittleBrothers
 
 class VeryLargeTransitionSystems(val useSpectro: Int = 0) {
 
-  val vltsSamplesMedium = Seq(
-    //"shared/src/test/assets/other/peterson_mutex.csv",
+  val vltsSamplesMedium = Seq(    
     "shared/src/test/assets/vlts/vasy_0_1.csv", //   289,   1224,  no tau,  2
     "shared/src/test/assets/vlts/vasy_1_4.csv", //  1183,   4464,    1213,  6
     "shared/src/test/assets/vlts/vasy_5_9.csv",
@@ -28,13 +27,14 @@ class VeryLargeTransitionSystems(val useSpectro: Int = 0) {
     "shared/src/test/assets/vlts/vasy_8_38.csv",
     "shared/src/test/assets/vlts/vasy_10_56.csv",
     "shared/src/test/assets/vlts/vasy_18_73.csv",
-    "shared/src/test/assets/vlts/vasy_25_25.csv"
+    "shared/src/test/assets/vlts/vasy_25_25.csv",
+    "shared/src/test/assets/other/peterson_mutex_weak.csv",
   )
 
-  val easyExamples = List(0,1,2,4,5,6,9)
+  val easyExamples = List(10,0,1,2,4,5,6,9)
   val hardExamples = List(3,7,8)
 
-  val tableOutput = false
+  val tableOutput = true
 
   def arrowLabeling(o: Option[Syntax.Label]) = {
     Interpreting.fromOption(o.map(_.name) orElse(Some("")))
@@ -53,19 +53,13 @@ class VeryLargeTransitionSystems(val useSpectro: Int = 0) {
 
     output("States", loadedSystem.nodes.size.toString)
     output("Transitions", loadedSystem.step.size.toString)
-    // val parser: Parser = new Parser(CCSSamples.ltbts1)
-    // val parser.ParseSuccess(esDef, _) = parser.parse
-    // val interpreter = new Interpreter(esDef, NodeID(_).hash, arrowLabeling, nodeLabeling, actionToInput, actionIsOutput)
-    // val Interpreting.Success(is) = interpreter.result(new WeakTransitionSystem(_, _, Set()))
-    // val loadedSystem = is.asInstanceOf[WeakTransitionSystem[Int, String, String]]
 
     val minStartTime = System.nanoTime()
-    //val weakSystem = new WeakTransitionSaturation(loadedSystem).compute()
     val strongBisim = new Bisimilarity(loadedSystem).computePartition()
-    val system = new BuildQuotientSystem(loadedSystem, strongBisim).build() // weakSystem //new BuildQuotientSystem(weakSystem, strongBisim).build()
+    val system = new BuildQuotientSystem(loadedSystem, strongBisim).build()
     printTiming(minStartTime, "Bisim minimization")
 
-    output("Strong bisim minimized system", system.nodes.size.toString)
+    output("Bisim minimized system", system.nodes.size.toString)
     val startTime = System.nanoTime()
 
     val states = system.nodes.toList
@@ -88,24 +82,24 @@ class VeryLargeTransitionSystems(val useSpectro: Int = 0) {
     output("Game positions", algo.gameSize._1.toString)
     output("Game moves", algo.gameSize._2.toString)
 
-    (result.spectrum.notions zip
-      result.toQuotients(result.spectrum.notions, Math.min, comparedPairs)
+    val interestingNotions = result.spectrum.notions.filter(n => List("enabledness", "traces", "simulation", "bisimulation").contains(n.name))
+
+    (interestingNotions zip
+      result.toQuotients(interestingNotions, Math.min, comparedPairs)
     ).foreach { case (notion, quotient) =>
       val quotientSystem = new BuildQuotientSystem(system, quotient).build()
       val minimizedSystem = new RemoveLittleBrothers(quotientSystem, { (p: Int, q: Int) =>
-        //println(result.foundImpliedPreorders(result.spectrum.notions, p, q))
         result.foundPreorders(p, q).exists(eq => eq.obsClass >= notion.obsClass)
       }).build()
       output(notion.name, minimizedSystem.nodes.size.toString)
     }
-    // if (tableOutput) {
-      
-    //   println()
-    // } else {
-    //   println(
-    //     (result.spectrum.notions.map(_.name) zip
-    //       result.toQuotients(result.spectrum.notions, Math.min, comparedPairs).map(_.universeSize())).mkString("  "))
-    // }
+    if (tableOutput) {
+      println()
+    } else {
+      println(
+         (result.spectrum.notions.map(_.name) zip
+           result.toQuotients(result.spectrum.notions, Math.min, comparedPairs).map(_.universeSize())).mkString("  "))
+    }
   }
 
   def output(msg: String, data: String, suffix: String = "") = {
