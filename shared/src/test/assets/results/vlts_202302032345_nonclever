@@ -1,0 +1,10 @@
+system, states, transitions, bisimtime, bisimquot, initialpairs, spectrotime, spectropos, spectromoves, enabledness, trace, simulation, bisimulation
+shared/src/test/assets/other/peterson_mutex_weak.csv, 20, 138, 44, 19, 47, 23307, 67703, 348474, 3, 11, 11, 19
+shared/src/test/assets/vlts/vasy_0_1.csv, 289, 1224, 20, 9, 30, 23, 565, 1334, 1, 9, 9, 9
+shared/src/test/assets/vlts/vasy_1_4.csv, 1183, 4464, 80, 28, 88, 19, 708, 1320, 8, 28, 28, 28
+shared/src/test/assets/vlts/vasy_5_9.csv, 5486, 9392, 209, 145, 232, 48, 2475, 4315, 109, 145, 145, 145
+shared/src/test/assets/vlts/cwi_3_14.csv, 3996, 14552, 1068, 62, 1832, 284, 14814, 25666, 2, 62, 62, 62
+shared/src/test/assets/vlts/vasy_8_24.csv, 8879, 24411, 850, 416, 2625, 10478, 227581, 725113, 171, 415, 415, 416
+shared/src/test/assets/vlts/vasy_8_38.csv, 8921, 38424, 1577, 219, 837, 214, 9889, 19690, 112, 218, 218, 218
+shared/src/test/assets/vlts/vasy_25_25.csv, 25217, 25216, 571, 25217, 25217, 322, 25217, 0, 25217, 25217, 25217, 25217
+shared/src/test/assets/vlts/cwi_1_2.csv, 1952, 2387, 202, 1132, 48173,,,
