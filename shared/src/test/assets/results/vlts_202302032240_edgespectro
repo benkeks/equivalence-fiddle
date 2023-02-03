@@ -1,0 +1,89 @@
+shared/src/test/assets/vlts/vasy_0_1.csvStates: 289
+Transitions: 1224
+Bisim minimization took: 38ms
+Bisim minimized system: 9
+Initial pairs: 30
+Spectroscopy took: 170ms
+Game positions: 386
+Game moves: 1118
+enabledness: 1
+traces: 9
+simulation: 9
+bisimulation: 9
+shared/src/test/assets/vlts/vasy_1_4.csvStates: 1183
+Transitions: 4464
+Bisim minimization took: 82ms
+Bisim minimized system: 28
+Initial pairs: 88
+Spectroscopy took: 52ms
+Game positions: 376
+Game moves: 1125
+enabledness: 8
+traces: 28
+simulation: 28
+bisimulation: 28
+shared/src/test/assets/vlts/vasy_5_9.csvStates: 5486
+Transitions: 9392
+Bisim minimization took: 211ms
+Bisim minimized system: 145
+Initial pairs: 232
+Spectroscopy took: 139ms
+Game positions: 1578
+Game moves: 3789
+enabledness: 109
+traces: 145
+simulation: 145
+bisimulation: 145
+shared/src/test/assets/vlts/cwi_3_14.csvStates: 3996
+Transitions: 14552
+Bisim minimization took: 1099ms
+Bisim minimized system: 62
+Initial pairs: 1832
+Spectroscopy took: 2610ms
+Game positions: 7442
+Game moves: 14761
+enabledness: 2
+traces: 62
+simulation: 62
+bisimulation: 62
+shared/src/test/assets/vlts/vasy_8_24.csvStates: 8879
+Transitions: 24411
+Bisim minimization took: 863ms
+Bisim minimized system: 416
+Initial pairs: 2625
+Spectroscopy took: 540963ms
+Game positions: 145674
+Game moves: 513690
+enabledness: 171
+traces: 415
+simulation: 415
+bisimulation: 416
+shared/src/test/assets/vlts/vasy_8_38.csvStates: 8921
+Transitions: 38424
+Bisim minimization took: 1569ms
+Bisim minimized system: 219
+Initial pairs: 837
+Spectroscopy took: 811ms
+Game positions: 4472
+Game moves: 19595
+enabledness: 112
+traces: 218
+simulation: 218
+bisimulation: 218
+shared/src/test/assets/vlts/vasy_25_25.csvStates: 25217
+Transitions: 25216
+Bisim minimization took: 613ms
+Bisim minimized system: 25217
+Initial pairs: 25217
+Spectroscopy took: 1216ms
+Game positions: 50434
+Game moves: 100866
+enabledness: 25217
+traces: 25217
+simulation: 25217
+bisimulation: 25217
+shared/src/test/assets/vlts/cwi_1_2.csvStates: 1952
+Transitions: 2387
+Bisim minimization took: 195ms
+Bisim minimized system: 1132
+Initial pairs: 481735
