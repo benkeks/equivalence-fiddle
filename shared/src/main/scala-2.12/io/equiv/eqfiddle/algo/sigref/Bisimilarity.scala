@@ -12,8 +12,9 @@ import io.equiv.eqfiddle.ts.WeakTransitionSystem
  * */
 
 class Bisimilarity[S, A, L] (
-    override val ts: WeakTransitionSystem[S, A, L])
-  extends SignatureRefinement[S, A, L](ts) {
+    override val ts: WeakTransitionSystem[S, A, L],
+    onStates: Option[Set[S]] = None
+) extends SignatureRefinement[S, A, L](ts, onStates) {
   
   override def signature(s: S): Set[(Coloring.Color, Coloring.Color)] = {
     for {

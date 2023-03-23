@@ -264,19 +264,29 @@ object Structure {
   def transitionSystemConstructor(
       rel: LabeledRelation[NodeID, ActionLabel],
       labels: Map[NodeID, Structure.NodeLabel],
-      oldTs: Option[Structure.TSStructure] = None) = {
+      oldTs: Option[Structure.TSStructure] = None)
+    : WeakTransitionSystem[NodeID,ActionLabel,NodeLabel] = {
 
     val silentActions = rel.labels filter (_.act == 'tau)
+    val mainNodes = (labels.collect { case (id, label) if label.act.contains('main) => id }).toSet
+    val ts = new WeakTransitionSystem(rel, labels, silentActions.toSet)
 
-    oldTs match {
-      case Some(d: DivergenceInformation[_]) =>
-        new WeakTransitionSystem(rel, labels, silentActions.toSet) with DivergenceInformation[NodeID] {
-          def diverges(s: NodeID): Boolean = d.asInstanceOf[DivergenceInformation[NodeID]].diverges(s)
-        }
-      case _ =>
-        new WeakTransitionSystem(rel, labels, silentActions.toSet)
+    val weaknessSaturated = labels.collect { case (id, label) if label.act.contains('weakness_saturated) => id }
+    val saturatedTs = if (weaknessSaturated.nonEmpty) {
+      new WeakTransitionSaturation(ts, Some(rel.getReachablePart(weaknessSaturated))).compute()
+    } else {
+      ts
     }
 
+    val bisimMinimized = labels.collect { case (id, label) if label.act.contains('bisim_minimized) => id }
+    val minimizedTs = if (bisimMinimized.nonEmpty) {
+      val bisimColoring = new Bisimilarity(saturatedTs, Some(rel.getReachablePart(bisimMinimized) -- mainNodes)).computePartition()
+      new BuildQuotientSystem(saturatedTs, bisimColoring, mainNodes).build()
+    } else {
+      saturatedTs
+    }
+
+    minimizedTs
   }
 
   case class StructureCallOperation(slug: String, resetReplay: Boolean = true) extends StructureAction {

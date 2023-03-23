@@ -14,12 +14,13 @@ import io.equiv.eqfiddle.util.LabeledRelation
  *  */
 class BuildQuotientSystem[S, A, L] (
     ts: WeakTransitionSystem[S, A, L],
-    coloring: Coloring[S]
+    coloring: Coloring[S],
+    protectedNodes: Set[S] = Set[S]()
   ) {
   
   def build() = {
     val partitions = coloring.partitions
-    val reps = partitions.mapValues(_.head)
+    val reps = partitions.mapValues(partition => partition.find(protectedNodes).getOrElse(partition.head))
     
     val transitions = for {
       (color, partition) <- partitions.toList

@@ -357,7 +357,7 @@ Spec = (ecA.lcA + ecB.lcB)
 
 @compare "Spec, Peterson" 
 
-Peterson(x=7, y=-155, main)
+Peterson(x=7, y=-155, main, weakness_saturated, bisim_minimized)
 "(A1 | setTurnA!B11 | TurnA | ReadyAf | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=181, y=-89)
 "(setTurnB!A11 | B1 | TurnA | ReadyAt | ReadyBf) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=-44, y=44)
 "(setTurnB!A11 | setTurnA!B11 | TurnA | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=145, y=107)
@@ -386,7 +386,7 @@ Peterson(x=7, y=-155, main)
 "(setTurnB!A11 | 0 | TurnA | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=716, y=345)
 "(setTurnB!A11 | lcB.0 | TurnA | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=579, y=266)
 
-Spec(x=926, y=-278, main)
+Spec(x=926, y=-278, main, weakness_saturated)
 lcB(x=1111, y=-262)
 lcA(x=933, y=-138)
 "0"(x=1144, y=-126)

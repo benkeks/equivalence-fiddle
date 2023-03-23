@@ -13,14 +13,15 @@ import io.equiv.eqfiddle.ts.WeakTransitionSystem
  * */
 
 abstract class SignatureRefinement[S, A, L] (
-    val ts: WeakTransitionSystem[S, A, L])
-  extends AlgorithmLogging[S] {
+    val ts: WeakTransitionSystem[S, A, L],
+    onStates: Option[Set[S]] = None
+  ) extends AlgorithmLogging[S] {
   
-  val labelColors = {
-    val parts = for {
-      (_, ss) <- ts.nodesByLabel
-    } yield ss
-    Coloring.fromPartition(parts.toSet)
+  val labelColors = onStates match {
+    case None =>
+      Coloring.fromPartition(Set(ts.nodes))
+    case Some(affectedStates) =>
+      Coloring.fromPartition(Set(affectedStates) ++ (ts.nodes -- affectedStates).map(Set(_)))
   }
   
   val actionColors =
