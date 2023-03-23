@@ -13,6 +13,7 @@
       stroke-opacity: .6;
       stroke-width: 2.5px;
       fill: none;
+      pointer-events: none;
     }
 
     .node {
@@ -85,6 +86,7 @@
       -webkit-user-select: none;
       -ms-user-select: none;
       user-select: none;
+      pointer-events: none;
     }
 
     .link.relation {
@@ -101,6 +103,10 @@
       stroke-dasharray: 5, 5;
       stroke-width: 2.5px;
       fill: none;
+    }
+
+    .link-label {
+      pointer-events: none;
     }
 
     .link-label.relation {
