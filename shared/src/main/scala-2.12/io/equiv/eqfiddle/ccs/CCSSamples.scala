@@ -254,81 +254,67 @@ P1B(x=391, y=-154)
 """
 
   val petersonMutex = """
-B1f = (b1rf!B1f + b1wf.B1f + b1wt.B1t)
-B1t = (b1rt!B1t + b1wf.B1f + b1wt.B1t)
-B2f = (b2rf!B2f + b2wf.B2f + b2wt.B2t)
-B2t = (b2rt!B2t + b2wf.B2f + b2wt.B2t)
+ReadyAf = (readyAf!ReadyAf + setReadyAf.ReadyAf + setReadyAt.ReadyAt)
+ReadyAt = (readyAt!ReadyAt + setReadyAf.ReadyAf + setReadyAt.ReadyAt)
 
-K1 = (kr1!K1 + kw1.K1 + kw2.K2)
-K2 = (kr2!K2 + kw1.K1 + kw2.K2)
-P1 = b1wt!kw2!P11
-P11 = (b2rf.P12 + b2rt.(kr2.P11 + kr1.P12))
-P12 = enter1.exit1.b1wf!P1
-P2 = b2wt!kw1!P21
-P21 = (b1rf.P22 + b1rt.(kr1.P21 + kr2.P22))
-P22 = enter2.exit2.b2wf!P2
+ReadyBf = (readyBf!ReadyBf + setReadyBf.ReadyBf + setReadyBt.ReadyBt)
+ReadyBt = (readyBt!ReadyBt + setReadyBf.ReadyBf + setReadyBt.ReadyBt)
 
-Peterson = (P1 | P2 | K1 | B1f | B2f) \ {b1rf, b1wf, b1wt, b1rt, b2rf, b2wf, b2rt, b2wt, kr1, kr2, kw1, kw2}
+TurnA = (turnA!TurnA + setTurnA.TurnA + setTurnB.TurnB)
+TurnB = (turnB!TurnB + setTurnA.TurnA + setTurnB.TurnB)
 
-Spec = (enter1.exit1.Spec + enter2.exit2.Spec)
+A1 = setReadyAt!setTurnB!A11
+A11 = (readyBf.A12 + turnA.A12)
+A12 = ecA.lcA.setReadyAf!A1
 
-@compare "Peterson, Spec" 
+B1 = setReadyBt!setTurnA!B11
+B11 = (readyAf.B12 + turnB.B12)
+B12 = ecB.lcB.setReadyBf!B1
 
+Peterson = (A1 | B1 | TurnA | ReadyAf | ReadyBf) \ {readyAf, readyAt, setReadyAf, setReadyAt, readyBf, readyBt, setReadyBf, setReadyBt, turnA, turnB, setTurnA, setTurnB}
+Spec = (ecA.lcA.Spec + ecB.lcB.Spec)
 
+@compare "Peterson, Spec"
+@compare "Spec, Peterson" 
 @minimize
-Peterson(x=-10, y=-485, main)
 
-Spec(x=1099, y=-289, main)
+Peterson(x=-10, y=-485, main, weakness_saturated, bisim_minimized)
+"(A1 | setTurnA!B11 | TurnA | ReadyAf | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=180, y=-480)
+"(setTurnB!A11 | B1 | TurnA | ReadyAt | ReadyBf) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=-16, y=-310)
+"(setTurnB!A11 | setTurnA!B11 | TurnA | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=174, y=-293)
+"(A1 | B11 | TurnA | ReadyAf | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=343, y=-470)
+"(A1 | B12 | TurnA | ReadyAf | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=501, y=-465)
+"(setTurnB!A11 | B12 | TurnA | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=445, y=-281)
+"(A11 | B1 | TurnB | ReadyAt | ReadyBf) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=-10, y=-130)
+"(A12 | B1 | TurnB | ReadyAt | ReadyBf) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=-8, y=31)
+"(lcA.setReadyAf!A1 | B1 | TurnB | ReadyAt | ReadyBf) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=-3, y=178)
+"(lcA.setReadyAf!A1 | setTurnA!B11 | TurnB | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=159, y=182)
+"(setTurnB!A11 | B1 | TurnB | ReadyAt | ReadyBf) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=-7, y=-291)
+"(A11 | B12 | TurnB | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=435, y=-109)
+"(setTurnB!A11 | lcB.setReadyBf!B1 | TurnA | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=628, y=-277)
+"(A1 | lcB.setReadyBf!B1 | TurnA | ReadyAf | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=611, y=-429)
+"(A11 | lcB.setReadyBf!B1 | TurnB | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=641, y=-82)
+"(A11 | setTurnA!B11 | TurnB | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=144, y=-139)
+"(A11 | B11 | TurnB | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=305, y=-166)
+"(setTurnB!A11 | B11 | TurnA | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=336, y=-281)
+"(A11 | B11 | TurnA | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=290, y=-129)
+"(setTurnB!A11 | setTurnA!B11 | TurnB | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=188, y=-249)
+"(A12 | setTurnA!B11 | TurnB | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=140, y=35)
+"(A12 | B11 | TurnA | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=301, y=37)
+"(lcA.setReadyAf!A1 | B11 | TurnA | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=310, y=171)
+"(setReadyAf!A1 | B1 | TurnB | ReadyAt | ReadyBf) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=4, y=353)
+"(A1 | B1 | TurnB | ReadyAf | ReadyBf) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=30, y=-445)
+"(setReadyAf!A1 | setTurnA!B11 | TurnB | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=172, y=356)
+"(A1 | setTurnA!B11 | TurnB | ReadyAf | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=225, y=-431)
+"(A1 | B1 | TurnA | ReadyAf | ReadyBf) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=-39, y=-510)
+"(A1 | setReadyBf!B1 | TurnA | ReadyAf | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=792, y=-402)
+"(setTurnB!A11 | setReadyBf!B1 | TurnA | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=780, y=-231)
+"(A11 | setReadyBf!B1 | TurnB | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=792, y=-87)
+"(setReadyAf!A1 | B11 | TurnA | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=328, y=356)
 
-"exit2.Spec"(x=1030, y=-107)
-"(P1 | kw1!P21 | K1 | B1f | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-149, y=-377)
-"(kw2!P11 | P2 | K1 | B1t | B2f) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=118, y=-393)
-"(P1 | P2 | K1 | B1f | B2f) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-350, y=385)
-"(kw2!P11 | kw1!P21 | K1 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-19, y=-289)
-"(P11 | P2 | K2 | B1t | B2f) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=228, y=-276)
-"(kw2!P11 | b2wf!P2 | K1 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-520, y=-18)
-"(P1 | P21 | K1 | B1f | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-276, y=-255)
-"(kw2!P11 | P21 | K1 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-118, y=-173)
-"(P12 | P2 | K2 | B1t | B2f) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=340, y=-189)
-"(kr2.P11 + kr1.P12 | b2wf!P2 | K2 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-384, y=175)
-"(exit1.b1wf!P1 | P2 | K2 | B1t | B2f) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=439, y=-101)
-"(P1 | kr1.P21 + kr2.P22 | K1 | B1f | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-151, y=-132)
-"(kw2!P11 | P2 | K2 | B1t | B2f) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=143, y=213)
-"(kr2.P11 + kr1.P12 | P21 | K2 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-41, y=-6)
-"(kw2!P11 | kw1!P21 | K2 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=62, y=258)
-"(kw2!P11 | kr1.P21 + kr2.P22 | K1 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-115, y=-89)
-"(P1 | P22 | K1 | B1f | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-465, y=-180)
-"(P1 | exit2.b2wf!P2 | K1 | B1f | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-554, y=-141)
-"(P11 | P21 | K2 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-62, y=-72)
-"(P1 | kw1!P21 | K2 | B1f | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=290, y=423)
-"(P1 | b2wf!P2 | K1 | B1f | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-625, y=-90)
-"(P11 | kw1!P21 | K2 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=94, y=-223)
-"(kr2.P11 + kr1.P12 | kw1!P21 | K2 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-46, y=33)
-"(P11 | b2wf!P2 | K2 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-446, y=77)
-"(kr2.P11 + kr1.P12 | P2 | K2 | B1t | B2f) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-326, y=289)
-"(P12 | kw1!P21 | K2 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=262, y=-111)
-"(kw2!P11 | exit2.b2wf!P2 | K1 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-436, y=-81)
-"(kw2!P11 | P22 | K1 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-346, y=-125)
-"(b1wf!P1 | P2 | K2 | B1t | B2f) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=543, y=-12)
-"(exit1.b1wf!P1 | kw1!P21 | K2 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=351, y=-41)
-"(b1wf!P1 | kw1!P21 | K2 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=425, y=68)
-"(P1 | P2 | K2 | B1f | B2f) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=581, y=245)
-"(kr2.P11 + kr1.P12 | exit2.b2wf!P2 | K2 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-292, y=102)
-"(kr2.P11 + kr1.P12 | P22 | K2 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-213, y=32)
-"(b1wf!P1 | kr1.P21 + kr2.P22 | K1 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=299, y=188)
-"(P11 | exit2.b2wf!P2 | K2 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-364, y=15)
-"(P11 | P22 | K2 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-287, y=-33)
-"(exit1.b1wf!P1 | P21 | K1 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=269, y=15)
-"(P12 | P21 | K1 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=186, y=-70)
-"(P11 | P21 | K1 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-176, y=135)
-"(kr2.P11 + kr1.P12 | P21 | K1 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-58, y=115)
-"(b1wf!P1 | P21 | K1 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=348, y=131)
-"(exit1.b1wf!P1 | kr1.P21 + kr2.P22 | K1 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=197, y=76)
-"(P12 | kr1.P21 + kr2.P22 | K1 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=75, y=-10)
-"(kr2.P11 + kr1.P12 | kr1.P21 + kr2.P22 | K1 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-44, y=192)
-"(P11 | kr1.P21 + kr2.P22 | K2 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-180, y=-64)
-"(kr2.P11 + kr1.P12 | kr1.P21 + kr2.P22 | K2 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-101, y=-7)
-"(P11 | kr1.P21 + kr2.P22 | K1 | B1t | B2t) \ {b1rf,b1wf,b1wt,b1rt,b2rf,b2wf,b2rt,b2wt,kr1,kr2,kw1,kw2}"(x=-126, y=224)
+Spec(x=-177, y=-693, main, weakness_saturated)
+"lcA.Spec"(x=-208, y=-536)
+"lcB.Spec"(x=9, y=-652)
 """
 
   val oneShotMutex = """
