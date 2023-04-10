@@ -1,6 +1,6 @@
 # Linear-Time–Branching-Time Spectroscope
 
-The “Linear-time–Branching-time Spectroscope” is a web app to find all preorders, equivalences and inequivalences from the (strong) linear-time–branching-time spectrum for small processes as described in [Bisping, Jansen, Nestmann, arXiv 2022](https://doi.org/10.48550/arXiv.2109.15295).
+The “Linear-time–Branching-time Spectroscope” is a web app to find all preorders, equivalences and inequivalences from the (strong) linear-time–branching-time spectrum for small processes as described in [Bisping, Jansen, Nestmann, LMCS 2022](https://doi.org/10.46298/lmcs-18(3:19)2022).
 
 It runs online on https://concurrency-theory.org/ltbt-spectroscope/ .
 
@@ -38,6 +38,6 @@ The algorithm uses a generalization of the bisimulation game to find all relevan
 
 ## Developed by
 
-The LTBT Spectroscope is developed at [MTV TU Berlin](https://www.mtv.tu-berlin.de) by Benjamin Bisping (benjamin.bisping@tu-berlin.de).
+The LTBT Spectroscope is developed at [MTV TU Berlin](https://www.mtv.tu-berlin.de) by [Benjamin Bisping](https://bbisping.de) (benjamin.bisping@tu-berlin.de).
 
 The code is subject to the MIT License to be found in `LICENSE`. The full source can be obtained from <https://concurrency-theory.org/ltbt-spectroscope/code/> and via [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6726494.svg)](https://doi.org/10.5281/zenodo.6726494).
