@@ -147,4 +147,8 @@ class WeakTransitionSystem[S, A, L](
     for { s <- ss; sp <- weakPre(s) toList } yield sp
   }.groupBy(_._1).mapValues(_.flatMap(_._2))
 
+  def isStable(s: S): Boolean = {
+    !enabled(s).exists(silentActions(_))
+  }
+
 }

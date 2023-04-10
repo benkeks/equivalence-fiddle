@@ -86,11 +86,14 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
       if (optimizeSymmetryDefWins && (qq0 contains p0)) {
         List()
       } else {
-        val conjMove = DefenderConjunction(p0, qq0)
+        val instableConjMove = DefenderConjunction(p0, qq0)
         if (optimizeAttackerWins && qq0.isEmpty) {
           // prioritize instant wins because of stuck defender
-          List(conjMove)
+          List(instableConjMove)
         } else {
+          val stableConjMove = if (ts.isStable(p0)) {
+            List(DefenderConjunction(p0, qq0.filter(ts.isStable(_))))
+          } else List()
           val dn = for {
             (a,pp1) <- ts.post(p0)
             p1 <- pp1
@@ -103,13 +106,13 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
           }
           val branchingConjs = for {
             (a,pp1) <- ts.post(p0)
-            if qq0.size > 1
+            //if qq0.size > 1
             p1 <- pp1
-            if !ts.silentActions(a)
+            //if !ts.silentActions(a)
           } yield {
             DefenderBranchingConjunction(p0, a, p1, qq0)
           }
-          dn ++ branchingConjs ++ List(conjMove)
+          dn ++ branchingConjs ++ List(instableConjMove) ++ stableConjMove
         }
       }
     case AttackerClause(p0, q0) =>
