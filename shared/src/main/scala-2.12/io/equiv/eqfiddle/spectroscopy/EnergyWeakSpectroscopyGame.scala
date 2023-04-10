@@ -71,16 +71,16 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
         List()
       } else {
         val conjMove = DefenderConjunction(p0, qq0)
-        if (optimizeAttackerWins && qq0.isEmpty) {
-          // prioritize instant wins because of stuck defender
-          List(conjMove)
-        } else {
+        // if (optimizeAttackerWins && qq0.isEmpty) {
+        //   // prioritize instant wins because of stuck defender
+        //   List(conjMove)
+        // } else {
           val qq1 = for {
             q0 <- qq0
             q1 <- ts.silentReachable(q0)
           } yield q1
           List(conjMove, AttackerDelayedObservation(p0, qq1))
-        }
+        // }
       }
     case AttackerDelayedObservation(p0, qq0) =>
       if (optimizeSymmetryDefWins && (qq0 contains p0)) {
