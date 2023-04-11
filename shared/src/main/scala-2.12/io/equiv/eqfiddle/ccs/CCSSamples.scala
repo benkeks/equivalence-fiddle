@@ -242,6 +242,16 @@ P2B = (a.b + P2A)
 @comment "Weakly bisimilar but not delay bisim" 
 @compare "P2B, P2A" 
 
+P3A = a + tau.b
+P3B = P3A + b
+@comment "Stabilitiy-respecting delay-bisimilar, but not eta-similar"
+@compare "P3B, P3A"
+
+P4A = a.b + a.c
+P4B = a.(tau.b + tau.c)
+@comment "Stable bisimilar but not even weakly similar"
+@compare "P4B, P4A"
+
 @comment "------- layout --------" 
 
 "0"(x=-23, y=780)
