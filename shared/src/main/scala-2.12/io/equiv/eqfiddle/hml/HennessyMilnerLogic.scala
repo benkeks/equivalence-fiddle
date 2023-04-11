@@ -41,6 +41,15 @@ object HennessyMilnerLogic {
     override val isImmediate = true
   }
 
+  case class ObserveInternal[A](andThen: Formula[A]) extends Formula[A] {
+
+    override def toString = "τ" + andThen.toString
+
+    override val isPositive = true
+
+    override val isImmediate = true
+  }
+  
   case class Pass[A](andThen: Formula[A]) extends Formula[A] {
 
     override def toString = andThen match {

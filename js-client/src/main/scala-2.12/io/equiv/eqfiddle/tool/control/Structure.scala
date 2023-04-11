@@ -320,7 +320,7 @@ object Structure {
         val algo = new EnergyWeakSpectroscopy(structure.structure)// FastSpectroscopy(structure.structure)
         algo.uriEncoder = scala.scalajs.js.URIUtils.encodeURI _
 
-        val result = algo.compute(List((n1, n2)), computeFormulas = false)
+        val result = algo.compute(List((n1, n2)), computeFormulas = true)
         println("Spectroscopy took: " + (Date.now - begin) + "ms.")
 
         for {

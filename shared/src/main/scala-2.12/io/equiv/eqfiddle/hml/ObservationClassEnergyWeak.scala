@@ -124,15 +124,14 @@ object ObservationClassEnergyWeak {
     "s-ready-simulation" ->      ObservationClassEnergyWeak(INFTY,     0,     0, INFTY,     0, INFTY,INFTY,    1,    1),
     "2-nested-simulation"->      ObservationClassEnergyWeak(INFTY,     0, INFTY,     0,     0, INFTY,INFTY,INFTY,    1),
     "contrasimulation" ->        ObservationClassEnergyWeak(INFTY,     0, INFTY,     0,     0,     0,    0,INFTY,INFTY),
-    "s-contrasimulation" ->      ObservationClassEnergyWeak(INFTY,     0,     0, INFTY,     0,     0,    0,INFTY,INFTY),
-    "sr-contrasimulation" ->     ObservationClassEnergyWeak(INFTY,     0, INFTY, INFTY,     0,     0,    0,INFTY,INFTY),
+    "stable-contrasimulation" -> ObservationClassEnergyWeak(INFTY,     0,     0, INFTY,     0,     0,    0,INFTY,INFTY),
     "stable-bisimulation" ->     ObservationClassEnergyWeak(INFTY,     0,     0, INFTY,     0, INFTY,INFTY,INFTY,INFTY),
     "weak-bisimulation" ->       ObservationClassEnergyWeak(INFTY,     0, INFTY,     0,     0, INFTY,INFTY,INFTY,INFTY),
-    "sr-weak-bisimulation" ->    ObservationClassEnergyWeak(INFTY,     0, INFTY, INFTY,     0, INFTY,INFTY,INFTY,INFTY),
+    //"sr-weak-bisimulation" ->    ObservationClassEnergyWeak(INFTY,     0, INFTY, INFTY,     0, INFTY,INFTY,INFTY,INFTY),
     "delay-bisimulation" ->      ObservationClassEnergyWeak(INFTY,     0, INFTY,     0, INFTY, INFTY,INFTY,INFTY,INFTY),
     "sr-delay-bisimulation" ->   ObservationClassEnergyWeak(INFTY,     0, INFTY, INFTY, INFTY, INFTY,INFTY,INFTY,INFTY),
     "eta-bisimulation"   ->      ObservationClassEnergyWeak(INFTY, INFTY, INFTY,     0,     0, INFTY,INFTY,INFTY,INFTY),
-    "sr-eta-bisimulation" ->     ObservationClassEnergyWeak(INFTY, INFTY, INFTY, INFTY,     0, INFTY,INFTY,INFTY,INFTY),
+    //"sr-eta-bisimulation" ->     ObservationClassEnergyWeak(INFTY, INFTY, INFTY, INFTY,     0, INFTY,INFTY,INFTY,INFTY), //?
     "branching-bisimulation"->   ObservationClassEnergyWeak(INFTY, INFTY, INFTY,     0, INFTY, INFTY,INFTY,INFTY,INFTY),
     "sr-branching-bisimulation"->ObservationClassEnergyWeak(INFTY, INFTY, INFTY, INFTY, INFTY, INFTY,INFTY,INFTY,INFTY)
   )
@@ -150,12 +149,20 @@ object ObservationClassEnergyWeak {
         val (negativeFlat, negativeDeep) = negativeSubterms.map(formulaObsClass(_)).partition(_.observationHeight <= 1)
         val allClasses = positiveDeep ++ positiveFlat ++ negativeDeep ++ negativeFlat
         val isBranchingObs = positiveSubterms.collect { case HennessyMilnerLogic.Observe(a, _) => a}.size
+        val isStabilityCheck = negativeSubterms.exists {
+          case HennessyMilnerLogic.Negate(HennessyMilnerLogic.ObserveInternal(HennessyMilnerLogic.Pass(HennessyMilnerLogic.And(subs)))) =>
+            subs.isEmpty
+          case HennessyMilnerLogic.Negate(HennessyMilnerLogic.ObserveInternal(HennessyMilnerLogic.And(subs))) =>
+            subs.isEmpty
+          case _ => false
+        }
 
         // if (allClasses.isEmpty || negativeDeep.nonEmpty || positiveDeep.size > 1) {
           ObservationClassEnergyWeak(
             observationHeight = allClasses.map(_.observationHeight).max,
             branchingConjunctionLevels = allClasses.map(_.branchingConjunctionLevels).max + (if (isBranchingObs > 0) 1 else 0),
-            instableConjunctionLevels = allClasses.map(_.instableConjunctionLevels).max + 1,
+            instableConjunctionLevels = allClasses.map(_.instableConjunctionLevels).max + (if (isStabilityCheck) 0 else 1),
+            stableConjunctionLevels = allClasses.map(_.stableConjunctionLevels).max + (if (isStabilityCheck) 1 else 0),
             immediateConjunctionLevels = allClasses.map(_.immediateConjunctionLevels).max + 1,
             revivalHeight = allClasses.map(_.revivalHeight).max,
             positiveConjHeight = (allClasses.map(_.positiveConjHeight) ++ (positiveFlat ++ positiveDeep).map(_.observationHeight)).max,
@@ -189,6 +196,11 @@ object ObservationClassEnergyWeak {
       ObservationClassEnergyWeak(
         observationHeight = andThenClass.observationHeight + 1
       ) lub andThenClass
+    case HennessyMilnerLogic.ObserveInternal(andThen) =>
+      val andThenClass = formulaObsClass(andThen)
+      ObservationClassEnergyWeak(
+        observationHeight = andThenClass.observationHeight + 1
+      ) lub andThenClass
     case HennessyMilnerLogic.Pass(andThen) =>
       val andThenClass = formulaObsClass(andThen)
       if (andThen.isInstanceOf[HennessyMilnerLogic.And[_]]) {
@@ -196,7 +208,7 @@ object ObservationClassEnergyWeak {
           observationHeight = andThenClass.observationHeight,
           branchingConjunctionLevels = andThenClass.branchingConjunctionLevels,
           instableConjunctionLevels = andThenClass.instableConjunctionLevels,
-          //TODO: stable conjuction levels
+          stableConjunctionLevels = andThenClass.stableConjunctionLevels,
           immediateConjunctionLevels = andThenClass.immediateConjunctionLevels - 1, // decreasing!
           revivalHeight = andThenClass.revivalHeight,
           positiveConjHeight = andThenClass.positiveConjHeight,

@@ -42,6 +42,8 @@ class EnergyWeakSpectroscopy[S, A, L] (
               } yield HennessyMilnerLogic.Pass(postForm)
             case game.DefenderConjunction(p1, qq1) =>
               buildHMLWitness(game, s, newPrice)
+            case game.DefenderStableConjunction(p1, qq1) =>
+              buildHMLWitness(game, s, newPrice)
             case _ => Set()
           }
         successorFormulas.flatten.toSet
@@ -66,6 +68,8 @@ class EnergyWeakSpectroscopy[S, A, L] (
             case game.AttackerDelayedObservation(p1, qq1) =>
               buildHMLWitness(game, s, newPrice)
             case game.DefenderConjunction(p1, qq1) =>
+              buildHMLWitness(game, s, newPrice)
+            case game.DefenderStableConjunction(p1, qq1) =>
               buildHMLWitness(game, s, newPrice)
             case game.DefenderBranchingConjunction(p01, a, p1, qq01) =>
               buildHMLWitness(game, s, newPrice)
@@ -100,13 +104,16 @@ class EnergyWeakSpectroscopy[S, A, L] (
           subformula <- buildHMLWitness(game, s, newPrice)
         } yield {
           s match {
+            case game.AttackerObservation(_, _) if ts.silentActions(a) =>
+              // TODO: weaken!
+              HennessyMilnerLogic.ObserveInternal(subformula)
             case game.AttackerObservation(_, _) =>
               HennessyMilnerLogic.Observe(a, subformula)
             case _ =>
               subformula
           }
         }
-      case game.DefenderConjunction(_, _) | game.DefenderBranchingConjunction(_, _, _, _) =>
+      case game.DefenderConjunction(_, _) | game.DefenderStableConjunction(_, _) | game.DefenderBranchingConjunction(_, _, _, _) =>
         val possibleMoves = for {
           s <- game.successors(node)
           update = game.weight(node, s)
@@ -121,7 +128,11 @@ class EnergyWeakSpectroscopy[S, A, L] (
           possibleMoves.foldLeft(Seq(Seq[HennessyMilnerLogic.Formula[A]]()))(
             (b, a) => b.flatMap(i => a.map(j => i ++ Seq(j))))
         productMoves.map { mv =>
-          val moves = mv.toSet
+          val moves = if (node.isInstanceOf[game.DefenderStableConjunction]) {
+            (mv :+ HennessyMilnerLogic.Negate(HennessyMilnerLogic.ObserveInternal(HennessyMilnerLogic.Pass(HennessyMilnerLogic.True)))).toSet
+          } else {
+            mv.toSet
+          }
           HennessyMilnerLogic.And(moves).asInstanceOf[HennessyMilnerLogic.Formula[A]]
         }
     }
@@ -191,7 +202,10 @@ class EnergyWeakSpectroscopy[S, A, L] (
 
       val distinguishingNodeFormulasExtended = distinguishingNodeFormulas ++ bisimilarNodes
 
-      debugLog(graphvizGameWithFormulas(hmlGame, hmlGame.attackerVictoryPrices.toMap, distinguishingNodeFormulasExtended))
+      debugLog(
+        graphvizGameWithFormulas(hmlGame, hmlGame.attackerVictoryPrices.toMap, distinguishingNodeFormulasExtended),
+        asLink = "https://dreampuf.github.io/GraphvizOnline/#"
+      )
 
       val bestPreorders: Map[GameNode,List[Spectrum.EquivalenceNotion[ObservationClassEnergyWeak]]] =
         distinguishingNodeFormulasExtended.mapValues { ffs =>
