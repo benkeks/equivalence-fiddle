@@ -317,9 +317,10 @@ object Structure {
         // val strongBisim = new Bisimilarity(loadedSystem).computePartition()
         // val preprocessed = new BuildQuotientSystem(loadedSystem, strongBisim).build()
         // println(preprocessed.step.toGraphString())
-        val algo = new FastSpectroscopy(structure.structure)
+        val algo = new EnergyWeakSpectroscopy(structure.structure)// FastSpectroscopy(structure.structure)
+        algo.uriEncoder = scala.scalajs.js.URIUtils.encodeURI _
 
-        val result = algo.compute(List((n1, n2)), computeFormulas = true)
+        val result = algo.compute(List((n1, n2)), computeFormulas = false)
         println("Spectroscopy took: " + (Date.now - begin) + "ms.")
 
         for {

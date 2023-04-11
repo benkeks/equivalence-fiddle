@@ -148,7 +148,7 @@ class EnergyWeakSpectroscopy[S, A, L] (
       start <- List(hmlGame.AttackerObservation(p, Set(q)), hmlGame.AttackerObservation(q, Set(p)))
     } yield start
 
-    val zeroEnergySet = Set(Energy.zeroEnergy(8))
+    val zeroEnergySet = Set(Energy.zeroEnergy(9))
 
     def instantAttackerWin(gn: GameNode) = gn match {
       case hmlGame.DefenderConjunction(_, qq) if qq.isEmpty => zeroEnergySet; case _ => Set.empty
@@ -233,12 +233,11 @@ class EnergyWeakSpectroscopy[S, A, L] (
         hmlGame.attackerVictoryPrices(gn) = List()
       }
 
-      debugLog(graphvizGameWithFormulas(hmlGame, hmlGame.attackerVictoryPrices.toMap, Map()))
+      debugLog(graphvizGameWithFormulas(hmlGame, hmlGame.attackerVictoryPrices.toMap, Map()), asLink = "https://dreampuf.github.io/GraphvizOnline/#")
 
       val bestPreorders: Map[GameNode,(Set[ObservationClassEnergyWeak],List[Spectrum.EquivalenceNotion[ObservationClassEnergyWeak]])] =
         hmlGame.attackerVictoryPrices.toMap.mapValues { energies =>
-        // 1 offset in conjunctions between prices and energy metric...
-        val fcs = energies.toSet[Energy].map(e => ObservationClassEnergyWeak(e(0), e(1), e(2) - 1, e(3) - 1, e(4), e(5), e(6), e(7)))
+        val fcs = energies.toSet[Energy].map(e => ObservationClassEnergyWeak(e(0), e(1), e(2), e(3), e(4), e(5), e(6), e(7), e(8)))
         (fcs, spectrum.getStrongestPreorderClassFromClass(fcs))
       }
 
@@ -290,9 +289,14 @@ class EnergyWeakSpectroscopy[S, A, L] (
             s"$p, ≈$qqString"
           case game.AttackerClause(p, q) =>
             s"$p, $q"
+          case game.AttackerBranchingClause(p0, a, p1, q) =>
+            s"$p0 -${a}-> $p1, $q"
           case game.DefenderConjunction(p, qq: Set[_]) =>
             val qqString = qq.mkString("{",",","}")
             s"$p, $qqString"
+          case game.DefenderStableConjunction(p, qq: Set[_]) =>
+            val qqString = qq.mkString("{",",","}")
+            s"$p, s$qqString"
           case game.DefenderBranchingConjunction(p0, a, p1, qq) =>
             val qqString = qq.mkString("{",",","}")
             s"$p0 -${a}-> $p1, $qqString"
