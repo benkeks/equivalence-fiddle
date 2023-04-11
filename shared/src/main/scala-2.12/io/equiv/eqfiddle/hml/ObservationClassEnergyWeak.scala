@@ -119,7 +119,6 @@ object ObservationClassEnergyWeak {
     "possible-future" ->         ObservationClassEnergyWeak(INFTY,     0,     1,     0,     0, INFTY,INFTY,INFTY,    1),
     "s-possible-future" ->       ObservationClassEnergyWeak(INFTY,     0,     0,     1,     0, INFTY,INFTY,INFTY,    1),
     "simulation" ->              ObservationClassEnergyWeak(INFTY,     0, INFTY,     0,     0, INFTY,INFTY,    0,    0),
-    "stable-simulation" ->       ObservationClassEnergyWeak(INFTY,     0,     0, INFTY,     0, INFTY,INFTY,    0,    0),
     "eta-simulation" ->          ObservationClassEnergyWeak(INFTY, INFTY, INFTY,     0,     0, INFTY,INFTY,    0,    0),
     "ready-simulation" ->        ObservationClassEnergyWeak(INFTY,     0, INFTY,     0,     0, INFTY,INFTY,    1,    1),
     "s-ready-simulation" ->      ObservationClassEnergyWeak(INFTY,     0,     0, INFTY,     0, INFTY,INFTY,    1,    1),
