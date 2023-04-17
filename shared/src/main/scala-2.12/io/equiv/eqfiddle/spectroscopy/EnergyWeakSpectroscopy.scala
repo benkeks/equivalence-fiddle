@@ -126,7 +126,7 @@ class EnergyWeakSpectroscopy[S, A, L] (
         val productMoves =
           possibleMoves.foldLeft(Seq(Seq[HennessyMilnerLogic.Formula[A]]()))(
             (b, a) => b.flatMap(i => a.map(j => i ++ Seq(j))))
-        productMoves.map { mv =>
+        productMoves.headOption.map { mv =>
           val moves = if (node.isInstanceOf[game.DefenderStableConjunction]) {
             (mv :+ HennessyMilnerLogic.Negate(HennessyMilnerLogic.ObserveInternal(HennessyMilnerLogic.True))).toSet
           } else {
