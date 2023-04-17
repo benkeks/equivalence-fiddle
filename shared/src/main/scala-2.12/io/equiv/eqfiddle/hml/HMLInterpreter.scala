@@ -19,7 +19,7 @@ class HMLInterpreter[S, A, L] (
       for { s <- states } yield makeNode(s, formula)
 
     def makeNode(s: S, formula: Formula[A]) = formula match {
-      case Observe(_, _) | ObserveInternal(_) | Negate(And(_)) | Pass(_) =>
+      case Observe(_, _) | ObserveInternal(_, _) | Negate(And(_)) | Pass(_) =>
         HMLDefense(s, formula)
       case And(_) | Negate(_) => 
         HMLAttack(s, formula)
@@ -34,9 +34,9 @@ class HMLInterpreter[S, A, L] (
         for {
           s1 <- ts.post(s, action)
         } yield makeNode(s1, Negate(andThen))
-      case HMLAttack(s, Negate(ObserveInternal(andThen))) =>
+      case HMLAttack(s, Negate(ObserveInternal(andThen, opt))) =>
         for {
-          s1 <- ts.silentSteps.values(s)
+          s1 <- ts.silentSteps.values(s) ++ (if (opt) Some(s) else None)
         } yield makeNode(s1, Negate(andThen))
       case HMLAttack(s, Negate(Pass(andThen))) =>
         for {
@@ -52,9 +52,9 @@ class HMLInterpreter[S, A, L] (
         for {
           s1 <- ts.post(s, action)
         } yield makeNode(s1, andThen)
-      case HMLDefense(s, ObserveInternal(andThen)) =>
+      case HMLDefense(s, ObserveInternal(andThen, opt)) =>
         for {
-          s1 <- ts.silentSteps.values(s)
+          s1 <- ts.silentSteps.values(s) ++ (if (opt) Some(s) else None)
         } yield makeNode(s1, andThen)
       case HMLDefense(s, Pass(andThen)) =>
         for {

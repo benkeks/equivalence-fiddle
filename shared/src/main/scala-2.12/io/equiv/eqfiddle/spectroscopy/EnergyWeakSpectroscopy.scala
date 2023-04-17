@@ -105,8 +105,7 @@ class EnergyWeakSpectroscopy[S, A, L] (
         } yield {
           s match {
             case game.AttackerObservation(_, _) if ts.silentActions(a) =>
-              // TODO: weaken!
-              HennessyMilnerLogic.ObserveInternal(subformula)
+              HennessyMilnerLogic.ObserveInternal(subformula, opt = true)
             case game.AttackerObservation(_, _) =>
               HennessyMilnerLogic.Observe(a, subformula)
             case _ =>
@@ -129,7 +128,7 @@ class EnergyWeakSpectroscopy[S, A, L] (
             (b, a) => b.flatMap(i => a.map(j => i ++ Seq(j))))
         productMoves.map { mv =>
           val moves = if (node.isInstanceOf[game.DefenderStableConjunction]) {
-            (mv :+ HennessyMilnerLogic.Negate(HennessyMilnerLogic.ObserveInternal(HennessyMilnerLogic.Pass(HennessyMilnerLogic.True)))).toSet
+            (mv :+ HennessyMilnerLogic.Negate(HennessyMilnerLogic.ObserveInternal(HennessyMilnerLogic.True))).toSet
           } else {
             mv.toSet
           }

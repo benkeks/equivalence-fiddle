@@ -116,6 +116,7 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
           val dn = for {
             (a,pp1) <- ts.post(p0)
             p1 <- pp1
+            if p0 != p1 || !ts.silentActions(a)
           } yield if (ts.silentActions(a)) {
             // stuttering
             AttackerDelayedObservation(p1, qq0)

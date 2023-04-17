@@ -41,9 +41,9 @@ object HennessyMilnerLogic {
     override val isImmediate = true
   }
 
-  case class ObserveInternal[A](andThen: Formula[A]) extends Formula[A] {
+  case class ObserveInternal[A](andThen: Formula[A], opt: Boolean = false) extends Formula[A] {
 
-    override def toString = "τ" + andThen.toString
+    override def toString = (if (opt) "(τ)" else "⟨τ⟩") + andThen.toString
 
     override val isPositive = true
 
