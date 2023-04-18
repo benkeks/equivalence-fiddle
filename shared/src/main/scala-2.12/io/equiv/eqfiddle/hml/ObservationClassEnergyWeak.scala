@@ -149,7 +149,10 @@ object ObservationClassEnergyWeak {
         val (positiveFlat, positiveDeep) = positiveSubterms.map(formulaObsClass(_)).partition(_.observationHeight <= 1)
         val (negativeFlat, negativeDeep) = negativeSubterms.map(formulaObsClass(_)).partition(_.observationHeight <= 1)
         val allClasses = positiveDeep ++ positiveFlat ++ negativeDeep ++ negativeFlat
-        val isBranchingObs = positiveSubterms.collect { case HennessyMilnerLogic.Observe(a, _) => a}.size
+        val isBranchingObs = positiveSubterms.count {
+          case HennessyMilnerLogic.Observe(_, _) | HennessyMilnerLogic.ObserveInternal(_, _) => true
+          case _ => false
+        }
         val isStabilityCheck = negativeSubterms.exists {
           case HennessyMilnerLogic.Negate(HennessyMilnerLogic.ObserveInternal(HennessyMilnerLogic.Pass(HennessyMilnerLogic.And(subs)), false)) =>
             subs.isEmpty
