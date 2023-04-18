@@ -107,6 +107,7 @@ object ObservationClassEnergyWeak {
   // The Linear-time Branching-time Spectrum
   val BaseLTBTS = List( 
     "enabledness" ->             ObservationClassEnergyWeak(    1,     0,     0,     0,     0,     0,    0,    0,    0),
+    "sr-enabledness" ->          ObservationClassEnergyWeak(    1,     0,     0,     1,     1,     0,    0,    1,    1),
     "traces" ->                  ObservationClassEnergyWeak(INFTY,     0,     0,     0,     0,     0,    0,    0,    0),
     "instable-failure" ->        ObservationClassEnergyWeak(INFTY,     0,     1,     0,     0,     0,    0,    1,    1),
     "failure" ->                 ObservationClassEnergyWeak(INFTY,     0,     0,     1,     0,     0,    0,    1,    1),
