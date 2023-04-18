@@ -410,10 +410,32 @@ S1 = a.(a + b.c)
 @minimize
 """
 
+
+  val ltbts2 = """
+P11 = tau.(tau.c + b) + a
+P12 = tau.(tau.c + b) + a + tau.c
+
+@comment "delay-bisimilar and eta-bisimilar, but not branching bisimilar!"
+@compare "P12,P11"
+
+P13 = a.(tau.b + c)
+P14 = a.(tau.b + c) + a.b
+@compare "P13,P14"
+@comment "eta-bisimilar and stable-bisimilar, but not delay."
+
+P15 = tau.(tau.c + b) + b + a
+P16 = tau.c + b + a
+@compare "P15, P16"
+@comment "coupled eta-similar, but weak bisim."
+"""
+
   val namedSamples = List[Samples.Example](
     Samples.Example("ltbts1",
       "Linear Time Branching Time Spectrum 1",
       ltbts1),
+    Samples.Example("ltbts2",
+      "Linear Time Branching Time Spectrum 2",
+      ltbts2),
     Samples.Example("neither-failure-sim",
       "Neither failure nor simulation equivalent",
       notFailureOrSim),
