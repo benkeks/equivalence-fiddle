@@ -42,8 +42,6 @@ class EnergyWeakSpectroscopy[S, A, L] (
               } yield HennessyMilnerLogic.Pass(postForm)
             case game.DefenderConjunction(p1, qq1) =>
               buildHMLWitness(game, s, newPrice)
-            case game.DefenderStableConjunction(p1, qq1) =>
-              buildHMLWitness(game, s, newPrice)
             case _ => Set()
           }
         successorFormulas.flatten.toSet

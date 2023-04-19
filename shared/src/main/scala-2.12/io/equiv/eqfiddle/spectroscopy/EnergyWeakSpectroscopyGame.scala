@@ -14,7 +14,6 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
   private val InstableConjEnergyUpdate   = new EnergyGame.EnergyUpdate(Array( 0, 0,-1, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
   private val StableConjEnergyUpdate     = new EnergyGame.EnergyUpdate(Array( 0, 0, 0,-1, 0, 0, 0, 0, 0), energyCap = energyCap)
   private val ImmediateConjEnergyUpdate  = new EnergyGame.EnergyUpdate(Array( 0, 0,-1, 0,-1, 0, 0, 0, 0), energyCap = energyCap)
-  private val ImmediateSConjEnergyUpdate = new EnergyGame.EnergyUpdate(Array( 0, 0, 0,-1,-1, 0, 0, 0, 0), energyCap = energyCap)
   private val BranchingConjEnergyUpdate  = new EnergyGame.EnergyUpdate(Array( 7,-1, 0, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
   private val NegClauseEnergyUpdate      = new EnergyGame.EnergyUpdate(Array( 8, 0, 0, 0, 0, 0, 0, 0,-1), energyCap = energyCap)
   private val PosClauseEnergyUpdate      = new EnergyGame.EnergyUpdate(Array( 7, 0, 0, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
@@ -37,8 +36,6 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
       gn2 match {
         case DefenderConjunction(p1, qq1) if qq0.nonEmpty =>
           ImmediateConjEnergyUpdate
-        case DefenderStableConjunction(p1, qq1) if qq0.nonEmpty =>
-          ImmediateSConjEnergyUpdate
         case _ =>
           NoEnergyUpdate
       }
@@ -87,9 +84,7 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
       if (optimizeSymmetryDefWins && (qq0 contains p0)) {
         List()
       } else {
-        val conjMoves = if (ts.isStable(p0)) {
-          List(DefenderConjunction(p0, qq0), DefenderStableConjunction(p0, qq0.filter(ts.isStable(_))))
-        } else List(DefenderConjunction(p0, qq0))
+        val conjMoves = List(DefenderConjunction(p0, qq0))
         // if (optimizeAttackerWins && qq0.isEmpty) {
         //   // prioritize instant wins because of stuck defender
         //   List(conjMove)
