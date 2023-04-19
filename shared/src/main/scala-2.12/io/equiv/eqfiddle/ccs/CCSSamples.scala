@@ -412,6 +412,8 @@ S1 = a.(a + b.c)
 
 
   val ltbts2 = """
+@comment "All finitary counterexamples of van Glabbeek's LTBT Spectrum 2"
+
 P11 = tau.(tau.c + b) + a
 P12 = tau.(tau.c + b) + a + tau.c
 
@@ -426,7 +428,74 @@ P14 = a.(tau.b + c) + a.b
 P15 = tau.(tau.c + b) + b + a
 P16 = tau.c + b + a
 @compare "P15, P16"
-@comment "coupled eta-similar, but weak bisim."
+@comment "coupled eta-similar, but not weak bisim."
+
+P21 = a.b.c + a.(b.c + b.d)
+P22 = a.(b.c + b.d)
+@compare "P21, P22"
+@comment "stable ready (eta)-similar, but not contrasim or stable bisim"
+
+P23 = a.b.c + a.b.d
+@compare "P22, P23"
+@comment "(Stable) ready trace but not sim eq"
+
+P24 = a.tau.b + a.tau.c
+P25 = a.(tau.b + tau.c)
+@compare "P24, P25"
+@comment "Contrasim (and stable bisim) but not sim"
+
+P31 = a.(b + c.d) + a.(c.e + f)
+P32 = a.(b + c.e) + a.(c.d + f)
+@compare "P31, P32"
+@comment "failure and ready but not failuretrace and readytrace eq."
+
+P33 = tau.b + a
+P34 = tau.b + b + a
+@compare "P34, P33"
+@comment "stability-respecting delay bisimilar but not eta-sim"
+
+P41 = a.b + a.c
+P42 = a.b + a.(b + c) + a.c
+@compare "P42, P41"
+@comment "imposs. future (and failure) prordered but not readies."
+
+P43 = a.(b + c)
+@compare "P42, P43"
+@comment "eta-sim and completed traces, but not failures"
+
+P44 = a.(b.c + tau.b.c + b.d)
+P45 = a.(b.c + tau.b.d + b.d)
+@compare "P44, P45"
+@comment "Ready eta-sim"
+
+Div = tau.Div
+P51 = tau.P51 + a.b.c + a.b.Div
+P52 = tau.P52 + a.b.c
+@compare "P51, P52"
+
+P53sub = tau.P53sub + tau.b
+P53 = a.P53sub
+P54 = a.b
+@compare "P53, P54"
+@comment "s-r-branching-bisim but nothing weaker"
+
+P55sub = tau.P55sub + b
+P55 = a.P55sub
+@compare "P54, P55"
+@comment "(Completed) branching bisim but not stable failures eq"
+
+P56 = a.(b + tau.Div)
+@compare "P55, P56"
+@comment "stable eta-coupled sim but not contrasim"
+
+P57 = a.(b + tau)
+@compare "P57, P56"
+@comment "branching bisim but not failure"
+
+P58 = a.(tau.b + b + tau)
+@compare "P58, P57"
+@comment "failure-eta-sim but not ready-eq"
+
 """
 
   val namedSamples = List[Samples.Example](
