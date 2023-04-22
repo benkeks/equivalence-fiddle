@@ -213,7 +213,7 @@ object ObservationClassEnergyWeak {
           branchingConjunctionLevels = andThenClass.branchingConjunctionLevels,
           instableConjunctionLevels = andThenClass.instableConjunctionLevels,
           stableConjunctionLevels = andThenClass.stableConjunctionLevels,
-          immediateConjunctionLevels = andThenClass.immediateConjunctionLevels - 1, // decreasing!
+          immediateConjunctionLevels = andThenClass.immediateConjunctionLevels - (if (andThenClass.observationHeight <= 0) 0 else 1), // decreasing!
           revivalHeight = andThenClass.revivalHeight,
           positiveConjHeight = andThenClass.positiveConjHeight,
           negativeConjHeight = andThenClass.negativeConjHeight,
