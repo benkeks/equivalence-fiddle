@@ -44,7 +44,8 @@ class EnergyWeakSpectroscopy[S, A, L] (
               buildHMLWitness(game, s, newPrice)
             case _ => Set()
           }
-        successorFormulas.flatten.toSet
+        //successorFormulas.flatten.toSet
+        successorFormulas.headOption.flatMap(_.headOption)
       case game.AttackerDelayedObservation(p0, qq0) =>
         val successorFormulas =
           for {
@@ -69,11 +70,12 @@ class EnergyWeakSpectroscopy[S, A, L] (
               buildHMLWitness(game, s, newPrice)
             case game.DefenderStableConjunction(p1, qq1) =>
               buildHMLWitness(game, s, newPrice)
-            case game.DefenderBranchingConjunction(p01, a, p1, qq01) =>
+            case game.DefenderBranchingConjunction(p01, a, p1, qq01, qq01a) =>
               buildHMLWitness(game, s, newPrice)
             case _ => Set()
           }
-        successorFormulas.flatten.toSet
+        //successorFormulas.flatten.toSet
+        successorFormulas.headOption.flatMap(_.headOption)
       case game.AttackerClause(p0, q0) =>
         val successorFormulas = for {
           s <- game.successors(node)
@@ -93,9 +95,10 @@ class EnergyWeakSpectroscopy[S, A, L] (
             }
           }
         successorFormulas.flatten
-      case game.AttackerBranchingClause(p0, a, p1, q0) =>
-        for {
+      case game.DefenderBranchingConjunction(p0, a, p1, qq0, qq0a) =>
+        val aBranches = for {
           s <- game.successors(node)
+          if s.isInstanceOf[game.AttackerObservation]
           update = game.weight(node, s)
           newPrice = update.applyEnergyUpdate(price)
           if game.isAttackerWinningPrice(s, newPrice)
@@ -110,7 +113,24 @@ class EnergyWeakSpectroscopy[S, A, L] (
               subformula
           }
         }
-      case game.DefenderConjunction(_, _) | game.DefenderStableConjunction(_, _) | game.DefenderBranchingConjunction(_, _, _, _) =>
+        val possibleMoves = (for {
+          s <- game.successors(node)
+          update = game.weight(node, s)
+          newPrice = update.applyEnergyUpdate(price)
+          if !s.isInstanceOf[game.AttackerObservation]
+        } yield if (game.isAttackerWinningPrice(s, newPrice)) {
+          (buildHMLWitness(game, s, newPrice)).asInstanceOf[Iterable[HennessyMilnerLogic.Formula[A]]]
+        } else {
+          Seq(s).asInstanceOf[Iterable[HennessyMilnerLogic.Formula[A]]]
+        }) ++ Seq(aBranches)
+        val productMoves =
+          possibleMoves.foldLeft(Seq(Seq[HennessyMilnerLogic.Formula[A]]()))(
+            (b, a) => b.flatMap(i => a.map(j => i ++ Seq(j))))
+        productMoves.headOption.map { mv =>
+          val moves = mv.toSet
+          HennessyMilnerLogic.And(moves).asInstanceOf[HennessyMilnerLogic.Formula[A]]
+        }
+      case game.DefenderConjunction(_, _) | game.DefenderStableConjunction(_, _) =>
         val possibleMoves = for {
           s <- game.successors(node)
           update = game.weight(node, s)
@@ -300,17 +320,16 @@ class EnergyWeakSpectroscopy[S, A, L] (
             s"$p, ≈$qqString"
           case game.AttackerClause(p, q) =>
             s"$p, $q"
-          case game.AttackerBranchingClause(p0, a, p1, q) =>
-            s"$p0 -${a}-> $p1, $q"
+          // case game.AttackerBranchingClause(p0, a, p1, q) =>
+          //   s"$p0 -${a}-> $p1, $q"
           case game.DefenderConjunction(p, qq: Set[_]) =>
             val qqString = qq.mkString("{",",","}")
             s"$p, $qqString"
           case game.DefenderStableConjunction(p, qq: Set[_]) =>
             val qqString = qq.mkString("{",",","}")
             s"$p, s$qqString"
-          case game.DefenderBranchingConjunction(p0, a, p1, qq) =>
-            val qqString = qq.mkString("{",",","}")
-            s"$p0 -${a}-> $p1, $qqString"
+          case game.DefenderBranchingConjunction(p0, a, p1, qq0, qq0a) =>
+            s"$p0 -${a}-> $p1, ${qq0.mkString("{",",","}")}, ${qq0a.mkString("{",",","}")}}"
           case _ => ""
         }).replaceAllLiterally(".0", "") +
          (if (priceString != "") s"\\n------\\n$priceString" else "") +
