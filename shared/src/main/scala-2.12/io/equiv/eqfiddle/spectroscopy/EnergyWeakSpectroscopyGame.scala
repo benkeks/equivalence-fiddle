@@ -14,7 +14,7 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
   private val InstableConjEnergyUpdate   = new EnergyGame.EnergyUpdate(Array( 0, 0,-1, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
   private val StableConjEnergyUpdate     = new EnergyGame.EnergyUpdate(Array( 0, 0, 0,-1, 0, 0, 0, 0, 0), energyCap = energyCap)
   private val ImmediateConjEnergyUpdate  = new EnergyGame.EnergyUpdate(Array( 0, 0,-1, 0,-1, 0, 0, 0, 0), energyCap = energyCap)
-  private val BranchingConjEnergyUpdate  = new EnergyGame.EnergyUpdate(Array( 7,-1, 0, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
+  private val BranchingConjEnergyUpdate  = new EnergyGame.EnergyUpdate(Array( 7,-1,-1, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
   private val NegClauseEnergyUpdate      = new EnergyGame.EnergyUpdate(Array( 8, 0, 0, 0, 0, 0, 0, 0,-1), energyCap = energyCap)
   private val PosClauseEnergyUpdate      = new EnergyGame.EnergyUpdate(Array( 7, 0, 0, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
   private val FailureTestEnergyUpdate    = new EnergyGame.EnergyUpdate(Array(-1, 0, 0, 0, 0, 0, 0,-1,-1), energyCap = energyCap)
@@ -68,13 +68,20 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
     //     case _ =>
     //       NoEnergyUpdate
     //   }
-    case DefenderStableConjunction(p0, qq0) =>
+    case DefenderBranchingConjunction(p0, a, o01, qq0, qq0a) =>
       gn2 match {
-        case DefenderConjunction(p1, qq1) =>
-          FailureTestEnergyUpdate
+        case AttackerObservation(p1, qq1) =>
+          ObsEnergyUpdate
         case _ =>
           NoEnergyUpdate
       }
+    // case DefenderStableConjunction(p0, qq0) =>
+    //   gn2 match {
+    //     case DefenderConjunction(p1, qq1) =>
+    //       FailureTestEnergyUpdate
+    //     case _ =>
+    //       NoEnergyUpdate
+    //   }
     case _ =>
       NoEnergyUpdate
   }
@@ -163,7 +170,7 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
         q1 <- qq0
       } yield {
         AttackerClause(p0, q1).asInstanceOf[GameNode]
-      }) + DefenderConjunction(p0, Set.empty)
+      })// + DefenderConjunction(p0, Set.empty)
     case DefenderBranchingConjunction(p0, a, p1, qq0, qq0a) =>
       val qq1 = if (ts.silentActions(a)) {
         ts.post(qq0a, a) ++ qq0a

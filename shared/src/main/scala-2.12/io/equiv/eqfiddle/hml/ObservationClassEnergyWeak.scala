@@ -146,18 +146,18 @@ object ObservationClassEnergyWeak {
         ObservationClassEnergyWeak()
       } else {
         val (positiveSubterms, negativeSubterms) = subterms.toList.partition(_.isPositive)
-        val (positiveFlat, positiveDeep) = positiveSubterms.map(formulaObsClass(_)).partition(_.observationHeight <= 1)
-        val (negativeFlat, negativeDeep) = negativeSubterms.map(formulaObsClass(_)).partition(_.observationHeight <= 1)
-        val allClasses = positiveDeep ++ positiveFlat ++ negativeDeep ++ negativeFlat
-        val isBranchingObs = positiveSubterms.count {
-          case HennessyMilnerLogic.Observe(_, _) | HennessyMilnerLogic.ObserveInternal(_, _) => true
-          case _ => false
-        }
-        val isStabilityCheck = negativeSubterms.exists {
+        val (stabilityChecks, properNegatives) = negativeSubterms.partition {
           case HennessyMilnerLogic.Negate(HennessyMilnerLogic.ObserveInternal(HennessyMilnerLogic.Pass(HennessyMilnerLogic.And(subs)), false)) =>
             subs.isEmpty
           case HennessyMilnerLogic.Negate(HennessyMilnerLogic.ObserveInternal(HennessyMilnerLogic.And(subs), false)) =>
             subs.isEmpty
+          case _ => false
+        }
+        val positiveClasses = positiveSubterms.map(formulaObsClass(_))
+        val negativeClasses = properNegatives.map(formulaObsClass(_))
+        val allClasses = positiveClasses ++ negativeClasses
+        val isBranchingObs = positiveSubterms.count {
+          case HennessyMilnerLogic.Observe(_, _) | HennessyMilnerLogic.ObserveInternal(_, _) => true
           case _ => false
         }
 
@@ -165,12 +165,12 @@ object ObservationClassEnergyWeak {
           ObservationClassEnergyWeak(
             observationHeight = allClasses.map(_.observationHeight).max,
             branchingConjunctionLevels = allClasses.map(_.branchingConjunctionLevels).max + (if (isBranchingObs > 0) 1 else 0),
-            instableConjunctionLevels = allClasses.map(_.instableConjunctionLevels).max + (if (isStabilityCheck) 0 else 1),
-            stableConjunctionLevels = allClasses.map(_.stableConjunctionLevels).max + (if (isStabilityCheck) 1 else 0),
+            instableConjunctionLevels = allClasses.map(_.instableConjunctionLevels).max + (if (stabilityChecks.nonEmpty) 0 else 1),
+            stableConjunctionLevels = allClasses.map(_.stableConjunctionLevels).max + (if (stabilityChecks.nonEmpty) 1 else 0),
             immediateConjunctionLevels = allClasses.map(_.immediateConjunctionLevels).max + 1,
             revivalHeight = allClasses.map(_.revivalHeight).max,
-            positiveConjHeight = (allClasses.map(_.positiveConjHeight) ++ (positiveFlat ++ positiveDeep).map(_.observationHeight)).max,
-            negativeConjHeight = (allClasses.map(_.negativeConjHeight) ++ (negativeFlat ++ negativeDeep).map(_.observationHeight)).max,
+            positiveConjHeight = (allClasses.map(_.positiveConjHeight) ++ positiveClasses.map(_.observationHeight)).max,
+            negativeConjHeight = (allClasses.map(_.negativeConjHeight) ++ negativeClasses.map(_.observationHeight)).max,
             negationLevels = allClasses.map(_.negationLevels).max,
           )
         // } else {
