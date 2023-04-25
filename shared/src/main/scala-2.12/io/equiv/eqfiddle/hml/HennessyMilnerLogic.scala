@@ -53,7 +53,8 @@ object HennessyMilnerLogic {
   case class Pass[A](andThen: Formula[A]) extends Formula[A] {
 
     override def toString = andThen match {
-      case And(subterms) => subterms.mkString("⨇{", ",", "}")
+      case And(subterms) if subterms.nonEmpty => subterms.mkString("⨇{", ",", "}")
+      case And(subterms) if subterms.isEmpty => "⊤"
       case Observe(action, andThen) => "⟪" + action.toString + "⟫" + andThen.toString
       case _ => "ϵ" + andThen.toString
     }
