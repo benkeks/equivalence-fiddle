@@ -34,10 +34,11 @@ sbt "shared/run"
 
 ## Docker image
 
-To build a docker image that bundles the Scala dependncies and the fiddle, run:
+To build a docker image that bundles the Scala dependencies and the fiddle (and export it to tgz), run:
 
 ```
 docker build . -t equivalence-fiddle
+docker save equivalence-fiddle | gzip > doc/artifact/equivalence-fiddle-docker.tar.gz
 ```
 
 By default, the docker image starts up a small webserver serving the fiddle on 8080, which can be made live on <http://127.0.0.1:8080> like this:
