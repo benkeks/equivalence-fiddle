@@ -32,6 +32,26 @@ To perform benchmarks, run:
 sbt "shared/run"
 ```
 
+## Docker image
+
+To build a docker image that bundles the Scala dependncies and the fiddle, run:
+
+```
+docker build . -t equivalence-fiddle
+```
+
+By default, the docker image starts up a small webserver serving the fiddle on 8080, which can be made live on <http://127.0.0.1:8080> like this:
+
+```
+docker run -p 127.0.0.1:8080:8080 --name equivalence-fiddle -d equivalence-fiddle
+```
+
+To reproduce benchmarks from the container, you then can (for instance) run:
+
+```
+docker exec -it equivalence-fiddle sbt shared/run
+```
+
 ## Theoretical background
 
 The algorithm uses a generalization of the bisimulation game to find all relevant distinguishing Hennessy–Milner logic formulas for two compared finite-state processes. Using these, we can give a precise characterization of how much distinguishing power is needed to tell two processes apart—and thus also determine the best fit of equivalences to equate them.
