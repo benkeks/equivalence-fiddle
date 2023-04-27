@@ -19,3 +19,4 @@ metals.sbt
 .bsp
 
 bib
+doc/artifact/equivalence-fiddle-docker.tar.gz
