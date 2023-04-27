@@ -10,6 +10,27 @@ object Benchmark extends App {
   AlgorithmLogging.loggingActive = true
   AlgorithmLogging.debugLogActive = false
 
-  //new LTBTSDistinctions(0).run()
-  new VeryLargeTransitionSystems(0).run()
+  val spectroscopyMode = if (args.contains("--formula-spectroscopy")) 1 else 0
+
+  if (args.headOption == Some("formulas")) {
+    new LTBTSDistinctions(spectroscopyMode).run()
+  } else {
+    val includeHardExamples = args.contains("--include-hard")
+    val shuffleExamples = args.contains("--shuffle")
+    val reducedSizes = args.contains("--reduced-sizes")
+
+    if (reducedSizes) {
+      new VeryLargeTransitionSystems(spectroscopyMode).run(
+        includeHardExamples = includeHardExamples,
+        shuffleExamples = shuffleExamples
+      )
+    } else {
+      new VeryLargeTransitionSystems(spectroscopyMode).run(
+        includeHardExamples = includeHardExamples,
+        shuffleExamples = shuffleExamples,
+        outputMinimizationSizes = List()
+      )
+    }
+  }
+
 }
