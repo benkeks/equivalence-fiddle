@@ -14,6 +14,7 @@ import io.equiv.eqfiddle.algo.transform.BuildQuotientSystem
 import io.equiv.eqfiddle.algo.sigref.Bisimilarity
 import io.equiv.eqfiddle.algo.WeakTransitionSaturation
 import io.equiv.eqfiddle.algo.transform.RemoveLittleBrothers
+import scala.util.Random
 
 class VeryLargeTransitionSystems(val useSpectro: Int = 0) {
 
@@ -45,7 +46,7 @@ class VeryLargeTransitionSystems(val useSpectro: Int = 0) {
   def actionIsOutput(a: String) = a.endsWith("!")
   def actionToInput(a: String): String = if (actionIsOutput(a)) actionToInput(a.dropRight(1)) else a
 
-  def listMinimizations(fileName: String) = {
+  def listMinimizations(fileName: String, outputMinimizationSizes: List[String]) = {
 
     print(fileName)
 
@@ -82,7 +83,7 @@ class VeryLargeTransitionSystems(val useSpectro: Int = 0) {
     output("Game positions", algo.gameSize._1.toString)
     output("Game moves", algo.gameSize._2.toString)
 
-    val interestingNotions = result.spectrum.notions.filter(n => List("enabledness", "traces", "simulation", "bisimulation").contains(n.name))
+    val interestingNotions = result.spectrum.notions.filter(n => outputMinimizationSizes.contains(n.name))
 
     (interestingNotions zip
       result.toQuotients(interestingNotions, Math.min, comparedPairs)
@@ -110,9 +111,18 @@ class VeryLargeTransitionSystems(val useSpectro: Int = 0) {
   }
 
 
-  def run(): Unit = {
-    for (i <-easyExamples ++ hardExamples) { //  List(0)) {//
-      listMinimizations(vltsSamplesMedium(i))
+  def run(
+      includeHardExamples: Boolean = false,
+      shuffleExamples: Boolean = false,
+      outputMinimizationSizes: List[String] = List("enabledness", "traces", "simulation", "bisimulation")
+    ): Unit = {
+    if (tableOutput) {
+      println(("States, Transitions, Bisim pre-minimization time, Bisim pre-minimized size, Initial pairs, Spectroscopy time, Game positions, Game moves" +: outputMinimizationSizes).mkString(", "))
+    }
+    val exampleNumbers = if (includeHardExamples) easyExamples ++ hardExamples else easyExamples
+    val orderedExamples = if (shuffleExamples) Random.shuffle(exampleNumbers) else exampleNumbers
+    for (i <-orderedExamples) {
+      listMinimizations(vltsSamplesMedium(i), outputMinimizationSizes)
     }
   }
 
