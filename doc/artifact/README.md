@@ -4,7 +4,8 @@ This is a preliminary artifact for Benjamin Bisping's CAV'23 submission “Proce
 
 ## Starting up
 
-The only prerequisites for this walk-through are Docker (tested on Docker version 20.10.5+dfsg1, build 55c4c88) and Bash.
+The only prerequisites for this walk-through are Docker and Bash.
+(Tested on Debian GNU/Linux 11 (bullseye), Docker version 20.10.5+dfsg1, using Intel® Core™ i7-8550U @ 1.80GHz × 8 CPU and 16 GB RAM.)
 
 Load the image and start the container:
 
