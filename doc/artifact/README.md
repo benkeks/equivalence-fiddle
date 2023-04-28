@@ -51,7 +51,27 @@ This will only go through the not-so-hard examples, which don't time-out often. 
 bash ./reproduce-results-hard.sh
 ```
 
+The distinguishing formula of Example 1 can be reproduced by entering the following definition into the tool (at http://127.0.0.1:8080/) and clicking onto the gutter next to `@compare`.
 
+```
+Div = tau.Div
+S1 = tau.S1 + enA.Div
+S = tau.S + tau.Div + enA.Div
+
+@compare "S, S1" 
+```
+
+This should lead to the output:
+
+> @compare "S, S1" 
+>- 0: Preordered by:
+>     simulation
+>- 1: Distinguished by:
+>     ⟨tau⟩⋀{¬⟨enA⟩⊤} (failure)
+>- 2: Equated by:
+>     simulation
+
+Also, in the console (Ctrl+Shift+I in Chrome), you can find a Graphviz representation of the underlying game. (Some line beginning like `digraph rel{1017767982 [shape=square, color=red, style=bold, label="S, {S1}\n------\n(2,2,0,0,1,1)\n------\n⟨tau⟩⋀{¬⟨enA⟩}"];....`.)
 
 ## Cleaning up
 
