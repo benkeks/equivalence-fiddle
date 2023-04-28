@@ -29,7 +29,7 @@ sbt "shared/test"
 To perform benchmarks, run:
 
 ```
-sbt "shared/run"
+sbt "shared/run benchmark"
 ```
 
 ## Docker image
@@ -50,7 +50,7 @@ docker run -p 127.0.0.1:8080:8080 --name equivalence-fiddle -d equivalence-fiddl
 To reproduce benchmarks from the container, you then can (for instance) run:
 
 ```
-docker exec -it equivalence-fiddle sbt shared/run
+docker exec -it equivalence-fiddle sbt "shared/run benchmark"
 ```
 
 ## Theoretical background
