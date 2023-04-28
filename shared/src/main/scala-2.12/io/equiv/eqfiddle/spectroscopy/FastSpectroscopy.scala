@@ -18,6 +18,8 @@ class FastSpectroscopy[S, A, L] (
 
   val spectrum = ObservationClassFast.LTBTS
 
+  val useCleverSpectroscopyGame: Boolean = true
+
   val distinguishingFormulas =
     collection.mutable.Map[(GameNode, Energy), Iterable[HennessyMilnerLogic.Formula[A]]]()
 
@@ -106,7 +108,9 @@ class FastSpectroscopy[S, A, L] (
 
     debugLog(s"Start spectroscopy on ${ts.nodes.size} node transition system with ${comparedPairs.size} compared pairs.")
 
-    val hmlGame = new EnergySpectroscopyGame(ts, energyCap = if (computeFormulas) Int.MaxValue else 3)
+    val hmlGame = new EnergySpectroscopyGame(ts, energyCap = if (computeFormulas) Int.MaxValue else 3) {
+      override val optimizeConjMoves: Boolean = useCleverSpectroscopyGame
+    }
 
     val init = for {
       (p, q) <- comparedPairs
