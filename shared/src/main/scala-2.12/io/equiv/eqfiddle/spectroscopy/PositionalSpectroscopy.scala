@@ -19,6 +19,8 @@ class PositionalSpectroscopy[S, A, L] (
 
   override val spectrum = ObservationClassStrong.LTBTS
 
+  var gameSize = (0, 0)
+
   def buildStrategyFormulas
     (game: AbstractSpectroscopyGame[S, A, L])
     (node: GameNode, possibleMoves: Iterable[Set[Formula[A]]])
@@ -94,7 +96,9 @@ class PositionalSpectroscopy[S, A, L] (
   def gameEdgeToLabel(game: AbstractSpectroscopyGame[S, A, L], gn1: GameNode, gn2: GameNode): String = ""
 
   def compute(
-      comparedPairs: Iterable[(S,S)]
+      comparedPairs: Iterable[(S,S)],
+      computeFormulas: Boolean = true,
+      saveGameSize: Boolean = false
     ) = {
   
     val init = for {
@@ -122,6 +126,8 @@ class PositionalSpectroscopy[S, A, L] (
     }
 
     debugLog(graphvizGameWithFormulas(hmlGame, attackerWin, minFormulas))
+
+    if (saveGameSize) gameSize = hmlGame.gameSize()
 
     collectSpectroscopyResult(hmlGame, minFormulas)
   }

@@ -25,7 +25,9 @@ trait GameDiscovery extends AbstractGameDiscovery {
   override def predecessors(gn: GameNode): Iterable[GameNode] = computedPredecessors(gn)
   
   private val computedPredecessors = collection.mutable.Map[GameNode, Set[GameNode]]() withDefaultValue Set()
-  
+
+  def gameSize(): (Int, Int) = (discovered.size, computedPredecessors.values.map(_.size).sum)
+
   // discover relevant game nodes and count outgoing transitions
   
   private val todo = new collection.mutable.Queue[GameNode]()

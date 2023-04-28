@@ -25,7 +25,11 @@ abstract class AbstractSpectroscopy[S, A, L, CF <: HennessyMilnerLogic.Formula[A
 
   def pruneDominated(oldFormulas: Set[CF]): Set[CF]
 
-  def compute(comparedPairs: Iterable[(S,S)]): SpectroscopyResult[S, A, ObservationClass, CF]
+  def compute(
+    comparedPairs: Iterable[(S,S)],
+    computeFormulas: Boolean = true,
+    saveGameSize: Boolean = false
+  ): SpectroscopyResult[S, A, ObservationClass, CF]
 
   /* Discards distinguishing formulas that do not contribute “extreme” distinguishing notions of equivalence */
   val discardLanguageDominatedResults: Boolean = false

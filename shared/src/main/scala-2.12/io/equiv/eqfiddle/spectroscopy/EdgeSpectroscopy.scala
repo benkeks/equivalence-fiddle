@@ -137,8 +137,6 @@ class EdgeSpectroscopy[S, A, L] (
     game.asInstanceOf[SpectroscopyGameEdgeLabeled[S, A, L]].recordedMoveEdges(gn1, gn2).toString()
   }
 
-  override def compute(comparedPairs: Iterable[(S,S)]) = compute(comparedPairs, false)
-
   def compute(
       comparedPairs: Iterable[(S,S)],
       /* the implementation will ignore this configuration as it NEEDs to compute formulas to work */
