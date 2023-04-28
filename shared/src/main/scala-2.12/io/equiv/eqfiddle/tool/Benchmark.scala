@@ -24,12 +24,13 @@ object Benchmark extends App {
       |  benchmark  Run benchmarks on VLTS
       |
       |General options:
-      | --formula-spectroscopy  Use the formula-driven spectroscopy algorithm of BJN22 instead of the energy game
+      | --formula-spectroscopy   Use the formula-driven spectroscopy algorithm of BJN22 instead of the energy game
+      | --unclever-spectroscopy  Use the exponentially-branching energy game (instead of the clever energy game)
       |
       |Benchmark options:
       | --shuffle        Perform benchmarks in random order
       | --include-hard   Also include hard cases (will take long / timeout on some examples)
-      | --reduced-sizes  Prints sizes of transition systems reduced according to enabledness, traces, sim, and bisim (may take longer)
+      | --reduced-sizes  Prints sizes of transition systems reduced according to enabledness, traces, and sim (may take longer)
       | --timeout=T      Sets how many milliseconds each analysis may take the most (default: 500,000)
       |""".stripMargin
 
@@ -42,13 +43,15 @@ object Benchmark extends App {
   AlgorithmLogging.loggingActive = true
   AlgorithmLogging.debugLogActive = false
 
-  val spectroscopyMode = if (args.contains("--formula-spectroscopy")) 1 else 0
-
   def algorithm[S,A,L](system: WeakTransitionSystem[S, A, L]): SpectroscopyInterface[S,A,L,HennessyMilnerLogic.Formula[A]] = {
-    if (spectroscopyMode == 0) {
-      new FastSpectroscopy(system)
-    } else {
+    if (args.contains("--formula-spectroscopy")) {
       new EdgeSpectroscopy(system)
+    } else if (args.contains("--unclever-spectroscopy")) {
+      new FastSpectroscopy(system) {
+        override val useCleverSpectroscopyGame: Boolean = false
+      }
+    } else {
+      new FastSpectroscopy(system)
     }
   }
 
@@ -64,7 +67,7 @@ object Benchmark extends App {
       val shuffleExamples = args.contains("--shuffle")
       val reducedSizes = args.contains("--reduced-sizes")
       val timeoutRegex = raw"--timeout=(\d+)".r
-      val timeout = args.collectFirst { case timeoutRegex(timeout) => timeout.toInt }.getOrElse(5000)
+      val timeout = args.collectFirst { case timeoutRegex(timeout) => timeout.toInt }.getOrElse(500000)
 
       if (reducedSizes) {
         new VeryLargeTransitionSystems(algorithm).run(

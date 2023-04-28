@@ -121,11 +121,11 @@ class VeryLargeTransitionSystems(
   def run(
       includeHardExamples: Boolean = false,
       shuffleExamples: Boolean = false,
-      outputMinimizationSizes: List[String] = List("enabledness", "traces", "simulation", "bisimulation"),
+      outputMinimizationSizes: List[String] = List("enabledness", "traces", "simulation"),
       timeoutTime: Long = 1000
     ): Unit = {
     if (tableOutput) {
-      println(("States, Transitions, Bisim pre-minimization time, Bisim pre-minimized size, Initial pairs, Spectroscopy time, Game positions, Game moves" +: outputMinimizationSizes).mkString(", "))
+      println(("System, States, Transitions, Bisim pre-minimization time, Bisim pre-minimized size, Initial pairs, Spectroscopy time, Game positions, Game moves" +: outputMinimizationSizes).mkString(", "))
     }
     val exampleNumbers = if (includeHardExamples) easyExamples ++ hardExamples else easyExamples
     val orderedExamples = if (shuffleExamples) Random.shuffle(exampleNumbers) else exampleNumbers
