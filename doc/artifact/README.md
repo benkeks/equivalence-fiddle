@@ -46,11 +46,17 @@ After starting up the container, the results of Table 1 in the paper can be repr
 bash ./reproduce-results.sh
 ```
 
-This will only go through the not-so-hard examples, which don't time-out often. It should be enough to see the advantages of the clever energy spectroscopy, in particular, that it works way better on systems with high non-determinism as in the Peterson's mutex example. If you have more time (and RAM), feel free to also run the harder examples:
+This will only go through the not-so-hard examples, which don't time-out often. It should be enough to see the advantages of the clever energy spectroscopy, in particular, that it works way better on systems with high non-determinism as in the Peterson's mutex example.
+
+An example of what one executions would look like, can be found in `example_reproduce-results.sh.log`.
+
+If you have more time (and RAM), feel free to also run the harder examples (example log in `example_reproduce-results-hard.sh.log`):
 
 ```
 bash ./reproduce-results-hard.sh
 ```
+
+(Many will time out and the bigger ones might well run out of heap space, depending on your setup.)
 
 The distinguishing formula of Example 1 can be reproduced by entering the following definition into the tool (at http://127.0.0.1:8080/) and clicking onto the gutter next to `@compare`.
 

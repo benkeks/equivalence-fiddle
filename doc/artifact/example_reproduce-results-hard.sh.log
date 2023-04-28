@@ -1,0 +1,132 @@
+bash ./reproduce-results-hard.sh
+Starting the equivalence-fiddle container if it is not yet running...
+equivalence-fiddle
+-----
+Reproducing results for all examples of Table 1 (ordered by state count)...
+The following will reproduce the lines peterson, vasy_0_1, vasy_1_4, vasy_5_9, cwi_3_14, vasy_8_24, vasy_8_38, vasy_25_25, cwi_1_2, vasy_10_56, vasy_18_73.
+-----
+Clever energy game spectroscopy:
+  The rows of the output and the table correspond like this: 1->system; 2->P; 5->P/B; 7->9,t/s; 9->8,↣▲
+-----
+System, States, Transitions, Bisim pre-minimization time, Bisim pre-minimized size, Initial pairs, Spectroscopy time, Game positions, Game moves
+shared/src/test/assets/other/peterson_mutex_weak.csv, 20, 138, 61, 19, 47, 316, 664, 2363
+shared/src/test/assets/vlts/vasy_0_1.csv, 289, 1224, 102, 9, 30, 72, 279, 566
+shared/src/test/assets/vlts/vasy_1_4.csv, 1183, 4464, 312, 28, 88, 97, 548, 1000
+shared/src/test/assets/vlts/vasy_5_9.csv, 5486, 9392, 440, 145, 232, 143, 1856, 2988
+shared/src/test/assets/vlts/cwi_3_14.csv, 3996, 14552, 1974, 62, 1832, 452, 11156, 18350
+shared/src/test/assets/vlts/vasy_8_24.csv, 8879, 24411, 1555, 416, 2625, 2709, 60095, 145965
+shared/src/test/assets/vlts/vasy_8_38.csv, 8921, 38424, 3420, 219, 837, 404, 7523, 14958
+shared/src/test/assets/vlts/vasy_25_25.csv, 25217, 25216, 1225, 25217, 25217, 540, 25217, 0
+shared/src/test/assets/vlts/cwi_1_2.csv, 1952, 2387, 522, 1132, 481735, 577921, 8510136, 22723369
+shared/src/test/assets/vlts/vasy_10_56.csv, 10849, 56156, 4802, 2112, 239878, 200784, 1949428, 6012676
+shared/src/test/assets/vlts/vasy_18_73.csv, 18746, 73043, 4834, 4087, 172428 [TIMEOUT after 600000 ms]
+-----
+Formula game spectroscopy of [BJN2022]:
+  Many will timeout.
+  The interesting rows of the output and the table correspond like this: 7->5,t/s; 9->4,[4]-↣
+-----
+System, States, Transitions, Bisim pre-minimization time, Bisim pre-minimized size, Initial pairs, Spectroscopy time, Game positions, Game moves
+shared/src/test/assets/other/peterson_mutex_weak.csv, 20, 138, 67, 19, 47 [TIMEOUT after 600000 ms]
+shared/src/test/assets/vlts/vasy_0_1.csv, 289, 1224, 63, 9, 30, 197, 386, 1118
+shared/src/test/assets/vlts/vasy_1_4.csv, 1183, 4464, 256, 28, 88, 118, 376, 1125
+shared/src/test/assets/vlts/vasy_5_9.csv, 5486, 9392, 595, 145, 232, 361, 1578, 3789
+shared/src/test/assets/vlts/cwi_3_14.csv, 3996, 14552, 2335, 62, 1832, 4957, 7442, 14761
+shared/src/test/assets/vlts/vasy_8_24.csv, 8879, 24411, 1743, 416, 2625 [TIMEOUT after 600000 ms]
+shared/src/test/assets/vlts/vasy_8_38.csv, 8921, 38424, 4214, 219, 837, 2967, 4472, 19595
+shared/src/test/assets/vlts/vasy_25_25.csv, 25217, 25216, 1603, 25217, 25217, 2688, 50434, 100866
+shared/src/test/assets/vlts/cwi_1_2.csv, 1952, 2387, 592, 1132, 481735Exception in thread "classloader-cache-cleanup-0" java.lang.OutOfMemoryError: Java heap space
+java.lang.OutOfMemoryError: Java heap space
+Uncaught error from thread [sbt-web-scheduler-1]: Java heap space, shutting down JVM since 'akka.jvm-exit-on-fatal-error' is enabled for ActorSystem[sbt-web]
+java.lang.OutOfMemoryError: Java heap space
+[ERROR] [04/28/2023 12:45:03.367] [sbt-web-scheduler-1] [akka.actor.ActorSystemImpl(sbt-web)] exception on LARS’ timer thread
+java.lang.OutOfMemoryError: Java heap space
+
+[INFO] [04/28/2023 12:45:03.371] [sbt-web-scheduler-1] [akka.actor.ActorSystemImpl(sbt-web)] starting new LARS thread
+[ERROR] [SECURITY][04/28/2023 12:45:03.375] [sbt-web-scheduler-1] [akka.actor.ActorSystemImpl(sbt-web)] Uncaught error from thread [sbt-web-scheduler-1]: Java heap space, shutting down JVM since 'akka.jvm-exit-on-fatal-error' is enabled for ActorSystem[sbt-web]
+java.lang.OutOfMemoryError: Java heap space
+
+-----
+Unclever energy game spectroscopy:
+  The interesting rows of the output and the table correspond like this: 7->7,t/s; 9->6,↣△
+-----
+System, States, Transitions, Bisim pre-minimization time, Bisim pre-minimized size, Initial pairs, Spectroscopy time, Game positions, Game moves
+shared/src/test/assets/other/peterson_mutex_weak.csv, 20, 138, 81, 19, 47, 27226, 67703, 348474
+shared/src/test/assets/vlts/vasy_0_1.csv, 289, 1224, 70, 9, 30, 71, 565, 1334
+shared/src/test/assets/vlts/vasy_1_4.csv, 1183, 4464, 175, 28, 88, 62, 708, 1320
+shared/src/test/assets/vlts/vasy_5_9.csv, 5486, 9392, 545, 145, 232, 108, 2475, 4315
+shared/src/test/assets/vlts/cwi_3_14.csv, 3996, 14552, 1478, 62, 1832, 391, 14814, 25666
+shared/src/test/assets/vlts/vasy_8_24.csv, 8879, 24411, 1216, 416, 2625, 15908, 227581, 725113
+shared/src/test/assets/vlts/vasy_8_38.csv, 8921, 38424, 3365, 219, 837, 284, 9889, 19690
+shared/src/test/assets/vlts/vasy_25_25.csv, 25217, 25216, 986, 25217, 25217, 499, 25217, 0
+shared/src/test/assets/vlts/cwi_1_2.csv, 1952, 2387, 283, 1132, 481735 [TIMEOUT after 600000 ms]
+shared/src/test/assets/vlts/vasy_10_56.csv, 10849, 56156, 9127, 2112, 239878 [TIMEOUT after 600000 ms]
+shared/src/test/assets/vlts/vasy_18_73.csv [TIMEOUT after 600000 ms]
+java.lang.OutOfMemoryError: Java heap space
+        at scala.collection.generic.Growable$$Lambda$4384/0x00000008412cd040.get$Lambda(Unknown Source)
+        at java.base/java.lang.invoke.DirectMethodHandle$Holder.invokeStatic(DirectMethodHandle$Holder)
+        at java.base/java.lang.invoke.Invokers$Holder.linkToTargetMethod(Invokers$Holder)
+        at scala.collection.generic.Growable.$plus$plus$eq(Growable.scala:62)
+        at scala.collection.generic.Growable.$plus$plus$eq$(Growable.scala:53)
+        at scala.collection.mutable.ListBuffer.$plus$plus$eq(ListBuffer.scala:184)
+        at scala.collection.mutable.ListBuffer.$plus$plus$eq(ListBuffer.scala:47)
+        at scala.collection.TraversableLike.to(TraversableLike.scala:786)
+        at scala.collection.TraversableLike.to$(TraversableLike.scala:783)
+        at scala.collection.AbstractTraversable.to(Traversable.scala:108)
+        at scala.collection.TraversableOnce.toList(TraversableOnce.scala:350)
+        at scala.collection.TraversableOnce.toList$(TraversableOnce.scala:350)
+        at scala.collection.AbstractTraversable.toList(Traversable.scala:108)
+        at scala.collection.immutable.List.$plus$plus(List.scala:216)
+        at io.equiv.eqfiddle.game.GameLazyDecision.priceUpdate(GameLazyDecision.scala:39)
+        at io.equiv.eqfiddle.game.GameLazyDecision.populateGame(GameLazyDecision.scala:83)
+        at io.equiv.eqfiddle.game.GameLazyDecision.populateGame$(GameLazyDecision.scala:48)
+        at io.equiv.eqfiddle.spectroscopy.EnergySpectroscopyGame.populateGame(EnergySpectroscopyGame.scala:8)
+        at io.equiv.eqfiddle.spectroscopy.FastSpectroscopy.compute(FastSpectroscopy.scala:131)
+        at io.equiv.eqfiddle.tool.benchmark.VeryLargeTransitionSystems.listMinimizations(VeryLargeTransitionSystems.scala:88)
+        at io.equiv.eqfiddle.tool.benchmark.VeryLargeTransitionSystems.$anonfun$run$2(VeryLargeTransitionSystems.scala:135)
+        at io.equiv.eqfiddle.tool.benchmark.VeryLargeTransitionSystems$$Lambda$4394/0x00000008412df840.apply$mcV$sp(Unknown Source)
+        at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:23)
+        at scala.concurrent.Future$.$anonfun$apply$1(Future.scala:659)
+        at scala.concurrent.Future$$$Lambda$4396/0x00000008412de040.apply(Unknown Source)
+        at scala.util.Success.$anonfun$map$1(Try.scala:255)
+        at scala.util.Success.map(Try.scala:213)
+        at scala.concurrent.Future.$anonfun$map$1(Future.scala:292)
+        at scala.concurrent.Future$$Lambda$4397/0x00000008412dd840.apply(Unknown Source)
+        at scala.concurrent.impl.Promise.liftedTree1$1(Promise.scala:33)
+        at scala.concurrent.impl.Promise.$anonfun$transform$1(Promise.scala:33)
+        at scala.concurrent.impl.Promise$$Lambda$4398/0x00000008412dc840.apply(Unknown Source)
+java.lang.OutOfMemoryError: Java heap space
+        at scala.util.hashing.MurmurHash3.unorderedHash(MurmurHash3.scala:121)
+        at scala.util.hashing.MurmurHash3$.setHash(MurmurHash3.scala:261)
+        at scala.collection.GenSetLike.hashCode(GenSetLike.scala:132)
+        at scala.collection.GenSetLike.hashCode$(GenSetLike.scala:132)
+        at scala.collection.AbstractSet.hashCode(Set.scala:53)
+        at scala.runtime.Statics.anyHash(Statics.java:122)
+        at scala.util.hashing.MurmurHash3.productHash(MurmurHash3.scala:76)
+        at scala.util.hashing.MurmurHash3$.productHash(MurmurHash3.scala:246)
+        at scala.runtime.ScalaRunTime$._hashCode(ScalaRunTime.scala:172)
+        at io.equiv.eqfiddle.spectroscopy.EnergySpectroscopyGame$AttackerObservation.hashCode(EnergySpectroscopyGame.scala:24)
+        at scala.runtime.Statics.anyHash(Statics.java:122)
+        at scala.collection.mutable.HashTable$HashUtils.elemHashCode(HashTable.scala:416)
+        at scala.collection.mutable.HashTable$HashUtils.elemHashCode$(HashTable.scala:416)
+        at scala.collection.mutable.HashMap.elemHashCode(HashMap.scala:44)
+        at scala.collection.mutable.HashTable.findEntry(HashTable.scala:136)
+        at scala.collection.mutable.HashTable.findEntry$(HashTable.scala:135)
+        at scala.collection.mutable.HashMap.findEntry(HashMap.scala:44)
+        at scala.collection.mutable.HashMap.get(HashMap.scala:74)
+        at scala.collection.Map$WithDefault.get(Map.scala:57)
+        at scala.collection.MapLike.apply(MapLike.scala:143)
+        at scala.collection.MapLike.apply$(MapLike.scala:143)
+        at scala.collection.AbstractMap.apply(Map.scala:65)
+        at io.equiv.eqfiddle.game.GameLazyDecision.$anonfun$populateGame$2(GameLazyDecision.scala:75)
+        at io.equiv.eqfiddle.game.GameLazyDecision$$Lambda$4499/0x00000008413c9840.apply(Unknown Source)
+        at scala.collection.immutable.List.foreach(List.scala:431)
+        at io.equiv.eqfiddle.game.GameLazyDecision.populateGame(GameLazyDecision.scala:73)
+        at io.equiv.eqfiddle.game.GameLazyDecision.populateGame$(GameLazyDecision.scala:48)
+        at io.equiv.eqfiddle.spectroscopy.EnergySpectroscopyGame.populateGame(EnergySpectroscopyGame.scala:8)
+        at io.equiv.eqfiddle.spectroscopy.FastSpectroscopy.compute(FastSpectroscopy.scala:131)
+        at io.equiv.eqfiddle.tool.benchmark.VeryLargeTransitionSystems.listMinimizations(VeryLargeTransitionSystems.scala:88)
+        at io.equiv.eqfiddle.tool.benchmark.VeryLargeTransitionSystems.$anonfun$run$2(VeryLargeTransitionSystems.scala:135)
+        at io.equiv.eqfiddle.tool.benchmark.VeryLargeTransitionSystems$$Lambda$4394/0x00000008412df840.apply$mcV$sp(Unknown Source)
+-----
+All done!
+Bye!
