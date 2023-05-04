@@ -107,7 +107,6 @@ object ObservationClassEnergyWeak {
   // The Linear-time Branching-time Spectrum
   val BaseLTBTS = List( 
     "enabledness" ->             ObservationClassEnergyWeak(    1,     0,     0,     0,     0,     0,    0,    0,    0),
-    "sr-enabledness" ->          ObservationClassEnergyWeak(    1,     0,     0,     1,     0,     0,    0,    1,    1),
     "traces" ->                  ObservationClassEnergyWeak(INFTY,     0,     0,     0,     0,     0,    0,    0,    0),
     "instable-failure" ->        ObservationClassEnergyWeak(INFTY,     0,     1,     0,     0,     0,    0,    1,    1),
     "failure" ->                 ObservationClassEnergyWeak(INFTY,     0,     0,     1,     0,     0,    0,    1,    1),
@@ -137,6 +136,13 @@ object ObservationClassEnergyWeak {
     "sr-branching-bisimulation"->ObservationClassEnergyWeak(INFTY, INFTY, INFTY, INFTY, INFTY, INFTY,INFTY,INFTY,INFTY)
   )
 
+  def isStabilityCheck(f: HennessyMilnerLogic.Formula[_]) = f match {
+    case HennessyMilnerLogic.Negate(HennessyMilnerLogic.ObserveInternal(HennessyMilnerLogic.Pass(HennessyMilnerLogic.And(subs)), false)) =>
+      subs.isEmpty
+    case HennessyMilnerLogic.Negate(HennessyMilnerLogic.ObserveInternal(HennessyMilnerLogic.And(subs), false)) =>
+      subs.isEmpty
+    case _ => false
+  }
 
   val LTBTS = Spectrum.fromTuples(BaseLTBTS, getFormulaRootClass)
 
@@ -144,17 +150,13 @@ object ObservationClassEnergyWeak {
     case HennessyMilnerLogic.And(subterms) =>
       if (subterms.isEmpty) {
         ObservationClassEnergyWeak()
+      } else if (subterms.forall(isStabilityCheck(_))) {
+        ObservationClassEnergyWeak(stableConjunctionLevels = 1)
       } else {
         val (positiveSubterms, negativeSubterms) = subterms.toList.partition(_.isPositive)
-        val (stabilityChecks, properNegatives) = negativeSubterms.partition {
-          case HennessyMilnerLogic.Negate(HennessyMilnerLogic.ObserveInternal(HennessyMilnerLogic.Pass(HennessyMilnerLogic.And(subs)), false)) =>
-            subs.isEmpty
-          case HennessyMilnerLogic.Negate(HennessyMilnerLogic.ObserveInternal(HennessyMilnerLogic.And(subs), false)) =>
-            subs.isEmpty
-          case _ => false
-        }
+        val (stabilityChecks, properNegatives) = negativeSubterms.partition(isStabilityCheck(_))
         val positiveClasses = positiveSubterms.map(formulaObsClass(_))
-        val negativeClasses = properNegatives.map(formulaObsClass(_))
+        val negativeClasses = properNegatives.map(formulaObsClass(_)) ++ stabilityChecks.map(_ => ObservationClassEnergyWeak())
         val allClasses = positiveClasses ++ negativeClasses
         val isBranchingObs = positiveSubterms.count {
           case HennessyMilnerLogic.Observe(_, _) | HennessyMilnerLogic.ObserveInternal(_, _) => true

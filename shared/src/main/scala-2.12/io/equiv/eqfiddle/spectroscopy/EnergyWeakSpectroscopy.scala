@@ -189,7 +189,9 @@ class EnergyWeakSpectroscopy[S, A, L] (
     val zeroEnergySet = Set(Energy.zeroEnergy(9))
 
     def instantAttackerWin(gn: GameNode) = gn match {
-      case hmlGame.DefenderConjunction(_, qq) if qq.isEmpty => zeroEnergySet; case _ => Set.empty
+      case hmlGame.DefenderConjunction(_, qq) if qq.isEmpty => zeroEnergySet
+      case hmlGame.DefenderStableConjunction(_, qq) if qq.isEmpty => zeroEnergySet
+      case _ => Set.empty
     }
 
     debugLog("HML spectroscopy game construction ...")

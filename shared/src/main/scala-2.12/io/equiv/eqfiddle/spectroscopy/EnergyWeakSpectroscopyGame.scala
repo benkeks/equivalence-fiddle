@@ -130,7 +130,6 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
             (a,pp1) <- ts.post(p0)
             if qq0.size > 1
             p1 <- pp1
-            //if !ts.silentActions(a)
             qq0a <- qq0.subsets()
             if qq0a.nonEmpty
           } yield {
