@@ -183,19 +183,19 @@ R3 = c.(a.a.0 + a.0 + b.0) + c.(a.a.0 + a.0 + b.b.0)
 P1A = tau.a + tau.b + tau.c
 P1B = tau.a + tau.(tau.b + tau.c)
 @comment "Distinguished by Weak Bisim (eq by coupledsim = weaksim + contrasim)"
-@compare "P1A,P1B" 
+@compareSilent "P1A,P1B" 
 
 P2A = (res!0 | (res.a.0 + res.b.0 + res.c.0)) \ {res}
 P2B = (res1!res2!0 | (res1.res2.a.0 + res1.(res2.b.0 + res2.c.0))) \ {res1, res2}
 
 @comment "More complicated variant of P1"
-@compare "P2A,P2B" 
+@compareSilent "P2A,P2B" 
 
 @comment "Pc, Pp Contrasim from https://arxiv.org/pdf/2108.10492.pdf" 
 Pc = (pl.sp.aEats | pl.sp.bEats | pl!0 | op.sp!0) \ {pl, sp}
 Pp = (pl.op.sp.aEats | pl.op.sp.bEats | pl!0 | sp!0) \ {pl, sp}
 
-@compare "Pc,Pp"
+@compareSilent "Pc,Pp"
 
 @comment "------- layout --------" 
 
@@ -226,31 +226,31 @@ Pp(x=511, y=590)
   val strongWeakSims = """
 P0A = tau.a
 P0B = a
-@compare "P0A, P0B"
+@compareSilent "P0A, P0B"
 
 P00A = a.tau.tau.b
 P00B = tau.a.b
-@compare "P00A, P00B"
+@compareSilent "P00A, P00B"
 
 P1A = (tau.b + a)
 P1B = (P1A + b)
 @comment "Delay bisimilar processes" 
-@compare "P1B, P1A" 
+@compareSilent "P1B, P1A" 
 
 P2A = a.(tau.b + c)
 P2B = (a.b + P2A)
 @comment "Weakly bisimilar but not delay bisim" 
-@compare "P2B, P2A" 
+@compareSilent "P2B, P2A" 
 
 P3A = a + tau.b
 P3B = P3A + b
 @comment "Stabilitiy-respecting delay-bisimilar, but not eta-similar"
-@compare "P3B, P3A"
+@compareSilent "P3B, P3A"
 
 P4A = a.b + a.c
 P4B = a.(tau.b + tau.c)
 @comment "Stable bisimilar but not even weakly similar"
-@compare "P4B, P4A"
+@compareSilent "P4B, P4A"
 
 @comment "------- layout --------" 
 
@@ -430,83 +430,84 @@ S1 = a.(a + b.c)
 P11 = tau.(tau.c + b) + a
 P12 = tau.(tau.c + b) + a + tau.c
 
+@compareSilent "P12,P11"
 @comment "delay-bisimilar and eta-bisimilar, but not branching bisimilar!"
-@compare "P12,P11"
 
 P13 = a.(tau.b + c)
 P14 = a.(tau.b + c) + a.b
-@compare "P13,P14"
+@compareSilent "P13,P14"
 @comment "eta-bisimilar and stable-bisimilar, but not delay."
 
 P15 = tau.(tau.c + b) + b + a
 P16 = tau.c + b + a
-@compare "P15, P16"
+@compareSilent "P15, P16"
 @comment "coupled eta-similar, but not weak bisim."
 
 P21 = a.b.c + a.(b.c + b.d)
 P22 = a.(b.c + b.d)
-@compare "P21, P22"
+@compareSilent "P21, P22"
 @comment "stable ready (eta)-similar, but not contrasim or stable bisim"
 
 P23 = a.b.c + a.b.d
+@compareSilent "P22, P23"
 @compare "P22, P23"
 @comment "(Stable) ready trace but not sim eq"
 
 P24 = a.tau.b + a.tau.c
 P25 = a.(tau.b + tau.c)
-@compare "P24, P25"
+@compareSilent "P24, P25"
 @comment "Contrasim (and stable bisim) but not sim"
 
 P31 = a.(b + c.d) + a.(c.e + f)
 P32 = a.(b + c.e) + a.(c.d + f)
-@compare "P31, P32"
+@compareSilent "P31, P32"
 @comment "failure and ready but not failuretrace and readytrace eq."
 
 P33 = tau.b + a
 P34 = tau.b + b + a
-@compare "P34, P33"
+@compareSilent "P34, P33"
 @comment "stability-respecting delay bisimilar but not eta-sim"
 
 P41 = a.b + a.c
 P42 = a.b + a.(b + c) + a.c
-@compare "P42, P41"
+@compareSilent "P42, P41"
 @comment "imposs. future (and failure) prordered but not readies."
 
 P43 = a.(b + c)
-@compare "P42, P43"
+@compareSilent "P42, P43"
 @comment "eta-sim and completed traces, but not failures"
 
 P44 = a.(b.c + tau.b.c + b.d)
 P45 = a.(b.c + tau.b.d + b.d)
-@compare "P44, P45"
+@compareSilent "P44, P45"
 @comment "Ready eta-sim"
 
 Div = tau.Div
 P51 = tau.P51 + a.b.c + a.b.Div
 P52 = tau.P52 + a.b.c
-@compare "P51, P52"
+@compareSilent "P51, P52"
 
 P53sub = tau.P53sub + tau.b
 P53 = a.P53sub
 P54 = a.b
-@compare "P53, P54"
+@compareSilent "P53, P54"
 @comment "s-r-branching-bisim but nothing weaker"
 
 P55sub = tau.P55sub + b
 P55 = a.P55sub
-@compare "P54, P55"
+@compareSilent "P54, P55"
 @comment "(Completed) branching bisim but not stable failures eq"
 
 P56 = a.(b + tau.Div)
-@compare "P55, P56"
+@compareSilent "P55, P56"
 @comment "stable eta-coupled sim but not contrasim"
 
 P57 = a.(b + tau)
-@compare "P57, P56"
+@compareSilent "P57, P56"
 @comment "branching bisim but not failure"
 
 P58 = a.(tau.b + b + tau)
-@compare "P58, P57"
+@compareSilent "P58, P57"
 @comment "failure-eta-sim but not ready-eq"
 
 """
@@ -548,6 +549,6 @@ P58 = a.(tau.b + b + tau)
     namedSamples.find(_.slug == slug)
   }
 
-  val default = petersonMutex
+  val default = ltbts2
 
 }

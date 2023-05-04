@@ -302,7 +302,7 @@ object Structure {
     }
   }
 
-  case class StructureExamineEquivalences(n1: NodeID, n2: NodeID, resetReplay: Boolean = true) extends StructureAction {
+  case class StructureExamineEquivalences(n1: NodeID, n2: NodeID, resetReplay: Boolean = true, silentSpectrum: Boolean = false) extends StructureAction {
 
     override def implementStructure(structure: Structure) = {
       if (resetReplay) {
@@ -313,7 +313,11 @@ object Structure {
 
         val begin = Date.now
 
-        val algo = new EnergyWeakSpectroscopy(structure.structure)// FastSpectroscopy(structure.structure)
+        val algo = if (silentSpectrum) {
+          new EnergyWeakSpectroscopy(structure.structure)
+        } else {
+          new FastSpectroscopy(structure.structure)
+        }
         algo.uriEncoder = scala.scalajs.js.URIUtils.encodeURI _
 
         val result = algo.compute(List((n1, n2)), computeFormulas = true)
