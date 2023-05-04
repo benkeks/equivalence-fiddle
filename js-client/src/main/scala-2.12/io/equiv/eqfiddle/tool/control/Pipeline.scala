@@ -56,6 +56,15 @@ class Pipeline(val main: Control) extends ModelComponent {
       } else {
         false
       }
+    case "compareSilent" =>
+      val states = info.split(",").map(_.trim())
+      if (states.length == 2) {
+        broadcast(Pipeline.PipelineStatusChange(List(Pipeline.CurrentLine(line))))
+        main.dispatchAction(Structure.StructureExamineEquivalences(NodeID(states(0)), NodeID(states(1)), silentSpectrum = true))
+        true
+      } else {
+        false
+      }
     case "minimize" =>
       broadcast(Pipeline.PipelineStatusChange(List(Pipeline.CurrentLine(line))))
       main.dispatchAction(Structure.StructureMinimize())

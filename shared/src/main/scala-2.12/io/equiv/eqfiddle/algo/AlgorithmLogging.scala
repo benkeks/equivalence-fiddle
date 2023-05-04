@@ -4,7 +4,6 @@ import io.equiv.eqfiddle.util.Relation
 import scala.collection.mutable.ListBuffer
 import io.equiv.eqfiddle.util.Coloring
 import io.equiv.eqfiddle.util.LabeledRelation
-
 trait AlgorithmLogging[S] {
   
   private val log = ListBuffer[() => AlgorithmLogging.LogEntry[S]]()
@@ -15,6 +14,8 @@ trait AlgorithmLogging[S] {
     }
   }
 
+  var uriEncoder = (s: String) => s
+
   def logRelation =
     logAppend(AlgorithmLogging.LogRelation[S]) _
 
@@ -23,9 +24,13 @@ trait AlgorithmLogging[S] {
   
   def getReplay() = log toList
 
-  def debugLog(msg: => String) = {
+  def debugLog(msg: => String, asLink: String = "") = {
     if (AlgorithmLogging.debugLogActive) {
-      println(msg)
+      if (asLink == "") {
+        println(msg)
+      } else {
+        println(uriEncoder(asLink + msg))
+      }
     }
   }
 }

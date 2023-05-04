@@ -3,12 +3,14 @@ package io.equiv.eqfiddle.hml
 case class ObservationClassEnergyWeak(
   /** the maximal observation depth of the subformulas (⊤ has height 0, negation and conjunction are neutral wrt. height) */
   observationHeight: Int = 0,
-  /** are there branching observations among the observationHeight levels */
-  branchingObservations: Int = 0,
-  /** the maximal amount of conjunctions when descending into a formula */
-  conjunctionLevels: Int = 0,
+  /** the maximal amount of branching conjunctions when descending into a formula */
+  branchingConjunctionLevels: Int = 0,
+  /** the maximal amount of instable conjunctions when descending into a formula */
+  instableConjunctionLevels: Int = 0,
+  /** the maximal amount of stable conjunctions when descending into a formula */
+  stableConjunctionLevels: Int = 0,
   /** number of “strong” conjunctions among the conjunctionLevels */
-  immediateConjunctions: Int = 0,
+  immediateConjunctionLevels: Int = 0,
   /** the maximal height of revivals at local-test conjunctions (observationHeight)*/
   revivalHeight: Int = 0,
   /** maximal height of positive conjunctions (observationHeight) excluding revivals*/
@@ -26,9 +28,10 @@ case class ObservationClassEnergyWeak(
           Some(0)
         } else if (
             this.observationHeight >= that.observationHeight &&
-            this.branchingObservations >= that.branchingObservations &&
-            this.conjunctionLevels >= that.conjunctionLevels &&
-            this.immediateConjunctions >= that.immediateConjunctions &&
+            this.branchingConjunctionLevels >= that.branchingConjunctionLevels &&
+            this.instableConjunctionLevels >= that.instableConjunctionLevels &&
+            this.stableConjunctionLevels >= that.stableConjunctionLevels &&
+            this.immediateConjunctionLevels >= that.immediateConjunctionLevels &&
             this.revivalHeight >= that.revivalHeight &&
             this.positiveConjHeight >= that.positiveConjHeight &&
             this.negativeConjHeight >= that.negativeConjHeight &&
@@ -36,9 +39,10 @@ case class ObservationClassEnergyWeak(
           Some(1)
         } else if (
             this.observationHeight <= that.observationHeight &&
-            this.branchingObservations <= that.branchingObservations &&
-            this.conjunctionLevels <= that.conjunctionLevels &&
-            this.immediateConjunctions <= that.immediateConjunctions &&
+            this.branchingConjunctionLevels <= that.branchingConjunctionLevels &&
+            this.instableConjunctionLevels <= that.instableConjunctionLevels &&
+            this.stableConjunctionLevels <= that.stableConjunctionLevels &&
+            this.immediateConjunctionLevels <= that.immediateConjunctionLevels &&
             this.revivalHeight <= that.revivalHeight &&
             this.positiveConjHeight <= that.positiveConjHeight &&
             this.negativeConjHeight <= that.negativeConjHeight &&
@@ -55,9 +59,10 @@ case class ObservationClassEnergyWeak(
     case that: ObservationClassEnergyWeak =>
       ObservationClassEnergyWeak(
         Integer.max(this.observationHeight, that.observationHeight),
-        Integer.max(this.branchingObservations, that.branchingObservations),
-        Integer.max(this.conjunctionLevels, that.conjunctionLevels),
-        Integer.max(this.immediateConjunctions, that.immediateConjunctions),
+        Integer.max(this.branchingConjunctionLevels, that.branchingConjunctionLevels),
+        Integer.max(this.instableConjunctionLevels, that.instableConjunctionLevels),
+        Integer.max(this.stableConjunctionLevels, that.stableConjunctionLevels),
+        Integer.max(this.immediateConjunctionLevels, that.immediateConjunctionLevels),
         Integer.max(this.revivalHeight, that.revivalHeight),
         Integer.max(this.positiveConjHeight, that.positiveConjHeight),
         Integer.max(this.negativeConjHeight, that.negativeConjHeight),
@@ -70,9 +75,10 @@ case class ObservationClassEnergyWeak(
     case that: ObservationClassEnergyWeak =>
       ObservationClassEnergyWeak(
         Integer.min(this.observationHeight, that.observationHeight),
-        Integer.min(this.branchingObservations, that.branchingObservations),
-        Integer.min(this.conjunctionLevels, that.conjunctionLevels),
-        Integer.min(this.immediateConjunctions, that.immediateConjunctions),
+        Integer.min(this.branchingConjunctionLevels, that.branchingConjunctionLevels),
+        Integer.min(this.instableConjunctionLevels, that.instableConjunctionLevels),
+        Integer.min(this.stableConjunctionLevels, that.stableConjunctionLevels),
+        Integer.min(this.immediateConjunctionLevels, that.immediateConjunctionLevels),
         Integer.min(this.revivalHeight, that.revivalHeight),
         Integer.min(this.positiveConjHeight, that.positiveConjHeight),
         Integer.min(this.negativeConjHeight, that.negativeConjHeight),
@@ -81,33 +87,62 @@ case class ObservationClassEnergyWeak(
     case _ => this
   }
 
-  override def toTuple = (observationHeight, branchingObservations, conjunctionLevels, immediateConjunctions, revivalHeight, positiveConjHeight, negativeConjHeight, negationLevels)
+  override def toTuple = (
+    observationHeight,
+    branchingConjunctionLevels,
+    instableConjunctionLevels,
+    stableConjunctionLevels,
+    immediateConjunctionLevels,
+    revivalHeight,
+    positiveConjHeight,
+    negativeConjHeight,
+    negationLevels
+  )
 }
 
 object ObservationClassEnergyWeak {
   val INFTY = Integer.MAX_VALUE
 
-  // observationHeight, branchingObservations, conjunctionLevels, immediateConjunctions, revivalHeight, positiveConjHeight, negativeConjHeight, negationLevels
+  // observationHeight, branchingConjLevels, instableConjs, stableConjs, immediateConjs, revivalHeight, positiveConjHeight, negativeConjHeight, negationLevels
   // The Linear-time Branching-time Spectrum
-  val BaseLTBTS = List(
-    "enabledness" ->           ObservationClassEnergyWeak(    1,     0,     0,     0,     0,    0,    0,    0),
-    "traces" ->                ObservationClassEnergyWeak(INFTY,     0,     0,     0,     0,    0,    0,    0),
-    "failure" ->               ObservationClassEnergyWeak(INFTY,     0,     1,     0,     0,    0,    1,    1),
-    "readiness" ->             ObservationClassEnergyWeak(INFTY,     0,     1,     0,     1,    1,    1,    1),
-    //"failure-trace" ->         ObservationClassEnergyWeak(INFTY,     0, INFTY,     0, INFTY,    0,    1,    1),
-    //"ready-trace" ->           ObservationClassEnergyWeak(INFTY,     0, INFTY,     0, INFTY,    1,    1,    1),
-    "impossible-future" ->     ObservationClassEnergyWeak(INFTY,     0,     1,     0,     0,    0,INFTY,    1),
-    "possible-future" ->       ObservationClassEnergyWeak(INFTY,     0,     1,     0, INFTY,INFTY,INFTY,    1),
-    "simulation" ->            ObservationClassEnergyWeak(INFTY,     0, INFTY,     0, INFTY,INFTY,    0,    0),
-    "ready-simulation" ->      ObservationClassEnergyWeak(INFTY,     0, INFTY,     0, INFTY,INFTY,    1,    1),
-    "2-nested-simulation"->    ObservationClassEnergyWeak(INFTY,     0, INFTY,     0, INFTY,INFTY,INFTY,    1),
-    "contrasimulation" ->      ObservationClassEnergyWeak(INFTY,     0, INFTY,     0,     0,    0,INFTY,INFTY),
-    "weak-bisimulation" ->     ObservationClassEnergyWeak(INFTY,     0, INFTY,     0, INFTY,INFTY,INFTY,INFTY),
-    "delay-bisimulation" ->    ObservationClassEnergyWeak(INFTY,     0, INFTY, INFTY, INFTY,INFTY,INFTY,INFTY),
-    "eta-bisimulation"   ->    ObservationClassEnergyWeak(INFTY,     1, INFTY,     0, INFTY,INFTY,INFTY,INFTY),
-    "branching-bisimulation"-> ObservationClassEnergyWeak(INFTY,     1, INFTY, INFTY, INFTY,INFTY,INFTY,INFTY)
+  val BaseLTBTS = List( 
+    "enabledness" ->             ObservationClassEnergyWeak(    1,     0,     0,     0,     0,     0,    0,    0,    0),
+    "traces" ->                  ObservationClassEnergyWeak(INFTY,     0,     0,     0,     0,     0,    0,    0,    0),
+    "instable-failure" ->        ObservationClassEnergyWeak(INFTY,     0,     1,     0,     0,     0,    0,    1,    1),
+    "failure" ->                 ObservationClassEnergyWeak(INFTY,     0,     0,     1,     0,     0,    0,    1,    1),
+    "instable-readiness" ->      ObservationClassEnergyWeak(INFTY,     0,     1,     0,     0,     1,    1,    1,    1),
+    "readiness" ->               ObservationClassEnergyWeak(INFTY,     0,     0,     1,     0,     1,    1,    1,    1),
+  //"failure-trace" ->           ObservationClassEnergyWeak(INFTY,     0,     0, INFTY,     0, INFTY,    0,    1,    1),
+  //"ready-trace" ->             ObservationClassEnergyWeak(INFTY,     0,     0, INFTY,     0, INFTY,    1,    1,    1),
+    "impossible-future" ->       ObservationClassEnergyWeak(INFTY,     0,     1,     0,     0,     0,    0,INFTY,    1),
+    "s-impossible-future" ->     ObservationClassEnergyWeak(INFTY,     0,     0,     1,     0,     0,    0,INFTY,    1),
+    "possible-future" ->         ObservationClassEnergyWeak(INFTY,     0,     1,     0,     0, INFTY,INFTY,INFTY,    1),
+    "s-possible-future" ->       ObservationClassEnergyWeak(INFTY,     0,     0,     1,     0, INFTY,INFTY,INFTY,    1),
+    "simulation" ->              ObservationClassEnergyWeak(INFTY,     0, INFTY,     0,     0, INFTY,INFTY,    0,    0),
+    "eta-simulation" ->          ObservationClassEnergyWeak(INFTY, INFTY, INFTY,     0,     0, INFTY,INFTY,    0,    0),
+    "ready-simulation" ->        ObservationClassEnergyWeak(INFTY,     0, INFTY,     0,     0, INFTY,INFTY,    1,    1),
+    "s-ready-simulation" ->      ObservationClassEnergyWeak(INFTY,     0,     0, INFTY,     0, INFTY,INFTY,    1,    1),
+    "2-nested-simulation"->      ObservationClassEnergyWeak(INFTY,     0, INFTY,     0,     0, INFTY,INFTY,INFTY,    1),
+    "contrasimulation" ->        ObservationClassEnergyWeak(INFTY,     0, INFTY,     0,     0,     0,    0,INFTY,INFTY),
+    "stable-contrasimulation" -> ObservationClassEnergyWeak(INFTY,     0,     0, INFTY,     0,     0,    0,INFTY,INFTY),
+    "stable-bisimulation" ->     ObservationClassEnergyWeak(INFTY,     0,     0, INFTY,     0, INFTY,INFTY,INFTY,INFTY),
+    "weak-bisimulation" ->       ObservationClassEnergyWeak(INFTY,     0, INFTY,     0,     0, INFTY,INFTY,INFTY,INFTY),
+    //"sr-weak-bisimulation" ->    ObservationClassEnergyWeak(INFTY,     0, INFTY, INFTY,     0, INFTY,INFTY,INFTY,INFTY),
+    "delay-bisimulation" ->      ObservationClassEnergyWeak(INFTY,     0, INFTY,     0, INFTY, INFTY,INFTY,INFTY,INFTY),
+    "sr-delay-bisimulation" ->   ObservationClassEnergyWeak(INFTY,     0, INFTY, INFTY, INFTY, INFTY,INFTY,INFTY,INFTY),
+    "eta-bisimulation"   ->      ObservationClassEnergyWeak(INFTY, INFTY, INFTY,     0,     0, INFTY,INFTY,INFTY,INFTY),
+    //"sr-eta-bisimulation" ->     ObservationClassEnergyWeak(INFTY, INFTY, INFTY, INFTY,     0, INFTY,INFTY,INFTY,INFTY), //?
+    "branching-bisimulation"->   ObservationClassEnergyWeak(INFTY, INFTY, INFTY,     0, INFTY, INFTY,INFTY,INFTY,INFTY),
+    "sr-branching-bisimulation"->ObservationClassEnergyWeak(INFTY, INFTY, INFTY, INFTY, INFTY, INFTY,INFTY,INFTY,INFTY)
   )
 
+  def isStabilityCheck(f: HennessyMilnerLogic.Formula[_]) = f match {
+    case HennessyMilnerLogic.Negate(HennessyMilnerLogic.ObserveInternal(HennessyMilnerLogic.Pass(HennessyMilnerLogic.And(subs)), false)) =>
+      subs.isEmpty
+    case HennessyMilnerLogic.Negate(HennessyMilnerLogic.ObserveInternal(HennessyMilnerLogic.And(subs), false)) =>
+      subs.isEmpty
+    case _ => false
+  }
 
   val LTBTS = Spectrum.fromTuples(BaseLTBTS, getFormulaRootClass)
 
@@ -115,22 +150,29 @@ object ObservationClassEnergyWeak {
     case HennessyMilnerLogic.And(subterms) =>
       if (subterms.isEmpty) {
         ObservationClassEnergyWeak()
+      } else if (subterms.forall(isStabilityCheck(_))) {
+        ObservationClassEnergyWeak(stableConjunctionLevels = 1)
       } else {
         val (positiveSubterms, negativeSubterms) = subterms.toList.partition(_.isPositive)
-        val (positiveFlat, positiveDeep) = positiveSubterms.map(formulaObsClass(_)).partition(_.observationHeight <= 1)
-        val (negativeFlat, negativeDeep) = negativeSubterms.map(formulaObsClass(_)).partition(_.observationHeight <= 1)
-        val allClasses = positiveDeep ++ positiveFlat ++ negativeDeep ++ negativeFlat
-        val isBranchingObs = positiveSubterms.collect { case HennessyMilnerLogic.Observe(a, _) => a}.size
+        val (stabilityChecks, properNegatives) = negativeSubterms.partition(isStabilityCheck(_))
+        val positiveClasses = positiveSubterms.map(formulaObsClass(_))
+        val negativeClasses = properNegatives.map(formulaObsClass(_)) ++ stabilityChecks.map(_ => ObservationClassEnergyWeak())
+        val allClasses = positiveClasses ++ negativeClasses
+        val isBranchingObs = positiveSubterms.count {
+          case HennessyMilnerLogic.Observe(_, _) | HennessyMilnerLogic.ObserveInternal(_, _) => true
+          case _ => false
+        }
 
         // if (allClasses.isEmpty || negativeDeep.nonEmpty || positiveDeep.size > 1) {
           ObservationClassEnergyWeak(
             observationHeight = allClasses.map(_.observationHeight).max,
-            branchingObservations = (isBranchingObs::allClasses.map(_.branchingObservations)).max,
-            conjunctionLevels = allClasses.map(_.conjunctionLevels).max + 1,
-            immediateConjunctions = allClasses.map(_.immediateConjunctions).max + 1,
+            branchingConjunctionLevels = allClasses.map(_.branchingConjunctionLevels).max + (if (isBranchingObs > 0) 1 else 0),
+            instableConjunctionLevels = allClasses.map(_.instableConjunctionLevels).max + (if (stabilityChecks.nonEmpty) 0 else 1),
+            stableConjunctionLevels = allClasses.map(_.stableConjunctionLevels).max + (if (stabilityChecks.nonEmpty) 1 else 0),
+            immediateConjunctionLevels = allClasses.map(_.immediateConjunctionLevels).max + 1,
             revivalHeight = allClasses.map(_.revivalHeight).max,
-            positiveConjHeight = (allClasses.map(_.positiveConjHeight) ++ (positiveFlat ++ positiveDeep).map(_.observationHeight)).max,
-            negativeConjHeight = (allClasses.map(_.negativeConjHeight) ++ (negativeFlat ++ negativeDeep).map(_.observationHeight)).max,
+            positiveConjHeight = (allClasses.map(_.positiveConjHeight) ++ positiveClasses.map(_.observationHeight)).max,
+            negativeConjHeight = (allClasses.map(_.negativeConjHeight) ++ negativeClasses.map(_.observationHeight)).max,
             negationLevels = allClasses.map(_.negationLevels).max,
           )
         // } else {
@@ -160,14 +202,20 @@ object ObservationClassEnergyWeak {
       ObservationClassEnergyWeak(
         observationHeight = andThenClass.observationHeight + 1
       ) lub andThenClass
+    case HennessyMilnerLogic.ObserveInternal(andThen, opt) =>
+      val andThenClass = formulaObsClass(andThen)
+      ObservationClassEnergyWeak(
+        observationHeight = andThenClass.observationHeight + 1
+      ) lub andThenClass
     case HennessyMilnerLogic.Pass(andThen) =>
       val andThenClass = formulaObsClass(andThen)
       if (andThen.isInstanceOf[HennessyMilnerLogic.And[_]]) {
         ObservationClassEnergyWeak(
           observationHeight = andThenClass.observationHeight,
-          branchingObservations = andThenClass.branchingObservations,
-          conjunctionLevels = andThenClass.conjunctionLevels,
-          immediateConjunctions = andThenClass.immediateConjunctions - 1, // decreasing!
+          branchingConjunctionLevels = andThenClass.branchingConjunctionLevels,
+          instableConjunctionLevels = andThenClass.instableConjunctionLevels,
+          stableConjunctionLevels = andThenClass.stableConjunctionLevels,
+          immediateConjunctionLevels = andThenClass.immediateConjunctionLevels - (if (andThenClass.observationHeight <= 0) 0 else 1), // decreasing!
           revivalHeight = andThenClass.revivalHeight,
           positiveConjHeight = andThenClass.positiveConjHeight,
           negativeConjHeight = andThenClass.negativeConjHeight,

@@ -2,13 +2,15 @@
 
 The “Linear-time–Branching-time Spectroscope” is a web app to find all preorders, equivalences and inequivalences from the (strong) linear-time–branching-time spectrum for small processes as described in [Bisping, Jansen, Nestmann, LMCS 2022](https://doi.org/10.46298/lmcs-18(3:19)2022).
 
-It runs online on https://concurrency-theory.org/ltbt-spectroscope/ .
+It runs online on https://equiv.io/ .
 
 ![](doc/usage-illustration.gif)
 
 Just input CCS-style processes, give the two processes you want to compare with `@compare "P1,P2"` and click on the gutter next to the compare-statement!
 
 To explore possible minimizations of the system, write `@minimize` and click on the gutter!
+
+It's also possible to enter processes with internal behavior, either by `tau.P` actions or due to communication, `(a.0 | a!0) \ {a}`. To compare with respect to the weak spectrum, use `@compareSilent "P1,P2"`.
 
 ## How to build
 

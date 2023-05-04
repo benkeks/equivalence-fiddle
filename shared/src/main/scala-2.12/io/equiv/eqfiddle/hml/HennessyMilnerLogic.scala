@@ -41,10 +41,20 @@ object HennessyMilnerLogic {
     override val isImmediate = true
   }
 
+  case class ObserveInternal[A](andThen: Formula[A], opt: Boolean = false) extends Formula[A] {
+
+    override def toString = (if (opt) "(τ)" else "⟨τ⟩") + andThen.toString
+
+    override val isPositive = true
+
+    override val isImmediate = true
+  }
+  
   case class Pass[A](andThen: Formula[A]) extends Formula[A] {
 
     override def toString = andThen match {
-      case And(subterms) => subterms.mkString("⨇{", ",", "}")
+      case And(subterms) if subterms.nonEmpty => subterms.mkString("⨇{", ",", "}")
+      case And(subterms) if subterms.isEmpty => "⊤"
       case Observe(action, andThen) => "⟪" + action.toString + "⟫" + andThen.toString
       case _ => "ϵ" + andThen.toString
     }
