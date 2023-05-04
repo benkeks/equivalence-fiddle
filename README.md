@@ -2,7 +2,7 @@
 
 The “Linear-time–Branching-time Spectroscope” is a web app to find all preorders, equivalences and inequivalences from the (strong) linear-time–branching-time spectrum for small processes as described in [Bisping, Jansen, Nestmann, LMCS 2022](https://doi.org/10.46298/lmcs-18(3:19)2022).
 
-It runs online on https://concurrency-theory.org/ltbt-spectroscope/ .
+It runs online on https://equiv.io/ .
 
 ![](doc/usage-illustration.gif)
 
