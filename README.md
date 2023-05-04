@@ -10,6 +10,8 @@ Just input CCS-style processes, give the two processes you want to compare with 
 
 To explore possible minimizations of the system, write `@minimize` and click on the gutter!
 
+It's also possible to enter processes with internal behavior, either by `tau.P` actions or due to communication, `(a.0 | a!0) \ {a}`. To compare with respect to the weak spectrum, use `@compareSilent "P1,P2"`.
+
 ## How to build
 
 The project can be built using `sbt` by.
