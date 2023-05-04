@@ -78,8 +78,6 @@ class EnergySpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], energyC
               qqS <- qq0.subsets()
             } yield DefenderConjunction(p0, qqS, qq0 -- qqS)
           }
-          //
-          //val readyChallengedQ = qq0.filter(q0 => ts.enabled(p0) subsetOf ts.enabled(q0))
           val obsMoves = for {
             (a,pp1) <- ts.post(p0)
             p1 <- pp1

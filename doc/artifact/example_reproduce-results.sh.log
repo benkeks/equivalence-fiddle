@@ -1,0 +1,52 @@
+bash ./reproduce-results.sh
+
+Starting the equivalence-fiddle container if it is not yet running...
+equivalence-fiddle
+-----
+Reproducing the easier examples of Table 1 (ordered by state count)...
+The following will reproduce the lines peterson, vasy_0_1, vasy_1_4, vasy_5_9, cwi_3_14, vasy_8_24, vasy_8_38, vasy_25_25.
+-----
+Clever energy game spectroscopy:
+  The rows of the output and the table correspond like this: 1->system; 2->P; 5->P/B; 7->9,t/s; 9->8,↣▲; 10->P/E; 11->P/T; 12->P/1S
+-----
+System, States, Transitions, Bisim pre-minimization time, Bisim pre-minimized size, Initial pairs, Spectroscopy time, Game positions, Game moves, enabledness, traces, simulation
+shared/src/test/assets/other/peterson_mutex_weak.csv, 20, 138, 146, 19, 47, 478, 664, 2363, 3, 11, 11
+shared/src/test/assets/vlts/vasy_0_1.csv, 289, 1224, 71, 9, 30, 60, 279, 566, 1, 9, 9
+shared/src/test/assets/vlts/vasy_1_4.csv, 1183, 4464, 567, 28, 88, 144, 548, 1000, 8, 28, 28
+shared/src/test/assets/vlts/vasy_5_9.csv, 5486, 9392, 770, 145, 232, 121, 1856, 2988, 109, 145, 145
+shared/src/test/assets/vlts/cwi_3_14.csv, 3996, 14552, 2152, 62, 1832, 897, 11156, 18350, 2, 62, 62
+shared/src/test/assets/vlts/vasy_8_24.csv, 8879, 24411, 2192, 416, 2625, 3962, 60095, 145965, 171, 415, 415
+shared/src/test/assets/vlts/vasy_8_38.csv, 8921, 38424, 3015, 219, 837, 237, 7523, 14958, 112, 218, 218
+shared/src/test/assets/vlts/vasy_25_25.csv, 25217, 25216, 1072, 25217, 25217, 633, 25217, 0, 25217, 25217, 25217
+-----
+Formula game spectroscopy of [BJN2022]:
+  peterson will timeout (which is the motivating example of the paper!); vasy_8_24 will timeout as well
+  The interesting rows of the output and the table correspond like this: 7->5,t/s; 9->4,[4]-↣
+-----
+System, States, Transitions, Bisim pre-minimization time, Bisim pre-minimized size, Initial pairs, Spectroscopy time, Game positions, Game moves
+shared/src/test/assets/other/peterson_mutex_weak.csv, 20, 138, 108, 19, 47 [TIMEOUT after 10000 ms]
+shared/src/test/assets/vlts/vasy_0_1.csv, 289, 1224, 64, 9, 30, 534, 386, 1118
+shared/src/test/assets/vlts/vasy_1_4.csv, 1183, 4464, 296, 28, 88, 116, 376, 1125
+shared/src/test/assets/vlts/vasy_5_9.csv, 5486, 9392, 805, 145, 232, 490, 1578, 3789
+shared/src/test/assets/vlts/cwi_3_14.csv, 3996, 14552, 2957, 62, 1832 [TIMEOUT after 10000 ms]
+shared/src/test/assets/vlts/vasy_8_24.csv, 8879, 24411, 8471, 7442, 14761
+, 2456, 416, 2625 [TIMEOUT after 10000 ms]
+shared/src/test/assets/vlts/vasy_8_38.csv, 8921, 38424, 4942, 219, 837, 2383, 4472, 19595
+shared/src/test/assets/vlts/vasy_25_25.csv, 25217, 25216, 1214, 25217, 25217, 2689, 50434, 100866
+-----
+Unclever energy game spectroscopy:
+  The interesting rows of the output and the table correspond like this: 7->7,t/s; 9->6,↣△
+-----
+System, States, Transitions, Bisim pre-minimization time, Bisim pre-minimized size, Initial pairs, Spectroscopy time, Game positions, Game moves
+shared/src/test/assets/other/peterson_mutex_weak.csv, 20, 138, 119, 19, 47, 30988, 67703, 348474
+shared/src/test/assets/vlts/vasy_0_1.csv, 289, 1224, 104, 9, 30, 84, 565, 1334
+shared/src/test/assets/vlts/vasy_1_4.csv, 1183, 4464, 209, 28, 88, 61, 708, 1320
+shared/src/test/assets/vlts/vasy_5_9.csv, 5486, 9392, 748, 145, 232, 164, 2475, 4315
+shared/src/test/assets/vlts/cwi_3_14.csv, 3996, 14552, 2312, 62, 1832, 669, 14814, 25666
+shared/src/test/assets/vlts/vasy_8_24.csv, 8879, 24411, 1422, 416, 2625, 17015, 227581, 725113
+shared/src/test/assets/vlts/vasy_8_38.csv, 8921, 38424, 3651, 219, 837, 447, 9889, 19690
+shared/src/test/assets/vlts/vasy_25_25.csv, 25217, 25216, 1152, 25217, 25217, 564, 25217, 0
+-----
+All done!
+If you've got time, you can also run this script including the harder examples, with more timeouts in ./reproduce-results-hard.sh
+Bye!

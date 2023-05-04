@@ -12,7 +12,16 @@ trait SpectroscopyInterface[S, A, L, CF <: HennessyMilnerLogic.Formula[A]] {
 
   def spectrum: Spectrum[ObservationClass]
 
-  def compute(comparedPairs: Iterable[(S,S)]): SpectroscopyInterface.SpectroscopyResult[S, A, ObservationClass, CF]
+  def compute(
+    comparedPairs: Iterable[(S,S)],
+    computeFormulas: Boolean = true,
+    saveGameSize: Boolean = false
+  ) : SpectroscopyInterface.SpectroscopyResult[S, A, ObservationClass, CF]
+
+  /**
+    * output the game size in positions and moves after the algorithm has run (if saveGameSize was selected)
+    */
+  def gameSize: (Int, Int)
 }
 
 object SpectroscopyInterface {

@@ -8,6 +8,7 @@ import io.equiv.eqfiddle.util.Interpreting
 import io.equiv.eqfiddle.tool.model.NodeID
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 import io.equiv.eqfiddle.ts.CSVTSLoader
+import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
 import io.equiv.eqfiddle.spectroscopy.EdgeSpectroscopy
 import io.equiv.eqfiddle.spectroscopy.FastSpectroscopy
 import io.equiv.eqfiddle.algo.transform.BuildQuotientSystem
@@ -15,7 +16,15 @@ import io.equiv.eqfiddle.algo.sigref.Bisimilarity
 import io.equiv.eqfiddle.algo.WeakTransitionSaturation
 import io.equiv.eqfiddle.algo.transform.RemoveLittleBrothers
 
-class VeryLargeTransitionSystems(val useSpectro: Int = 0) {
+import scala.util.Random
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent._
+import scala.concurrent.duration._
+import io.equiv.eqfiddle.hml.HennessyMilnerLogic
+
+class VeryLargeTransitionSystems(
+  algorithm: (WeakTransitionSystem[Int,Symbol,Unit]) => SpectroscopyInterface[Int,Symbol,Unit,HennessyMilnerLogic.Formula[Symbol]]
+) {
 
   val vltsSamplesMedium = Seq(    
     "shared/src/test/assets/vlts/vasy_0_1.csv", //   289,   1224,  no tau,  2
@@ -45,7 +54,7 @@ class VeryLargeTransitionSystems(val useSpectro: Int = 0) {
   def actionIsOutput(a: String) = a.endsWith("!")
   def actionToInput(a: String): String = if (actionIsOutput(a)) actionToInput(a.dropRight(1)) else a
 
-  def listMinimizations(fileName: String) = {
+  def listMinimizations(fileName: String, outputMinimizationSizes: List[String]) = {
 
     print(fileName)
 
@@ -74,7 +83,7 @@ class VeryLargeTransitionSystems(val useSpectro: Int = 0) {
     }
     output("Initial pairs", comparedPairs.size.toString())
 
-    val algo = new FastSpectroscopy(system)
+    val algo = algorithm(system)
 
     val result = algo.compute(comparedPairs, computeFormulas = false, saveGameSize = true)
     printTiming(startTime, "Spectroscopy")
@@ -82,7 +91,7 @@ class VeryLargeTransitionSystems(val useSpectro: Int = 0) {
     output("Game positions", algo.gameSize._1.toString)
     output("Game moves", algo.gameSize._2.toString)
 
-    val interestingNotions = result.spectrum.notions.filter(n => List("enabledness", "traces", "simulation", "bisimulation").contains(n.name))
+    val interestingNotions = result.spectrum.notions.filter(n => outputMinimizationSizes.contains(n.name))
 
     (interestingNotions zip
       result.toQuotients(interestingNotions, Math.min, comparedPairs)
@@ -109,10 +118,26 @@ class VeryLargeTransitionSystems(val useSpectro: Int = 0) {
       println(msg + ": " + data + suffix)
   }
 
-
-  def run(): Unit = {
-    for (i <-easyExamples ++ hardExamples) { //  List(0)) {//
-      listMinimizations(vltsSamplesMedium(i))
+  def run(
+      includeHardExamples: Boolean = false,
+      shuffleExamples: Boolean = false,
+      outputMinimizationSizes: List[String] = List("enabledness", "traces", "simulation"),
+      timeoutTime: Long = 1000
+    ): Unit = {
+    if (tableOutput) {
+      println(("System, States, Transitions, Bisim pre-minimization time, Bisim pre-minimized size, Initial pairs, Spectroscopy time, Game positions, Game moves" +: outputMinimizationSizes).mkString(", "))
+    }
+    val exampleNumbers = if (includeHardExamples) easyExamples ++ hardExamples else easyExamples
+    val orderedExamples = if (shuffleExamples) Random.shuffle(exampleNumbers) else exampleNumbers
+    for (i <-orderedExamples) {
+      try {
+        Await.result(
+          Future(listMinimizations(vltsSamplesMedium(i), outputMinimizationSizes)),
+          timeoutTime milliseconds
+        )
+      } catch {
+        case e: TimeoutException => println(s" [TIMEOUT after $timeoutTime ms]")
+      }
     }
   }
 

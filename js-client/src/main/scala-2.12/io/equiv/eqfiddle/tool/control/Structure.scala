@@ -17,7 +17,7 @@ import io.equiv.eqfiddle.util.Relation
 import io.equiv.eqfiddle.util.LabeledRelation
 import io.equiv.eqfiddle.ts.DivergenceInformation
 import io.equiv.eqfiddle.algo.AlgorithmLogging
-import io.equiv.eqfiddle.spectroscopy.{AbstractSpectroscopy, PositionalSpectroscopy, WeakPositionalSpectroscopy, EdgeSpectroscopy, EnergyWeakSpectroscopy}
+import io.equiv.eqfiddle.spectroscopy.{AbstractSpectroscopy, PositionalSpectroscopy, EdgeSpectroscopy, EnergyWeakSpectroscopy}
 import io.equiv.eqfiddle.spectroscopy.FastSpectroscopy
 import io.equiv.eqfiddle.hml.ObservationClassFast
 import io.equiv.eqfiddle.hml.Spectrum
@@ -313,10 +313,6 @@ object Structure {
 
         val begin = Date.now
 
-        // val loadedSystem = new WeakTransitionSaturation(structure.structure).compute()
-        // val strongBisim = new Bisimilarity(loadedSystem).computePartition()
-        // val preprocessed = new BuildQuotientSystem(loadedSystem, strongBisim).build()
-        // println(preprocessed.step.toGraphString())
         val algo = new EnergyWeakSpectroscopy(structure.structure)// FastSpectroscopy(structure.structure)
         algo.uriEncoder = scala.scalajs.js.URIUtils.encodeURI _
 
@@ -363,10 +359,6 @@ object Structure {
 
       val states = structure.structure.nodes.toList
 
-      // val loadedSystem = new WeakTransitionSaturation(structure.structure).compute()
-      // val strongBisim = new Bisimilarity(loadedSystem).computePartition()
-      // val preprocessed = new BuildQuotientSystem(loadedSystem, strongBisim).build()
-      // println(preprocessed.step.toGraphString())
       val algo = new FastSpectroscopy(structure.structure)
 
       val comparedPairs = for {
@@ -378,14 +370,14 @@ object Structure {
       println("Minimization Spectroscopy took: " + (Date.now - begin) + "ms.")
 
       val distRel = result.toDistancesRelation()
-      val lubDists = distRel.tupleSet//.map { case (l, dists, r) => (l, dists.reduce(_ lub _), r) }
+      val lubDists = distRel.tupleSet
 
       val eqLevels =
         distRel.labels.map(result.spectrum.getStrongestPreorderClassFromClass(_))
         .flatten.toSet[Spectrum.EquivalenceNotion[ObservationClassFast]].toList.sortBy(_.obsClass.toTuple).reverse
 
       val replay = for {
-        Spectrum.EquivalenceNotion(name, obsClass) <- eqLevels//equivMessages
+        Spectrum.EquivalenceNotion(name, obsClass) <- eqLevels
         resultRelation = for {
           (p, d, q) <- lubDists
           if !d.exists(_ <= obsClass)
@@ -426,11 +418,9 @@ object Structure {
         } {
           val dists = distinctions.map(d => d._1.toString() + d._3.map(_.name).mkString(" (", ",", ")")).mkString("<br>")
           val preords = preorderings.map(_.name).mkString("<br>")
-          //val equations = result.findEqs(n1, n2).map(_.name).mkString("<br>")
           val replay = List(
             () => AlgorithmLogging.LogRelation(result.toPreorderingRelation(), s"Preordered by:<div class='preorderings'>$preords</div>"),
             () => AlgorithmLogging.LogRelation(result.toDistinctionRelation(), s"Distinguished by:<div class='distinctions'>$dists</div>"),
-            //() => AlgorithmLogging.LogRelation(result.toEquivalencesRelation(), s"Equated by:<div class='equations'>$equations</div>")
           )
           structure.setReplay(replay)
           structure.main.doAction(StructureDoReplayStep(), structure)
