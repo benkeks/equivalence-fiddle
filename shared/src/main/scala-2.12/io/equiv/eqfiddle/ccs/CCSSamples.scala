@@ -512,6 +512,12 @@ P58 = a.(tau.b + b + tau)
 
 """
 
+  val davidsEdgeCases =
+    """|A1 = a.(f.f + tau.(a + d + tau.f))
+       |A2 = a.(tau.(a + tau.f) + tau.d) + a.(a + d + tau.f.f)
+       |@compareSilent "A1,A2"
+       |""".stripMargin
+
   val namedSamples = List[Samples.Example](
     Samples.Example("ltbts1",
       "Linear Time Branching Time Spectrum 1",
@@ -537,6 +543,9 @@ P58 = a.(tau.b + b + tau)
     Samples.Example("strong-weak-sims",
       "Eta, Branching, Delay Bisims",
       strongWeakSims),
+    Samples.Example("weak-edge-cases-david",
+      "Weak Edge Cases by David",
+      davidsEdgeCases),
     Samples.Example("peterson-mutex",
       "Peterson Mutual exclusion",
       petersonMutex),
