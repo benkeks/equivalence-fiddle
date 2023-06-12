@@ -2,6 +2,8 @@ package io.equiv.eqfiddle.hml
 
 object HennessyMilnerLogic {
 
+  val OutputSugaredWeakFormulas = false
+
 
   abstract class Formula[A] {
 
@@ -53,10 +55,10 @@ object HennessyMilnerLogic {
   case class Pass[A](andThen: Formula[A]) extends Formula[A] {
 
     override def toString = andThen match {
-      case And(subterms) if subterms.nonEmpty => subterms.mkString("⨇{", ",", "}")
+      case And(subterms) if OutputSugaredWeakFormulas && subterms.nonEmpty => subterms.mkString("⨇{", ",", "}")
       case And(subterms) if subterms.isEmpty => "⊤"
-      case Observe(action, andThen) => "⟪" + action.toString + "⟫" + andThen.toString
-      case _ => "ϵ" + andThen.toString
+      case Observe(action, andThen) if OutputSugaredWeakFormulas => "⟪" + action.toString + "⟫" + andThen.toString
+      case _ => "⟨ϵ⟩" + andThen.toString
     }
 
     override val isPositive = andThen.isPositive
