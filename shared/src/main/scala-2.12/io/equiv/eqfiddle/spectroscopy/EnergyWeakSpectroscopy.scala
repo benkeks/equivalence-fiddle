@@ -213,10 +213,14 @@ class EnergyWeakSpectroscopy[S, A, L] (
         //witnessFormulas = potentialWitnesses.filter(f => spectrum.classifyFormula(f)._1 <= energyClass)
         f <- witnessFormulas.headOption
       } {
-        if (! (spectrum.classifyFormula(f)._1 <= energyClass) ) {
-          System.err.println(s"Formula $f (${spectrum.classifyFormula(f)._1.toTuple}) too expensive; not below ${energyClass.toTuple}.")
+        val formulaPrice = spectrum.classifyFormula(f)._1
+        if (! (formulaPrice <= energyClass) ) {
+          System.err.println(s"ERROR: Formula $f ${formulaPrice.toTuple} too expensive; not below ${energyClass.toTuple}.")
         } else {
-          debugLog("Distinguished under " + spectrum.classifyClass(energyClass) + " preorder by " + f.toString() + " Price: " + spectrum.classifyFormula(f))
+          if (formulaPrice < energyClass) {
+            System.err.println(s"WARNING: Witness formula $f ${formulaPrice.toTuple} is strictly cheaper than determined minimal distinction class ${energyClass.toTuple}!")
+          }
+          debugLog("Distinguished at " + energyClass.toTuple + ", " + spectrum.classifyClass(energyClass) + " preorder by " + f.toString() + " Price: " + spectrum.classifyFormula(f))
           checkDistinguishing(f, p, qq.head)
         }
       }
