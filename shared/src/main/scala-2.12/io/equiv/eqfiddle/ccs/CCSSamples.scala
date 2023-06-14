@@ -513,9 +513,9 @@ P58 = a.(tau.b + b + tau)
 """
 
   val davidsEdgeCases =
-    """|A1 = a.(f.f + tau.(a + d + tau.f))
-       |A2 = a.(tau.(a + tau.f) + tau.d) + a.(a + d + tau.f.f)
-       |@compareSilent "A1,A2"
+    """|A1 = (f.f + tau.(a + tau.d + tau.f))
+       |A2 = (tau.(tau.(a + tau.f) + tau.d) + tau.(a + tau.d + f.f))
+       |@compareSilent "A1, A2"
        |""".stripMargin
 
   val namedSamples = List[Samples.Example](
