@@ -80,6 +80,14 @@ class EnergyWeakSpectroscopy[S, A, L] (
           }
         //pruneDominated(successorFormulas.flatten.toSet)
         successorFormulas.headOption.flatMap(_.headOption)
+      case game.AttackerBranchingObservation(p0, qq0) =>
+        for {
+          s <- game.successors(node)
+          update = game.weight(node, s)
+          newPrice = update.applyEnergyUpdate(price)
+          if game.isAttackerWinningPrice(s, newPrice)
+          f <- buildHMLWitness(game, s, newPrice)
+        } yield f
       case game.AttackerClause(p0, q0) =>
         val successorFormulas = for {
           s <- game.successors(node)
@@ -102,16 +110,16 @@ class EnergyWeakSpectroscopy[S, A, L] (
       case game.DefenderBranchingConjunction(p0, a, p1, qq0, qq0a) =>
         val aBranches = for {
           s <- game.successors(node)
-          if s.isInstanceOf[game.AttackerObservation]
+          if s.isInstanceOf[game.AttackerBranchingObservation]
           update = game.weight(node, s)
           newPrice = update.applyEnergyUpdate(price)
           if game.isAttackerWinningPrice(s, newPrice)
           subformula <- buildHMLWitness(game, s, newPrice)
         } yield {
           s match {
-            case game.AttackerObservation(_, _) if ts.silentActions(a) =>
+            case game.AttackerBranchingObservation(_, _) if ts.silentActions(a) =>
               HennessyMilnerLogic.ObserveInternal(subformula, opt = true)
-            case game.AttackerObservation(_, _) =>
+            case game.AttackerBranchingObservation(_, _) =>
               HennessyMilnerLogic.Observe(a, subformula)
             case _ =>
               subformula

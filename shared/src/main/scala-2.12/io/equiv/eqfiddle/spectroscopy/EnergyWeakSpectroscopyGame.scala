@@ -14,7 +14,7 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
   private val InstableConjEnergyUpdate   = new EnergyGame.EnergyUpdate(Array( 0, 0,-1, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
   private val StableConjEnergyUpdate     = new EnergyGame.EnergyUpdate(Array( 0, 0, 0,-1, 0, 0, 0, 0, 0), energyCap = energyCap)
   private val ImmediateConjEnergyUpdate  = new EnergyGame.EnergyUpdate(Array( 0, 0,-1, 0,-1, 0, 0, 0, 0), energyCap = energyCap)
-  private val BranchingConjEnergyUpdate  = new EnergyGame.EnergyUpdate(Array( 7,-1,-1, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
+  private val BranchingConjEnergyUpdate  = new EnergyGame.EnergyUpdate(Array( 0,-1,-1, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
   private val NegClauseEnergyUpdate      = new EnergyGame.EnergyUpdate(Array( 8, 0, 0, 0, 0, 0, 0, 0,-1), energyCap = energyCap)
   private val PosClauseEnergyUpdate      = new EnergyGame.EnergyUpdate(Array( 7, 0, 0, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
   private val FailureTestEnergyUpdate    = new EnergyGame.EnergyUpdate(Array(-1, 0, 0, 0, 0, 0, 0,-1,-1), energyCap = energyCap)
@@ -26,6 +26,7 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
   case class AttackerObservation(p: S, qq: Set[S]) extends SimpleGame.AttackerNode
   case class AttackerDelayedObservation(p: S, qq: Set[S]) extends SimpleGame.AttackerNode
   case class AttackerClause(p: S, q: S) extends SimpleGame.AttackerNode
+  case class AttackerBranchingObservation(p: S, qq: Set[S]) extends SimpleGame.AttackerNode
   //case class AttackerBranchingClause(p: S, a: A, p2: S, q: S) extends SimpleGame.AttackerNode
   case class DefenderConjunction(p: S, qq: Set[S]) extends SimpleGame.DefenderNode
   case class DefenderStableConjunction(p: S, qq: Set[S]) extends SimpleGame.DefenderNode
@@ -61,6 +62,8 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
         case AttackerObservation(p1, qq1) if qq1 contains p0 =>
           NegClauseEnergyUpdate
       }
+    case AttackerBranchingObservation(p0, qq0) =>
+      ObsEnergyUpdate
     // case AttackerBranchingClause(p0, a, p01, q0) =>
     //   gn2 match {
     //     case AttackerObservation(p1, qq1) =>
@@ -70,8 +73,8 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
     //   }
     case DefenderBranchingConjunction(p0, a, o01, qq0, qq0a) =>
       gn2 match {
-        case AttackerObservation(p1, qq1) =>
-          ObsEnergyUpdate
+        case AttackerBranchingObservation(p1, qq1) =>
+          PosClauseEnergyUpdate
         case _ =>
           NoEnergyUpdate
       }
@@ -138,6 +141,8 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
           dn ++ branchingConjs ++ List(instableConjMove) ++ stableConjMove
         }
       }
+    case AttackerBranchingObservation(p0, qq0) =>
+      List(AttackerObservation(p0, qq0))
     case AttackerClause(p0, q0) =>
       val neg = AttackerObservation(q0, Set(p0))
       val pos = AttackerObservation(p0, Set(q0))
@@ -176,13 +181,10 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
       } else {
         ts.post(qq0a, a)
       }
-      List(
-        AttackerObservation(p1, qq1)
-      )
       (for {
         q0 <- qq0
       } yield {
         AttackerClause(p0, q0).asInstanceOf[GameNode]
-      }) + AttackerObservation(p1, qq1)
+      }) + AttackerBranchingObservation(p1, qq1)
   }
 }
