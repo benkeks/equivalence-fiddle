@@ -131,7 +131,7 @@ class EnergyWeakSpectroscopy[S, A, L] (
           s <- game.successors(node)
           update = game.weight(node, s)
           newPrice = update.applyEnergyUpdate(price)
-          if !s.isInstanceOf[game.AttackerObservation]
+          if !s.isInstanceOf[game.AttackerBranchingObservation]
         } yield if (game.isAttackerWinningPrice(s, newPrice)) {
           (buildHMLWitness(game, s, newPrice))
         } else {
@@ -351,10 +351,11 @@ class EnergyWeakSpectroscopy[S, A, L] (
           case game.AttackerDelayedObservation(p, qq: Set[_]) =>
             val qqString = qq.mkString("{",",","}")
             s"$p, ≈$qqString"
+          case game.AttackerBranchingObservation(p, qq: Set[_]) =>
+            val qqString = qq.mkString("{",",","}")
+            s"$p, b$qqString"
           case game.AttackerClause(p, q) =>
             s"$p, $q"
-          // case game.AttackerBranchingClause(p0, a, p1, q) =>
-          //   s"$p0 -${a}-> $p1, $q"
           case game.DefenderConjunction(p, qq: Set[_]) =>
             val qqString = qq.mkString("{",",","}")
             s"$p, $qqString"
