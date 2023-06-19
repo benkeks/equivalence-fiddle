@@ -57,9 +57,9 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
       }
     case AttackerClause(p0, q0) =>
       gn2 match {
-        case AttackerObservation(p1, qq1) if p1 == p0 =>
+        case AttackerDelayedObservation(p1, qq1) if p1 == p0 =>
           PosClauseEnergyUpdate
-        case AttackerObservation(p1, qq1) if qq1 contains p0 =>
+        case AttackerDelayedObservation(p1, qq1) if qq1 contains p0 =>
           NegClauseEnergyUpdate
       }
     case AttackerBranchingObservation(p0, qq0) =>
@@ -144,8 +144,8 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
     case AttackerBranchingObservation(p0, qq0) =>
       List(AttackerObservation(p0, qq0))
     case AttackerClause(p0, q0) =>
-      val neg = AttackerObservation(q0, Set(p0))
-      val pos = AttackerObservation(p0, Set(q0))
+      val neg = AttackerDelayedObservation(q0, ts.silentReachable(p0))
+      val pos = AttackerDelayedObservation(p0, ts.silentReachable(q0))
       List(pos, neg)
     // case AttackerBranchingClause(p0, a, p1, q0) =>
     //   val qq1 = if (ts.silentActions(a)) {

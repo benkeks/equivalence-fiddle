@@ -96,13 +96,15 @@ class EnergyWeakSpectroscopy[S, A, L] (
           if game.isAttackerWinningPrice(s, newPrice)
         } yield {
           s match {
-            case game.AttackerObservation(p1, qq1) =>
+            case game.AttackerDelayedObservation(p1, qq1) =>
               if (p0 == p1) {
-                buildHMLWitness(game, s, newPrice)
+                for {
+                  postForm <- buildHMLWitness(game, s, newPrice)
+                } yield HennessyMilnerLogic.Pass(postForm)
               } else {
                 for {
                   postForm <- buildHMLWitness(game, s, newPrice)
-                } yield HennessyMilnerLogic.Negate(postForm)
+                } yield HennessyMilnerLogic.Negate(HennessyMilnerLogic.Pass(postForm))
               }
             }
           }
