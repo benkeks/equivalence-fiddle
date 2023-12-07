@@ -124,7 +124,6 @@ object ObservationClassEnergyWeak {
     "s-ready-simulation" ->      ObservationClassEnergyWeak(INFTY,     0,     0, INFTY,     0, INFTY,INFTY,    1,    1),
     "2-nested-simulation"->      ObservationClassEnergyWeak(INFTY,     0, INFTY,     0,     0, INFTY,INFTY,INFTY,    1),
     "contrasimulation" ->        ObservationClassEnergyWeak(INFTY,     0, INFTY,     0,     0,     0,    0,INFTY,INFTY),
-    "stable-contrasimulation" -> ObservationClassEnergyWeak(INFTY,     0,     0, INFTY,     0,     0,    0,INFTY,INFTY),
     "stable-bisimulation" ->     ObservationClassEnergyWeak(INFTY,     0,     0, INFTY,     0, INFTY,INFTY,INFTY,INFTY),
     "weak-bisimulation" ->       ObservationClassEnergyWeak(INFTY,     0, INFTY,     0,     0, INFTY,INFTY,INFTY,INFTY),
     //"sr-weak-bisimulation" ->    ObservationClassEnergyWeak(INFTY,     0, INFTY, INFTY,     0, INFTY,INFTY,INFTY,INFTY),
