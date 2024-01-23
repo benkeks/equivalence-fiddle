@@ -200,7 +200,6 @@ class EnergyWeakSpectroscopy[S, A, L] (
 
     def instantAttackerWin(gn: GameNode) = gn match {
       case hmlGame.DefenderConjunction(_, qq) if qq.isEmpty => zeroEnergySet
-      case hmlGame.DefenderStableConjunction(_, qq) if qq.isEmpty => zeroEnergySet
       case _ => Set.empty
     }
 

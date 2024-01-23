@@ -116,7 +116,7 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
           } yield {
             DefenderBranchingConjunction(p0, a, p1, qq0 -- qq0a, qq0a)
           }
-          dn ++ branchingConjs ++ List(instableConjMove) ++ stableConjMove
+          dn ++ List(instableConjMove) ++ branchingConjs ++ stableConjMove
         }
       }
     case AttackerBranchingObservation(p0, qq0) =>
@@ -136,7 +136,7 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
         q1 <- qq0
       } yield {
         AttackerClause(p0, q1).asInstanceOf[GameNode]
-      })
+      }) + DefenderConjunction(p0, Set())
     case DefenderBranchingConjunction(p0, a, p1, qq0, qq0a) =>
       val qq1 = if (ts.silentActions(a)) {
         ts.post(qq0a, a) ++ qq0a

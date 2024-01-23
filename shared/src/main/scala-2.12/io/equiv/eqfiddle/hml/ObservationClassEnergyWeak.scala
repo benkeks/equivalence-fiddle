@@ -150,7 +150,7 @@ object ObservationClassEnergyWeak {
       if (subterms.isEmpty) {
         ObservationClassEnergyWeak()
       } else if (subterms.forall(isStabilityCheck(_))) {
-        ObservationClassEnergyWeak(stableConjunctionLevels = 1)
+        ObservationClassEnergyWeak(immediateConjunctionLevels = 1, stableConjunctionLevels = 1)
       } else {
         val (positiveSubterms, negativeSubterms) = subterms.toList.partition(_.isPositive)
         val (stabilityChecks, properNegatives) = negativeSubterms.partition(isStabilityCheck(_))
@@ -214,7 +214,8 @@ object ObservationClassEnergyWeak {
           branchingConjunctionLevels = andThenClass.branchingConjunctionLevels,
           instableConjunctionLevels = andThenClass.instableConjunctionLevels,
           stableConjunctionLevels = andThenClass.stableConjunctionLevels,
-          immediateConjunctionLevels = andThenClass.immediateConjunctionLevels - (if (andThenClass.observationHeight <= 0) 0 else 1), // decreasing!
+          immediateConjunctionLevels = andThenClass.immediateConjunctionLevels -
+            (if (andThenClass.observationHeight <= 0 && andThenClass.stableConjunctionLevels <= 0) 0 else 1), // decreasing!
           revivalHeight = andThenClass.revivalHeight,
           positiveConjHeight = andThenClass.positiveConjHeight,
           negativeConjHeight = andThenClass.negativeConjHeight,
