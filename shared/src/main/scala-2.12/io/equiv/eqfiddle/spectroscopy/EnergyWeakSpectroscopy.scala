@@ -80,6 +80,14 @@ class EnergyWeakSpectroscopy[S, A, L] (
           }
         //pruneDominated(successorFormulas.flatten.toSet)
         successorFormulas.headOption.flatMap(_.headOption)
+      case game.AttackerBranchingObservation(p0, qq0) =>
+        for {
+          s <- game.successors(node)
+          update = game.weight(node, s)
+          newPrice = update.applyEnergyUpdate(price)
+          if game.isAttackerWinningPrice(s, newPrice)
+          f <- buildHMLWitness(game, s, newPrice)
+        } yield f
       case game.AttackerClause(p0, q0) =>
         val successorFormulas = for {
           s <- game.successors(node)
@@ -88,13 +96,15 @@ class EnergyWeakSpectroscopy[S, A, L] (
           if game.isAttackerWinningPrice(s, newPrice)
         } yield {
           s match {
-            case game.AttackerObservation(p1, qq1) =>
+            case game.AttackerDelayedObservation(p1, qq1) =>
               if (p0 == p1) {
-                buildHMLWitness(game, s, newPrice)
+                for {
+                  postForm <- buildHMLWitness(game, s, newPrice)
+                } yield HennessyMilnerLogic.Pass(postForm)
               } else {
                 for {
                   postForm <- buildHMLWitness(game, s, newPrice)
-                } yield HennessyMilnerLogic.Negate(postForm)
+                } yield HennessyMilnerLogic.Negate(HennessyMilnerLogic.Pass(postForm))
               }
             }
           }
@@ -102,16 +112,16 @@ class EnergyWeakSpectroscopy[S, A, L] (
       case game.DefenderBranchingConjunction(p0, a, p1, qq0, qq0a) =>
         val aBranches = for {
           s <- game.successors(node)
-          if s.isInstanceOf[game.AttackerObservation]
+          if s.isInstanceOf[game.AttackerBranchingObservation]
           update = game.weight(node, s)
           newPrice = update.applyEnergyUpdate(price)
           if game.isAttackerWinningPrice(s, newPrice)
           subformula <- buildHMLWitness(game, s, newPrice)
         } yield {
           s match {
-            case game.AttackerObservation(_, _) if ts.silentActions(a) =>
+            case game.AttackerBranchingObservation(_, _) if ts.silentActions(a) =>
               HennessyMilnerLogic.ObserveInternal(subformula, opt = true)
-            case game.AttackerObservation(_, _) =>
+            case game.AttackerBranchingObservation(_, _) =>
               HennessyMilnerLogic.Observe(a, subformula)
             case _ =>
               subformula
@@ -121,7 +131,7 @@ class EnergyWeakSpectroscopy[S, A, L] (
           s <- game.successors(node)
           update = game.weight(node, s)
           newPrice = update.applyEnergyUpdate(price)
-          if !s.isInstanceOf[game.AttackerObservation]
+          if !s.isInstanceOf[game.AttackerBranchingObservation]
         } yield if (game.isAttackerWinningPrice(s, newPrice)) {
           (buildHMLWitness(game, s, newPrice))
         } else {
@@ -190,7 +200,6 @@ class EnergyWeakSpectroscopy[S, A, L] (
 
     def instantAttackerWin(gn: GameNode) = gn match {
       case hmlGame.DefenderConjunction(_, qq) if qq.isEmpty => zeroEnergySet
-      case hmlGame.DefenderStableConjunction(_, qq) if qq.isEmpty => zeroEnergySet
       case _ => Set.empty
     }
 
@@ -213,10 +222,14 @@ class EnergyWeakSpectroscopy[S, A, L] (
         //witnessFormulas = potentialWitnesses.filter(f => spectrum.classifyFormula(f)._1 <= energyClass)
         f <- witnessFormulas.headOption
       } {
-        if (! (spectrum.classifyFormula(f)._1 <= energyClass) ) {
-          System.err.println(s"Formula $f (${spectrum.classifyFormula(f)._1.toTuple}) too expensive; not below ${energyClass.toTuple}.")
+        val formulaPrice = spectrum.classifyFormula(f)._1
+        if (! (formulaPrice <= energyClass) ) {
+          System.err.println(s"ERROR: Formula $f ${formulaPrice.toTuple} too expensive; not below ${energyClass.toTuple}.")
         } else {
-          debugLog("Distinguished under " + spectrum.classifyClass(energyClass) + " preorder by " + f.toString() + " Price: " + spectrum.classifyFormula(f))
+          if (formulaPrice < energyClass) {
+            System.err.println(s"WARNING: Witness formula $f ${formulaPrice.toTuple} is strictly cheaper than determined minimal distinction class ${energyClass.toTuple}!")
+          }
+          debugLog("Distinguished at " + energyClass.toTuple + ", " + spectrum.classifyClass(energyClass) + " preorder by " + f.toString() + " Price: " + spectrum.classifyFormula(f))
           checkDistinguishing(f, p, qq.head)
         }
       }
@@ -337,10 +350,11 @@ class EnergyWeakSpectroscopy[S, A, L] (
           case game.AttackerDelayedObservation(p, qq: Set[_]) =>
             val qqString = qq.mkString("{",",","}")
             s"$p, ≈$qqString"
+          case game.AttackerBranchingObservation(p, qq: Set[_]) =>
+            val qqString = qq.mkString("{",",","}")
+            s"$p, b$qqString"
           case game.AttackerClause(p, q) =>
             s"$p, $q"
-          // case game.AttackerBranchingClause(p0, a, p1, q) =>
-          //   s"$p0 -${a}-> $p1, $q"
           case game.DefenderConjunction(p, qq: Set[_]) =>
             val qqString = qq.mkString("{",",","}")
             s"$p, $qqString"
