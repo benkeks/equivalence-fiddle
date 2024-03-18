@@ -44,6 +44,7 @@ class VeryLargeTransitionSystems(
   val hardExamples = List(3,7,8)
 
   val tableOutput = true
+  val littleBrotherElimination = false
 
   def arrowLabeling(o: Option[Syntax.Label]) = {
     Interpreting.fromOption(o.map(_.name) orElse(Some("")))
@@ -97,10 +98,14 @@ class VeryLargeTransitionSystems(
       result.toQuotients(interestingNotions, Math.min, comparedPairs)
     ).foreach { case (notion, quotient) =>
       val quotientSystem = new BuildQuotientSystem(system, quotient).build()
-      val minimizedSystem = new RemoveLittleBrothers(quotientSystem, { (p: Int, q: Int) =>
-        result.foundPreorders(p, q).exists(eq => eq.obsClass >= notion.obsClass)
-      }).build()
-      output(notion.name, minimizedSystem.nodes.size.toString)
+      if (littleBrotherElimination) {
+        val minimizedSystem = new RemoveLittleBrothers(quotientSystem, { (p: Int, q: Int) =>
+          result.foundPreorders(p, q).exists(eq => eq.obsClass >= notion.obsClass)
+        }).build()
+        output(notion.name, minimizedSystem.nodes.size.toString)
+      } else {
+        output(notion.name, quotientSystem.nodes.size.toString)
+      }
     }
     if (tableOutput) {
       println()
