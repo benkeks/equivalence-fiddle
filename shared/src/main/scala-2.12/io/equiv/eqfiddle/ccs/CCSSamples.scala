@@ -518,6 +518,37 @@ P58 = a.(tau.b + b + tau)
        |@compareSilent "A1, A2"
        |""".stripMargin
 
+  val stableInstableAbstraction =
+    """|@comment "P1t/P2t resemble P1/P2 with all occurrences of c renamed to tau"
+       |
+       |CB = (c.CB + b)
+       |CD = (c.CD + d)
+       |CBD = (c.CBD + c.CDB + b)
+       |CDB = (c.CDB + c.CBD + d)
+       |
+       |P1 = (a.CB + a.CD)
+       |P2 = (a.CBD + a.CDB)
+       |
+       |tauB = (tau.tauB + b)
+       |tauD = (tau.tauD + d)
+       |tauBD = (tau.tauBD + tau.tauDB + b)
+       |tauDB = (tau.tauDB + tau.tauBD + d)
+       |
+       |P1t = (a.tauB + a.tauD)
+       |P2t = (a.tauBD + a.tauDB)
+       |
+       |@compareSilent "P1, P2"
+       |@compareSilent "P1t, P2t"
+       |
+       |@comment "P1/P2 should be (instable&stable) readiness equivalent"
+       |@comment "P1t/P2t are stable, but not instable (!) failure (and readiness) equivalent"
+       |
+       |P1(x=200, y=10)
+       |P2(x=500, y=10)
+       |P1t(x=200, y=450)
+       |P2t(x=500, y=450)
+       |""".stripMargin
+
   val namedSamples = List[Samples.Example](
     Samples.Example("ltbts1",
       "Linear Time Branching Time Spectrum 1",
@@ -546,6 +577,9 @@ P58 = a.(tau.b + b + tau)
     Samples.Example("weak-edge-cases-david",
       "Weak Edge Cases by David",
       davidsEdgeCases),
+    Samples.Example("stable-instable-abstraction",
+      "Stable vs. instable abstraction",
+      stableInstableAbstraction),
     Samples.Example("peterson-mutex",
       "Peterson Mutual exclusion",
       petersonMutex),
