@@ -12,6 +12,7 @@ import io.equiv.eqfiddle.hml.HennessyMilnerLogic
 import io.equiv.eqfiddle.hml.HMLInterpreter
 import io.equiv.eqfiddle.game.GameGraphVisualizer
 import io.equiv.eqfiddle.hml.ObservationClassEnergyWeak
+import io.equiv.eqfiddle.util.FixedPoint
 
 class EnergyWeakSpectroscopy[S, A, L] (
     ts: WeakTransitionSystem[S, A, L])
@@ -50,13 +51,24 @@ class EnergyWeakSpectroscopy[S, A, L] (
           }
         //pruneDominated(successorFormulas.flatten.toSet)
         successorFormulas.headOption.flatMap(_.headOption)
-      case game.AttackerDelayedObservation(p0, qq0) =>
+      case ado: game.AttackerDelayedObservation =>
+        val attackerDelayedComponent = FixedPoint[Set[game.AttackerDelayedObservation]]({
+          case delayedTodo =>
+            val newTodo = for {
+              n: game.AttackerDelayedObservation <- delayedTodo
+              s <- game.successors(n)
+              if s.isInstanceOf[game.AttackerDelayedObservation] && game.isAttackerWinningPrice(s, price)
+            } yield s.asInstanceOf[game.AttackerDelayedObservation]
+            delayedTodo ++ newTodo
+        }, (todo1, todo2) => todo1.size == todo2.size) (Set(ado))
+        println(attackerDelayedComponent)
         val successorFormulas =
           for {
-            s <- game.successors(node)
-            update = game.weight(node, s)
+            n @ game.AttackerDelayedObservation(p0, qq0) <- attackerDelayedComponent
+            s <- game.successors(n)
+            update = game.weight(n, s)
             newPrice = update.applyEnergyUpdate(price)
-            if game.isAttackerWinningPrice(s, newPrice)
+            if game.isAttackerWinningPrice(s, newPrice) && !s.isInstanceOf[game.AttackerDelayedObservation]
           } yield s match {
             case game.AttackerObservation(p1, qq1) =>
               val possibleRestoredActions = for {
@@ -68,8 +80,6 @@ class EnergyWeakSpectroscopy[S, A, L] (
                 a <- possibleRestoredActions.headOption.toList // just take first option
                 postForm <- buildHMLWitness(game, s, newPrice)
               } yield HennessyMilnerLogic.Observe(a, postForm)
-            case game.AttackerDelayedObservation(p1, qq1) =>
-              buildHMLWitness(game, s, newPrice)
             case game.DefenderConjunction(p1, qq1) =>
               buildHMLWitness(game, s, newPrice)
             case game.DefenderStableConjunction(p1, qq1) =>
