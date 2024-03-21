@@ -3,13 +3,21 @@ package io.equiv.eqfiddle.tool.control
 import io.equiv.eqfiddle.tool.arch.Action
 import io.equiv.eqfiddle.tool.arch.Control
 import io.equiv.eqfiddle.tool.model.NodeID
+import io.equiv.eqfiddle.ccs.Syntax
 
 class Pipeline(val main: Control) extends ModelComponent {
   
   var pipelineSource = Array[String]()
   var operations = Map[String, StructureOperation]()
-  var currentStep = 0
-  
+  var currentStep = -1
+  var operationLines = List[Pipeline.LineInfo]()
+  val supportedOperations = Map(
+    "compare" -> "Compare two processes with respect to all strong equivalences",
+    "compareSilent" -> "Compare two processes with respect to all weak equivalences",
+    "minimize" -> "Explore quotient minimizations with respect to all strong equivalences",
+    "characterize" -> "What is special about a process when compared with the others"
+  )
+
   def changePipeline(code: String) = {
     pipelineSource = code.split("\n")
   }
@@ -38,19 +46,23 @@ class Pipeline(val main: Control) extends ModelComponent {
   }
   
   def resetPipeline() = {
-    setStep(0)
+    setStep(-1)
   }
   
   def setStep(step: Int) = {
     currentStep = step
-    broadcast(Pipeline.PipelineStatusChange(List(Pipeline.CurrentLine(currentStep))))
+    if (currentStep >= 0) {
+      broadcast(Pipeline.PipelineStatusChange(operationLines ++ List(Pipeline.CurrentLine(currentStep))))
+    } else {
+      broadcast(Pipeline.PipelineStatusChange(operationLines))
+    }
   }
   
   def runMetaRunner(meta: String, info: String, line: Int): Boolean = meta match {
     case "compare" =>
       val states = info.split(",").map(_.trim())
       if (states.length == 2) {
-        broadcast(Pipeline.PipelineStatusChange(List(Pipeline.CurrentLine(line))))
+        broadcast(Pipeline.PipelineStatusChange(operationLines ++ List(Pipeline.CurrentLine(line))))
         main.dispatchAction(Structure.StructureExamineEquivalences(NodeID(states(0)), NodeID(states(1))))
         true
       } else {
@@ -59,29 +71,36 @@ class Pipeline(val main: Control) extends ModelComponent {
     case "compareSilent" =>
       val states = info.split(",").map(_.trim())
       if (states.length == 2) {
-        broadcast(Pipeline.PipelineStatusChange(List(Pipeline.CurrentLine(line))))
+        broadcast(Pipeline.PipelineStatusChange(operationLines ++ List(Pipeline.CurrentLine(line))))
         main.dispatchAction(Structure.StructureExamineEquivalences(NodeID(states(0)), NodeID(states(1)), silentSpectrum = true))
         true
       } else {
         false
       }
     case "minimize" =>
-      broadcast(Pipeline.PipelineStatusChange(List(Pipeline.CurrentLine(line))))
+      broadcast(Pipeline.PipelineStatusChange(operationLines ++ List(Pipeline.CurrentLine(line))))
       main.dispatchAction(Structure.StructureMinimize())
       true
     case "characterize" =>
-      broadcast(Pipeline.PipelineStatusChange(List(Pipeline.CurrentLine(line))))
+      broadcast(Pipeline.PipelineStatusChange(operationLines ++ List(Pipeline.CurrentLine(line))))
       main.dispatchAction(Structure.StructureCharacterize(NodeID(info.trim())))
       true
     case _ =>
       false
   }
 
+
   def notify(change: ModelComponent.Change) = change match {
     case Structure.StructureOperationsChanged(ops) =>
       operations = ops toMap
     case Structure.StructureChange(_) =>
       resetPipeline()
+    case Source.SourceChange(_, ast) =>
+      operationLines = ast.defs.collect {
+        case Syntax.MetaDeclaration(key, value, pos) if supportedOperations.contains(key) =>
+          Pipeline.OperationLine(pos.line, supportedOperations(key))
+      }
+      
     case _ => 
   }
 }
@@ -90,6 +109,7 @@ object Pipeline {
   
   abstract class LineInfo(line: Int)
   case class CurrentLine(line: Int) extends LineInfo(line)
+  case class OperationLine(line: Int, explanation: String) extends LineInfo(line)
   
   case class PipelineStatusChange(pipelineStatus: List[LineInfo]) extends ModelComponent.Change
   
