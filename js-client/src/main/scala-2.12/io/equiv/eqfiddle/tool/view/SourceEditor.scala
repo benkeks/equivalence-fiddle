@@ -229,7 +229,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
       sourceDoc.setValue(code)
     }
   }
-  
+
   def setErrors(code: String, errs: List[Source.Problem]) {
     setCode(code)
     editor.clearGutter(PROBLEM_GUTTER)
@@ -239,6 +239,10 @@ class SourceEditor(val main: Control) extends ViewComponent {
       problemNode.setAttribute("title", msg)
       editor.setGutterMarker(line - 1, PROBLEM_GUTTER, problemNode)
     }
+  }
+
+  def setRunners(runners: List[(String, String, Int)]) = {
+    this.runners = runners
   }
   
   def setSamples(samples: List[Samples.Example]) {
@@ -286,6 +290,12 @@ class SourceEditor(val main: Control) extends ViewComponent {
         node.setAttribute("class", "es-pipeline-current")
         node.setAttribute("title", "current line")
         editor.setGutterMarker(line, PROBLEM_GUTTER, node)
+      case Pipeline.OperationLine(line, explanation) =>
+        currentPipelineLine = line
+        val node = dom.document.createElement("div").asInstanceOf[HTMLElement]
+        node.setAttribute("class", "es-pipeline-operation")
+        node.setAttribute("title", explanation)
+        editor.setGutterMarker(line, PROBLEM_GUTTER, node)
     }
   }
   
@@ -323,7 +333,9 @@ class SourceEditor(val main: Control) extends ViewComponent {
   def notify(change: ModelComponent.Change) = change match {
     case Source.SourceChange(source, ast) =>
       setCode(source)
-      runners = ast.defs.collect{ case MetaDeclaration(key, value, pos) => (key, value, pos.line)}
+      setRunners(ast.defs.collect {
+          case MetaDeclaration(key, value, pos) => (key, value, pos.line)
+      })
     case Source.ProblemChange(source, errs) =>
       setErrors(source, errs)
     case Source.ExamplesChange(samples) => 
