@@ -66,6 +66,7 @@ class Pipeline(val main: Control) extends ModelComponent {
         main.dispatchAction(Structure.StructureExamineEquivalences(NodeID(states(0)), NodeID(states(1))))
         true
       } else {
+        throw new Exception("Need two process names as arguments. @compare \"proc1, proc2\"")
         false
       }
     case "compareSilent" =>
@@ -75,6 +76,7 @@ class Pipeline(val main: Control) extends ModelComponent {
         main.dispatchAction(Structure.StructureExamineEquivalences(NodeID(states(0)), NodeID(states(1)), silentSpectrum = true))
         true
       } else {
+        throw new Exception("Need two process names as arguments. @compareSilent \"proc1, proc2\"")
         false
       }
     case "minimize" =>
