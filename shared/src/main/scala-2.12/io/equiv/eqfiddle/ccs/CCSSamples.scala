@@ -521,21 +521,21 @@ P58 = a.(tau.b + b + tau)
   val stableInstableAbstraction =
     """|@comment "P1t/P2t resemble P1/P2 with all occurrences of c renamed to tau"
        |
-       |CB = (c.CB + b)
-       |CD = (c.CD + d)
-       |CBD = (c.CBD + c.CDB + b)
-       |CDB = (c.CDB + c.CBD + d)
+       |CA = (idle.CA + a)
+       |CB = (idle.CB + b)
+       |CIA = (idle.CIB + idle.CIA + a)
+       |CIB = (idle.CIA + idle.CIB + b)
        |
-       |P1 = (a.CB + a.CD)
-       |P2 = (a.CBD + a.CDB)
+       |P1 = (op.CA + op.CB)
+       |P2 = (op.CIA + op.CIB)
        |
+       |tauA = (tau.tauA + a)
        |tauB = (tau.tauB + b)
-       |tauD = (tau.tauD + d)
-       |tauBD = (tau.tauBD + tau.tauDB + b)
-       |tauDB = (tau.tauDB + tau.tauBD + d)
+       |tauIA = (tau.tauIB + tau.tauIA + a)
+       |tauIB = (tau.tauIA + tau.tauIB + b)
        |
-       |P1t = (a.tauB + a.tauD)
-       |P2t = (a.tauBD + a.tauDB)
+       |P1t = (op.tauA + op.tauB)
+       |P2t = (op.tauIA + op.tauIB)
        |
        |@compareSilent "P1, P2"
        |@compareSilent "P1t, P2t"
