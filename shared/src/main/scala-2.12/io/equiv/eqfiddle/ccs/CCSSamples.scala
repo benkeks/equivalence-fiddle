@@ -519,34 +519,34 @@ P58 = a.(tau.b + b + tau)
        |""".stripMargin
 
   val stableInstableAbstraction =
-    """|@comment "P1t/P2t resemble P1/P2 with all occurrences of c renamed to tau"
+    """|@comment "Pte/Ptl resemble Pe/Pl with all occurrences of idle renamed to tau"
        |
-       |CA = (idle.CA + a)
-       |CB = (idle.CB + b)
-       |CIA = (idle.CIB + idle.CIA + a)
-       |CIB = (idle.CIA + idle.CIB + b)
+       |Ae = (idle.Ae + a)
+       |Be = (idle.Be + b)
+       |Al = (idle.Bl + idle.Al + a)
+       |Bl = (idle.Al + idle.Bl + b)
        |
-       |P1 = (op.CA + op.CB)
-       |P2 = (op.CIA + op.CIB)
+       |Pe = (op.Ae + op.Be)
+       |Pl = (op.Al + op.Bl)
        |
-       |tauA = (tau.tauA + a)
-       |tauB = (tau.tauB + b)
-       |tauIA = (tau.tauIB + tau.tauIA + a)
-       |tauIB = (tau.tauIA + tau.tauIB + b)
+       |Ate = (tau.Ate + a)
+       |Bte = (tau.Bte + b)
+       |Atl = (tau.Btl + tau.Atl + a)
+       |Btl = (tau.Atl + tau.Btl + b)
        |
-       |P1t = (op.tauA + op.tauB)
-       |P2t = (op.tauIA + op.tauIB)
+       |Pte = (op.Ate + op.Bte)
+       |Ptl = (op.Atl + op.Btl)
        |
-       |@compareSilent "P1, P2"
-       |@compareSilent "P1t, P2t"
+       |@compareSilent "Pe, Pl"
+       |@compareSilent "Pte, Ptl"
        |
-       |@comment "P1/P2 should be (instable&stable) readiness equivalent"
-       |@comment "P1t/P2t are stable, but not instable (!) failure (and readiness) equivalent"
+       |@comment "Pe/Pl should be (instable&stable) readiness equivalent"
+       |@comment "Pte/Ptl are stable, but not instable (!) failure (and readiness) equivalent"
        |
-       |P1(x=200, y=10)
-       |P2(x=500, y=10)
-       |P1t(x=200, y=450)
-       |P2t(x=500, y=450)
+       |Pe(x=200, y=10)
+       |Pl(x=500, y=10)
+       |Pte(x=200, y=450)
+       |Ptl(x=500, y=450)
        |""".stripMargin
 
   val namedSamples = List[Samples.Example](
