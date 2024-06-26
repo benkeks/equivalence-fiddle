@@ -24,8 +24,18 @@ trait EnergyGame extends SimpleGame with GameLazyDecision[EnergyGame.Energy] {
         } yield attackerVictoryPrices(s).map(w.unapplyEnergyUpdate(_))
         val productMoves =
           possibleMoves.reduceLeft(
-            (b, a) => b.flatMap(i => a.map(j => i lub j)))
+            (b, a) => filterMinimal(b.flatMap(i => a.map(j => i lub j))))
         productMoves.toSet
+    }
+  }
+
+  private def filterMinimal(energies: List[Energy]) = {
+    // if energy list becomes big, prune dominated energies on-the-fly at defender positions
+    // to prevent exponential blowup of options.
+    if (energies.size > 2) {
+      energies.filterNot(e1 => energies.exists(e2 => e2 < e1))
+    } else {
+      energies
     }
   }
 }
