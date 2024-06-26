@@ -5,8 +5,8 @@ case class ObservationClassEnergyWeak(
   observationHeight: Int = 0,
   /** the maximal amount of branching conjunctions when descending into a formula */
   branchingConjunctionLevels: Int = 0,
-  /** the maximal amount of instable conjunctions when descending into a formula */
-  instableConjunctionLevels: Int = 0,
+  /** the maximal amount of unstable conjunctions when descending into a formula */
+  unstableConjunctionLevels: Int = 0,
   /** the maximal amount of stable conjunctions when descending into a formula */
   stableConjunctionLevels: Int = 0,
   /** number of “strong” conjunctions among the conjunctionLevels */
@@ -29,7 +29,7 @@ case class ObservationClassEnergyWeak(
         } else if (
             this.observationHeight >= that.observationHeight &&
             this.branchingConjunctionLevels >= that.branchingConjunctionLevels &&
-            this.instableConjunctionLevels >= that.instableConjunctionLevels &&
+            this.unstableConjunctionLevels >= that.unstableConjunctionLevels &&
             this.stableConjunctionLevels >= that.stableConjunctionLevels &&
             this.immediateConjunctionLevels >= that.immediateConjunctionLevels &&
             this.revivalHeight >= that.revivalHeight &&
@@ -40,7 +40,7 @@ case class ObservationClassEnergyWeak(
         } else if (
             this.observationHeight <= that.observationHeight &&
             this.branchingConjunctionLevels <= that.branchingConjunctionLevels &&
-            this.instableConjunctionLevels <= that.instableConjunctionLevels &&
+            this.unstableConjunctionLevels <= that.unstableConjunctionLevels &&
             this.stableConjunctionLevels <= that.stableConjunctionLevels &&
             this.immediateConjunctionLevels <= that.immediateConjunctionLevels &&
             this.revivalHeight <= that.revivalHeight &&
@@ -60,7 +60,7 @@ case class ObservationClassEnergyWeak(
       ObservationClassEnergyWeak(
         Integer.max(this.observationHeight, that.observationHeight),
         Integer.max(this.branchingConjunctionLevels, that.branchingConjunctionLevels),
-        Integer.max(this.instableConjunctionLevels, that.instableConjunctionLevels),
+        Integer.max(this.unstableConjunctionLevels, that.unstableConjunctionLevels),
         Integer.max(this.stableConjunctionLevels, that.stableConjunctionLevels),
         Integer.max(this.immediateConjunctionLevels, that.immediateConjunctionLevels),
         Integer.max(this.revivalHeight, that.revivalHeight),
@@ -76,7 +76,7 @@ case class ObservationClassEnergyWeak(
       ObservationClassEnergyWeak(
         Integer.min(this.observationHeight, that.observationHeight),
         Integer.min(this.branchingConjunctionLevels, that.branchingConjunctionLevels),
-        Integer.min(this.instableConjunctionLevels, that.instableConjunctionLevels),
+        Integer.min(this.unstableConjunctionLevels, that.unstableConjunctionLevels),
         Integer.min(this.stableConjunctionLevels, that.stableConjunctionLevels),
         Integer.min(this.immediateConjunctionLevels, that.immediateConjunctionLevels),
         Integer.min(this.revivalHeight, that.revivalHeight),
@@ -90,7 +90,7 @@ case class ObservationClassEnergyWeak(
   override def toTuple = (
     observationHeight,
     branchingConjunctionLevels,
-    instableConjunctionLevels,
+    unstableConjunctionLevels,
     stableConjunctionLevels,
     immediateConjunctionLevels,
     revivalHeight,
@@ -103,14 +103,14 @@ case class ObservationClassEnergyWeak(
 object ObservationClassEnergyWeak {
   val INFTY = Integer.MAX_VALUE
 
-  // observationHeight, branchingConjLevels, instableConjs, stableConjs, immediateConjs, revivalHeight, positiveConjHeight, negativeConjHeight, negationLevels
+  // observationHeight, branchingConjLevels, unstableConjs, stableConjs, immediateConjs, revivalHeight, positiveConjHeight, negativeConjHeight, negationLevels
   // The Linear-time Branching-time Spectrum
   val BaseLTBTS = List( 
     "enabledness" ->             ObservationClassEnergyWeak(    1,     0,     0,     0,     0,     0,    0,    0,    0),
     "traces" ->                  ObservationClassEnergyWeak(INFTY,     0,     0,     0,     0,     0,    0,    0,    0),
-    "instable-failure" ->        ObservationClassEnergyWeak(INFTY,     0,     1,     0,     0,     0,    0,    1,    1),
+    "unstable-failure" ->        ObservationClassEnergyWeak(INFTY,     0,     1,     0,     0,     0,    0,    1,    1),
     "failure" ->                 ObservationClassEnergyWeak(INFTY,     0,     0,     1,     0,     0,    0,    1,    1),
-    "instable-readiness" ->      ObservationClassEnergyWeak(INFTY,     0,     1,     0,     0,     1,    1,    1,    1),
+    "unstable-readiness" ->      ObservationClassEnergyWeak(INFTY,     0,     1,     0,     0,     1,    1,    1,    1),
     "readiness" ->               ObservationClassEnergyWeak(INFTY,     0,     0,     1,     0,     1,    1,    1,    1),
   //"failure-trace" ->           ObservationClassEnergyWeak(INFTY,     0,     0, INFTY,     0, INFTY,    0,    1,    1),
   //"ready-trace" ->             ObservationClassEnergyWeak(INFTY,     0,     0, INFTY,     0, INFTY,    1,    1,    1),
@@ -166,7 +166,7 @@ object ObservationClassEnergyWeak {
           ObservationClassEnergyWeak(
             observationHeight = allClasses.map(_.observationHeight).max,
             branchingConjunctionLevels = allClasses.map(_.branchingConjunctionLevels).max + (if (isBranchingObs > 0) 1 else 0),
-            instableConjunctionLevels = allClasses.map(_.instableConjunctionLevels).max + (if (stabilityChecks.nonEmpty) 0 else 1),
+            unstableConjunctionLevels = allClasses.map(_.unstableConjunctionLevels).max + (if (stabilityChecks.nonEmpty) 0 else 1),
             stableConjunctionLevels = allClasses.map(_.stableConjunctionLevels).max + (if (stabilityChecks.nonEmpty) 1 else 0),
             immediateConjunctionLevels = allClasses.map(_.immediateConjunctionLevels).max + 1,
             revivalHeight = allClasses.map(_.revivalHeight).max,
@@ -212,7 +212,7 @@ object ObservationClassEnergyWeak {
         ObservationClassEnergyWeak(
           observationHeight = andThenClass.observationHeight,
           branchingConjunctionLevels = andThenClass.branchingConjunctionLevels,
-          instableConjunctionLevels = andThenClass.instableConjunctionLevels,
+          unstableConjunctionLevels = andThenClass.unstableConjunctionLevels,
           stableConjunctionLevels = andThenClass.stableConjunctionLevels,
           immediateConjunctionLevels = andThenClass.immediateConjunctionLevels -
             (if (andThenClass.observationHeight <= 0 && andThenClass.stableConjunctionLevels <= 0) 0 else 1), // decreasing!

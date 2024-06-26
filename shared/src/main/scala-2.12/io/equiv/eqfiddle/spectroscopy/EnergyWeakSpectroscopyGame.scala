@@ -8,7 +8,7 @@ import io.equiv.eqfiddle.ts.WeakTransitionSystem
 class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], energyCap: Int = Int.MaxValue)
   extends SimpleGame with EnergyGame {
 
-  // obs, branchingConj, instableConj, stableConj, immediateConj, revivals, positiveHeight, negativeHeight, negations
+  // obs, branchingConj, unstableConj, stableConj, immediateConj, revivals, positiveHeight, negativeHeight, negations
   private val NoEnergyUpdate             = new EnergyGame.EnergyUpdate(Array( 0, 0, 0, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
   private val ObsEnergyUpdate            = new EnergyGame.EnergyUpdate(Array(-1, 0, 0, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
   private val InstableConjEnergyUpdate   = new EnergyGame.EnergyUpdate(Array( 0, 0,-1, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
@@ -88,10 +88,10 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
       if (optimizeSymmetryDefWins && (qq0 contains p0)) {
         List()
       } else {
-        val instableConjMove = DefenderConjunction(p0, qq0)
+        val unstableConjMove = DefenderConjunction(p0, qq0)
         if (optimizeAttackerWins && qq0.isEmpty) {
           // prioritize instant wins because of stuck defender
-          List(instableConjMove)
+          List(unstableConjMove)
         } else {
           val stableConjMove = if (ts.isStable(p0)) {
             List(DefenderStableConjunction(p0, qq0.filter(ts.isStable(_))))
@@ -116,7 +116,7 @@ class EnergyWeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
           } yield {
             DefenderBranchingConjunction(p0, a, p1, qq0 -- qq0a, qq0a)
           }
-          dn ++ List(instableConjMove) ++ branchingConjs ++ stableConjMove
+          dn ++ List(unstableConjMove) ++ branchingConjs ++ stableConjMove
         }
       }
     case AttackerBranchingObservation(p0, qq0) =>

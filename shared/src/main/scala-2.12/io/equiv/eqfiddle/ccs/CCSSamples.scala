@@ -518,7 +518,7 @@ P58 = a.(tau.b + b + tau)
        |@compareSilent "A1, A2"
        |""".stripMargin
 
-  val stableInstableAbstraction =
+  val stableUnstableAbstraction =
     """|@comment "Pte/Ptl resemble Pe/Pl with all occurrences of idle renamed to tau"
        |
        |Ae = (idle.Ae + a)
@@ -540,8 +540,8 @@ P58 = a.(tau.b + b + tau)
        |@compareSilent "Pe, Pl"
        |@compareSilent "Pte, Ptl"
        |
-       |@comment "Pe/Pl should be (instable&stable) readiness equivalent"
-       |@comment "Pte/Ptl are stable, but not instable (!) failure (and readiness) equivalent"
+       |@comment "Pe/Pl should be (unstable&stable) readiness equivalent"
+       |@comment "Pte/Ptl are stable, but not unstable (!) failure (and readiness) equivalent"
        |
        |Pe(x=200, y=10)
        |Pl(x=500, y=10)
@@ -577,9 +577,9 @@ P58 = a.(tau.b + b + tau)
     Samples.Example("weak-edge-cases-david",
       "Weak Edge Cases by David",
       davidsEdgeCases),
-    Samples.Example("stable-instable-abstraction",
-      "Stable vs. instable abstraction",
-      stableInstableAbstraction),
+    Samples.Example("stable-unstable-abstraction",
+      "Stable vs. unstable abstraction",
+      stableUnstableAbstraction),
     Samples.Example("peterson-mutex",
       "Peterson Mutual exclusion",
       petersonMutex),
