@@ -22,10 +22,30 @@ trait EnergyGame extends SimpleGame with GameLazyDecision[EnergyGame.Energy] {
           s <- successors(node)
           w = weight(node, s)
         } yield attackerVictoryPrices(s).map(w.unapplyEnergyUpdate(_))
+        if (possibleMoves.isEmpty || possibleMoves.exists(_.isEmpty)) {
+          Nil // return empty if one defender option is un-winnable for attacker
+        } else {
+          var productMoves = possibleMoves.head
+          for (paretoFront <- possibleMoves.tail) {
+            var newMoves: List[Energy] = Nil
+            for (otherMove <- paretoFront; knownMove <- productMoves) {
+              val productOption = knownMove lub otherMove
+              // only include those new moves that are not dominated by one that already exists.
+              if (!newMoves.exists(m => m <= productOption)) {
+                newMoves = productOption :: newMoves
+              }
+            }
+            productMoves = newMoves
+          }
+          productMoves
+        }
+        /*
+        // functional implementation:
         val productMoves =
           possibleMoves.reduceLeft(
-            (b, a) => filterMinimal(b.flatMap(i => a.map(j => i lub j))))
+            (b, a) => (b.flatMap(i => a.map(j => i lub j))))
         productMoves.toSet
+        */
     }
   }
 
