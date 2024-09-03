@@ -21,6 +21,7 @@ object Syntax {
       case Label(n, p0) => Label(n, pos)
       case Prefix(l, proc, p0) => Prefix(l, proc, pos)
       case Restrict(lls, proc, p0) => Restrict(lls, proc, pos)
+      case Renaming(rns, proc, p0) => Renaming(rns, proc, pos)
       case Parallel(procs, p0) => Parallel(procs, pos)
       case Choice(procs, p0) => Choice(procs, pos)
       case ProcessName(l, p0) => ProcessName(l, pos)
@@ -35,6 +36,7 @@ object Syntax {
         case Label(n, p0) => Label(n, Pos0)
         case Prefix(l, proc, p0) => Prefix(l, proc.prunePos, Pos0)
         case Restrict(lls, proc, p0) => Restrict(lls, proc.prunePos, Pos0)
+        case Renaming(rns, proc, p0) => Renaming(rns, proc.prunePos, Pos0)
         case Parallel(procs, p0) => Parallel(procs map (_.prunePos), Pos0)
         case Choice(procs, p0) => Choice(procs map (_.prunePos), Pos0)
         case ProcessName(l, p0) => ProcessName(l, Pos0)
@@ -97,11 +99,24 @@ object Syntax {
     }
   }
 
-    case class Restrict(val names: List[Label], val proc: ProcessExpression, pos: Pos = Pos0) extends ProcessExpression(pos) {
-    
+  case class Restrict(val names: List[Label], val proc: ProcessExpression, pos: Pos = Pos0) extends ProcessExpression(pos) {
+
     override def toString() = {
       val ps = proc.toString()
       (if (ps.contains(" ")) "(" + ps + ")" else ps) + names.mkString(" \\ {",",","}")
+    }
+  }
+
+  case class Renaming(val renamings: List[(Label, Label)], val proc: ProcessExpression, pos: Pos = Pos0) extends ProcessExpression(pos) {
+
+    override def toString() = {
+      val ps = proc.toString()
+      val renamingString = if (renamings.forall(_._2.name == "tau")) {
+        renamings.map(_._1).mkString(" \\csp {",",","}")
+      } else {
+        renamings.map { case (from, to) => s"$from -> $to" }.mkString("[", ",", "]")
+      }
+      (if (ps.contains(" ")) "(" + ps + ")" else ps) + renamingString
     }
   }
 

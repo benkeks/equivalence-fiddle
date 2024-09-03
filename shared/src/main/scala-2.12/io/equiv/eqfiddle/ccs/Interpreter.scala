@@ -141,6 +141,19 @@ class Interpreter[S, A, L](
             (a, Syntax.Restrict(names, p, pos))
         }
       }
+    case Syntax.Renaming(rns, proc, pos) =>
+      val aRns = rns.map { case (from, to) => (arrowLabeling(Some(from)).get, arrowLabeling(Some(to)).get) }
+      for {
+        (a, p) <- semantics(procEnv)(proc)
+      } yield {
+        val action = aRns.find(_._1 == a).map(_._2).getOrElse(a)
+        p match {
+          case Syntax.Renaming(rnsC, procC, posC) =>
+            (action, Syntax.Renaming(rns ++ (rnsC.filterNot { case (from, to) => rns.contains(from) } ), procC, pos) )
+          case other =>
+            (action, Syntax.Renaming(rns, p, pos))
+        }
+      }
     case Syntax.ProcessName(l, pos) =>
       val continuation = procEnv.getOrElse(
         l.name,

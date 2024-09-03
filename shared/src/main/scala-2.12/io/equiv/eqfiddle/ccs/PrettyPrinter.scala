@@ -37,7 +37,14 @@ class PrettyPrinter {
     case Parallel(procs, pos) =>
       procs.map(show(_)).mkString("(", " | ", ")")
     case Restrict(names, proc, pos) =>
-      show(proc) + " \\ " + names.map(show(_)).mkString("{", ", ", "}") 
+      show(proc) + " \\ " + names.map(show(_)).mkString("{", ", ", "}")
+    case Renaming(renamings, proc, pos) =>
+      val renamingString = if (renamings.forall(_._2.name == "tau")) {
+        renamings.map(_._1).mkString(" \\csp {",",","}")
+      } else {
+        renamings.map { case (from, to) => s"$from -> $to" }.mkString("[", ",", "]")
+      }
+      show(proc) + renamingString
     case ProcessName(l, p0) =>
       show(l)
     case Label(l, p0) =>

@@ -199,6 +199,11 @@ class Parser(val input: String) extends Parsing {
             case (labels, rt) =>
               ParseSuccess(Restrict(labels, proc, proc.position), rt)
           }
+        case Backslash(_) :: Identifier("csp", p) :: CurlyBracketOpen(_) :: in5 =>
+          parseLabelSet(in5) flatMap {
+            case (labels, rt) =>
+              ParseSuccess(Renaming(labels.map(l => (l, Label("tau", p))), proc, proc.position), rt)
+          }
         case other =>
           ParseFail("Expected process continuation.", other)
       }
