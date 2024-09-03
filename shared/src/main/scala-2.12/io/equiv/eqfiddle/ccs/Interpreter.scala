@@ -134,13 +134,24 @@ class Interpreter[S, A, L](
         (a, p) <- semantics(procEnv)(proc)
         if !aNames.contains(toInput(a))
       } yield {
-        (a, Syntax.Restrict(names, p, pos))
+        p match {
+          case Restrict(namesC, procC, posC) =>
+            (a, Syntax.Restrict(names ++ (namesC.filterNot(names.contains(_))), procC, pos) )
+          case other =>
+            (a, Syntax.Restrict(names, p, pos))
+        }
       }
     case Syntax.ProcessName(l, pos) =>
-      semantics(procEnv)(
-        procEnv.getOrElse(
-          l.name,
-          Syntax.Prefix(l, Syntax.NullProcess(pos), pos))
+      val continuation = procEnv.getOrElse(
+        l.name,
+        Syntax.Prefix(l, Syntax.NullProcess(pos), pos)
       )
+      if (continuation == e) {
+        // direct loop
+        System.err.println(s"Unguarded recursion at ${e.position.line}")
+        List()
+      } else {
+        semantics(procEnv)(continuation)
+      }
   }
 }
