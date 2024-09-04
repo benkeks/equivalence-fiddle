@@ -25,6 +25,7 @@ import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
 import io.equiv.eqfiddle.algo.WeakTransitionSaturation
 import io.equiv.eqfiddle.algo.sigref.Bisimilarity
 import io.equiv.eqfiddle.algo.transform.BuildQuotientSystem
+import io.equiv.eqfiddle.hml.ObservationClass
 
 class Structure(val main: Control) extends ModelComponent {
 
@@ -108,6 +109,8 @@ class Structure(val main: Control) extends ModelComponent {
         case AlgorithmLogging.LogRichRelation(rel, comment) =>
           broadcast(Structure.StructureCommentChange(comment))
           broadcast(Structure.StructureRichRelationChange(rel))
+        case AlgorithmLogging.LogSpectrum(spectrum, comment) =>
+          broadcast(Structure.StructureSpectrumChange(spectrum, comment))
       }
       currentReplayStep += 1
       true
@@ -154,6 +157,8 @@ object Structure {
   case class StructureRichRelationChange(relation: LabeledRelation[(Set[NodeID], String, Set[NodeID]), String]) extends ModelComponent.Change
 
   case class StructureCommentChange(comment: String) extends ModelComponent.Change
+
+  case class StructureSpectrumChange[OC <: ObservationClass](spectrum: Spectrum[OC], comment: String) extends ModelComponent.Change
 
   case class StructureReplayChange(replay: List[() => AlgorithmLogging.LogEntry[NodeID]])
     extends ModelComponent.Change
@@ -333,7 +338,8 @@ object Structure {
           val replay = List(
             () => AlgorithmLogging.LogRelation(result.toPreorderingRelation(), s"Preordered by:<div class='preorderings'>$preords</div>"),
             () => AlgorithmLogging.LogRelation(result.toDistinctionRelation(), s"Distinguished by:<div class='distinctions'>$dists</div>"),
-            () => AlgorithmLogging.LogRelation(result.toEquivalencesRelation(), s"Equated by:<div class='equations'>$equations</div>")
+            () => AlgorithmLogging.LogRelation(result.toEquivalencesRelation(), s"Equated by:<div class='equations'>$equations</div>"),
+            () => AlgorithmLogging.LogSpectrum[NodeID, ObservationClass](result.spectrum, s"Show spectrum.")
           )
           structure.setReplay(replay)
           structure.main.doAction(StructureDoReplayStep(), structure)
