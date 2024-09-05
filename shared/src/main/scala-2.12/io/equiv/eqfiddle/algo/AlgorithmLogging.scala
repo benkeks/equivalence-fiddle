@@ -45,7 +45,7 @@ object AlgorithmLogging {
 
   case class LogRichRelation[S](rel: LabeledRelation[(Set[S], String, Set[S]), String], comment: String) extends LogEntry[S]
 
-  case class LogSpectrum[S, OC <: ObservationClass](spectrum: Spectrum[OC], comment: String) extends LogEntry[S]
+  case class LogSpectrum[S, OC <: ObservationClass](spectrum: Spectrum[OC], preords: List[String], equations: List[String], distCoordsLR: List[OC], distCoordsRL: List[OC], comment: String) extends LogEntry[S]
   
   var loggingActive = true
   

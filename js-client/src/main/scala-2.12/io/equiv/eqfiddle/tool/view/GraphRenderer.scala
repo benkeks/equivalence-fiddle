@@ -207,10 +207,6 @@ class GraphRenderer(val main: Control)
       .classed("hidden", comment.isEmpty())
   }
 
-  def showSpectrum(spectrum: Spectrum[ObservationClass], componentId: String) = {
-    val spectrumView = new SpectrumView(spectrum, componentId)
-  }
-
   def colorize(partition: Coloring[NodeID]) {
     val colorScale = d3.scale.category20()
     nodeViews.style("stroke", { (d: GraphNode, i: Int) =>
@@ -266,9 +262,9 @@ class GraphRenderer(val main: Control)
       setStructure()
     case Structure.StructureCommentChange(comment) =>
       setComment(comment)
-    case Structure.StructureSpectrumChange(spectrum, comment) =>
+    case Structure.StructureSpectrumChange(spectrum, preords, equations, distCoordsLR, distCoordsRL, comment) =>
       setComment(comment + """<div id="es-spectrum-view"></div>""")
-      showSpectrum(spectrum, "#es-spectrum-view")
+      val spectrumView = new SpectrumView(spectrum, preords, equations, distCoordsLR, distCoordsRL, "#es-spectrum-view")
     case _ =>
       
   }

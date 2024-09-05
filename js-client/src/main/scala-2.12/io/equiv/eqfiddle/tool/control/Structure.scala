@@ -38,22 +38,7 @@ class Structure(val main: Control) extends ModelComponent {
   val operations = HashMap[String, StructureOperation]()
 
   def init() {
-    // registerOperation(new StructureOperation.FixedPointCoupledSimilarityAnalyzer)
-    // registerOperation(new StructureOperation.GameCoupledSimilarityAnalyzer)
-    // registerOperation(new StructureOperation.GameCoupledSimilarityPlainAnalyzer)
 
-    // registerOperation(new StructureOperation.GameContrasimilarityExponentialAnalyzer)
-
-    // registerOperation(new StructureOperation.SigrefBisimilarityAnalyzer)
-    // registerOperation(new StructureOperation.SigrefWeakBisimilarityAnalyzer)
-
-    // registerOperation(new StructureOperation.NaiveTransitiveTauClosure)
-    // registerOperation(new StructureOperation.NaiveReflexiveTauClosure)
-
-    // registerOperation(new StructureOperation.WeakStepRelationClosure)
-
-    // registerOperation(new StructureOperation.TauLoopCompressor)
-    // registerOperation(new StructureOperation.QuotientBuilder)
   }
 
   def registerOperation(op: StructureOperation) = {
@@ -109,8 +94,8 @@ class Structure(val main: Control) extends ModelComponent {
         case AlgorithmLogging.LogRichRelation(rel, comment) =>
           broadcast(Structure.StructureCommentChange(comment))
           broadcast(Structure.StructureRichRelationChange(rel))
-        case AlgorithmLogging.LogSpectrum(spectrum, comment) =>
-          broadcast(Structure.StructureSpectrumChange(spectrum, comment))
+        case AlgorithmLogging.LogSpectrum(spectrum, preords, equations, distCoordsLR, distCoordsRL, comment) =>
+          broadcast(Structure.StructureSpectrumChange(spectrum, preords, equations, distCoordsLR, distCoordsRL, comment))
       }
       currentReplayStep += 1
       true
@@ -158,7 +143,8 @@ object Structure {
 
   case class StructureCommentChange(comment: String) extends ModelComponent.Change
 
-  case class StructureSpectrumChange[OC <: ObservationClass](spectrum: Spectrum[OC], comment: String) extends ModelComponent.Change
+  case class StructureSpectrumChange[OC <: ObservationClass](spectrum: Spectrum[OC], preords: List[String], equations: List[String],
+    distCoordsLR: List[OC], distCoordsRL: List[OC], comment: String) extends ModelComponent.Change
 
   case class StructureReplayChange(replay: List[() => AlgorithmLogging.LogEntry[NodeID]])
     extends ModelComponent.Change
@@ -328,22 +314,21 @@ object Structure {
         val result = algo.compute(List((n1, n2)), computeFormulas = true)
         println("Spectroscopy took: " + (Date.now - begin) + "ms.")
 
-        for {
-          res <- result.relationItems.find(r => r.left == n1 && r.right == n2)
-          SpectroscopyInterface.SpectroscopyResultItem(_, _, distinctions, preorderings) = res
-        } {
-          val dists = distinctions.map(d => d._1.toString() + d._3.map(_.name).mkString(" (", ",", ")")).mkString("<br>")
-          val preords = preorderings.map(_.name).mkString("<br>")
-          val equations = result.findEqs(n1, n2).map(_.name).mkString("<br>")
-          val replay = List(
-            () => AlgorithmLogging.LogRelation(result.toPreorderingRelation(), s"Preordered by:<div class='preorderings'>$preords</div>"),
-            () => AlgorithmLogging.LogRelation(result.toDistinctionRelation(), s"Distinguished by:<div class='distinctions'>$dists</div>"),
-            () => AlgorithmLogging.LogRelation(result.toEquivalencesRelation(), s"Equated by:<div class='equations'>$equations</div>"),
-            () => AlgorithmLogging.LogSpectrum[NodeID, ObservationClass](result.spectrum, s"Show spectrum.")
-          )
-          structure.setReplay(replay)
-          structure.main.doAction(StructureDoReplayStep(), structure)
-        }
+        val leftRightDists = result.foundDistinctionsWithCertificate(n1, n2).map(d => d._1.toString() + d._2.map(_.name).mkString(" (", ",", ")")).mkString("<br>")
+        val rightLeftDists = result.foundDistinctionsWithCertificate(n2, n1).map(d => d._1.toString() + d._2.map(_.name).mkString(" (", ",", ")")).mkString("<br>")
+        val preords = result.foundPreorders(n1, n2).map(_.name)
+        val equations = result.findEqs(n1, n2).map(_.name)
+        val distCoordsLR = result.foundDistinctionCoordinates(n1, n2)
+        val distCoordsRL = result.foundDistinctionCoordinates(n2, n1)
+        val replay = List(
+          () => AlgorithmLogging.LogRelation(result.toPreorderingRelation(), s"Preordered by:<div class='preorderings'>${preords.mkString("<br>")}</div>"),
+          () => AlgorithmLogging.LogRelation(result.toDistinctionRelation(), s"Left-right-distinguished by:<div class='distinctions'>$leftRightDists</div>"),
+          () => AlgorithmLogging.LogRelation(result.toDistinctionRelation(), s"Right-left-distinguished by:<div class='distinctions'>$rightLeftDists</div>"),
+          () => AlgorithmLogging.LogRelation(result.toEquivalencesRelation(), s"Equated by:<div class='equations'>${equations.mkString("<br>")}</div>"),
+          () => AlgorithmLogging.LogSpectrum[NodeID, ObservationClass](result.spectrum, preords, equations, distCoordsLR, distCoordsRL, s"Show spectrum.")
+        )
+        structure.setReplay(replay)
+        structure.main.doAction(StructureDoReplayStep(), structure)
 
         true
       } else {
