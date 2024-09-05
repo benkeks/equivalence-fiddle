@@ -314,6 +314,11 @@ object Structure {
         val result = algo.compute(List((n1, n2)), computeFormulas = true)
         println("Spectroscopy took: " + (Date.now - begin) + "ms.")
 
+        val gameString = result.meta.get("game") match {
+          case Some(game) if game != "" => s""" <a href="$game" target="_blank">View game.</a>"""
+          case _ => ""
+        }
+
         val leftRightDists = result.foundDistinctionsWithCertificate(n1, n2).map(d => d._1.toString() + d._2.map(_.name).mkString(" (", ",", ")")).mkString("<br>")
         val rightLeftDists = result.foundDistinctionsWithCertificate(n2, n1).map(d => d._1.toString() + d._2.map(_.name).mkString(" (", ",", ")")).mkString("<br>")
         val preords = result.foundPreorders(n1, n2).map(_.name)
@@ -325,7 +330,7 @@ object Structure {
           () => AlgorithmLogging.LogRelation(result.toDistinctionRelation(), s"Left-right-distinguished by:<div class='distinctions'>$leftRightDists</div>"),
           () => AlgorithmLogging.LogRelation(result.toDistinctionRelation(), s"Right-left-distinguished by:<div class='distinctions'>$rightLeftDists</div>"),
           () => AlgorithmLogging.LogRelation(result.toEquivalencesRelation(), s"Equated by:<div class='equations'>${equations.mkString("<br>")}</div>"),
-          () => AlgorithmLogging.LogSpectrum[NodeID, ObservationClass](result.spectrum, preords, equations, distCoordsLR, distCoordsRL, s"Show spectrum.")
+          () => AlgorithmLogging.LogSpectrum[NodeID, ObservationClass](result.spectrum, preords, equations, distCoordsLR, distCoordsRL, s"Show spectrum. $gameString")
         )
         structure.setReplay(replay)
         structure.main.doAction(StructureDoReplayStep(), structure)

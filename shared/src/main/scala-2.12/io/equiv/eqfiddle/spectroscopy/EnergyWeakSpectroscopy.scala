@@ -261,9 +261,9 @@ class EnergyWeakSpectroscopy[S, A, L] (
 
       val distinguishingNodeFormulasExtended = distinguishingNodeFormulas ++ bisimilarNodes
 
-      debugLog(
+      val gameString = debugLog(
         graphvizGameWithFormulas(hmlGame, hmlGame.attackerVictoryPrices.toMap, distinguishingNodeFormulasExtended),
-        asLink = "https://dreampuf.github.io/GraphvizOnline/#"
+        asLink = "https://edotor.net/?engine=dot#"//"https://dreampuf.github.io/GraphvizOnline/#"
       )
 
       val bestPreorders: Map[GameNode,List[Spectrum.EquivalenceNotion[ObservationClassEnergyWeak]]] =
@@ -288,7 +288,7 @@ class EnergyWeakSpectroscopy[S, A, L] (
 
       if (saveGameSize) gameSize = hmlGame.gameSize()
 
-      SpectroscopyInterface.SpectroscopyResult[S, A, ObservationClassEnergyWeak, HennessyMilnerLogic.Formula[A]](spectroResults.toList, spectrum)
+      SpectroscopyInterface.SpectroscopyResult[S, A, ObservationClassEnergyWeak, HennessyMilnerLogic.Formula[A]](spectroResults.toList, spectrum, meta = Map("game" -> gameString))
     } else {
       for {
         gn <- init
@@ -374,7 +374,7 @@ class EnergyWeakSpectroscopy[S, A, L] (
           case game.DefenderBranchingConjunction(p0, a, p1, qq0, qq0a) =>
             s"$p0 -${a}-> $p1, ${qq0.mkString("{",",","}")}, ${qq0a.mkString("{",",","}")}}"
           case _ => ""
-        }).replaceAllLiterally(".0", "") +
+        }).replaceAllLiterally(".0", "").replaceAllLiterally("\\", "\\\\") +
          (if (priceString != "") s"\\n------\\n$priceString" else "") +
          (if (formulaString != "") s"\\n------\\n$formulaString" else "")
       }

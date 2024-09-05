@@ -20,17 +20,27 @@ class SpectrumView[+OC <: ObservationClass](
   val width = 550
   val height = 400
 
-  val axes = List(
-    (0,-15), // obs
-    (-25,-15), // branch
-    (-30,-10), // unstable conj
-    (50,-30), // stable conj
-    (8,-20),
-    (-10,-20),
-    (0,0),
-    (15,-30),
-    (17,-35),
-  )
+  val axes = if (spectrum.notions.head.obsClass.toTuple.productArity > 6)
+    List(
+      (0,-10), // obs
+      (-25,-10), // branch
+      (-30,-10), // unstable conj
+      (50,-25), // stable conj
+      (8,-15),
+      (-10,-15),
+      (0,0),
+      (15,-25),
+      (17,-30),
+    )
+  else
+    List(
+      (0,-15), // obs
+      (-30,-20), // conj
+      (15,-20), // max pos conjuncts
+      (-20,-25), // other pos conjuncts
+      (40,-25), // neg conjuncts
+      (20,-50) // negations
+    )
 
   val svg = d3.select(parentId)
     .append("svg")
@@ -54,7 +64,7 @@ class SpectrumView[+OC <: ObservationClass](
     } {
       val axis = axes(i)
       val componentInt = component.asInstanceOf[Int]
-      val componentStrength = if (componentInt > 2) 2 else componentInt
+      val componentStrength = if (componentInt > 2) 2.5 else componentInt
       x = x + componentStrength * axis._1
       y = y + componentStrength * axis._2
     }
@@ -132,19 +142,6 @@ class SpectrumView[+OC <: ObservationClass](
         .style("stroke-width", (eq: Spectrum.EquivalenceNotion[OC], _: Int) => if (equations.contains(eq.name)) 3.0 else 0.0)
         .style("stroke", "#33aaff")
 
-    val names = svg.append("g")
-      .selectAll(".eq-notion-name")
-      .data(spectrum.notions.toJSArray)
-      .enter()
-      .append("text")
-        .attr("x", (eq: Spectrum.EquivalenceNotion[OC], _: Int) => {
-          val pos = positionOfNotion(eq.obsClass)._1
-          if (pos < 0) pos - 5 else pos + 5
-        })
-        .attr("y", (eq: Spectrum.EquivalenceNotion[OC], _: Int) => positionOfNotion(eq.obsClass)._2 + 5 )
-        .attr("text-anchor", (eq: Spectrum.EquivalenceNotion[OC], _: Int) =>
-          if (positionOfNotion(eq.obsClass)._1 < 0) "end" else "start")
-        .text((eq: Spectrum.EquivalenceNotion[OC], _: Int) => eq.name)
 
     val lrDistinctions = svg.append("g")
       .selectAll(".eq-dist-lr")
@@ -167,6 +164,20 @@ class SpectrumView[+OC <: ObservationClass](
           s"${x+3},${y-4} ${x+3},${y+4} ${x-5},${y}"
          })
         .style("fill", "#cc1100")
+
+    val names = svg.append("g")
+      .selectAll(".eq-notion-name")
+      .data(spectrum.notions.toJSArray)
+      .enter()
+      .append("text")
+        .attr("x", (eq: Spectrum.EquivalenceNotion[OC], _: Int) => {
+          val pos = positionOfNotion(eq.obsClass)._1
+          if (pos < 0) pos - 5 else pos + 5
+        })
+        .attr("y", (eq: Spectrum.EquivalenceNotion[OC], _: Int) => positionOfNotion(eq.obsClass)._2 + 5 )
+        .attr("text-anchor", (eq: Spectrum.EquivalenceNotion[OC], _: Int) =>
+          if (positionOfNotion(eq.obsClass)._1 < 0) "end" else "start")
+        .text((eq: Spectrum.EquivalenceNotion[OC], _: Int) => eq.name)
 
   }
 }

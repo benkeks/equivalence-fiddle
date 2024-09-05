@@ -50,7 +50,9 @@ object SpectroscopyInterface {
   }
 
   case class SpectroscopyResult[S, A, +OC <: ObservationClass, +OF <:HennessyMilnerLogic.Formula[A]](
-      val relationItems: List[SpectroscopyResultItem[S, A, OC, OF]], val spectrum: Spectrum[OC]) {
+      val relationItems: List[SpectroscopyResultItem[S, A, OC, OF]],
+      val spectrum: Spectrum[OC],
+      val meta: Map[String, String] = Map()) {
 
     def resultFor(p: S, q: S) = {
       for {

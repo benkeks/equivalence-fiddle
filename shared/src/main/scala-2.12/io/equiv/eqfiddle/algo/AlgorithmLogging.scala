@@ -6,6 +6,7 @@ import io.equiv.eqfiddle.util.Coloring
 import io.equiv.eqfiddle.util.LabeledRelation
 import io.equiv.eqfiddle.hml.ObservationClass
 import io.equiv.eqfiddle.hml.Spectrum
+
 trait AlgorithmLogging[S] {
   
   private val log = ListBuffer[() => AlgorithmLogging.LogEntry[S]]()
@@ -26,15 +27,15 @@ trait AlgorithmLogging[S] {
   
   def getReplay() = log toList
 
-  def debugLog(msg: => String, asLink: String = "") = {
+  def debugLog(msg: => String, asLink: String = ""): String = {
     if (AlgorithmLogging.debugLogActive) {
-      if (asLink == "") {
-        println(msg)
-      } else {
-        println(uriEncoder(asLink + msg))
-      }
+      val outMsg = if (asLink == "") msg else uriEncoder(asLink + msg)
+      outMsg
+    } else {
+      ""
     }
   }
+
 }
 
 object AlgorithmLogging {
