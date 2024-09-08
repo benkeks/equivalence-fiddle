@@ -14,8 +14,8 @@ class SpectrumView[+OC <: ObservationClass](
     spectrum: Spectrum[OC],
     preords: List[String],
     equations: List[String],
-    distCoordsLR: List[OC],
-    distCoordsRL: List[OC],
+    distCoordsLR: List[(OC, String)],
+    distCoordsRL: List[(OC, String)],
     parentId: String) {
   val width = 550
   val height = 400
@@ -109,10 +109,9 @@ class SpectrumView[+OC <: ObservationClass](
     // mark which distinctions refute which closest notions
 
     val distinctionNeighbors = for {
-      p1 <- distCoordsLR ++ distCoordsRL
+      (p1, _) <- distCoordsLR ++ distCoordsRL
       p2 <- positions
       if (p1 <= p2) && positions.forall(otherP => !(p1 < otherP) || !(otherP < p2))
-        //|| (p1 >= p2) && positions.forall(otherP => !(otherP < p1 && p2 < otherP)))
     } yield (p1, p2)
 
     val distinctionLinks = svg.append("g")
@@ -137,10 +136,14 @@ class SpectrumView[+OC <: ObservationClass](
       .append("circle")
         .attr("cx", (eq: Spectrum.EquivalenceNotion[OC], _: Int) => positionOfNotion(eq.obsClass)._1 )
         .attr("cy", (eq: Spectrum.EquivalenceNotion[OC], _: Int) => positionOfNotion(eq.obsClass)._2 )
-        .attr("r", 3)
-        .style("fill", (eq: Spectrum.EquivalenceNotion[OC], _: Int) => if (southOfEquivalenceBoundary(eq.obsClass)) "#1177dd" else if (southOfPreorderBoundary(eq.obsClass)) "#5577aa" else "#992211")
-        .style("stroke-width", (eq: Spectrum.EquivalenceNotion[OC], _: Int) => if (equations.contains(eq.name)) 3.0 else 0.0)
+        .attr("r", 4)
+        .style("fill", (eq: Spectrum.EquivalenceNotion[OC], _: Int) =>
+          if (southOfEquivalenceBoundary(eq.obsClass)) "#1177dd" else if (southOfPreorderBoundary(eq.obsClass)) "#5577aa" else "#992211")
+        .style("stroke-width", (eq: Spectrum.EquivalenceNotion[OC], _: Int) =>
+          if (equations.contains(eq.name)) 4.0 else 0.0)
         .style("stroke", "#33aaff")
+        .html((eq: Spectrum.EquivalenceNotion[OC], _: Int, _: js.UndefOr[Int]) =>
+          s"<title>${eq.obsClass.toTuple}</title>".replaceAll(Int.MaxValue.toString(),"∞"))
 
 
     val lrDistinctions = svg.append("g")
@@ -148,22 +151,25 @@ class SpectrumView[+OC <: ObservationClass](
       .data(distCoordsLR.toJSArray)
       .enter()
       .append("polygon")
-        .attr("points", (oc: OC, _: Int) => {
-          val (x, y) = positionOfNotion(oc)
+        .attr("points", (oc: (OC, String), _: Int) => {
+          val (x, y) = positionOfNotion(oc._1)
           s"${x-3},${y-4} ${x+5},${y} ${x-3},${y+4}"
          })
         .style("fill", "#cc1100")
+        .html((oc: (OC, String), _: Int, _: js.UndefOr[Int]) => s"<title>${oc._2}</title>")
 
     val rlDistinctions = svg.append("g")
       .selectAll(".eq-dist-rl")
       .data(distCoordsRL.toJSArray)
       .enter()
       .append("polygon")
-        .attr("points", (oc: OC, _: Int) => {
-          val (x, y) = positionOfNotion(oc)
+        .attr("points", (oc: (OC, String), _: Int) => {
+          val (x, y) = positionOfNotion(oc._1)
           s"${x+3},${y-4} ${x+3},${y+4} ${x-5},${y}"
          })
+        .attr("title", (oc: (OC, String), _: Int) => oc._2)
         .style("fill", "#cc1100")
+        .html((oc: (OC, String), _: Int, _: js.UndefOr[Int]) => s"<title>${oc._2}</title>")
 
     val names = svg.append("g")
       .selectAll(".eq-notion-name")

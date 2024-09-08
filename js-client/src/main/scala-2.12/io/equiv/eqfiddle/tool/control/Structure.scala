@@ -144,7 +144,7 @@ object Structure {
   case class StructureCommentChange(comment: String) extends ModelComponent.Change
 
   case class StructureSpectrumChange[OC <: ObservationClass](spectrum: Spectrum[OC], preords: List[String], equations: List[String],
-    distCoordsLR: List[OC], distCoordsRL: List[OC], comment: String) extends ModelComponent.Change
+    distCoordsLR: List[(OC, String)], distCoordsRL: List[(OC, String)], comment: String) extends ModelComponent.Change
 
   case class StructureReplayChange(replay: List[() => AlgorithmLogging.LogEntry[NodeID]])
     extends ModelComponent.Change
@@ -323,12 +323,12 @@ object Structure {
         val rightLeftDists = result.foundDistinctionsWithCertificate(n2, n1).map(d => d._1.toString() + d._2.map(_.name).mkString(" (", ",", ")")).mkString("<br>")
         val preords = result.foundPreorders(n1, n2).map(_.name)
         val equations = result.findEqs(n1, n2).map(_.name)
-        val distCoordsLR = result.foundDistinctionCoordinates(n1, n2)
-        val distCoordsRL = result.foundDistinctionCoordinates(n2, n1)
+        val distCoordsLR = result.resultFor(n1, n2).flatMap(_.distinctions).map(d => (d._2, d._1.toString()))
+        val distCoordsRL = result.resultFor(n2, n1).flatMap(_.distinctions).map(d => (d._2, d._1.toString()))
         val replay = List(
           () => AlgorithmLogging.LogRelation(result.toPreorderingRelation(), s"Preordered by:<div class='preorderings'>${preords.mkString("<br>")}</div>"),
           () => AlgorithmLogging.LogRelation(result.toDistinctionRelation(), s"Left-right-distinguished by:<div class='distinctions'>$leftRightDists</div>"),
-          () => AlgorithmLogging.LogRelation(result.toDistinctionRelation(), s"Right-left-distinguished by:<div class='distinctions'>$rightLeftDists</div>"),
+          //() => AlgorithmLogging.LogRelation(result.toDistinctionRelation(), s"Right-left-distinguished by:<div class='distinctions'>$rightLeftDists</div>"),
           () => AlgorithmLogging.LogRelation(result.toEquivalencesRelation(), s"Equated by:<div class='equations'>${equations.mkString("<br>")}</div>"),
           () => AlgorithmLogging.LogSpectrum[NodeID, ObservationClass](result.spectrum, preords, equations, distCoordsLR, distCoordsRL, s"Show spectrum. $gameString")
         )
