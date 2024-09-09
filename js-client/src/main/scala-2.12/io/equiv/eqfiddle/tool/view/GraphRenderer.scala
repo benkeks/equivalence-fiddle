@@ -27,6 +27,8 @@ import io.equiv.eqfiddle.tool.model.NodeID
 import io.equiv.eqfiddle.util.Coloring
 import io.equiv.eqfiddle.util.Relation
 import io.equiv.eqfiddle.util.LabeledRelation
+import io.equiv.eqfiddle.hml.Spectrum
+import io.equiv.eqfiddle.hml.ObservationClass
 
 class GraphRenderer(val main: Control)
   extends GraphView
@@ -204,7 +206,7 @@ class GraphRenderer(val main: Control)
       .html(comment)
       .classed("hidden", comment.isEmpty())
   }
-  
+
   def colorize(partition: Coloring[NodeID]) {
     val colorScale = d3.scale.category20()
     nodeViews.style("stroke", { (d: GraphNode, i: Int) =>
@@ -260,6 +262,9 @@ class GraphRenderer(val main: Control)
       setStructure()
     case Structure.StructureCommentChange(comment) =>
       setComment(comment)
+    case Structure.StructureSpectrumChange(spectrum, preords, equations, distCoordsLR, distCoordsRL, comment) =>
+      setComment(comment + """<div id="es-spectrum-view"></div>""")
+      val spectrumView = new SpectrumView(spectrum, preords, equations, distCoordsLR, distCoordsRL, "#es-spectrum-view")
     case _ =>
       
   }

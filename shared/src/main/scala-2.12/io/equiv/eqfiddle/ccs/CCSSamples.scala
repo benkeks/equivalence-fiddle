@@ -529,13 +529,8 @@ P58 = a.(tau.b + b + tau)
        |Pe = (op.Ae + op.Be)
        |Pl = (op.Al + op.Bl)
        |
-       |Ate = (tau.Ate + a)
-       |Bte = (tau.Bte + b)
-       |Atl = (tau.Btl + tau.Atl + a)
-       |Btl = (tau.Atl + tau.Btl + b)
-       |
-       |Pte = (op.Ate + op.Bte)
-       |Ptl = (op.Atl + op.Btl)
+       |Pte = Pe \csp { idle }
+       |Ptl = Pl \csp { idle }
        |
        |@compareSilent "Pe, Pl"
        |@compareSilent "Pte, Ptl"

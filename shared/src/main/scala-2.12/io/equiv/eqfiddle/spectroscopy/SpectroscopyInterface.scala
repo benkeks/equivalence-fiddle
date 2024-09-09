@@ -50,7 +50,9 @@ object SpectroscopyInterface {
   }
 
   case class SpectroscopyResult[S, A, +OC <: ObservationClass, +OF <:HennessyMilnerLogic.Formula[A]](
-      val relationItems: List[SpectroscopyResultItem[S, A, OC, OF]], val spectrum: Spectrum[OC]) {
+      val relationItems: List[SpectroscopyResultItem[S, A, OC, OF]],
+      val spectrum: Spectrum[OC],
+      val meta: Map[String, String] = Map()) {
 
     def resultFor(p: S, q: S) = {
       for {
@@ -141,6 +143,20 @@ object SpectroscopyInterface {
         dists <- res.distinctions
         dis <- dists._3
       } yield dis
+    }
+
+    def foundDistinctionsWithCertificate(p: S, q: S): List[(OF, List[Spectrum.EquivalenceNotion[OC]])] = {
+      for {
+        res <- resultFor(p, q)
+        dists <- res.distinctions
+      } yield (dists._1, dists._3)
+    }
+
+    def foundDistinctionCoordinates(p: S, q: S): List[OC] = {
+      for {
+        res <- resultFor(p, q)
+        dists <- res.distinctions
+      } yield (dists._2)
     }
 
     def findEqs(p: S, q: S): List[Spectrum.EquivalenceNotion[OC]] = {

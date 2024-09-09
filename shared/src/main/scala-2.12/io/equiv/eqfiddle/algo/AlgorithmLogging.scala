@@ -4,6 +4,9 @@ import io.equiv.eqfiddle.util.Relation
 import scala.collection.mutable.ListBuffer
 import io.equiv.eqfiddle.util.Coloring
 import io.equiv.eqfiddle.util.LabeledRelation
+import io.equiv.eqfiddle.hml.ObservationClass
+import io.equiv.eqfiddle.hml.Spectrum
+
 trait AlgorithmLogging[S] {
   
   private val log = ListBuffer[() => AlgorithmLogging.LogEntry[S]]()
@@ -24,15 +27,15 @@ trait AlgorithmLogging[S] {
   
   def getReplay() = log toList
 
-  def debugLog(msg: => String, asLink: String = "") = {
+  def debugLog(msg: => String, asLink: String = ""): String = {
     if (AlgorithmLogging.debugLogActive) {
-      if (asLink == "") {
-        println(msg)
-      } else {
-        println(uriEncoder(asLink + msg))
-      }
+      val outMsg = if (asLink == "") msg else uriEncoder(asLink + msg)
+      outMsg
+    } else {
+      ""
     }
   }
+
 }
 
 object AlgorithmLogging {
@@ -42,6 +45,8 @@ object AlgorithmLogging {
   case class LogRelation[S](rel: LabeledRelation[S, String], comment: String) extends LogEntry[S]
 
   case class LogRichRelation[S](rel: LabeledRelation[(Set[S], String, Set[S]), String], comment: String) extends LogEntry[S]
+
+  case class LogSpectrum[S, OC <: ObservationClass](spectrum: Spectrum[OC], preords: List[String], equations: List[String], distCoordsLR: List[(OC, String)], distCoordsRL: List[(OC, String)], comment: String) extends LogEntry[S]
   
   var loggingActive = true
   
