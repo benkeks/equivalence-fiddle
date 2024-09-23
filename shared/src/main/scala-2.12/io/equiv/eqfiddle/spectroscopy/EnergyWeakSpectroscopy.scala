@@ -31,7 +31,6 @@ class EnergyWeakSpectroscopy[S, A, L] (
 
   def buildHMLWitness(game: EnergyWeakSpectroscopyGame[S, A, L], node: GameNode, price: Energy): Iterable[HennessyMilnerLogic.Formula[A]]
     = distinguishingFormulas.getOrElseUpdate((node, price), {
-    //debugLog(s"exploring: $node, $price" )
     node match {
       case game.AttackerObservation(p0, qq0) =>
         val successorFormulas =
@@ -61,7 +60,6 @@ class EnergyWeakSpectroscopy[S, A, L] (
             } yield s.asInstanceOf[game.AttackerDelayedObservation]
             delayedTodo ++ newTodo
         }, (todo1, todo2) => todo1.size == todo2.size) (Set(ado))
-        println(attackerDelayedComponent)
         val successorFormulas =
           for {
             n @ game.AttackerDelayedObservation(p0, qq0) <- attackerDelayedComponent
@@ -88,8 +86,8 @@ class EnergyWeakSpectroscopy[S, A, L] (
               buildHMLWitness(game, s, newPrice)
             case _ => Set()
           }
-        //pruneDominated(successorFormulas.flatten.toSet)
-        successorFormulas.headOption.flatMap(_.headOption)
+        pruneDominated(successorFormulas.flatMap(_.headOption).toSet).headOption
+        //successorFormulas.headOption.flatMap(_.headOption)
       case game.AttackerBranchingObservation(p0, qq0) =>
         for {
           s <- game.successors(node)
