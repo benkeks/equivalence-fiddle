@@ -27,6 +27,14 @@ trait CSSSampleTests[OC <: ObservationClass, CF <: HennessyMilnerLogic.Formula[S
     cl <- spectrum.getSpectrumClass.get(n)
   } yield cl).toSet
 
+  /**
+    * 
+    *
+    * @param sampleSystem 
+    * @param sampleNames list of tuples of (p1, p2, exact list of maintained preorder, list of distinctions)
+    * @param spectroscopyAlgo
+    * @param title
+    */
   def runTest(
       sampleSystem: WeakTransitionSystem[NodeID,String,String],
       sampleNames: List[(String, String, List[String], List[String])],
@@ -49,14 +57,18 @@ trait CSSSampleTests[OC <: ObservationClass, CF <: HennessyMilnerLogic.Formula[S
 
           val result = algo.compute(List((n1, n2)))
 
-          val foundDistinctions = result.foundDistinctions(n1, n2).map(d => d.name match { case "2bisimulation" => "bisimulation"; case "2trace" => "trace"; case n => n } ).toSet
+          val foundDistinctions = result.foundDistinctions(n1, n2).map(
+            d => d.name match { case "2bisimulation" => "bisimulation"; case "2trace" => "trace"; case n => n }
+          ).toSet
           it ("should be distinguished by " + notPreordsStr.mkString(",")) {
             (notPreordsStr diff foundDistinctions) should be (empty)
           }
 
           val foundPreorders = result.foundPreorders(n1, n2).map(_.name).toSet
           it ("should exactly be preordered by " + preordsStr.mkString(",")) {
-            if (!(preordsStr subsetOf algo.spectrum.notionNames)) cancel(s"$preordsStr do not apply for $title spectrum")
+            if (!(preordsStr subsetOf algo.spectrum.notionNames)) {
+              cancel(s"$preordsStr do not apply for $title spectrum")
+            }
             (foundPreorders diff preordsStr) should be (empty)
             (preordsStr diff foundPreorders) should be (empty)
           }
