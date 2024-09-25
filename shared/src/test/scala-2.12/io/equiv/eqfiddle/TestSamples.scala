@@ -9,7 +9,7 @@ import io.equiv.eqfiddle.ccs.Interpreter
 import io.equiv.eqfiddle.util.Interpreting
 import io.equiv.eqfiddle.ccs.Parser
 
-object TestSamples  {
+object TestSamples {
   
   def arrowLabeling(o: Option[Syntax.Label]) = {
     Interpreting.fromOption(o.map(_.name) orElse(Some("")))
@@ -25,7 +25,7 @@ object TestSamples  {
     parser: Parser = new Parser(src)
     parser.ParseSuccess(esDef, _) = parser.parse
     interpreter = new Interpreter(esDef, NodeID(_), arrowLabeling, nodeLabeling, actionStrToInput, actionStrIsOutput)
-    Interpreting.Success(is) = interpreter.result(new WeakTransitionSystem(_, _, Set()))
+    Interpreting.Success(is) = interpreter.result(new WeakTransitionSystem(_, _, Set("tau")))
   } yield (slug, is.asInstanceOf[WeakTransitionSystem[NodeID, String, String]])
   
 }
