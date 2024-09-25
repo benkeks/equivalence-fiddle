@@ -24,6 +24,7 @@ import io.equiv.eqfiddle.hml.Spectrum
 import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
 import io.equiv.eqfiddle.algo.WeakTransitionSaturation
 import io.equiv.eqfiddle.algo.sigref.Bisimilarity
+import io.equiv.eqfiddle.algo.sigref.BranchingBisimilarity
 import io.equiv.eqfiddle.algo.transform.BuildQuotientSystem
 import io.equiv.eqfiddle.hml.ObservationClass
 
@@ -269,15 +270,29 @@ object Structure {
       ts
     }
 
-    val bisimMinimized = labels.collect { case (id, label) if label.act.contains('bisim_minimized) => id }
-    val minimizedTs = if (bisimMinimized.nonEmpty) {
-      val bisimColoring = new Bisimilarity(saturatedTs, Some(rel.getReachablePart(bisimMinimized) -- mainNodes)).computePartition()
+    val bisimMinimizedIds =
+      labels.collect { case (id, label) if label.act.contains('bisim_minimized) => id }
+    val minimizedTs = if (bisimMinimizedIds.nonEmpty) {
+      val bisimColoring = new Bisimilarity(saturatedTs, Some(rel.getReachablePart(bisimMinimizedIds) -- mainNodes)).computePartition()
       new BuildQuotientSystem(saturatedTs, bisimColoring, mainNodes).build()
     } else {
       saturatedTs
     }
 
-    minimizedTs
+    val branchingBisimMinimizedIds =
+      labels.collect { case (id, label) if label.act.contains('srbb_minimized) => id }
+    val minimizedTs2 = if (branchingBisimMinimizedIds.nonEmpty) {
+      val bisimColoring = new BranchingBisimilarity(
+        minimizedTs,
+        Some(rel.getReachablePart(branchingBisimMinimizedIds) -- mainNodes),
+        stabilityRespecting = true
+      ).computePartition()
+      new BuildQuotientSystem(minimizedTs, bisimColoring, mainNodes).build()
+    } else {
+      minimizedTs
+    }
+
+    minimizedTs2
   }
 
   case class StructureCallOperation(slug: String, resetReplay: Boolean = true) extends StructureAction {
