@@ -26,7 +26,9 @@ class BuildQuotientSystem[S, A, L] (
       (color, partition) <- partitions.toList
       (a, post) <- ts.post(partition).toList
       tar <- post
-    } yield (reps(color), a, reps(coloring(tar)))
+      srcRep = reps(color)
+      tarRep = reps(coloring(tar))
+    } yield (srcRep, a, tarRep)
     
     val nodeLabeling = for {
       rep <- reps.values

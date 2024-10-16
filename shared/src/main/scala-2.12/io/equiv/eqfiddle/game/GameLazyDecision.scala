@@ -31,15 +31,13 @@ trait GameLazyDecision[P] extends AbstractGameDiscovery {
   val printToDoLength: Boolean = false
 
   private def priceUpdate(node: GameNode, newPrices: Iterable[P]) = {
-    // assumes old and new price sets not to contain any dominated prices
     val oldPrices = attackerVictoryPrices(node)
-    val interestingNewPrices = newPrices.filterNot(p => oldPrices.exists(op => priceIsBetterOrEq(op, p)))
-    if (interestingNewPrices.nonEmpty) {
-      val interestingOldPrices = oldPrices.filterNot(p => interestingNewPrices.exists(priceIsBetter(_, p)))
-      attackerVictoryPrices(node) = interestingOldPrices ++ interestingNewPrices.filterNot(p => interestingNewPrices.exists(op => priceIsBetter(op, p)))
-      true
-    } else {
+    val newPricesMin = newPrices.filterNot(p => newPrices.exists(op => priceIsBetter(op, p))).toList
+    if (newPricesMin.forall(p => oldPrices.contains(p))) {
       false
+    } else {
+      attackerVictoryPrices(node) = newPricesMin
+      true
     }
   }
 
