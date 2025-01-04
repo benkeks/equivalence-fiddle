@@ -2,7 +2,7 @@ name := "EquivalenceFiddle"
 
 version := "0.1.0"
 
-scalaVersion := "2.12.20"
+scalaVersion := "2.12.13"
 
 val scalacOpts = Seq(
   "-Xmax-classfile-name", "140",
@@ -14,7 +14,7 @@ val scalacOpts = Seq(
 )
 
 lazy val web = (project in file("web")).settings(
-  scalaVersion := "2.12.20",
+  scalaVersion := "2.12.13",
   scalaJSProjects := Seq(jsClient),
   Assets / pipelineStages := Seq(scalaJSPipeline),
   Compile / compile := ((Compile / compile) dependsOn scalaJSPipeline).value,
@@ -27,7 +27,7 @@ lazy val web = (project in file("web")).settings(
 ).enablePlugins(SbtWeb)
 
 lazy val shared = (project in file("shared")).settings(
-  scalaVersion := "2.12.20",
+  scalaVersion := "2.12.13",
   name := "shared",
   scalacOptions ++= scalacOpts,
   assembly / test := {},
@@ -39,7 +39,7 @@ lazy val shared = (project in file("shared")).settings(
 )
 
 lazy val jsClient = (project in file("js-client")).settings(
-  scalaVersion := "2.12.20",
+  scalaVersion := "2.12.13",
   name := "eqfiddle-client",
   ThisBuild / parallelExecution := false,
   scalacOptions ++= scalacOpts,
@@ -63,7 +63,7 @@ lazy val jsClient = (project in file("js-client")).settings(
 ).aggregate(shared).dependsOn(shared).enablePlugins(ScalaJSPlugin, ScalaJSWeb)
 
 lazy val jsApi = (project in file("js-api")).settings(
-  scalaVersion := "2.12.20",
+  scalaVersion := "2.12.13",
   name := "eqfiddle-api",
   ThisBuild / parallelExecution := false,
   scalacOptions ++= scalacOpts,
