@@ -96,28 +96,11 @@ class EnergyWeakSpectroscopy[S, A, L] (
           if game.isAttackerWinningPrice(s, newPrice)
           f <- buildHMLWitness(game, s, newPrice)
         } yield f
-      case game.AttackerClause(p0, q0) =>
-        val successorFormulas = for {
-          s <- game.successors(node)
-          update = game.weight(node, s)
-          newPrice = update.applyEnergyUpdate(price)
-          if game.isAttackerWinningPrice(s, newPrice)
-        } yield {
-          s match {
-            case game.AttackerDelayedObservation(p1, qq1) =>
-              if (p0 == p1) {
-                for {
-                  postForm <- buildHMLWitness(game, s, newPrice)
-                } yield HennessyMilnerLogic.Pass(postForm)
-              } else {
-                for {
-                  postForm <- buildHMLWitness(game, s, newPrice)
-                } yield HennessyMilnerLogic.Negate(HennessyMilnerLogic.Pass(postForm))
-              }
-            }
-          }
-        successorFormulas.flatten
-      case game.AttackerClauseStable(p0, q0) =>
+      case _ : game.AttackerClause | _ : game.AttackerClauseStable =>
+        val (p0, q0) = node match {
+          case game.AttackerClause(p0, q0) => (p0, q0)
+          case game.AttackerClauseStable(p0, q0) => (p0, q0)
+        }
         val successorFormulas = for {
           s <- game.successors(node)
           update = game.weight(node, s)
