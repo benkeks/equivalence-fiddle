@@ -80,7 +80,7 @@ class EnergyWeakSpectroscopy[S, A, L] (
               } yield HennessyMilnerLogic.Observe(a, postForm)
             case game.DefenderConjunction(p1, qq1) =>
               buildHMLWitness(game, s, newPrice)
-            case game.DefenderStableConjunction(p1, qq1) =>
+            case game.DefenderStableConjunction(p1, qq1, qq1revivals) =>
               buildHMLWitness(game, s, newPrice)
             case game.DefenderBranchingConjunction(p01, a, p1, qq01, qq01a) =>
               buildHMLWitness(game, s, newPrice)
@@ -97,6 +97,27 @@ class EnergyWeakSpectroscopy[S, A, L] (
           f <- buildHMLWitness(game, s, newPrice)
         } yield f
       case game.AttackerClause(p0, q0) =>
+        val successorFormulas = for {
+          s <- game.successors(node)
+          update = game.weight(node, s)
+          newPrice = update.applyEnergyUpdate(price)
+          if game.isAttackerWinningPrice(s, newPrice)
+        } yield {
+          s match {
+            case game.AttackerDelayedObservation(p1, qq1) =>
+              if (p0 == p1) {
+                for {
+                  postForm <- buildHMLWitness(game, s, newPrice)
+                } yield HennessyMilnerLogic.Pass(postForm)
+              } else {
+                for {
+                  postForm <- buildHMLWitness(game, s, newPrice)
+                } yield HennessyMilnerLogic.Negate(HennessyMilnerLogic.Pass(postForm))
+              }
+            }
+          }
+        successorFormulas.flatten
+      case game.AttackerClauseStable(p0, q0) =>
         val successorFormulas = for {
           s <- game.successors(node)
           update = game.weight(node, s)
@@ -153,12 +174,16 @@ class EnergyWeakSpectroscopy[S, A, L] (
           HennessyMilnerLogic.And(moves).asInstanceOf[HennessyMilnerLogic.Formula[A]]
         }
         pruneDominated(conjs.toSet)
-      case game.DefenderConjunction(_, _) | game.DefenderStableConjunction(_, _) =>
+      case game.DefenderConjunction(_, _) | game.DefenderStableConjunction(_, _, _) =>
         val possibleMoves = for {
           s <- game.successors(node)
           update = game.weight(node, s)
           newPrice = update.applyEnergyUpdate(price)
-          if !s.isInstanceOf[game.DefenderConjunction]
+          if (s match {
+            //case game.AttackerObservation(_, qq) => qq.nonEmpty
+            case game.DefenderConjunction(_, _) => false
+            case _ => true
+          })
         } yield if (game.isAttackerWinningPrice(s, newPrice)) {
           buildHMLWitness(game, s, newPrice)
         } else {
@@ -366,9 +391,10 @@ class EnergyWeakSpectroscopy[S, A, L] (
           case game.DefenderConjunction(p, qq: Set[_]) =>
             val qqString = qq.mkString("{",",","}")
             s"$p, $qqString"
-          case game.DefenderStableConjunction(p, qq: Set[_]) =>
+          case game.DefenderStableConjunction(p, qq: Set[_], qqRevivals) =>
             val qqString = qq.mkString("{",",","}")
-            s"$p, s$qqString"
+            val qqRevivalsString = qq.mkString("{",",","}")
+            s"$p, s$qqString, $qqRevivalsString"
           case game.DefenderBranchingConjunction(p0, a, p1, qq0, qq0a) =>
             s"$p0 -${a}-> $p1, ${qq0.mkString("{",",","}")}, ${qq0a.mkString("{",",","}")}}"
           case _ => ""
