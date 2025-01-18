@@ -262,7 +262,7 @@ class EnergyWeakSpectroscopy[S, A, L] (
       val bisimilarNodes = for {
         gn <- hmlGame.discovered
         if (gn match { case hmlGame.AttackerObservation(_, qq) => qq.size == 1; case _ => false }) &&
-          !hmlGame.attackerVictoryPrices.isDefinedAt(gn)
+          (!hmlGame.attackerVictoryPrices.isDefinedAt(gn) || hmlGame.attackerVictoryPrices(gn).isEmpty)
       } yield (gn, Set[HennessyMilnerLogic.Formula[A]]())
 
       val distinguishingNodeFormulasExtended = distinguishingNodeFormulas ++ bisimilarNodes
@@ -307,7 +307,7 @@ class EnergyWeakSpectroscopy[S, A, L] (
       val bisimilarNodes = for {
         gn <- hmlGame.discovered
         if (gn match { case hmlGame.AttackerObservation(_, qq) => qq.size == 1; case _ => false }) &&
-          !hmlGame.attackerVictoryPrices.isDefinedAt(gn)
+          (!hmlGame.attackerVictoryPrices.isDefinedAt(gn) || hmlGame.attackerVictoryPrices(gn).isEmpty)
       } {
         hmlGame.attackerVictoryPrices(gn) = List()
       }

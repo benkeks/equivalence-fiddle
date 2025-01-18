@@ -14,7 +14,7 @@ It's also possible to enter processes with internal behavior, either by `tau.P` 
 
 ## How to build
 
-The project can be built using `sbt` by.
+The project can be built using [`sbt`](https://www.scala-sbt.org/download/) on Java 17 by.
 
 ```
 sbt webStage
