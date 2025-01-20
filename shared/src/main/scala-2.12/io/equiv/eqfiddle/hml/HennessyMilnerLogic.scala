@@ -34,6 +34,11 @@ object HennessyMilnerLogic {
 
   def True[A]: And[A] = And[A](Set())
 
+  def isTrueLiteral[A](f: Formula[A]) = f match {
+    case And(subterms) => subterms.isEmpty
+    case _ => false
+  }
+
   case class Observe[A](action: A, andThen: Formula[A]) extends Formula[A] {
 
     override def toString = "⟨" + action.toString + "⟩" + andThen.toString

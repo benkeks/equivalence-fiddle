@@ -18,6 +18,8 @@ class EnergyWeakSpectroscopy[S, A, L] (
     ts: WeakTransitionSystem[S, A, L])
   extends SpectroscopyInterface[S, A, L, HennessyMilnerLogic.Formula[A]] with AlgorithmLogging[S] {
 
+  val useCleverBranching: Boolean = true
+
   val spectrum = ObservationClassEnergyWeak.LTBTS
 
   val distinguishingFormulas =
@@ -80,7 +82,7 @@ class EnergyWeakSpectroscopy[S, A, L] (
               } yield HennessyMilnerLogic.Observe(a, postForm)
             case game.DefenderConjunction(p1, qq1) =>
               buildHMLWitness(game, s, newPrice)
-            case game.DefenderStableConjunction(p1, qq1) =>
+            case game.DefenderStableConjunction(p1, qq1, qq1revivals) =>
               buildHMLWitness(game, s, newPrice)
             case game.DefenderBranchingConjunction(p01, a, p1, qq01, qq01a) =>
               buildHMLWitness(game, s, newPrice)
@@ -95,8 +97,12 @@ class EnergyWeakSpectroscopy[S, A, L] (
           newPrice = update.applyEnergyUpdate(price)
           if game.isAttackerWinningPrice(s, newPrice)
           f <- buildHMLWitness(game, s, newPrice)
-        } yield f
-      case game.AttackerClause(p0, q0) =>
+        } yield if (s.isInstanceOf[game.AttackerDelayedObservation]) HennessyMilnerLogic.Pass(f) else f
+      case _ : game.AttackerClause | _ : game.AttackerClauseStable =>
+        val (p0, q0) = node match {
+          case game.AttackerClause(p0, q0) => (p0, q0)
+          case game.AttackerClauseStable(p0, q0) => (p0, q0)
+        }
         val successorFormulas = for {
           s <- game.successors(node)
           update = game.weight(node, s)
@@ -117,7 +123,7 @@ class EnergyWeakSpectroscopy[S, A, L] (
             }
           }
         successorFormulas.flatten
-      case game.DefenderBranchingConjunction(p0, a, p1, qq0, qq0a) =>
+      case game.DefenderBranchingConjunction(p0, a, p1, qq0, qq0a) if !useCleverBranching =>
         val aBranches = for {
           s <- game.successors(node)
           if s.isInstanceOf[game.AttackerBranchingObservation]
@@ -153,12 +159,84 @@ class EnergyWeakSpectroscopy[S, A, L] (
           HennessyMilnerLogic.And(moves).asInstanceOf[HennessyMilnerLogic.Formula[A]]
         }
         pruneDominated(conjs.toSet)
-      case game.DefenderConjunction(_, _) | game.DefenderStableConjunction(_, _) =>
+      case game.DefenderBranchingConjunction(p0, a, p1, qq0, qq0a) if useCleverBranching =>
+        // note: qq0a is always empty for clever game
+        val gameClever = game.asInstanceOf[EnergyWeakSpectroscopyGameClever[S, A, L]]
+
+        // at first we collect optional distinguishing formulas for each q in qq0 as in usual conjunctions
+        val possibleMoves: Iterable[Iterable[HennessyMilnerLogic.Formula[A]]] = for {
+          s1 <- gameClever.successors(node)
+          update1 = gameClever.weight(node, s1)
+          newPrice1 = update1.applyEnergyUpdate(price)
+        } yield (if (gameClever.isAttackerWinningPrice(s1, newPrice1)) {
+          for {
+            s2 <- gameClever.successors(s1)
+            update2 = gameClever.weight(s1, s2)
+            newPrice2 = update2.applyEnergyUpdate(newPrice1)
+            subformula <- buildHMLWitness(game, s2, newPrice2)
+          } yield {
+            s2 match {
+              case gameClever.AttackerBranchingObservation(_, _) if ts.silentActions(a) =>
+                HennessyMilnerLogic.ObserveInternal(subformula, opt = true)
+              case gameClever.AttackerBranchingObservation(_, _) =>
+                HennessyMilnerLogic.Observe(a, subformula)
+              case _ =>
+              subformula
+            }
+          }
+        } else {
+          Seq()
+        })
+        val productMoves: Seq[Seq[HennessyMilnerLogic.Formula[A]]] =
+          possibleMoves.foldLeft(Seq(Seq[HennessyMilnerLogic.Formula[A]]()))(
+            (b, a) => b.flatMap(i => a.map(j => i ++ Seq(j))))
+
+        // we now remix the formulas such that the different branching conjuncts are merged. (their continuations are combined by a conjunction under the observation)
+        val flattenedProducts = for {
+          prod <- productMoves
+        } yield {
+          // note that only the branching conjuncts can lead to observes not guarded by ⟨ϵ⟩
+          val (obsParts, conjParts) =
+            prod.partition(part => part.isInstanceOf[HennessyMilnerLogic.ObserveInternal[A]] ||  part.isInstanceOf[HennessyMilnerLogic.Observe[A]])
+          // collect and flatten continuations
+          val obsContinuations = (for (obs <- obsParts) yield {
+            obs match {
+              case HennessyMilnerLogic.ObserveInternal(HennessyMilnerLogic.And(subterms), opt) => subterms
+              case HennessyMilnerLogic.ObserveInternal(andThen, opt) => List(andThen)
+              case HennessyMilnerLogic.Observe(action, HennessyMilnerLogic.And(subterms)) => subterms
+              case HennessyMilnerLogic.Observe(action, andThen) => List(andThen)
+            }
+          }).flatten
+          val branchingContinuation = if (obsContinuations.forall(
+            c => c.isInstanceOf[HennessyMilnerLogic.Pass[A]] || HennessyMilnerLogic.isTrueLiteral(c)
+          )) {
+            HennessyMilnerLogic.Pass(HennessyMilnerLogic.And(obsContinuations.toSet))
+          } else {
+            HennessyMilnerLogic.And(obsContinuations.toSet)
+          }
+          // reconstruct conjunction with merged continuations
+          (if (ts.silentActions(a)) {
+            HennessyMilnerLogic.ObserveInternal(branchingContinuation, opt = true)
+          } else {
+            HennessyMilnerLogic.Observe(a, branchingContinuation)
+          }) +: conjParts
+        }
+        
+        val conjs = flattenedProducts.map { mv =>
+          val moves = mv.toSet
+          HennessyMilnerLogic.And(moves).asInstanceOf[HennessyMilnerLogic.Formula[A]]
+        }
+        pruneDominated(conjs.toSet)
+      case game.DefenderConjunction(_, _) | game.DefenderStableConjunction(_, _, _) =>
         val possibleMoves = for {
           s <- game.successors(node)
           update = game.weight(node, s)
           newPrice = update.applyEnergyUpdate(price)
-          if !s.isInstanceOf[game.DefenderConjunction]
+          if (s match {
+            //case game.AttackerObservation(_, qq) => qq.nonEmpty
+            case game.DefenderConjunction(_, _) => false
+            case _ => true
+          })
         } yield if (game.isAttackerWinningPrice(s, newPrice)) {
           buildHMLWitness(game, s, newPrice)
         } else {
@@ -197,7 +275,11 @@ class EnergyWeakSpectroscopy[S, A, L] (
 
     debugLog(s"Start spectroscopy on ${ts.nodes.size} node transition system with ${comparedPairs.size} compared pairs.")
 
-    val hmlGame = new EnergyWeakSpectroscopyGame(ts, energyCap = if (computeFormulas) Int.MaxValue else 3)
+    val hmlGame = if (useCleverBranching) {
+      new EnergyWeakSpectroscopyGameClever(ts, energyCap = if (computeFormulas) Int.MaxValue else 3)
+    } else {
+      new EnergyWeakSpectroscopyGame(ts, energyCap = if (computeFormulas) Int.MaxValue else 3)
+    }
 
     val init = for {
       (p, q) <- comparedPairs
@@ -366,12 +448,23 @@ class EnergyWeakSpectroscopy[S, A, L] (
           case game.DefenderConjunction(p, qq: Set[_]) =>
             val qqString = qq.mkString("{",",","}")
             s"$p, $qqString"
-          case game.DefenderStableConjunction(p, qq: Set[_]) =>
+          case game.DefenderStableConjunction(p, qq: Set[_], qqRevivals) =>
             val qqString = qq.mkString("{",",","}")
-            s"$p, s$qqString"
+            val qqRevivalsString = qq.mkString("{",",","}")
+            s"$p, s$qqString, $qqRevivalsString"
           case game.DefenderBranchingConjunction(p0, a, p1, qq0, qq0a) =>
-            s"$p0 -${a}-> $p1, ${qq0.mkString("{",",","}")}, ${qq0a.mkString("{",",","}")}}"
-          case _ => ""
+            s"$p0 -${a}-> $p1, ${qq0.mkString("{",",","}")}, ${qq0a.mkString("{",",","}")}"
+          case _ =>
+            if (game.isInstanceOf[EnergyWeakSpectroscopyGameClever[S, A, L]]) {
+              val gameClever = game.asInstanceOf[EnergyWeakSpectroscopyGameClever[S, A, L]]
+              gn match {
+                case gameClever.AttackerBranchingConjunction(p0, a, p1, q0) =>
+                  s"$p0 -${a}-> $p1, ${q0}"
+                case _ => ""
+              }
+            } else {
+              ""
+            }
         }).replaceAllLiterally(".0", "").replaceAllLiterally("\\", "\\\\") +
          (if (priceString != "") s"\\n------\\n$priceString" else "") +
          (if (formulaString != "") s"\\n------\\n$formulaString" else "")
