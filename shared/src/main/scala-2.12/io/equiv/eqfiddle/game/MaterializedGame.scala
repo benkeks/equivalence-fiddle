@@ -6,7 +6,8 @@ class MaterializedEnergyGame[P](
     val baseGame: GameLazyDecision[P],
     initialBaseNodes: Iterable[GameNode],
     initialEnergy: P,
-    energyUpdate: (GameNode, GameNode, P) => Option[P])
+    energyUpdate: (GameNode, GameNode, P) => Option[P],
+    preferredNodes: (GameNode, P, GameNode) => Boolean)
   extends SimpleGame with GameDiscovery with WinningRegionComputation {
   
   case class MaterializedAttackerNode(baseNode: GameNode, energy: P) extends AttackerNode
@@ -29,10 +30,10 @@ class MaterializedEnergyGame[P](
       case MaterializedAttackerNode(b, e) => (b, e)
       case MaterializedDefenderNode(b, e) => (b, e)
     }
-    val successors = for {
+    for {
       s <- baseGame.computeSuccessors(baseNode)
       updatedEnergy <- energyUpdate(baseNode, s, energy)
+      if preferredNodes(baseNode, energy, s)
     } yield materialize(s, updatedEnergy)
-    successors
   }
 }

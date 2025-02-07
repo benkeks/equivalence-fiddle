@@ -419,12 +419,12 @@ class EnergyWeakSpectroscopy[S, A, L] (
   }
 
   def checkIndividualPreorder(comparedPairs: Iterable[(S,S)], notion: String): Iterable[SpectroscopyInterface.IndividualNotionResult[S]] = {
-    val hmlGame = new EnergyWeakSpectroscopyGame(ts, energyCap = 2)
-    // if (useCleverBranching) {
-    //   new EnergyWeakSpectroscopyGameClever(ts, energyCap = 2)
-    // } else {
-    //   new EnergyWeakSpectroscopyGame(ts, energyCap = 2)
-    // }
+    val hmlGame =
+      if (useCleverBranching) {
+        new EnergyWeakSpectroscopyGameClever(ts, energyCap = 2)
+      } else {
+        new EnergyWeakSpectroscopyGame(ts, energyCap = 2)
+      }
 
     val init = for {
       (p, q) <- comparedPairs
@@ -442,8 +442,26 @@ class EnergyWeakSpectroscopy[S, A, L] (
         None
     }
 
-    val reachabilityGame = new MaterializedEnergyGame[Energy](
-      hmlGame, init, notionEnergy, energyUpdate)
+    // whether to consider the baseSuccessor as a relevant node for the attacker
+    def preferredNodes(currentBaseNode: GameNode, currentEnergy: Energy, baseSuccessor: GameNode) = currentBaseNode match {
+      case hmlGame.AttackerObservation(p, qq) if currentEnergy(4) >= Int.MaxValue && qq.size > 1 =>
+        // if we have infinitely many immediate conjunctions, use them to chop down blowup on right-hand side
+        baseSuccessor.isInstanceOf[hmlGame.DefenderConjunction]
+      case hmlGame.AttackerBranchingObservation(p, qq) if useCleverBranching && currentEnergy(4) >= Int.MaxValue && qq.size > 1 =>
+        // same as previous case
+        baseSuccessor.isInstanceOf[hmlGame.DefenderConjunction]
+      case hmlGame.AttackerDelayedObservation(_, _) if (currentEnergy(3) == 0 || currentEnergy(5) == currentEnergy(6)) && baseSuccessor.isInstanceOf[hmlGame.DefenderStableConjunction] =>
+        // disregard revival partitions if they make no difference
+        baseSuccessor.asInstanceOf[hmlGame.DefenderStableConjunction].qqRevival.isEmpty
+      case hmlGame.AttackerDelayedObservation(_, qq) if currentEnergy(1) >= Int.MaxValue && qq.size > 1 =>
+        // focus on branching observations if we have infinite supply of them
+        !baseSuccessor.isInstanceOf[hmlGame.AttackerObservation]
+      case _ => true
+    }
+
+    val reachabilityGame: MaterializedEnergyGame[Energy] = new MaterializedEnergyGame[Energy](
+      hmlGame, init, notionEnergy, energyUpdate, preferredNodes)
+
 
     val attackerWins = reachabilityGame.computeWinningRegion()
 
@@ -556,9 +574,9 @@ class EnergyWeakSpectroscopy[S, A, L] (
 
       def nodeToString(gn: GameNode): String = gn match {
         case game.MaterializedAttackerNode(bgn, e) =>
-          gameNodeToString(baseGame, bgn) + "\\n" + e.vector.mkString("(", ",", ")").replaceAllLiterally(maxIntString, "∞")
+          gameNodeToString(baseGame, bgn) + "\\n" + e.toString().replaceAllLiterally(maxIntString, "∞")
         case game.MaterializedDefenderNode(bgn, e) =>
-          gameNodeToString(baseGame, bgn) + "\\n" + e.vector.mkString("(", ",", ")").replaceAllLiterally(maxIntString, "∞")
+          gameNodeToString(baseGame, bgn) + "\\n" + e.toString().replaceAllLiterally(maxIntString, "∞")
       }
 
       def edgeToLabel(gn1: GameNode, gn2: GameNode) = {

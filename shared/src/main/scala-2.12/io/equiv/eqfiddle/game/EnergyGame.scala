@@ -79,6 +79,9 @@ object EnergyGame {
       indices.fold(0){ (hash, i) => (hash << 3) ^ vector(i) }
     }
 
+    override def toString(): String =
+      vector.mkString("(", "," ,")")
+
     def isNonNegative() =
       vector.forall(_ >= 0)
 
