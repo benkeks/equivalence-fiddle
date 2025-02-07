@@ -443,11 +443,22 @@ class EnergyWeakSpectroscopy[S, A, L] (
     
     val attackerWins = reachabilityGame.computeWinningRegion()
 
+    val relation: Set[(S, String, S)] = for {
+      gn <- reachabilityGame.discovered.toSet
+      if !attackerWins(gn)
+      (p, eString, q) <- gn match {
+        case reachabilityGame.MaterializedAttackerNode(hmlGame.AttackerObservation(p, qq), energy)
+            if qq.size == 1 && energy == notionEnergy =>
+          Some((p, "", qq.head))
+        case _ =>
+          None
+      }
+    } yield (p, eString,  q)
+
     for {
       (p, q) <- comparedPairs
-      distinguished = attackerWins(reachabilityGame.materialize(hmlGame.AttackerObservation(p, Set(q)), notionEnergy))
     } yield {
-      SpectroscopyInterface.IndividualNotionResult(p, q, !distinguished)
+      SpectroscopyInterface.IndividualNotionResult(p, q, relation.contains((p, "", q)), relation)
     }
   }
 

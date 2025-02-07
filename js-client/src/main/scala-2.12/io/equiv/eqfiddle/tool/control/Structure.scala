@@ -393,7 +393,7 @@ object Structure {
 
         val replay = List(
           () => AlgorithmLogging.LogRelation(
-            LabeledRelation[NodeID, String](),
+            new LabeledRelation[NodeID, String](pairResult.relation),
             if (pairResult.isMaintained)
               "States are preordered"
             else

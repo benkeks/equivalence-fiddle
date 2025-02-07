@@ -175,6 +175,6 @@ object SpectroscopyInterface {
 
   }
 
-  case class IndividualNotionResult[S](left: S, right: S, isMaintained: Boolean)
+  case class IndividualNotionResult[S](left: S, right: S, isMaintained: Boolean, relation: Set[(S, String, S)])
 
 }
