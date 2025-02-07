@@ -13,6 +13,7 @@ import io.equiv.eqfiddle.hml.HMLInterpreter
 import io.equiv.eqfiddle.game.GameGraphVisualizer
 import io.equiv.eqfiddle.hml.ObservationClassEnergyWeak
 import io.equiv.eqfiddle.util.FixedPoint
+import io.equiv.eqfiddle.game.MaterializedEnergyGame
 
 class EnergyWeakSpectroscopy[S, A, L] (
     ts: WeakTransitionSystem[S, A, L])
@@ -257,8 +258,13 @@ class EnergyWeakSpectroscopy[S, A, L] (
     }
   })
 
-  private def energyToClass(e: Energy) = {
+  private def energyToClass(e: Energy): ObservationClassEnergyWeak = {
     ObservationClassEnergyWeak(e(0), e(1), e(2), e(3), e(4), e(5), e(6), e(7), e(8))
+  }
+
+  private def classToEnergy(obsClass: ObservationClassEnergyWeak): Energy = {
+    val c = obsClass.toTuple
+    Energy(Array(c._1, c._2, c._3, c._4, c._5, c._6, c._7, c._8, c._9))
   }
 
   def compute(
@@ -411,6 +417,38 @@ class EnergyWeakSpectroscopy[S, A, L] (
       SpectroscopyInterface.SpectroscopyResult[S, A, ObservationClassEnergyWeak, HennessyMilnerLogic.Formula[A]](spectroResults.toList, spectrum)
     }
 
+  }
+
+  def checkIndividualPreorder(comparedPairs: Iterable[(S,S)], notion: String): Iterable[SpectroscopyInterface.IndividualNotionResult[S]] = {
+    val hmlGame = if (useCleverBranching) {
+      new EnergyWeakSpectroscopyGameClever(ts, energyCap = 2)
+    } else {
+      new EnergyWeakSpectroscopyGame(ts, energyCap = 2)
+    }
+
+    val init = for {
+      (p, q) <- comparedPairs
+      start <- List(hmlGame.AttackerObservation(p, Set(q)), hmlGame.AttackerObservation(q, Set(p)))
+    } yield start
+
+    val notionEnergy = classToEnergy(spectrum.getSpectrumClass(notion).obsClass)
+
+    def energyUpdate(gn1: GameNode, gn2: GameNode, energy: Energy) = {
+      val update = hmlGame.weight(gn1, gn2)
+      update.applyEnergyUpdate(energy)
+    }
+
+    val reachabilityGame = new MaterializedEnergyGame[Energy](
+      hmlGame, init, notionEnergy, energyUpdate)
+    
+    val attackerWins = reachabilityGame.computeWinningRegion()
+
+    for {
+      (p, q) <- comparedPairs
+      distinguished = attackerWins(reachabilityGame.materialize(hmlGame.AttackerObservation(p, Set(q)), notionEnergy))
+    } yield {
+      SpectroscopyInterface.IndividualNotionResult(p, q, !distinguished)
+    }
   }
 
   def checkDistinguishing(formula: HennessyMilnerLogic.Formula[A], p: S, q: S) = {
