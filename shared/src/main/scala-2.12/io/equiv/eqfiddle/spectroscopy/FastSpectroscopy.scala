@@ -127,7 +127,6 @@ class FastSpectroscopy[S, A, L] (
 
     hmlGame.populateGame(
       init,
-      (gns => hmlGame.computeSuccessors(gns)),
       instantAttackerWin(_))
 
     debugLog("HML spectroscopy game size: " + hmlGame.discovered.size)

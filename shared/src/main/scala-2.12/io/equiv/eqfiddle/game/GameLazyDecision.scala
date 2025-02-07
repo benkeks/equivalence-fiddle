@@ -11,6 +11,7 @@ trait GameLazyDecision[P] extends AbstractGameDiscovery {
 
   override def successors(gn: GameNode): Iterable[GameNode] = computedSuccessors(gn)
   private val computedSuccessors = collection.mutable.Map[GameNode, Set[GameNode]]() withDefaultValue Set()
+  def computeSuccessors(gn: GameNode): Iterable[GameNode]
 
   /* set for nodes that are won by the attacker with the minimal attacker victory prices */
   val attackerVictoryPrices = collection.mutable.Map[GameNode, List[P]]() withDefaultValue List()
@@ -45,7 +46,6 @@ trait GameLazyDecision[P] extends AbstractGameDiscovery {
 
   def populateGame(
       initialNodes: Iterable[GameNode],
-      discoverSuccessors: GameNode => Iterable[GameNode],
       instantAttackerWin: GameNode => Iterable[P]) = {
 
     val todo = collection.mutable.Queue[GameNode]()
@@ -65,7 +65,7 @@ trait GameLazyDecision[P] extends AbstractGameDiscovery {
       } else {
         if (!(visited contains currNode)) {
           visited += currNode
-          val succs = discoverSuccessors(currNode)
+          val succs = computeSuccessors(currNode)
           computedSuccessors(currNode) = succs.toSet
           for {
             gn <- succs

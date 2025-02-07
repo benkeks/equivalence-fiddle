@@ -3,10 +3,10 @@ package io.equiv.eqfiddle.game
 import io.equiv.eqfiddle.game.SimpleGame.{GameNode, AttackerNode, DefenderNode}
 
 class MaterializedEnergyGame[P](
-    baseGame: SimpleGame,
+    val baseGame: GameLazyDecision[P],
     initialBaseNodes: Iterable[GameNode],
     initialEnergy: P,
-    energyUpdate: (GameNode, GameNode, P) => P)
+    energyUpdate: (GameNode, GameNode, P) => Option[P])
   extends SimpleGame with GameDiscovery with WinningRegionComputation {
   
   case class MaterializedAttackerNode(baseNode: GameNode, energy: P) extends AttackerNode
@@ -26,12 +26,13 @@ class MaterializedEnergyGame[P](
 
   override def successors(gn: GameNode): Iterable[GameNode] = {
     val (baseNode, energy) = gn match {
-      case MaterializedAttackerNode(baseNode, energy) => (baseNode, energy)
-      case MaterializedDefenderNode(baseNode, energy) => (baseNode, energy)
+      case MaterializedAttackerNode(b, e) => (b, e)
+      case MaterializedDefenderNode(b, e) => (b, e)
     }
-    for {
-      s <- baseGame.successors(baseNode)
-      updatedEnergy = energyUpdate(baseNode, s, energy)
-    } yield materialize(baseNode, updatedEnergy)
+    val successors = for {
+      s <- baseGame.computeSuccessors(baseNode)
+      updatedEnergy <- energyUpdate(baseNode, s, energy)
+    } yield materialize(s, updatedEnergy)
+    successors
   }
 }
