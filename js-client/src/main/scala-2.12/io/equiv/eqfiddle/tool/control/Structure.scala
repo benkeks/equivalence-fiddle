@@ -363,6 +363,58 @@ object Structure {
     }
   }
 
+  case class StructureCheckEquivalence(n1: NodeID, n2: NodeID, notion: String, resetReplay: Boolean = true, silentSpectrum: Boolean = false) extends StructureAction {
+
+    override def implementStructure(structure: Structure) = {
+      if (resetReplay) {
+        structure.setReplay(List())
+      }
+      
+      if (structure.structure.nodes(n1) && structure.structure.nodes(n2)) {
+
+        val begin = Date.now
+
+        val algo = new EnergyWeakSpectroscopy(structure.structure)
+        //  if (silentSpectrum) {
+        //   new EnergyWeakSpectroscopy(structure.structure)
+        // } else {
+        //   new FastSpectroscopy(structure.structure)
+        // }
+        algo.uriEncoder = scala.scalajs.js.URIUtils.encodeURI _
+
+        val result = algo.checkIndividualPreorder(List((n1, n2)), notion)
+        println("Preorder check took: " + (Date.now - begin) + "ms.")
+
+        // val gameString = result.meta.get("game") match {
+        //   case Some(game) if game != "" => s""" <a href="$game" target="_blank">View game.</a>"""
+        //   case _ => ""
+        // }
+        val Some(pairResult) = result.find(r => r.left == n1 && r.right == n2)
+
+        val replay = List(
+          () => AlgorithmLogging.LogRelation(
+            LabeledRelation[NodeID, String](),
+            if (pairResult.isMaintained)
+              "States are preordered"
+            else
+              "States are <strong>not</strong> preordered")
+        )
+        structure.setReplay(replay)
+        structure.main.doAction(StructureDoReplayStep(), structure)
+
+        true
+      } else {
+        val unknownState = if (!structure.structure.nodes(n1)) n1 else n2
+        val replay = List(
+          () => AlgorithmLogging.LogRelation(LabeledRelation[NodeID, String](), s"Unknown state ‹$unknownState›.")
+        )
+        structure.setReplay(replay)
+        structure.main.doAction(StructureDoReplayStep(), structure)
+        false
+      }
+    }
+  }
+
   case class StructureMinimize(resetReplay: Boolean = true) extends StructureAction {
 
     override def implementStructure(structure: Structure) = {

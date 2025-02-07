@@ -14,6 +14,7 @@ class Pipeline(val main: Control) extends ModelComponent {
   val supportedOperations = Map(
     "compare" -> "Compare two processes with respect to all strong equivalences",
     "compareSilent" -> "Compare two processes with respect to all weak equivalences",
+    "check" -> "Compare two processes with respect to a specific equivalence",
     "minimize" -> "Explore quotient minimizations with respect to all strong equivalences",
     "characterize" -> "What is special about a process when compared with the others"
   )
@@ -77,6 +78,16 @@ class Pipeline(val main: Control) extends ModelComponent {
         true
       } else {
         throw new Exception("Need two process names as arguments. @compareSilent \"proc1, proc2\"")
+        false
+      }
+    case "check" =>
+      val parameters = info.split(",").map(_.trim())
+      if (parameters.length == 3) {
+        broadcast(Pipeline.PipelineStatusChange(operationLines ++ List(Pipeline.CurrentLine(line))))
+        main.dispatchAction(Structure.StructureCheckEquivalence(NodeID(parameters(1)), NodeID(parameters(2)), parameters(0), silentSpectrum = true))
+        true
+      } else {
+        throw new Exception("Need a notion name and two process names as arguments. @check \"notion, proc1, proc2\"")
         false
       }
     case "minimize" =>
