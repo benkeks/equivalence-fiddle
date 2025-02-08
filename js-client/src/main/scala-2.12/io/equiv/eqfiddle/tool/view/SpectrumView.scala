@@ -28,7 +28,7 @@ class SpectrumView[+OC <: ObservationClass](
       (50,-25), // stable conj
       (8,-15),
       (-10,-15),
-      (0,0),
+      (-30,-15),
       (15,-25),
       (17,-30),
     )
