@@ -7,8 +7,7 @@ import io.equiv.eqfiddle.tool.benchmark.VeryLargeTransitionSystems
 
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
-import io.equiv.eqfiddle.spectroscopy.EdgeSpectroscopy
-import io.equiv.eqfiddle.spectroscopy.FastSpectroscopy
+import io.equiv.eqfiddle.spectroscopy.StrongSpectroscopy
 import io.equiv.eqfiddle.hml.HennessyMilnerLogic
 
 object Benchmark extends App {
@@ -24,7 +23,6 @@ object Benchmark extends App {
       |  benchmark  Run benchmarks on VLTS
       |
       |General options:
-      | --formula-spectroscopy   Use the formula-driven spectroscopy algorithm of BJN22 instead of the energy game
       | --unclever-spectroscopy  Use the exponentially-branching energy game (instead of the clever energy game)
       |
       |Benchmark options:
@@ -44,14 +42,12 @@ object Benchmark extends App {
     AlgorithmLogging.loggingActive = true
     AlgorithmLogging.debugLogActive = false
 
-    if (args.contains("--formula-spectroscopy")) {
-      new EdgeSpectroscopy(system)
-    } else if (args.contains("--unclever-spectroscopy")) {
-      new FastSpectroscopy(system) {
+    if (args.contains("--unclever-spectroscopy")) {
+      new StrongSpectroscopy(system) {
         override val useCleverSpectroscopyGame: Boolean = false
       }
     } else {
-      new FastSpectroscopy(system)
+      new StrongSpectroscopy(system)
     }
   }
 

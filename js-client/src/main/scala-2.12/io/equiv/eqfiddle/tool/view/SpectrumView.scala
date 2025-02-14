@@ -7,10 +7,10 @@ import js.JSConverters._
 import org.singlespaced.d3js.Ops.fromFunction2To3DoublePrimitive
 import org.singlespaced.d3js.Ops.fromFunction2To3StringPrimitive
 
-import io.equiv.eqfiddle.hml.ObservationClass
+import io.equiv.eqfiddle.hml.ObservationNotion
 import io.equiv.eqfiddle.hml.Spectrum
 
-class SpectrumView[+OC <: ObservationClass](
+class SpectrumView[+OC <: ObservationNotion](
     spectrum: Spectrum[OC],
     preords: List[String],
     equations: List[String],
@@ -52,7 +52,7 @@ class SpectrumView[+OC <: ObservationClass](
 
   render()
 
-  def positionOfNotion(oc: ObservationClass): (Double, Double) = {
+  def positionOfNotion(oc: ObservationNotion): (Double, Double) = {
     var x = 0.0
     var y = 0.0
     val components = oc.toTuple
@@ -72,11 +72,11 @@ class SpectrumView[+OC <: ObservationClass](
     (x, y)
   }
 
-  def southOfEquivalenceBoundary(oc: ObservationClass): Boolean = {
+  def southOfEquivalenceBoundary(oc: ObservationNotion): Boolean = {
     equations.exists(e => oc <= spectrum.getSpectrumClass(e).obsClass)
   }
 
-  def southOfPreorderBoundary(oc: ObservationClass): Boolean = {
+  def southOfPreorderBoundary(oc: ObservationNotion): Boolean = {
     preords.exists(e => oc <= spectrum.getSpectrumClass(e).obsClass)
   }
 

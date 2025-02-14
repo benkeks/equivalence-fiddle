@@ -28,7 +28,7 @@ import io.equiv.eqfiddle.util.Coloring
 import io.equiv.eqfiddle.util.Relation
 import io.equiv.eqfiddle.util.LabeledRelation
 import io.equiv.eqfiddle.hml.Spectrum
-import io.equiv.eqfiddle.hml.ObservationClass
+import io.equiv.eqfiddle.hml.ObservationNotion
 
 class GraphRenderer(val main: Control)
   extends GraphView

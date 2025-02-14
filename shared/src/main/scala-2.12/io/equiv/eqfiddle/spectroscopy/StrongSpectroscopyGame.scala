@@ -2,10 +2,10 @@ package io.equiv.eqfiddle.spectroscopy
 
 import io.equiv.eqfiddle.game.SimpleGame
 import io.equiv.eqfiddle.game.EnergyGame
-import io.equiv.eqfiddle.hml.ObservationClassFast
+import io.equiv.eqfiddle.hml.ObservationNotionStrong
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 
-class EnergySpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], energyCap: Int = Int.MaxValue)
+class StrongSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], energyCap: Int = Int.MaxValue)
   extends SimpleGame with EnergyGame {
 
   private val NoEnergyUpdate        = new EnergyGame.EnergyUpdate(Array( 0,0,0,0,0,0), energyCap = energyCap)
@@ -30,6 +30,8 @@ class EnergySpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], energyC
       gn2 match {
         case AttackerObservation(p1, qq1) =>
           ObsEnergyUpdate
+        case DefenderConjunction(p1, qqS, qqR) if qq0.isEmpty =>
+          NoEnergyUpdate
         case DefenderConjunction(p1, qqS, qqR) =>
           ConjEnergyUpdate
       }

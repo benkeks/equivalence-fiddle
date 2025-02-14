@@ -1,13 +1,13 @@
 package io.equiv.eqfiddle
 
-import io.equiv.eqfiddle.spectroscopy.EnergyWeakSpectroscopy
-import io.equiv.eqfiddle.hml.ObservationClassEnergyWeak
+import io.equiv.eqfiddle.spectroscopy.WeakSpectroscopy
+import io.equiv.eqfiddle.hml.ObservationNotionWeak
 import io.equiv.eqfiddle.hml.HennessyMilnerLogic
 
 
-class LTBTS2Tests extends CSSSampleTests[ObservationClassEnergyWeak, HennessyMilnerLogic.Formula[String]] {
+class LTBTS2Tests extends CSSSampleTests[ObservationNotionWeak, HennessyMilnerLogic.Formula[String]] {
 
-  override val spectrum = ObservationClassEnergyWeak.LTBTS
+  override val spectrum = ObservationNotionWeak.LTBTS
 
   val ltbtsSystem = TestSamples.samples.find(_._1 == "ltbts2").get._2
 
@@ -27,5 +27,5 @@ class LTBTS2Tests extends CSSSampleTests[ObservationClassEnergyWeak, HennessyMil
     ("P58", "P57", List("s-impossible-future", "eta-simulation", "2-nested-weak-simulation"), List("contrasimulation", "stable-bisimulation", "weak-readiness")),
   )
 
-  runTest(ltbtsSystem, sampleNames, new EnergyWeakSpectroscopy(_), "(weak)")
+  runTest(ltbtsSystem, sampleNames, new WeakSpectroscopy(_), "(weak)")
 }

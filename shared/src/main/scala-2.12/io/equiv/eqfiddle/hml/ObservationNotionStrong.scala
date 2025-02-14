@@ -1,6 +1,6 @@
 package io.equiv.eqfiddle.hml
 
-case class ObservationClassFast(
+case class ObservationNotionStrong(
   /** the maximal observation depth of the subformulas (⊤ has height 0, negation and conjunction are neutral wrt. height) */
   observationHeight: Int = 0,
   /** the maximal amount of conjunctions when descending into a formula */
@@ -13,11 +13,11 @@ case class ObservationClassFast(
   negativeConjHeight: Int = 0,
   /** how many negation levels may happen? */
   negationLevels: Int = 0
-) extends ObservationClass {
+) extends ObservationNotion {
 
-  override def tryCompareTo[B >: ObservationClass](that: B)(implicit evidence$1: B => PartiallyOrdered[B]): Option[Int] = {
+  override def tryCompareTo[B >: ObservationNotion](that: B)(implicit evidence$1: B => PartiallyOrdered[B]): Option[Int] = {
     that match {
-      case that: ObservationClassFast =>
+      case that: ObservationNotionStrong =>
         if (this == that) {
           Some(0)
         } else if (
@@ -43,9 +43,9 @@ case class ObservationClassFast(
     }
   }
 
-  override def lub[B >: ObservationClassFast](that: B): B = that match {
-    case that: ObservationClassFast =>
-      ObservationClassFast(
+  override def lub[B >: ObservationNotionStrong](that: B): B = that match {
+    case that: ObservationNotionStrong =>
+      ObservationNotionStrong(
         Integer.max(this.observationHeight, that.observationHeight),
         Integer.max(this.conjunctionLevels, that.conjunctionLevels),
         Integer.max(this.revivalHeight, that.revivalHeight),
@@ -56,9 +56,9 @@ case class ObservationClassFast(
     case _ => this
   }
 
-  override def glb[B >: ObservationClassFast](that: B): B = that match {
-    case that: ObservationClassFast =>
-      ObservationClassFast(
+  override def glb[B >: ObservationNotionStrong](that: B): B = that match {
+    case that: ObservationNotionStrong =>
+      ObservationNotionStrong(
         Integer.min(this.observationHeight, that.observationHeight),
         Integer.min(this.conjunctionLevels, that.conjunctionLevels),
         Integer.min(this.revivalHeight, that.revivalHeight),
@@ -72,34 +72,34 @@ case class ObservationClassFast(
   override def toTuple = (observationHeight, conjunctionLevels, revivalHeight, positiveConjHeight, negativeConjHeight, negationLevels)
 }
 
-object ObservationClassFast {
+object ObservationNotionStrong {
   val INFTY = Integer.MAX_VALUE
 
   // observationHeight, conjunctionLevels, revivalHeight, positiveConjHeight, negativeConjHeight, negationLevels
   // The Linear-time Branching-time Spectrum
   val BaseLTBTS = List(
-    "enabledness" ->        ObservationClassFast(    1,     1,    0,    0,    0,    0),
-    "traces" ->             ObservationClassFast(INFTY,     1,    0,    0,    0,    0),
-    "failure" ->            ObservationClassFast(INFTY,     2,    0,    0,    1,    1),
-    "revivals" ->           ObservationClassFast(INFTY,     2,    1,    0,    1,    1),
-    "readiness" ->          ObservationClassFast(INFTY,     2,    1,    1,    1,    1),
-    "failure-trace" ->      ObservationClassFast(INFTY, INFTY,INFTY,    0,    1,    1),
-    "ready-trace" ->        ObservationClassFast(INFTY, INFTY,INFTY,    1,    1,    1),
-    "impossible-future" ->  ObservationClassFast(INFTY,     2,    0,    0,INFTY,    1),
-    "possible-future" ->    ObservationClassFast(INFTY,     2,INFTY,INFTY,INFTY,    1),
-    "simulation" ->         ObservationClassFast(INFTY, INFTY,INFTY,INFTY,    0,    0),
-    "ready-simulation" ->   ObservationClassFast(INFTY, INFTY,INFTY,INFTY,    1,    1),
-    "2-nested-simulation"-> ObservationClassFast(INFTY, INFTY,INFTY,INFTY,INFTY,    1),
-    "bisimulation" ->       ObservationClassFast(INFTY, INFTY,INFTY,INFTY,INFTY,INFTY)
+    "enabledness" ->        ObservationNotionStrong(    1,     0,    0,    0,    0,    0),
+    "traces" ->             ObservationNotionStrong(INFTY,     0,    0,    0,    0,    0),
+    "failure" ->            ObservationNotionStrong(INFTY,     1,    0,    0,    1,    1),
+    "revivals" ->           ObservationNotionStrong(INFTY,     1,    1,    0,    1,    1),
+    "readiness" ->          ObservationNotionStrong(INFTY,     1,    1,    1,    1,    1),
+    "failure-trace" ->      ObservationNotionStrong(INFTY, INFTY,INFTY,    0,    1,    1),
+    "ready-trace" ->        ObservationNotionStrong(INFTY, INFTY,INFTY,    1,    1,    1),
+    "impossible-future" ->  ObservationNotionStrong(INFTY,     1,    0,    0,INFTY,    1),
+    "possible-future" ->    ObservationNotionStrong(INFTY,     1,INFTY,INFTY,INFTY,    1),
+    "simulation" ->         ObservationNotionStrong(INFTY, INFTY,INFTY,INFTY,    0,    0),
+    "ready-simulation" ->   ObservationNotionStrong(INFTY, INFTY,INFTY,INFTY,    1,    1),
+    "2-nested-simulation"-> ObservationNotionStrong(INFTY, INFTY,INFTY,INFTY,INFTY,    1),
+    "bisimulation" ->       ObservationNotionStrong(INFTY, INFTY,INFTY,INFTY,INFTY,INFTY)
   )
 
 
   val LTBTS = Spectrum.fromTuples(BaseLTBTS, getFormulaRootClass)
 
-  def formulaObsClass(f: HennessyMilnerLogic.Formula[_]): ObservationClassFast = f match {
+  def formulaObsClass(f: HennessyMilnerLogic.Formula[_]): ObservationNotionStrong = f match {
     case HennessyMilnerLogic.And(subterms) =>
       if (subterms.isEmpty) {
-        ObservationClassFast(conjunctionLevels = 1)
+        ObservationNotionStrong()
       } else {
         val (positiveSubterms, negativeSubterms) = subterms.toList.partition(_.isPositive)
         val positiveClasses = positiveSubterms.map(formulaObsClass(_))
@@ -108,7 +108,7 @@ object ObservationClassFast {
         val otherPositiveClasses = positiveClasses diff revivalClass.toList
         val allClasses = positiveClasses ++ negativeClasses
 
-        ObservationClassFast(
+        ObservationNotionStrong(
           observationHeight = allClasses.map(_.observationHeight).max,
           conjunctionLevels = allClasses.map(_.conjunctionLevels).max + 1,
           revivalHeight = Integer.max(revivalClass.map(_.observationHeight).getOrElse(0), allClasses.map(_.revivalHeight).max),
@@ -119,12 +119,12 @@ object ObservationClassFast {
       }
     case HennessyMilnerLogic.Negate(andThen) =>
       val andThenClass = formulaObsClass(andThen)
-      ObservationClassFast(
+      ObservationNotionStrong(
         negationLevels = andThenClass.negationLevels + 1
       ) lub andThenClass
     case HennessyMilnerLogic.Observe(action, andThen) =>
       val andThenClass = formulaObsClass(andThen)
-      ObservationClassFast(
+      ObservationNotionStrong(
         observationHeight = andThenClass.observationHeight + 1
       ) lub andThenClass
     case HennessyMilnerLogic.Pass(andThen) =>

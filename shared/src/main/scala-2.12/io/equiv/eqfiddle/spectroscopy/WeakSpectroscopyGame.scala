@@ -1,80 +1,179 @@
 package io.equiv.eqfiddle.spectroscopy
 
 import io.equiv.eqfiddle.game.SimpleGame
-import io.equiv.eqfiddle.game.WinningRegionComputation
-import io.equiv.eqfiddle.game.GameDiscovery
+import io.equiv.eqfiddle.game.EnergyGame
+import io.equiv.eqfiddle.hml.ObservationNotionStrong
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
-import io.equiv.eqfiddle.util.Partition
 
-class WeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], init: Iterable[(S, Set[S])])
-  extends SpectroscopyGame(ts, init) {
+class WeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], energyCap: Int = Int.MaxValue)
+  extends SimpleGame with EnergyGame {
 
-  override def successors(gn: GameNode): Iterable[GameNode] = gn match {
-    case AttackerObservation(p0, qq0, moveKind) =>
+  // obs, branchingConj, unstableConj, stableConj, immediateConj, revivals, positiveHeight, negativeHeight, negations
+  protected val NoEnergyUpdate              = new EnergyGame.EnergyUpdate(Array( 0, 0, 0, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
+  protected val ObsEnergyUpdate             = new EnergyGame.EnergyUpdate(Array(-1, 0, 0, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
+  protected val InstableConjEnergyUpdate    = new EnergyGame.EnergyUpdate(Array( 0, 0,-1, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
+  protected val StableConjEnergyUpdate      = new EnergyGame.EnergyUpdate(Array( 0, 0, 0,-1, 0, 0, 6, 0, 0), energyCap = energyCap)
+  protected val StableRevivalEnergyUpdate   = new EnergyGame.EnergyUpdate(Array( 6, 0, 0,-1, 0, 0, 0, 0, 0), energyCap = energyCap)
+  protected val StabilityCheckEnergyUpdate  = new EnergyGame.EnergyUpdate(Array( 0, 0, 0,-1, 0, 0, 0, 0,-1), energyCap = energyCap)
+  protected val ImmediateConjEnergyUpdate   = new EnergyGame.EnergyUpdate(Array( 0, 0, 0, 0,-1, 0, 0, 0, 0), energyCap = energyCap)
+  protected val BranchingObsEnergyUpdate    = new EnergyGame.EnergyUpdate(Array( 6,-1,-1, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
+  protected val BranchingConjEnergyUpdate   = new EnergyGame.EnergyUpdate(Array( 0,-1,-1, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
+  protected val NegClauseEnergyUpdate       = new EnergyGame.EnergyUpdate(Array( 8, 0, 0, 0, 0, 0, 0, 0,-1), energyCap = energyCap)
+  protected val PosClauseEnergyUpdate       = new EnergyGame.EnergyUpdate(Array( 6, 0, 0, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
+  protected val PosClauseStableEnergyUpdate = new EnergyGame.EnergyUpdate(Array( 7, 0, 0, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
+
+  /* This will abort the game construction in nodes where the attacker cannot win because p is contained in qq. */
+  val optimizeSymmetryDefWins: Boolean = true
+  val optimizeAttackerWins: Boolean = true
+
+  case class AttackerObservation(p: S, qq: Set[S]) extends SimpleGame.AttackerNode
+  case class AttackerDelayedObservation(p: S, qq: Set[S]) extends SimpleGame.AttackerNode
+  case class AttackerClause(p: S, q: S) extends SimpleGame.AttackerNode
+  case class AttackerClauseStable(p: S, q: S) extends SimpleGame.AttackerNode
+  case class AttackerBranchingObservation(p: S, qq: Set[S]) extends SimpleGame.AttackerNode
+  case class DefenderConjunction(p: S, qq: Set[S]) extends SimpleGame.DefenderNode
+  case class DefenderStableConjunction(p: S, qq: Set[S], qqRevival: Set[S]) extends SimpleGame.DefenderNode
+  case class DefenderBranchingConjunction(p1: S, a: A, p2: S, qq: Set[S], qqA: Set[S]) extends SimpleGame.DefenderNode
+
+  override def weight(gn1: GameNode, gn2: GameNode): EnergyGame.EnergyUpdate = gn1 match {
+    case AttackerObservation(p0, qq0) =>
+      gn2 match {
+        case DefenderConjunction(p1, qq1) if qq0.nonEmpty =>
+          ImmediateConjEnergyUpdate
+        case _ =>
+          NoEnergyUpdate
+      }
+    case AttackerDelayedObservation(p0, qq0) =>
+      gn2 match {
+        case AttackerObservation(p1, qq1) =>
+          ObsEnergyUpdate
+        case _ =>
+          NoEnergyUpdate
+      }
+    case AttackerClause(p0, q0) =>
+      gn2 match {
+        case AttackerDelayedObservation(p1, qq1) if p1 == p0 =>
+          PosClauseEnergyUpdate
+        case AttackerDelayedObservation(p1, qq1) if qq1 contains p0 =>
+          NegClauseEnergyUpdate
+      }
+    case AttackerClauseStable(p0, q0) =>
+      gn2 match {
+        case AttackerDelayedObservation(p1, qq1) if p1 == p0 =>
+          PosClauseStableEnergyUpdate
+        case AttackerDelayedObservation(p1, qq1) if qq1 contains p0 =>
+          NegClauseEnergyUpdate
+      }
+    case AttackerBranchingObservation(p0, qq0) =>
+      ObsEnergyUpdate
+    case DefenderConjunction(_, _) =>
+      InstableConjEnergyUpdate
+    case DefenderStableConjunction(_, _, _) =>
+      gn2 match {
+        case AttackerClauseStable(_, _) =>
+          StableConjEnergyUpdate
+        case DefenderConjunction(_, _) =>
+          StabilityCheckEnergyUpdate
+        case _ =>
+          StableRevivalEnergyUpdate
+      }
+    case DefenderBranchingConjunction(p0, a, o01, qq0, qq0a) =>
+      gn2 match {
+        case AttackerBranchingObservation(p1, qq1) =>
+          BranchingObsEnergyUpdate
+        case _ =>
+          BranchingConjEnergyUpdate
+      }
+    case _ =>
+      NoEnergyUpdate
+  }
+
+  def computeSuccessors(gn: GameNode): Iterable[GameNode] = gn match {
+    case AttackerObservation(p0, qq0) =>
       if (optimizeSymmetryDefWins && (qq0 contains p0)) {
         List()
       } else {
-        val obsMoves = (
-          for {
+        val conjMoves = List(DefenderConjunction(p0, qq0))
+          val qq1 = for {
+            q0 <- qq0
+            q1 <- ts.silentReachable(q0)
+          } yield q1
+          AttackerDelayedObservation(p0, qq1) :: conjMoves
+        // }
+      }
+    case AttackerDelayedObservation(p0, qq0) =>
+      if (optimizeSymmetryDefWins && (qq0 contains p0)) {
+        List()
+      } else {
+        val unstableConjMove = DefenderConjunction(p0, qq0)
+        if (optimizeAttackerWins && qq0.isEmpty) {
+          // prioritize instant wins because of stuck defender
+          List(unstableConjMove)
+        } else {
+          val stableConjMove = if (ts.isStable(p0)) {
+            val qq0stable = qq0.filter(ts.isStable(_))
+            (
+              for {
+                qqRevivals <- qq0stable.subsets()
+              } yield DefenderStableConjunction(p0, qq0stable -- qqRevivals, qqRevivals)
+            ).toList
+          } else List()
+          val dn = for {
             (a,pp1) <- ts.post(p0)
-            if moveKind != NegationMove // prohibit strong negated observations
-            if !ts.silentActions(a) // prohibit explicit tau moves
             p1 <- pp1
-          } yield {
-            AttackerObservation(p1,
-              qq0.flatMap(ts.post(_, a)),
-              ObservationMove(a)
-            )
-          }
-        )
-        val etaLoop = if (qq0.nonEmpty && moveKind != PassingMove) {
-          val qq1 = qq0.flatMap(ts.silentReachable(_))
-          for {
-            p1 <- ts.silentReachable(p0)
-          } yield AttackerObservation(p1, qq1, PassingMove)
-        } else {
-          List()
-        }
-        val negMoves = if (qq0.size == 1 && (moveKind == ConjunctMove)) {
-          List(AttackerObservation(qq0.head, Set(p0), NegationMove))
-        } else {
-          List()
-        }
-        val p0prime = ts.silentReachable(p0)
-        val conjMoves = (
-          if (moveKind.isInstanceOf[ObservationMove] || moveKind == PassingMove) {
-            for {
-              partList <- selectPartitions(qq0)
-            } yield {
-              DefenderConjunction(p0, partList)
-            }
+            if p0 != p1 || !ts.silentActions(a)
+          } yield if (ts.silentActions(a)) {
+            // stuttering
+            AttackerDelayedObservation(p1, qq0)
           } else {
-            List()
+            // (delayed) observation
+            AttackerObservation(p1, qq0.flatMap(ts.post(_, a)))
           }
-        )
-        obsMoves ++ etaLoop ++ negMoves ++ conjMoves
+          val branchingConjs = for {
+            (a,pp1) <- ts.post(p0)
+            if qq0.size > 1
+            p1 <- pp1
+            qq0a <- qq0.subsets()
+            if qq0a.nonEmpty
+          } yield {
+            DefenderBranchingConjunction(p0, a, p1, qq0 -- qq0a, qq0a)
+          }
+          dn ++ List(unstableConjMove) ++ branchingConjs ++ stableConjMove
+        }
       }
-    case DefenderConjunction(p0, qqPart0) =>
+    case AttackerBranchingObservation(p0, qq0) =>
+      List(AttackerObservation(p0, qq0))
+    case AttackerClause(p0, q0) =>
+      val neg = AttackerDelayedObservation(q0, ts.silentReachable(p0))
+      val pos = AttackerDelayedObservation(p0, ts.silentReachable(q0))
+      List(pos, neg)
+    case AttackerClauseStable(p0, q0) =>
+      // identical to AttackerClause
+      val neg = AttackerDelayedObservation(q0, ts.silentReachable(p0))
+      val pos = AttackerDelayedObservation(p0, ts.silentReachable(q0))
+      List(pos, neg)
+    case DefenderConjunction(p0, qq0) =>
       for {
-        qq0 <- qqPart0
+        q1 <- qq0
       } yield {
-        AttackerObservation(p0, qq0, ConjunctMove)
+        AttackerClause(p0, q1)
       }
-  }
-
-  private def selectPartitions(states: Set[S]): TraversableOnce[List[Set[S]]] = {
-    if (states.isEmpty) {
-      List(List())
-    } else {
-      // List(states.map(Set(_)).toList) // hack to only explore finest partition
-      for {
-        parts <- Partition.partitioningListsOfSet(states)
-        // mainPart <- states.subsets()
-        // if mainPart.nonEmpty
+    case DefenderStableConjunction(p0, qq0, qq0revivals) =>
+      (for {
+        q1 <- qq0
       } yield {
-        parts
-        //mainPart :: (states -- mainPart).map(Set(_)).toList
+        AttackerClauseStable(p0, q1).asInstanceOf[GameNode]
+      }) + DefenderConjunction(p0, Set()) ++ (if (qq0revivals.nonEmpty) List(AttackerObservation(p0, qq0revivals)) else List())
+    case DefenderBranchingConjunction(p0, a, p1, qq0, qq0a) =>
+      val qq1 = if (ts.silentActions(a)) {
+        ts.post(qq0a, a) ++ qq0a
+      } else {
+        ts.post(qq0a, a)
       }
-    }
+      (for {
+        q0 <- qq0
+      } yield {
+        AttackerClause(p0, q0).asInstanceOf[GameNode]
+      }) + AttackerBranchingObservation(p1, qq1)
   }
 }

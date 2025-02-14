@@ -5,18 +5,18 @@ import io.equiv.eqfiddle.util.LabeledRelation
 import io.equiv.eqfiddle.util.Coloring
 
 import io.equiv.eqfiddle.hml.HennessyMilnerLogic
-import io.equiv.eqfiddle.hml.ObservationClass
+import io.equiv.eqfiddle.hml.ObservationNotion
 import io.equiv.eqfiddle.hml.Spectrum
 
 trait SpectroscopyInterface[S, A, L, CF <: HennessyMilnerLogic.Formula[A]] {
 
-  def spectrum: Spectrum[ObservationClass]
+  def spectrum: Spectrum[ObservationNotion]
 
   def compute(
     comparedPairs: Iterable[(S,S)],
     computeFormulas: Boolean = true,
     saveGameSize: Boolean = false
-  ) : SpectroscopyInterface.SpectroscopyResult[S, A, ObservationClass, CF]
+  ) : SpectroscopyInterface.SpectroscopyResult[S, A, ObservationNotion, CF]
 
   def checkIndividualPreorder(comparedPairs: Iterable[(S,S)], notion: String): SpectroscopyInterface.IndividualNotionResult[S]
 
@@ -28,7 +28,7 @@ trait SpectroscopyInterface[S, A, L, CF <: HennessyMilnerLogic.Formula[A]] {
 
 object SpectroscopyInterface {
 
-  case class SpectroscopyResultItem[S, A, +OC <: ObservationClass, +OF <: HennessyMilnerLogic.Formula[A]](
+  case class SpectroscopyResultItem[S, A, +OC <: ObservationNotion, +OF <: HennessyMilnerLogic.Formula[A]](
     left: S,
     right: S,
     distinctions: List[(OF, OC, List[Spectrum.EquivalenceNotion[OC]])],
@@ -51,7 +51,7 @@ object SpectroscopyInterface {
     }
   }
 
-  case class SpectroscopyResult[S, A, +OC <: ObservationClass, +OF <:HennessyMilnerLogic.Formula[A]](
+  case class SpectroscopyResult[S, A, +OC <: ObservationNotion, +OF <:HennessyMilnerLogic.Formula[A]](
       val relationItems: List[SpectroscopyResultItem[S, A, OC, OF]],
       val spectrum: Spectrum[OC],
       val meta: Map[String, String] = Map()) {
@@ -112,7 +112,7 @@ object SpectroscopyInterface {
       new LabeledRelation(relTuples.toSet)
     }
 
-    def toQuotients(eqs: Iterable[Spectrum.EquivalenceNotion[ObservationClass]], rep: (S, S) => S, initialApproximation: Iterable[(S,S)]): Iterable[Coloring[S]] = {
+    def toQuotients(eqs: Iterable[Spectrum.EquivalenceNotion[ObservationNotion]], rep: (S, S) => S, initialApproximation: Iterable[(S,S)]): Iterable[Coloring[S]] = {
       val distances = toDistancesRelation().symmetricReflexiveClosure(initialApproximation.map(_._1), Set())
       for {
         eq <- eqs
@@ -131,7 +131,7 @@ object SpectroscopyInterface {
       } yield preord
     }
 
-    def foundImpliedPreorders(eqs: Iterable[Spectrum.EquivalenceNotion[ObservationClass]], p: S, q: S): Iterable[Spectrum.EquivalenceNotion[ObservationClass]] = {
+    def foundImpliedPreorders(eqs: Iterable[Spectrum.EquivalenceNotion[ObservationNotion]], p: S, q: S): Iterable[Spectrum.EquivalenceNotion[ObservationNotion]] = {
       val preords = foundPreorders(p, q)
       for {
         eq <- eqs

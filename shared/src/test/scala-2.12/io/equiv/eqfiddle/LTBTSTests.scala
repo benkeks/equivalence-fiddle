@@ -1,15 +1,13 @@
 package io.equiv.eqfiddle
 
-import io.equiv.eqfiddle.spectroscopy.PositionalSpectroscopy
-import io.equiv.eqfiddle.spectroscopy.EdgeSpectroscopy
-import io.equiv.eqfiddle.spectroscopy.FastSpectroscopy
-import io.equiv.eqfiddle.hml.ObservationClassStrong
+import io.equiv.eqfiddle.spectroscopy.StrongSpectroscopy
+import io.equiv.eqfiddle.hml.ObservationNotionStrong
 import io.equiv.eqfiddle.hml.HennessyMilnerLogic
 
 
-class LTBTSTests extends CSSSampleTests[ObservationClassStrong, HennessyMilnerLogic.Formula[String]] {
+class LTBTSTests extends CSSSampleTests[ObservationNotionStrong, HennessyMilnerLogic.Formula[String]] {
 
-  override val spectrum = ObservationClassStrong.LTBTS
+  override val spectrum = ObservationNotionStrong.LTBTS
 
   val ltbtsSystem = TestSamples.samples.find(_._1 == "ltbts1").get._2
 
@@ -36,7 +34,5 @@ class LTBTSTests extends CSSSampleTests[ObservationClassStrong, HennessyMilnerLo
     ("R50", "L50", List("ready-trace", "impossible-future"), List("possible-future", "simulation"))
   )
 
-  runTest(ltbtsSystem, sampleNames, new PositionalSpectroscopy(_), "(positional)")
-  runTest(ltbtsSystem, sampleNames, new EdgeSpectroscopy(_), "(edge-labeled)")
-  runTest(ltbtsSystem, sampleNames, new FastSpectroscopy(_), "(energy-labeled)")
+  runTest(ltbtsSystem, sampleNames, new StrongSpectroscopy(_), "(energy-labeled)")
 }
