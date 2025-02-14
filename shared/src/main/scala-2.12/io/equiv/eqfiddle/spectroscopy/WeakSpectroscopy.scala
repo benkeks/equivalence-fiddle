@@ -2,7 +2,7 @@ package io.equiv.eqfiddle.spectroscopy
 
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 import io.equiv.eqfiddle.algo.AlgorithmLogging
-import io.equiv.eqfiddle.hml.ObservationClassFast
+import io.equiv.eqfiddle.hml.ObservationNotionStrong
 import io.equiv.eqfiddle.hml.Spectrum
 import io.equiv.eqfiddle.game.SimpleGame
 import io.equiv.eqfiddle.game.SimpleGame.GameNode
@@ -11,17 +11,17 @@ import io.equiv.eqfiddle.game.EnergyGame.Energy
 import io.equiv.eqfiddle.hml.HennessyMilnerLogic
 import io.equiv.eqfiddle.hml.HMLInterpreter
 import io.equiv.eqfiddle.game.GameGraphVisualizer
-import io.equiv.eqfiddle.hml.ObservationClassEnergyWeak
+import io.equiv.eqfiddle.hml.ObservationNotionWeak
 import io.equiv.eqfiddle.util.FixedPoint
 import io.equiv.eqfiddle.game.MaterializedEnergyGame
 
-class EnergyWeakSpectroscopy[S, A, L] (
+class WeakSpectroscopy[S, A, L] (
     ts: WeakTransitionSystem[S, A, L])
   extends SpectroscopyInterface[S, A, L, HennessyMilnerLogic.Formula[A]] with AlgorithmLogging[S] {
 
   val useCleverBranching: Boolean = true
 
-  val spectrum = ObservationClassEnergyWeak.LTBTS
+  val spectrum = ObservationNotionWeak.LTBTS
 
   val distinguishingFormulas =
     collection.mutable.Map[(GameNode, Energy), Iterable[HennessyMilnerLogic.Formula[A]]]()
@@ -32,7 +32,7 @@ class EnergyWeakSpectroscopy[S, A, L] (
     spectrum.getLeastDistinguishing(oldFormulas)
   }
 
-  def buildHMLWitness(game: EnergyWeakSpectroscopyGame[S, A, L], node: GameNode, price: Energy): Iterable[HennessyMilnerLogic.Formula[A]]
+  def buildHMLWitness(game: WeakSpectroscopyGame[S, A, L], node: GameNode, price: Energy): Iterable[HennessyMilnerLogic.Formula[A]]
     = distinguishingFormulas.getOrElseUpdate((node, price), {
     node match {
       case game.AttackerObservation(p0, qq0) =>
@@ -162,7 +162,7 @@ class EnergyWeakSpectroscopy[S, A, L] (
         pruneDominated(conjs.toSet)
       case game.DefenderBranchingConjunction(p0, a, p1, qq0, qq0a) if useCleverBranching =>
         // note: qq0a is always empty for clever game
-        val gameClever = game.asInstanceOf[EnergyWeakSpectroscopyGameClever[S, A, L]]
+        val gameClever = game.asInstanceOf[WeakSpectroscopyGameClever[S, A, L]]
 
         // at first we collect optional distinguishing formulas for each q in qq0 as in usual conjunctions
         val possibleMoves: Iterable[Iterable[HennessyMilnerLogic.Formula[A]]] = for {
@@ -258,18 +258,18 @@ class EnergyWeakSpectroscopy[S, A, L] (
     }
   })
 
-  private def energyToClass(e: Energy): ObservationClassEnergyWeak = {
-    ObservationClassEnergyWeak(e(0), e(1), e(2), e(3), e(4), e(5), e(6), e(7), e(8))
+  private def energyToClass(e: Energy): ObservationNotionWeak = {
+    ObservationNotionWeak(e(0), e(1), e(2), e(3), e(4), e(5), e(6), e(7), e(8))
   }
 
-  private def classToEnergy(obsClass: ObservationClassEnergyWeak): Energy = {
+  private def classToEnergy(obsClass: ObservationNotionWeak): Energy = {
     val c = obsClass.toTuple
     Energy(Array(c._1, c._2, c._3, c._4, c._5, c._6, c._7, c._8, c._9))
   }
 
   def compute(
       comparedPairs: Iterable[(S,S)]
-    ): SpectroscopyInterface.SpectroscopyResult[S, A, ObservationClassEnergyWeak, HennessyMilnerLogic.Formula[A]] = {
+    ): SpectroscopyInterface.SpectroscopyResult[S, A, ObservationNotionWeak, HennessyMilnerLogic.Formula[A]] = {
     compute(comparedPairs, computeFormulas = true)
   }
 
@@ -277,14 +277,14 @@ class EnergyWeakSpectroscopy[S, A, L] (
       comparedPairs: Iterable[(S,S)],
       computeFormulas: Boolean = true,
       saveGameSize: Boolean = false
-    ): SpectroscopyInterface.SpectroscopyResult[S, A, ObservationClassEnergyWeak, HennessyMilnerLogic.Formula[A]] = {
+    ): SpectroscopyInterface.SpectroscopyResult[S, A, ObservationNotionWeak, HennessyMilnerLogic.Formula[A]] = {
 
     debugLog(s"Start spectroscopy on ${ts.nodes.size} node transition system with ${comparedPairs.size} compared pairs.")
 
     val hmlGame = if (useCleverBranching) {
-      new EnergyWeakSpectroscopyGameClever(ts, energyCap = if (computeFormulas) Int.MaxValue else 3)
+      new WeakSpectroscopyGameClever(ts, energyCap = if (computeFormulas) Int.MaxValue else 3)
     } else {
-      new EnergyWeakSpectroscopyGame(ts, energyCap = if (computeFormulas) Int.MaxValue else 3)
+      new WeakSpectroscopyGame(ts, energyCap = if (computeFormulas) Int.MaxValue else 3)
     }
 
     val init = for {
@@ -351,7 +351,7 @@ class EnergyWeakSpectroscopy[S, A, L] (
         asLink = "https://edotor.net/?engine=dot#"//"https://dreampuf.github.io/GraphvizOnline/#"
       )
 
-      val bestPreorders: Map[GameNode,List[Spectrum.EquivalenceNotion[ObservationClassEnergyWeak]]] =
+      val bestPreorders: Map[GameNode,List[Spectrum.EquivalenceNotion[ObservationNotionWeak]]] =
         distinguishingNodeFormulasExtended.mapValues { ffs =>
         val classes = ffs.flatMap(spectrum.classifyFormula(_)._2)
         spectrum.getStrongestPreorderClass(classes)
@@ -369,11 +369,11 @@ class EnergyWeakSpectroscopy[S, A, L] (
           f <- distinctionFormulas.toList
           (price, eqs) = spectrum.classifyFormula(f)
         } yield (f, price, eqs)
-      } yield SpectroscopyInterface.SpectroscopyResultItem[S, A, ObservationClassEnergyWeak, HennessyMilnerLogic.Formula[A]](p, q, distinctions, preorders)
+      } yield SpectroscopyInterface.SpectroscopyResultItem[S, A, ObservationNotionWeak, HennessyMilnerLogic.Formula[A]](p, q, distinctions, preorders)
 
       if (saveGameSize) gameSize = hmlGame.gameSize()
 
-      SpectroscopyInterface.SpectroscopyResult[S, A, ObservationClassEnergyWeak, HennessyMilnerLogic.Formula[A]](spectroResults.toList, spectrum, meta = Map("game" -> gameString))
+      SpectroscopyInterface.SpectroscopyResult[S, A, ObservationNotionWeak, HennessyMilnerLogic.Formula[A]](spectroResults.toList, spectrum, meta = Map("game" -> gameString))
     } else {
       for {
         gn <- init
@@ -393,7 +393,7 @@ class EnergyWeakSpectroscopy[S, A, L] (
 
       debugLog(graphvizGameWithFormulas(hmlGame, hmlGame.attackerVictoryPrices.toMap, Map()), asLink = "https://dreampuf.github.io/GraphvizOnline/#")
 
-      val bestPreorders: Map[GameNode,(Set[ObservationClassEnergyWeak],List[Spectrum.EquivalenceNotion[ObservationClassEnergyWeak]])] =
+      val bestPreorders: Map[GameNode,(Set[ObservationNotionWeak],List[Spectrum.EquivalenceNotion[ObservationNotionWeak]])] =
         hmlGame.attackerVictoryPrices.toMap.mapValues { energies =>
         val fcs = energies.toSet[Energy].map(energyToClass _)
         (fcs, spectrum.getStrongestPreorderClassFromClass(fcs))
@@ -409,11 +409,11 @@ class EnergyWeakSpectroscopy[S, A, L] (
         distinctions = for {
           price <- prices
         } yield (HennessyMilnerLogic.True[A], price, spectrum.classifyClass(price))
-      } yield SpectroscopyInterface.SpectroscopyResultItem[S, A, ObservationClassEnergyWeak, HennessyMilnerLogic.Formula[A]](p, q, distinctions.toList, preorders)
+      } yield SpectroscopyInterface.SpectroscopyResultItem[S, A, ObservationNotionWeak, HennessyMilnerLogic.Formula[A]](p, q, distinctions.toList, preorders)
 
       if (saveGameSize) gameSize = hmlGame.gameSize()
 
-      SpectroscopyInterface.SpectroscopyResult[S, A, ObservationClassEnergyWeak, HennessyMilnerLogic.Formula[A]](spectroResults.toList, spectrum)
+      SpectroscopyInterface.SpectroscopyResult[S, A, ObservationNotionWeak, HennessyMilnerLogic.Formula[A]](spectroResults.toList, spectrum)
     }
 
   }
@@ -421,9 +421,9 @@ class EnergyWeakSpectroscopy[S, A, L] (
   def checkIndividualPreorder(comparedPairs: Iterable[(S,S)], notion: String): SpectroscopyInterface.IndividualNotionResult[S] = {
     val hmlGame =
       if (useCleverBranching) {
-        new EnergyWeakSpectroscopyGameClever(ts, energyCap = 2)
+        new WeakSpectroscopyGameClever(ts, energyCap = 2)
       } else {
-        new EnergyWeakSpectroscopyGame(ts, energyCap = 2)
+        new WeakSpectroscopyGame(ts, energyCap = 2)
       }
 
     val init = for {
@@ -498,7 +498,7 @@ class EnergyWeakSpectroscopy[S, A, L] (
   }
 
   def gameNodeToString(
-      game: EnergyWeakSpectroscopyGame[S, A, L],
+      game: WeakSpectroscopyGame[S, A, L],
       gn: GameNode) = gn match {
     case game.AttackerObservation(p, qq: Set[_]) =>
       val qqString = qq.mkString("{",",","}")
@@ -521,8 +521,8 @@ class EnergyWeakSpectroscopy[S, A, L] (
     case game.DefenderBranchingConjunction(p0, a, p1, qq0, qq0a) =>
       s"$p0 -${a}-> $p1, ${qq0.mkString("{",",","}")}, ${qq0a.mkString("{",",","}")}"
     case _ =>
-      if (game.isInstanceOf[EnergyWeakSpectroscopyGameClever[S, A, L]]) {
-        val gameClever = game.asInstanceOf[EnergyWeakSpectroscopyGameClever[S, A, L]]
+      if (game.isInstanceOf[WeakSpectroscopyGameClever[S, A, L]]) {
+        val gameClever = game.asInstanceOf[WeakSpectroscopyGameClever[S, A, L]]
         gn match {
           case gameClever.AttackerBranchingConjunction(p0, a, p1, q0) =>
             s"$p0 -${a}-> $p1, ${q0}"
@@ -534,7 +534,7 @@ class EnergyWeakSpectroscopy[S, A, L] (
   }
 
   def graphvizGameWithFormulas(
-      game: EnergyWeakSpectroscopyGame[S, A, L],
+      game: WeakSpectroscopyGame[S, A, L],
       attackerVictoryPrices: Map[GameNode, Iterable[Energy]],
       formulas: Map[GameNode, Set[HennessyMilnerLogic.Formula[A]]]
   ) = {
@@ -569,7 +569,7 @@ class EnergyWeakSpectroscopy[S, A, L] (
       game: MaterializedEnergyGame[Energy],
       attackerWin: Set[GameNode]
   ) = {
-    val baseGame = game.baseGame.asInstanceOf[EnergyWeakSpectroscopyGame[S, A, L]]
+    val baseGame = game.baseGame.asInstanceOf[WeakSpectroscopyGame[S, A, L]]
     val maxIntString = Int.MaxValue.toString()
     val visualizer = new GameGraphVisualizer(game) {
 

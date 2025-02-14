@@ -11,7 +11,6 @@ import io.equiv.eqfiddle.hml.ObservationClass
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 import io.equiv.eqfiddle.algo.AlgorithmLogging
 import io.equiv.eqfiddle.spectroscopy.AbstractSpectroscopy
-import io.equiv.eqfiddle.spectroscopy.PositionalSpectroscopy
 import io.equiv.eqfiddle.hml.Spectrum
 import io.equiv.eqfiddle.hml.HennessyMilnerLogic
 import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface

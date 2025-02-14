@@ -1,8 +1,6 @@
 package io.equiv.eqfiddle
 
-import io.equiv.eqfiddle.spectroscopy.PositionalSpectroscopy
-import io.equiv.eqfiddle.spectroscopy.EdgeSpectroscopy
-import io.equiv.eqfiddle.spectroscopy.FastSpectroscopy
+import io.equiv.eqfiddle.spectroscopy.StrongSpectroscopy
 import io.equiv.eqfiddle.hml.ObservationClassStrong
 import io.equiv.eqfiddle.hml.HennessyMilnerLogic
 
@@ -16,7 +14,5 @@ class EdgeCaseTests extends CSSSampleTests[ObservationClassStrong, HennessyMilne
     ("L2", "R2", List("readiness", "simulation"), List("failure-trace", "impossible-future"))
   )
 
-  runTest(reviewSystem, sampleNames, new PositionalSpectroscopy(_), "(positional)")
-  runTest(reviewSystem, sampleNames, new EdgeSpectroscopy(_), "(edge-labeled)")
-  runTest(reviewSystem, sampleNames, new FastSpectroscopy(_), "(energy-labeled)")
+  runTest(reviewSystem, sampleNames, new StrongSpectroscopy(_), "(energy-labeled)")
 }

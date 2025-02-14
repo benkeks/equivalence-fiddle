@@ -17,10 +17,9 @@ import io.equiv.eqfiddle.util.Relation
 import io.equiv.eqfiddle.util.LabeledRelation
 import io.equiv.eqfiddle.ts.DivergenceInformation
 import io.equiv.eqfiddle.algo.AlgorithmLogging
-import io.equiv.eqfiddle.spectroscopy.{AbstractSpectroscopy, PositionalSpectroscopy, EdgeSpectroscopy, EnergyWeakSpectroscopy}
-import io.equiv.eqfiddle.spectroscopy.FastSpectroscopy
-import io.equiv.eqfiddle.hml.ObservationClassFast
-import io.equiv.eqfiddle.hml.ObservationClassEnergyWeak
+import io.equiv.eqfiddle.spectroscopy.{AbstractSpectroscopy, StrongSpectroscopy, WeakSpectroscopy}
+import io.equiv.eqfiddle.hml.ObservationNotionStrong
+import io.equiv.eqfiddle.hml.ObservationNotionWeak
 import io.equiv.eqfiddle.hml.Spectrum
 import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
 import io.equiv.eqfiddle.algo.WeakTransitionSaturation
@@ -321,9 +320,9 @@ object Structure {
         val begin = Date.now
 
         val algo = if (silentSpectrum) {
-          new EnergyWeakSpectroscopy(structure.structure)
+          new WeakSpectroscopy(structure.structure)
         } else {
-          new FastSpectroscopy(structure.structure)
+          new StrongSpectroscopy(structure.structure)
         }
         algo.uriEncoder = scala.scalajs.js.URIUtils.encodeURI _
 
@@ -376,13 +375,13 @@ object Structure {
         val begin = Date.now
 
         val algo = 
-          if (ObservationClassEnergyWeak.LTBTS.getSpectrumClass.isDefinedAt(notion)) {
-            new EnergyWeakSpectroscopy(structure.structure)
-          } else if (ObservationClassFast.LTBTS.getSpectrumClass.isDefinedAt(notion)) {
-            new FastSpectroscopy(structure.structure)
+          if (ObservationNotionWeak.LTBTS.getSpectrumClass.isDefinedAt(notion)) {
+            new WeakSpectroscopy(structure.structure)
+          } else if (ObservationNotionStrong.LTBTS.getSpectrumClass.isDefinedAt(notion)) {
+            new StrongSpectroscopy(structure.structure)
           } else {
             throw new Exception(
-              s"Notion $notion is not defined. Possible names would be: ${(ObservationClassEnergyWeak.LTBTS.getSpectrumClass.keys ++ ObservationClassEnergyWeak.LTBTS.getSpectrumClass.keys).mkString(", ")}")
+              s"Notion $notion is not defined. Possible names would be: ${(ObservationNotionWeak.LTBTS.getSpectrumClass.keys ++ ObservationNotionWeak.LTBTS.getSpectrumClass.keys).mkString(", ")}")
           }
 
         algo.uriEncoder = scala.scalajs.js.URIUtils.encodeURI _
@@ -440,7 +439,7 @@ object Structure {
 
       val states = structure.structure.nodes.toList
 
-      val algo = new FastSpectroscopy(structure.structure)
+      val algo = new StrongSpectroscopy(structure.structure)
 
       val comparedPairs = for {
         n1i <- 0 until states.length
@@ -455,7 +454,7 @@ object Structure {
 
       val eqLevels =
         distRel.labels.map(result.spectrum.getStrongestPreorderClassFromClass(_))
-        .flatten.toSet[Spectrum.EquivalenceNotion[ObservationClassFast]].toList.sortBy(_.obsClass.toTuple).reverse
+        .flatten.toSet[Spectrum.EquivalenceNotion[ObservationNotionStrong]].toList.sortBy(_.obsClass.toTuple).reverse
 
       val replay = for {
         Spectrum.EquivalenceNotion(name, obsClass) <- eqLevels
@@ -484,7 +483,7 @@ object Structure {
 
         val begin = Date.now
 
-        val algo = new FastSpectroscopy(structure.structure)
+        val algo = new StrongSpectroscopy(structure.structure)
 
         val comparedPairs = for {
           n2 <- structure.structure.nodes
