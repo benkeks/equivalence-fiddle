@@ -14,7 +14,7 @@ class HennessyMilnerLogicTests extends AnyFunSpec with should.Matchers  {
       LTBTS.classifier(ob1) should equal (ObservationNotionStrong(1,0,0,0,0,0))
     }
     
-    val ob2 = Observe("a", Negate( And( Set[Formula[String]](Observe("a", True[String])))))
+    val ob2 = Observe("a", And( Set[Formula[String]]( Negate( Observe("a", True[String])))))
     it(ob2 + " should have coordinates (2,1,0,0,1,1)") {
       LTBTS.classifier(ob2) should equal (ObservationNotionStrong(2,1,0,0,1,1))
     }
@@ -24,8 +24,8 @@ class HennessyMilnerLogicTests extends AnyFunSpec with should.Matchers  {
       Observe("a", True[String]),
       Observe("a", Observe("a", True[String]))
     )))
-    it(ob3 + " should have coordinates (3,1,1,2,1,1)") {
-      LTBTS.classifier(ob3) should equal (ObservationNotionStrong(3,1,1,2,1,1))
+    it(ob3 + " should have coordinates (3,1,2,1,1,1)") {
+      LTBTS.classifier(ob3) should equal (ObservationNotionStrong(3,1,2,1,1,1))
     }
 
     val conj1a = And(Set[Formula[String]](

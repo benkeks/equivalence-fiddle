@@ -78,15 +78,15 @@ object ObservationNotionStrong {
   // observationHeight, conjunctionLevels, revivalHeight, positiveConjHeight, negativeConjHeight, negationLevels
   // The Linear-time Branching-time Spectrum
   val BaseLTBTS = List(
-    "enabledness" ->        ObservationNotionStrong(    1,     1,    0,    0,    0,    0),
-    "traces" ->             ObservationNotionStrong(INFTY,     1,    0,    0,    0,    0),
-    "failure" ->            ObservationNotionStrong(INFTY,     2,    0,    0,    1,    1),
-    "revivals" ->           ObservationNotionStrong(INFTY,     2,    1,    0,    1,    1),
-    "readiness" ->          ObservationNotionStrong(INFTY,     2,    1,    1,    1,    1),
+    "enabledness" ->        ObservationNotionStrong(    1,     0,    0,    0,    0,    0),
+    "traces" ->             ObservationNotionStrong(INFTY,     0,    0,    0,    0,    0),
+    "failure" ->            ObservationNotionStrong(INFTY,     1,    0,    0,    1,    1),
+    "revivals" ->           ObservationNotionStrong(INFTY,     1,    1,    0,    1,    1),
+    "readiness" ->          ObservationNotionStrong(INFTY,     1,    1,    1,    1,    1),
     "failure-trace" ->      ObservationNotionStrong(INFTY, INFTY,INFTY,    0,    1,    1),
     "ready-trace" ->        ObservationNotionStrong(INFTY, INFTY,INFTY,    1,    1,    1),
-    "impossible-future" ->  ObservationNotionStrong(INFTY,     2,    0,    0,INFTY,    1),
-    "possible-future" ->    ObservationNotionStrong(INFTY,     2,INFTY,INFTY,INFTY,    1),
+    "impossible-future" ->  ObservationNotionStrong(INFTY,     1,    0,    0,INFTY,    1),
+    "possible-future" ->    ObservationNotionStrong(INFTY,     1,INFTY,INFTY,INFTY,    1),
     "simulation" ->         ObservationNotionStrong(INFTY, INFTY,INFTY,INFTY,    0,    0),
     "ready-simulation" ->   ObservationNotionStrong(INFTY, INFTY,INFTY,INFTY,    1,    1),
     "2-nested-simulation"-> ObservationNotionStrong(INFTY, INFTY,INFTY,INFTY,INFTY,    1),
@@ -99,7 +99,7 @@ object ObservationNotionStrong {
   def formulaObsClass(f: HennessyMilnerLogic.Formula[_]): ObservationNotionStrong = f match {
     case HennessyMilnerLogic.And(subterms) =>
       if (subterms.isEmpty) {
-        ObservationNotionStrong(conjunctionLevels = 1)
+        ObservationNotionStrong()
       } else {
         val (positiveSubterms, negativeSubterms) = subterms.toList.partition(_.isPositive)
         val positiveClasses = positiveSubterms.map(formulaObsClass(_))
