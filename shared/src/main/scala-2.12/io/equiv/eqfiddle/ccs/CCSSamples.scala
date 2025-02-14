@@ -232,6 +232,10 @@ P00A = a.tau.tau.b
 P00B = tau.a.b
 @compareSilent P00A, P00B
 
+@comment "Branching bisimilar but not strongly bisimilar!"
+@check "sr-branching-bisimulation", P00A, P00B
+@check "bisimulation", P00A, P00B
+
 P1A = (tau.b + a)
 P1B = (P1A + b)
 @comment "Delay bisimilar processes" 

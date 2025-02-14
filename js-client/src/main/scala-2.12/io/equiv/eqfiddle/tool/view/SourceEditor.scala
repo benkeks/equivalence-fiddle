@@ -303,7 +303,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
     val node = dom.document.createElement("ul").asInstanceOf[HTMLElement]
     for ((le, i) <- replay.zipWithIndex) {
       val leChild = dom.document.createElement("li").asInstanceOf[HTMLElement]
-      leChild.innerHTML = i.toString + ": " + (le() match {
+      leChild.innerHTML = (le() match {
         case AlgorithmLogging.LogRelation(_, comment) =>
           comment
         case AlgorithmLogging.LogRichRelation(_, comment) =>

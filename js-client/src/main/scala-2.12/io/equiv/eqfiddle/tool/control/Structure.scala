@@ -387,22 +387,27 @@ object Structure {
 
         algo.uriEncoder = scala.scalajs.js.URIUtils.encodeURI _
 
-        val result = algo.checkIndividualPreorder(List((n1, n2)), notion)
+        val result = algo.checkIndividualPreorder(List((n1, n2), (n2, n1)), notion)
         println("Preorder check took: " + (Date.now - begin) + "ms.")
 
         // val gameString = result.meta.get("game") match {
         //   case Some(game) if game != "" => s""" <a href="$game" target="_blank">View game.</a>"""
         //   case _ => ""
         // }
-        val Some(pairResult) = result.find(r => r.left == n1 && r.right == n2)
+        val Some(lrResult) = result.find(r => r.left == n1 && r.right == n2)
+        val Some(rlResult) = result.find(r => r.left == n2 && r.right == n1)
 
         val replay = List(
           () => AlgorithmLogging.LogRelation(
-            new LabeledRelation[NodeID, String](pairResult.relation),
-            if (pairResult.isMaintained)
-              "States are preordered"
+            new LabeledRelation[NodeID, String](lrResult.relation),
+            if (lrResult.isMaintained && rlResult.isMaintained)
+              "States are <strong>equivalent</strong>."
+            else if (lrResult.isMaintained)
+              "States are strictly <strong>preordered</strong> (only from left to right)."
+            else if (rlResult.isMaintained)
+              "States are <strong>inversely preordered</strong> (only from right to left)."
             else
-              "States are <strong>not</strong> preordered")
+              "States are <strong>not</strong> preordered (nor equivalent)")
         )
         structure.setReplay(replay)
         structure.main.doAction(StructureDoReplayStep(), structure)
