@@ -20,6 +20,7 @@ import io.equiv.eqfiddle.algo.AlgorithmLogging
 import io.equiv.eqfiddle.spectroscopy.{AbstractSpectroscopy, PositionalSpectroscopy, EdgeSpectroscopy, EnergyWeakSpectroscopy}
 import io.equiv.eqfiddle.spectroscopy.FastSpectroscopy
 import io.equiv.eqfiddle.hml.ObservationClassFast
+import io.equiv.eqfiddle.hml.ObservationClassEnergyWeak
 import io.equiv.eqfiddle.hml.Spectrum
 import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
 import io.equiv.eqfiddle.algo.WeakTransitionSaturation
@@ -374,12 +375,16 @@ object Structure {
 
         val begin = Date.now
 
-        val algo = new EnergyWeakSpectroscopy(structure.structure)
-        //  if (silentSpectrum) {
-        //   new EnergyWeakSpectroscopy(structure.structure)
-        // } else {
-        //   new FastSpectroscopy(structure.structure)
-        // }
+        val algo = 
+          if (ObservationClassEnergyWeak.LTBTS.getSpectrumClass.isDefinedAt(notion)) {
+            new EnergyWeakSpectroscopy(structure.structure)
+          } else if (ObservationClassFast.LTBTS.getSpectrumClass.isDefinedAt(notion)) {
+            new FastSpectroscopy(structure.structure)
+          } else {
+            throw new Exception(
+              s"Notion $notion is not defined. Possible names would be: ${(ObservationClassEnergyWeak.LTBTS.getSpectrumClass.keys ++ ObservationClassEnergyWeak.LTBTS.getSpectrumClass.keys).mkString(", ")}")
+          }
+
         algo.uriEncoder = scala.scalajs.js.URIUtils.encodeURI _
 
         val result = algo.checkIndividualPreorder(List((n1, n2)), notion)

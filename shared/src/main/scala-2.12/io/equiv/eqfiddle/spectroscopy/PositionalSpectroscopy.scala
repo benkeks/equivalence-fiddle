@@ -131,4 +131,6 @@ class PositionalSpectroscopy[S, A, L] (
 
     collectSpectroscopyResult(hmlGame, minFormulas)
   }
+
+  def checkIndividualPreorder(comparedPairs: Iterable[(S,S)], notion: String): Iterable[SpectroscopyInterface.IndividualNotionResult[S]] = List()
 }

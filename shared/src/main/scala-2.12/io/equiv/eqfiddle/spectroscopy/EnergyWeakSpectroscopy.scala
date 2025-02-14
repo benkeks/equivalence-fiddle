@@ -465,7 +465,7 @@ class EnergyWeakSpectroscopy[S, A, L] (
 
     val attackerWins = reachabilityGame.computeWinningRegion()
 
-    println(debugLog(graphvizMaterializedGame(reachabilityGame, attackerWins)))
+    debugLog(graphvizMaterializedGame(reachabilityGame, attackerWins))
 
     val relation: Set[(S, String, S)] = for {
       gn <- reachabilityGame.discovered.toSet

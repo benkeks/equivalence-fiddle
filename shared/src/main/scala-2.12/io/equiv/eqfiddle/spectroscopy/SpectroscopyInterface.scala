@@ -18,6 +18,8 @@ trait SpectroscopyInterface[S, A, L, CF <: HennessyMilnerLogic.Formula[A]] {
     saveGameSize: Boolean = false
   ) : SpectroscopyInterface.SpectroscopyResult[S, A, ObservationClass, CF]
 
+  def checkIndividualPreorder(comparedPairs: Iterable[(S,S)], notion: String): Iterable[SpectroscopyInterface.IndividualNotionResult[S]]
+
   /**
     * output the game size in positions and moves after the algorithm has run (if saveGameSize was selected)
     */

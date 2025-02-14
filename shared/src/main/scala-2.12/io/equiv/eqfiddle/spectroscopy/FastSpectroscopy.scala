@@ -272,4 +272,6 @@ class FastSpectroscopy[S, A, L] (
 
     visualizer.outputDot(attackerWin)
   }
+
+  def checkIndividualPreorder(comparedPairs: Iterable[(S,S)], notion: String): Iterable[SpectroscopyInterface.IndividualNotionResult[S]] = List()
 }
