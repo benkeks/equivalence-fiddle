@@ -418,7 +418,7 @@ class EnergyWeakSpectroscopy[S, A, L] (
 
   }
 
-  def checkIndividualPreorder(comparedPairs: Iterable[(S,S)], notion: String): Iterable[SpectroscopyInterface.IndividualNotionResult[S]] = {
+  def checkIndividualPreorder(comparedPairs: Iterable[(S,S)], notion: String): SpectroscopyInterface.IndividualNotionResult[S] = {
     val hmlGame =
       if (useCleverBranching) {
         new EnergyWeakSpectroscopyGameClever(ts, energyCap = 2)
@@ -462,10 +462,12 @@ class EnergyWeakSpectroscopy[S, A, L] (
     val reachabilityGame: MaterializedEnergyGame[Energy] = new MaterializedEnergyGame[Energy](
       hmlGame, init, notionEnergy, energyUpdate, preferredNodes)
 
-
     val attackerWins = reachabilityGame.computeWinningRegion()
 
-    debugLog(graphvizMaterializedGame(reachabilityGame, attackerWins))
+    val gameString = debugLog(
+      graphvizMaterializedGame(reachabilityGame, attackerWins),
+      asLink = "https://edotor.net/?engine=dot#"//"https://dreampuf.github.io/GraphvizOnline/#"
+    )
 
     val relation: Set[(S, String, S)] = for {
       gn <- reachabilityGame.discovered.toSet
@@ -479,11 +481,12 @@ class EnergyWeakSpectroscopy[S, A, L] (
       }
     } yield (p, eString,  q)
 
-    for {
+    val items = for {
       (p, q) <- comparedPairs
     } yield {
-      SpectroscopyInterface.IndividualNotionResult(p, q, relation.contains((p, "", q)), relation)
+      SpectroscopyInterface.IndividualNotionResultItem(p, q, relation.contains((p, "", q)))
     }
+    SpectroscopyInterface.IndividualNotionResult(items, relation, meta = Map("game" -> gameString))
   }
 
   def checkDistinguishing(formula: HennessyMilnerLogic.Formula[A], p: S, q: S) = {

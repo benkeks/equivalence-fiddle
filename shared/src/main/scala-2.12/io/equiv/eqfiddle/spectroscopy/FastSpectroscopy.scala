@@ -280,7 +280,7 @@ class FastSpectroscopy[S, A, L] (
     visualizer.outputDot(attackerWin)
   }
 
-  def checkIndividualPreorder(comparedPairs: Iterable[(S,S)], notion: String): Iterable[SpectroscopyInterface.IndividualNotionResult[S]] = {
+  def checkIndividualPreorder(comparedPairs: Iterable[(S,S)], notion: String): SpectroscopyInterface.IndividualNotionResult[S] = {
     val hmlGame = new EnergySpectroscopyGame(ts, energyCap = 3)
 
     val init = for {
@@ -324,11 +324,12 @@ class FastSpectroscopy[S, A, L] (
       }
     } yield (p, eString,  q)
 
-    for {
+    val items = for {
       (p, q) <- comparedPairs
     } yield {
-      SpectroscopyInterface.IndividualNotionResult(p, q, relation.contains((p, "", q)), relation)
+      SpectroscopyInterface.IndividualNotionResultItem(p, q, relation.contains((p, "", q)))
     }
+    SpectroscopyInterface.IndividualNotionResult(items, relation)
   }
 
 }
