@@ -6,7 +6,7 @@ object CCSSamples {
   val ltbts1 = """
 @hint "compare processes by clicking on the gutter next to the @compare statements!"
 
-@minimize
+@minimize ""
 
 L13(x=-200,y=500)
 R13(x=300,y=500)
@@ -14,7 +14,7 @@ L13 = a.b.0 + a.0
 R13 = a.b.0
 @eqs "L13,R13:T,S"
 @notEqs "L13,R13:CT,1F"
-@compare "L13,R13"
+@compare L13, R13
 
 L16(x=-200,y=400)
 R16(x=300,y=400)
@@ -22,7 +22,7 @@ L16 = a.b.0 + a.(b.0 + c.0)
 R16 = a.(b.0 + c.0)
 @eqs "L16,R16:CT,CS"
 @notEqs "L16,R16:F,1F"
-@compare "L16,R16"
+@compare L16, R16
 
 L21(x=-200,y=300)
 R21(x=300,y=300)
@@ -30,7 +30,7 @@ L21 = a.(b.0 + c.d.0) + a.(f.0 + c.e.0)
 R21 = a.(b.0 + c.e.0) + a.(f.0 + c.d.0)
 @eqs "L21,R21:F,R"
 @notEqs "L21,R21:FT,RT"
-@compare "L21,R21"
+@compare L21, R21
 
 L24(x=-200,y=200)
 R24(x=300,y=200)
@@ -38,7 +38,7 @@ L24 = a.b.0 + a.c.0
 R24 = a.b.0 + a.(b.0 + c.0) + a.c.0
 @eqs "L24,R24:F,FT"
 @notEqs "L24,R24:R,RT"
-@compare "L24,R24"
+@compare L24, R24
 
 L27(x=-200,y=100)
 R27(x=300,y=100)
@@ -48,7 +48,7 @@ R27 = a.(a.(b.0 + c.d.0) + a.c.e.0)
   + a.(a.c.d.0 + a.(c.e.0 + b.0) + b.0)
 @eqs "L27,R27:PF"
 @notEqs "L27,R27:FT,S"
-@compare "L27,R27"
+@compare L27, R27
 
 L31(x=-200,y=0)
 R31(x=300,y=0)
@@ -56,19 +56,19 @@ L31 = a.b.c.0 + a.b.d.0
 R31 = a.(b.c.0 + b.d.0)
 @eqs "L31,R31:PW,RT"
 @notEqs "L31,R31:S"
-@compare "L31,R31"
+@compare L31, R31
 
 L34(x=-200,y=-100)
 L34 = a.b.c.0 + a.(b.c.0 + b.d.0)
 @eqs "L34,R31:RS"
 @notEqs "L34,R31:PF"
-@compare "L34,R31"
+@compare L34, R31
 
 L38(x=100,y=-100)
 L38 = a.b.0 + a.0 + a.c.0
 @eqs "L38,R24:1F"
 @notEqs "L38,R24:CT,F"
-@compare "L38,R24"
+@compare L38, R24
 
 L42(x=-200,y=-200)
 R42(x=300,y=-200)
@@ -76,7 +76,7 @@ L42 = a.b.c.0 + a.(b.c.0 + b.0)
 R42 = a.(b.c.0 + b.0)
 @eqs "L42,R42:2S"
 @notEqs "L42,R42:B"
-@compare "L42,R42"
+@compare L42, R42
 
 L50(x=-200,y=-300)
 R50(x=300,y=-300)
@@ -84,7 +84,7 @@ L50 = a.(b.d.0 + c.e.0) + a.(c.f.0 + b.g.0)
 R50 = a.(b.d.0 + c.e.0 + c.f.0 + b.g.0)
 @eqs "L50,R50:RT"
 @notEqs "L50,R50:PW"
-@compare "L50,R50"
+@compare L50, R50
 
 "0"(x=0, y=800)
 "b.0"(x=-100, y=600)
@@ -126,7 +126,7 @@ P2(x=600, y=0)
 P1 = (a.(b.0 + c.0) + a.d.0)
 P2 = (a.(b.0 + d.0) + a.(c.0 + d.0))
 @comment "P1 is distinguished from P2 under failure and simulation preorder"
-@compare "P1,P2"
+@compare P1, P2
 """
 
   val failureTraceAndImpossibleFutures = """
@@ -140,7 +140,7 @@ P2(x=600, y=100)
 P1 = (a.b.0 + a.(b.0 + c.0) + a.c.0)
 P2 = (a.b.0 + a.c.0)
 @comment "P1 is preordered to P2 by failure-trace AND impossible futures"
-@compare "P1,P2"
+@compare P1, P2
 """
 
   val reviewCounterexamples = """
@@ -156,7 +156,7 @@ R1(x=600, y=0)
 L1 = a.b.0
 R1 = (a.0 + a.b.b.0 + a.(a.0 + b.0))
 @comment "L1 is preordered to R1 by readiness (but distinguished by failure-traces AND impossible futures)" 
-@compare "L1,R1" 
+@compare L1, R1 
 
 L2(x=0, y=700)
 R2(x=600, y=700)
@@ -169,33 +169,33 @@ R2(x=600, y=700)
 "c.0"(x=461, y=508)
 L2 = a.(b.0 + c.0 + d.d.0)
 R2 = (a.(a.0 + d.d.0) + a.(b.b.0 + c.0 + d.d.d.0) + a.(b.0 + c.c.0 + d.d.d.0))
-@compare "L2, R2"
+@compare L2, R2
 
 L3(x=-200, y=500)
 R3(x=-100, y=500)
 L3 = c.(a.a.0 + b.b.0)
 R3 = c.(a.a.0 + a.0 + b.0) + c.(a.a.0 + a.0 + b.b.0)
 @comment "Example where the improved pruning finds minimal formula ⟨c⟩¬⟨a⟩¬⟨a⟩⊤."
-@compare "L3, R3"
+@compare L3, R3
 """
 
   val weakBisimCoupledSimParallel = """
 P1A = tau.a + tau.b + tau.c
 P1B = tau.a + tau.(tau.b + tau.c)
 @comment "Distinguished by Weak Bisim (eq by coupledsim = weaksim + contrasim)"
-@compareSilent "P1A,P1B" 
+@compareSilent P1A, P1B
 
 P2A = (res!0 | (res.a.0 + res.b.0 + res.c.0)) \ {res}
 P2B = (res1!res2!0 | (res1.res2.a.0 + res1.(res2.b.0 + res2.c.0))) \ {res1, res2}
 
 @comment "More complicated variant of P1"
-@compareSilent "P2A,P2B" 
+@compareSilent P2A, P2B
 
 @comment "Pc, Pp Contrasim from https://arxiv.org/pdf/2108.10492.pdf" 
 Pc = (pl.sp.aEats | pl.sp.bEats | pl!0 | op.sp!0) \ {pl, sp}
 Pp = (pl.op.sp.aEats | pl.op.sp.bEats | pl!0 | sp!0) \ {pl, sp}
 
-@compareSilent "Pc,Pp"
+@compareSilent Pc, Pp
 
 @comment "------- layout --------" 
 
@@ -226,31 +226,31 @@ Pp(x=511, y=590)
   val strongWeakSims = """
 P0A = tau.a
 P0B = a
-@compareSilent "P0A, P0B"
+@compareSilent P0A, P0B
 
 P00A = a.tau.tau.b
 P00B = tau.a.b
-@compareSilent "P00A, P00B"
+@compareSilent P00A, P00B
 
 P1A = (tau.b + a)
 P1B = (P1A + b)
 @comment "Delay bisimilar processes" 
-@compareSilent "P1B, P1A" 
+@compareSilent P1B, P1A
 
 P2A = a.(tau.b + c)
 P2B = (a.b + P2A)
 @comment "Weakly bisimilar but not delay bisim" 
-@compareSilent "P2B, P2A" 
+@compareSilent P2B, P2A
 
 P3A = a + tau.b
 P3B = P3A + b
 @comment "Stabilitiy-respecting delay-bisimilar, but not eta-similar"
-@compareSilent "P3B, P3A"
+@compareSilent P3B, P3A
 
 P4A = a.b + a.c
 P4B = a.(tau.b + tau.c)
 @comment "Stable bisimilar but not even weakly similar"
-@compareSilent "P4B, P4A"
+@compareSilent P4B, P4A
 
 @comment "------- layout --------" 
 
@@ -284,10 +284,9 @@ B12 = ecB.lcB.setReadyBf!B1
 Peterson = (A1 | B1 | TurnA | ReadyAf | ReadyBf) \ {readyAf, readyAt, setReadyAf, setReadyAt, readyBf, readyBt, setReadyBf, setReadyBt, turnA, turnB, setTurnA, setTurnB}
 Spec = (ecA.lcA.Spec + ecB.lcB.Spec)
 
-@compare "Peterson, Spec" 
-@compare "Spec, Peterson" 
-@minimize
-
+@compare Peterson, Spec 
+@compare Spec, Peterson 
+@minimize "strong"
 
 
 Peterson(x=35, weakness_saturated, y=63, main, bisim_minimized)
@@ -356,7 +355,7 @@ Spec(x=-289, y=-26, main, weakness_saturated)
        |Peterson = (A1 | B1 | TurnA | ReadyAf | ReadyBf) \ {readyAf, readyAt, setReadyAf, setReadyAt, readyBf, readyBt, setReadyBf, setReadyBt, turnA, turnB, setTurnA, setTurnB}
        |Spec = (ecA.lcA.Spec + ecB.lcB.Spec)
        |
-       |@compareSilent "Peterson, Spec" 
+       |@compareSilent Peterson, Spec 
        |
        |Peterson(x=35, y=63, main)
        |Spec(x=-289, y=-26, main)
@@ -418,10 +417,10 @@ P2 = (b.S0 + b.c)
 S0 = a.(a + b + b.c)
 S1 = a.(a + b.c)
 
-@compare "P1,P2" 
-@compare "S0,S1"
+@compare P1,P2
+@compare S0,S1
 
-@minimize
+@minimize "strong"
 """
 
 
@@ -431,84 +430,84 @@ S1 = a.(a + b.c)
 P11 = tau.(tau.c + b) + a
 P12 = tau.(tau.c + b) + a + tau.c
 
-@compareSilent "P12,P11"
+@compareSilent P12, P11
 @comment "delay-bisimilar and eta-bisimilar, but not branching bisimilar!"
 
 P13 = a.(tau.b + c)
 P14 = a.(tau.b + c) + a.b
-@compareSilent "P13,P14"
+@compareSilent P13, P14
 @comment "eta-bisimilar and stable-bisimilar, but not delay."
 
 P15 = tau.(tau.c + b) + b + a
 P16 = tau.c + b + a
-@compareSilent "P15, P16"
+@compareSilent P15, P16
 @comment "coupled eta-similar, but not weak bisim."
 
 P21 = a.b.c + a.(b.c + b.d)
 P22 = a.(b.c + b.d)
-@compareSilent "P21, P22"
+@compareSilent P21, P22
 @comment "stable ready (eta)-similar, but not contrasim or stable bisim"
 
 P23 = a.b.c + a.b.d
-@compareSilent "P22, P23"
-@compare "P22, P23"
+@compareSilent P22, P23
+@compare P22, P23
 @comment "(Stable) ready trace but not sim eq"
 
 P24 = a.tau.b + a.tau.c
 P25 = a.(tau.b + tau.c)
-@compareSilent "P24, P25"
+@compareSilent P24, P25
 @comment "Contrasim (and stable bisim) but not sim"
 
 P31 = a.(b + c.d) + a.(c.e + f)
 P32 = a.(b + c.e) + a.(c.d + f)
-@compareSilent "P31, P32"
+@compareSilent P31, P32
 @comment "failure and ready but not failuretrace and readytrace eq."
 
 P33 = tau.b + a
 P34 = tau.b + b + a
-@compareSilent "P34, P33"
+@compareSilent P34, P33
 @comment "stability-respecting delay bisimilar but not eta-sim"
 
 P41 = a.b + a.c
 P42 = a.b + a.(b + c) + a.c
-@compareSilent "P42, P41"
+@compareSilent P42, P41
 @comment "imposs. future (and failure) prordered but not readies."
 
 P43 = a.(b + c)
-@compareSilent "P42, P43"
+@compareSilent P42, P43
 @comment "eta-sim and completed traces, but not failures"
 
 P44 = a.(b.c + tau.b.c + b.d)
 P45 = a.(b.c + tau.b.d + b.d)
-@compareSilent "P44, P45"
+@compareSilent P44, P45
 @comment "Ready eta-sim"
 
 Div = tau.Div
 P51 = tau.P51 + a.b.c + a.b.Div
 P52 = tau.P52 + a.b.c
-@compareSilent "P51, P52"
+@compareSilent P51, P52
 
 P53sub = tau.P53sub + tau.b
 P53 = a.P53sub
 P54 = a.b
-@compareSilent "P53, P54"
+@compareSilent P53, P54
 @comment "s-r-branching-bisim but nothing weaker"
 
 P55sub = tau.P55sub + b
 P55 = a.P55sub
-@compareSilent "P54, P55"
+@compareSilent P54, P55
 @comment "(Completed) branching bisim but not stable failures eq"
 
 P56 = a.(b + tau.Div)
-@compareSilent "P55, P56"
+@compareSilent P55, P56
 @comment "stable eta-coupled sim but not contrasim"
 
 P57 = a.(b + tau)
-@compareSilent "P57, P56"
+@compareSilent P57, P56
 @comment "branching bisim but not failure"
 
 P58 = a.(tau.b + b + tau)
-@compareSilent "P58, P57"
+@compareSilent P58, P57
 @comment "failure-eta-sim but not ready-eq"
 
 """
@@ -516,7 +515,7 @@ P58 = a.(tau.b + b + tau)
   val davidsEdgeCases =
     """|A1 = (f.f + tau.(a + tau.d + tau.f))
        |A2 = (tau.(tau.(a + tau.f) + tau.d) + tau.(a + tau.d + f.f))
-       |@compareSilent "A1, A2"
+       |@compareSilent A1, A2
        |""".stripMargin
 
   val stableUnstableAbstraction =
@@ -533,8 +532,8 @@ P58 = a.(tau.b + b + tau)
        |Pte = Pe \csp { idle }
        |Ptl = Pl \csp { idle }
        |
-       |@compareSilent "Pe, Pl"
-       |@compareSilent "Pte, Ptl"
+       |@compareSilent Pe, Pl
+       |@compareSilent Pte, Ptl
        |
        |@comment "Pe/Pl should be (unstable&stable) readiness equivalent"
        |@comment "Pte/Ptl are stable, but not unstable (!) failure (and readiness) equivalent"

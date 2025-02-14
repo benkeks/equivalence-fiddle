@@ -72,7 +72,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
   var lastText = ""
   var lastPipelineText = ""
   
-  var runners = List[(String, String, Int)]()
+  var runners = List[(String, List[String], Int)]()
   
   var currentPipelineLine = 0
   var pipelineReplayWidget: Option[LineWidget] = None
@@ -241,7 +241,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
     }
   }
 
-  def setRunners(runners: List[(String, String, Int)]) = {
+  def setRunners(runners: List[(String, List[String], Int)]) = {
     this.runners = runners
   }
   

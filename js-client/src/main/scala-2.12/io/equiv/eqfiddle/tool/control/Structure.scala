@@ -364,7 +364,7 @@ object Structure {
     }
   }
 
-  case class StructureCheckEquivalence(n1: NodeID, n2: NodeID, notion: String, resetReplay: Boolean = true, silentSpectrum: Boolean = false) extends StructureAction {
+  case class StructureCheckEquivalence(n1: NodeID, n2: NodeID, notion: String, resetReplay: Boolean = true) extends StructureAction {
 
     override def implementStructure(structure: Structure) = {
       if (resetReplay) {

@@ -271,12 +271,35 @@ class Parser(val input: String) extends Parsing {
   }
   
   def metaDeclaration(in: List[Token]): Parsed[MetaDeclaration] = in match {
-    case MetaSign(p) :: Identifier(n, _) :: LiteralString(v, _) :: rest =>
-      ParseSuccess(MetaDeclaration(n, v, p), rest)
     case MetaSign(p) :: Identifier(n, _) :: rest =>
-      ParseSuccess(MetaDeclaration(n, "", p), rest)
+      metaArgumentList(rest, List()) flatMap { (args, in2) =>
+        ParseSuccess(MetaDeclaration(n, args, p), in2)
+      }
     case other =>
       ParseFail("Expected meta declaration.", other)
+  }
+
+  def metaArgumentList(in: List[Token], list: List[String]): Parsed[List[String]] = {
+    def argumentToString(arg: Token) = arg match {
+      case Identifier(name, pos) => Some(name)
+      case LiteralNumber(num, pos) => Some(num)
+      case LiteralString(str, pos) => Some(str)
+      case _ => None
+    }
+    in match {
+      case argument :: Comma(_) :: rest =>
+        argumentToString(argument) match {
+          case Some(argStr) => metaArgumentList(rest, list :+ argStr)
+          case _ => ParseFail("Illegal argument.", in)
+        }    
+      case argument :: rest =>
+        argumentToString(argument) match {
+          case Some(argStr) => ParseSuccess(list :+ argStr, rest)
+          case _ => ParseFail("Illegal argument. (Expected comma separated argument list.)", in)
+        }
+      case other =>
+        ParseSuccess(list, other)
+    }
   }
   
   def topLevelExpression(in: List[Token]): Parsed[Expression] = {
