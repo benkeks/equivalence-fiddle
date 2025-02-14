@@ -40,10 +40,10 @@ object Benchmark extends App {
       |Source:    https://github.com/benkeks/equivalence-fiddle
       |""".stripMargin
 
-  AlgorithmLogging.loggingActive = true
-  AlgorithmLogging.debugLogActive = false
-
   def algorithm[S,A,L](system: WeakTransitionSystem[S, A, L]): SpectroscopyInterface[S,A,L,HennessyMilnerLogic.Formula[A]] = {
+    AlgorithmLogging.loggingActive = true
+    AlgorithmLogging.debugLogActive = false
+
     if (args.contains("--formula-spectroscopy")) {
       new EdgeSpectroscopy(system)
     } else if (args.contains("--unclever-spectroscopy")) {

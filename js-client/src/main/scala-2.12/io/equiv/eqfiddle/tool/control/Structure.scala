@@ -20,6 +20,7 @@ import io.equiv.eqfiddle.algo.AlgorithmLogging
 import io.equiv.eqfiddle.spectroscopy.{AbstractSpectroscopy, PositionalSpectroscopy, EdgeSpectroscopy, EnergyWeakSpectroscopy}
 import io.equiv.eqfiddle.spectroscopy.FastSpectroscopy
 import io.equiv.eqfiddle.hml.ObservationClassFast
+import io.equiv.eqfiddle.hml.ObservationClassEnergyWeak
 import io.equiv.eqfiddle.hml.Spectrum
 import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
 import io.equiv.eqfiddle.algo.WeakTransitionSaturation
@@ -346,6 +347,71 @@ object Structure {
           //() => AlgorithmLogging.LogRelation(result.toDistinctionRelation(), s"Right-left-distinguished by:<div class='distinctions'>$rightLeftDists</div>"),
           () => AlgorithmLogging.LogRelation(result.toEquivalencesRelation(), s"Equated by:<div class='equations'>${equations.mkString("<br>")}</div>"),
           () => AlgorithmLogging.LogSpectrum[NodeID, ObservationClass](result.spectrum, preords, equations, distCoordsLR, distCoordsRL, s"Show spectrum. $gameString")
+        )
+        structure.setReplay(replay)
+        structure.main.doAction(StructureDoReplayStep(), structure)
+
+        true
+      } else {
+        val unknownState = if (!structure.structure.nodes(n1)) n1 else n2
+        val replay = List(
+          () => AlgorithmLogging.LogRelation(LabeledRelation[NodeID, String](), s"Unknown state ‹$unknownState›.")
+        )
+        structure.setReplay(replay)
+        structure.main.doAction(StructureDoReplayStep(), structure)
+        false
+      }
+    }
+  }
+
+  case class StructureCheckEquivalence(n1: NodeID, n2: NodeID, notion: String, resetReplay: Boolean = true) extends StructureAction {
+
+    override def implementStructure(structure: Structure) = {
+      if (resetReplay) {
+        structure.setReplay(List())
+      }
+      
+      if (structure.structure.nodes(n1) && structure.structure.nodes(n2)) {
+
+        val begin = Date.now
+
+        val algo = 
+          if (ObservationClassEnergyWeak.LTBTS.getSpectrumClass.isDefinedAt(notion)) {
+            new EnergyWeakSpectroscopy(structure.structure)
+          } else if (ObservationClassFast.LTBTS.getSpectrumClass.isDefinedAt(notion)) {
+            new FastSpectroscopy(structure.structure)
+          } else {
+            throw new Exception(
+              s"Notion $notion is not defined. Possible names would be: ${(ObservationClassEnergyWeak.LTBTS.getSpectrumClass.keys ++ ObservationClassEnergyWeak.LTBTS.getSpectrumClass.keys).mkString(", ")}")
+          }
+
+        algo.uriEncoder = scala.scalajs.js.URIUtils.encodeURI _
+
+        val result = algo.checkIndividualPreorder(List((n1, n2), (n2, n1)), notion)
+        println("Preorder check took: " + (Date.now - begin) + "ms.")
+
+        val Some(lrResult) = result.items.find(r => r.left == n1 && r.right == n2)
+        val Some(rlResult) = result.items.find(r => r.left == n2 && r.right == n1)
+
+        val replay = List(
+          () => AlgorithmLogging.LogRelation(
+            new LabeledRelation[NodeID, String](result.relation),
+            {
+              if (lrResult.isMaintained && rlResult.isMaintained)
+                "States are <strong>equivalent</strong>."
+              else if (lrResult.isMaintained)
+                "States are strictly <strong>preordered</strong> (only from left to right)."
+              else if (rlResult.isMaintained)
+                "States are <strong>inversely preordered</strong> (only from right to left)."
+              else
+                "States are <strong>not</strong> preordered (nor equivalent)"
+            } + {
+              result.meta.get("game") match {
+                case Some(game) if game != "" => s"""<p><a href="$game" target="_blank">View game.</a></p>"""
+                case _ => ""
+              }
+            }
+          )
         )
         structure.setReplay(replay)
         structure.main.doAction(StructureDoReplayStep(), structure)

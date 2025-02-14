@@ -15,16 +15,16 @@ class LTBTS2Tests extends CSSSampleTests[ObservationClassEnergyWeak, HennessyMil
     ("P12", "P11", List("sr-delay-bisimulation", "eta-bisimulation"), List("branching-bisimulation")),
     ("P13", "P14", List("stable-bisimulation", "eta-bisimulation"), List("delay-bisimulation")),
     ("P15", "P16", List("contrasimulation", "stable-bisimulation", "eta-simulation"), List("unstable-readiness")),
-    ("P21", "P22", List("ready-simulation", "s-ready-simulation", "eta-simulation"), List("impossible-future", "s-impossible-future")),
-    ("P24", "P25", List("possible-future", "ready-simulation", "contrasimulation", "stable-bisimulation", "eta-simulation"), List("delay-bisimulation", "2-nested-simulation")),
+    ("P21", "P22", List("weak-ready-simulation", "s-ready-simulation", "eta-simulation"), List("weak-impossible-future", "s-impossible-future")),
+    ("P24", "P25", List("weak-possible-future", "weak-ready-simulation", "contrasimulation", "stable-bisimulation", "eta-simulation"), List("delay-bisimulation", "2-nested-weak-simulation")),
     ("P34", "P33", List("sr-delay-bisimulation"), List("eta-simulation")),
-    ("P44", "P45", List("readiness", "eta-simulation", "ready-simulation"), List("failure-trace", "impossible-future", "s-impossible-future")),
+    ("P44", "P45", List("weak-readiness", "eta-simulation", "weak-ready-simulation"), List("weak-failure-trace", "weak-impossible-future", "s-impossible-future")),
     ("P51", "P52", List("eta-simulation", "s-ready-simulation"), List("unstable-failure", "s-impossible-future", "sr-delay-bisimulation")),
     ("P53", "P54", List("sr-branching-bisimulation"), List()),
-    ("P54", "P55", List("branching-bisimulation"), List("failure")),
-    ("P55", "P56", List("eta-simulation", "2-nested-simulation", "stable-bisimulation"), List("contrasimulation", "sr-delay-bisimulation")),
-    ("P57", "P56", List("branching-bisimulation"), List("failure")),
-    ("P58", "P57", List("s-impossible-future", "eta-simulation", "2-nested-simulation"), List("contrasimulation", "stable-bisimulation", "readiness")),
+    ("P54", "P55", List("branching-bisimulation"), List("weak-failure")),
+    ("P55", "P56", List("eta-simulation", "2-nested-weak-simulation", "stable-bisimulation"), List("contrasimulation", "sr-delay-bisimulation")),
+    ("P57", "P56", List("branching-bisimulation"), List("weak-failure")),
+    ("P58", "P57", List("s-impossible-future", "eta-simulation", "2-nested-weak-simulation"), List("contrasimulation", "stable-bisimulation", "weak-readiness")),
   )
 
   runTest(ltbtsSystem, sampleNames, new EnergyWeakSpectroscopy(_), "(weak)")

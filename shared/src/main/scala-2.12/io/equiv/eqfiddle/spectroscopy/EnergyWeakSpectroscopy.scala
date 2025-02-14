@@ -13,6 +13,7 @@ import io.equiv.eqfiddle.hml.HMLInterpreter
 import io.equiv.eqfiddle.game.GameGraphVisualizer
 import io.equiv.eqfiddle.hml.ObservationClassEnergyWeak
 import io.equiv.eqfiddle.util.FixedPoint
+import io.equiv.eqfiddle.game.MaterializedEnergyGame
 
 class EnergyWeakSpectroscopy[S, A, L] (
     ts: WeakTransitionSystem[S, A, L])
@@ -257,8 +258,13 @@ class EnergyWeakSpectroscopy[S, A, L] (
     }
   })
 
-  private def energyToClass(e: Energy) = {
+  private def energyToClass(e: Energy): ObservationClassEnergyWeak = {
     ObservationClassEnergyWeak(e(0), e(1), e(2), e(3), e(4), e(5), e(6), e(7), e(8))
+  }
+
+  private def classToEnergy(obsClass: ObservationClassEnergyWeak): Energy = {
+    val c = obsClass.toTuple
+    Energy(Array(c._1, c._2, c._3, c._4, c._5, c._6, c._7, c._8, c._9))
   }
 
   def compute(
@@ -297,7 +303,6 @@ class EnergyWeakSpectroscopy[S, A, L] (
 
     hmlGame.populateGame(
       init,
-      (gns => hmlGame.computeSuccessors(gns)),
       instantAttackerWin(_))
 
     debugLog("HML spectroscopy game size: " + hmlGame.discovered.size)
@@ -413,12 +418,119 @@ class EnergyWeakSpectroscopy[S, A, L] (
 
   }
 
+  def checkIndividualPreorder(comparedPairs: Iterable[(S,S)], notion: String): SpectroscopyInterface.IndividualNotionResult[S] = {
+    val hmlGame =
+      if (useCleverBranching) {
+        new EnergyWeakSpectroscopyGameClever(ts, energyCap = 2)
+      } else {
+        new EnergyWeakSpectroscopyGame(ts, energyCap = 2)
+      }
+
+    val init = for {
+      (p, q) <- comparedPairs
+      start <- List(hmlGame.AttackerObservation(p, Set(q)), hmlGame.AttackerObservation(q, Set(p)))
+    } yield start
+
+    val notionEnergy = classToEnergy(spectrum.getSpectrumClass(notion).obsClass)
+
+    def energyUpdate(gn1: GameNode, gn2: GameNode, energy: Energy): Option[Energy] = {
+      val update = hmlGame.weight(gn1, gn2)
+      val newEnergy = update.applyEnergyUpdateInfinity(energy)
+      if (gn1.isInstanceOf[SimpleGame.DefenderNode] || newEnergy.isNonNegative())
+        Some(newEnergy)
+      else
+        None
+    }
+
+    // whether to consider the baseSuccessor as a relevant node for the attacker
+    def preferredNodes(currentBaseNode: GameNode, currentEnergy: Energy, baseSuccessor: GameNode) = currentBaseNode match {
+      case hmlGame.AttackerObservation(p, qq) if currentEnergy(4) >= Int.MaxValue && qq.size > 1 =>
+        // if we have infinitely many immediate conjunctions, use them to chop down blowup on right-hand side
+        baseSuccessor.isInstanceOf[hmlGame.DefenderConjunction]
+      case hmlGame.AttackerBranchingObservation(p, qq) if useCleverBranching && currentEnergy(4) >= Int.MaxValue && qq.size > 1 =>
+        // same as previous case
+        baseSuccessor.isInstanceOf[hmlGame.DefenderConjunction]
+      case hmlGame.AttackerDelayedObservation(_, _) if (currentEnergy(3) == 0 || currentEnergy(5) == currentEnergy(6)) && baseSuccessor.isInstanceOf[hmlGame.DefenderStableConjunction] =>
+        // disregard revival partitions if they make no difference
+        baseSuccessor.asInstanceOf[hmlGame.DefenderStableConjunction].qqRevival.isEmpty
+      case hmlGame.AttackerDelayedObservation(_, qq) if currentEnergy(1) >= Int.MaxValue && qq.size > 1 =>
+        // focus on branching observations if we have infinite supply of them
+        !baseSuccessor.isInstanceOf[hmlGame.AttackerObservation]
+      case _ => true
+    }
+
+    val reachabilityGame: MaterializedEnergyGame[Energy] = new MaterializedEnergyGame[Energy](
+      hmlGame, init, notionEnergy, energyUpdate, preferredNodes)
+
+    val attackerWins = reachabilityGame.computeWinningRegion()
+
+    val gameString = debugLog(
+      graphvizMaterializedGame(reachabilityGame, attackerWins),
+      asLink = "https://edotor.net/?engine=dot#"//"https://dreampuf.github.io/GraphvizOnline/#"
+    )
+
+    val relation: Set[(S, String, S)] = for {
+      gn <- reachabilityGame.discovered.toSet
+      if !attackerWins(gn)
+      (p, eString, q) <- gn match {
+        case reachabilityGame.MaterializedAttackerNode(hmlGame.AttackerObservation(p, qq), energy)
+            if qq.size == 1 && energy == notionEnergy =>
+          Some((p, "", qq.head))
+        case _ =>
+          None
+      }
+    } yield (p, eString,  q)
+
+    val items = for {
+      (p, q) <- comparedPairs
+    } yield {
+      SpectroscopyInterface.IndividualNotionResultItem(p, q, relation.contains((p, "", q)))
+    }
+    SpectroscopyInterface.IndividualNotionResult(items, relation, meta = Map("game" -> gameString))
+  }
+
   def checkDistinguishing(formula: HennessyMilnerLogic.Formula[A], p: S, q: S) = {
     val hmlInterpreter = new HMLInterpreter(ts)
     val check = hmlInterpreter.isTrueAt(formula, List(p, q))
     if (!check(p) || check(q)) {
       System.err.println("Formula " + formula.toString() + " is no sound distinguishing formula! " + check)
     }
+  }
+
+  def gameNodeToString(
+      game: EnergyWeakSpectroscopyGame[S, A, L],
+      gn: GameNode) = gn match {
+    case game.AttackerObservation(p, qq: Set[_]) =>
+      val qqString = qq.mkString("{",",","}")
+      s"$p, $qqString"
+    case game.AttackerDelayedObservation(p, qq: Set[_]) =>
+      val qqString = qq.mkString("{",",","}")
+      s"$p, ≈$qqString"
+    case game.AttackerBranchingObservation(p, qq: Set[_]) =>
+      val qqString = qq.mkString("{",",","}")
+      s"$p, b$qqString"
+    case game.AttackerClause(p, q) =>
+      s"$p, $q"
+    case game.DefenderConjunction(p, qq: Set[_]) =>
+      val qqString = qq.mkString("{",",","}")
+      s"$p, $qqString"
+    case game.DefenderStableConjunction(p, qq: Set[_], qqRevivals) =>
+      val qqString = qq.mkString("{",",","}")
+      val qqRevivalsString = qq.mkString("{",",","}")
+      s"$p, s$qqString, $qqRevivalsString"
+    case game.DefenderBranchingConjunction(p0, a, p1, qq0, qq0a) =>
+      s"$p0 -${a}-> $p1, ${qq0.mkString("{",",","}")}, ${qq0a.mkString("{",",","}")}"
+    case _ =>
+      if (game.isInstanceOf[EnergyWeakSpectroscopyGameClever[S, A, L]]) {
+        val gameClever = game.asInstanceOf[EnergyWeakSpectroscopyGameClever[S, A, L]]
+        gn match {
+          case gameClever.AttackerBranchingConjunction(p0, a, p1, q0) =>
+            s"$p0 -${a}-> $p1, ${q0}"
+          case _ => ""
+        }
+      } else {
+        ""
+      }
   }
 
   def graphvizGameWithFormulas(
@@ -433,39 +545,7 @@ class EnergyWeakSpectroscopy[S, A, L] (
       def nodeToString(gn: GameNode): String = {
         val priceString = attackerVictoryPrices.getOrElse(gn,Set()).map(_.vector.mkString("(",",",")")).mkString(" / ")
         val formulaString = formulas.getOrElse(gn,Set()).mkString("\\n").replaceAllLiterally("⟩⊤","⟩")
-        (gn match {
-          case game.AttackerObservation(p, qq: Set[_]) =>
-            val qqString = qq.mkString("{",",","}")
-            s"$p, $qqString"
-          case game.AttackerDelayedObservation(p, qq: Set[_]) =>
-            val qqString = qq.mkString("{",",","}")
-            s"$p, ≈$qqString"
-          case game.AttackerBranchingObservation(p, qq: Set[_]) =>
-            val qqString = qq.mkString("{",",","}")
-            s"$p, b$qqString"
-          case game.AttackerClause(p, q) =>
-            s"$p, $q"
-          case game.DefenderConjunction(p, qq: Set[_]) =>
-            val qqString = qq.mkString("{",",","}")
-            s"$p, $qqString"
-          case game.DefenderStableConjunction(p, qq: Set[_], qqRevivals) =>
-            val qqString = qq.mkString("{",",","}")
-            val qqRevivalsString = qq.mkString("{",",","}")
-            s"$p, s$qqString, $qqRevivalsString"
-          case game.DefenderBranchingConjunction(p0, a, p1, qq0, qq0a) =>
-            s"$p0 -${a}-> $p1, ${qq0.mkString("{",",","}")}, ${qq0a.mkString("{",",","}")}"
-          case _ =>
-            if (game.isInstanceOf[EnergyWeakSpectroscopyGameClever[S, A, L]]) {
-              val gameClever = game.asInstanceOf[EnergyWeakSpectroscopyGameClever[S, A, L]]
-              gn match {
-                case gameClever.AttackerBranchingConjunction(p0, a, p1, q0) =>
-                  s"$p0 -${a}-> $p1, ${q0}"
-                case _ => ""
-              }
-            } else {
-              ""
-            }
-        }).replaceAllLiterally(".0", "").replaceAllLiterally("\\", "\\\\") +
+        gameNodeToString(game, gn).replaceAllLiterally(".0", "").replaceAllLiterally("\\", "\\\\") +
          (if (priceString != "") s"\\n------\\n$priceString" else "") +
          (if (formulaString != "") s"\\n------\\n$formulaString" else "")
       }
@@ -474,6 +554,39 @@ class EnergyWeakSpectroscopy[S, A, L] (
     }
 
     val attackerWin = attackerVictoryPrices.filter(_._2.nonEmpty).keySet.toSet
+
+    visualizer.outputDot(attackerWin)
+  }
+
+  def materializedToBaseGameNode(game: MaterializedEnergyGame[Energy], gn: GameNode) = gn match {
+    case game.MaterializedAttackerNode(bgn, e) =>
+      bgn
+    case game.MaterializedDefenderNode(bgn, e) =>
+      bgn
+  }
+
+  def graphvizMaterializedGame(
+      game: MaterializedEnergyGame[Energy],
+      attackerWin: Set[GameNode]
+  ) = {
+    val baseGame = game.baseGame.asInstanceOf[EnergyWeakSpectroscopyGame[S, A, L]]
+    val maxIntString = Int.MaxValue.toString()
+    val visualizer = new GameGraphVisualizer(game) {
+
+      def nodeToID(gn: GameNode): String = gn.toString().hashCode().toString()
+
+      def nodeToString(gn: GameNode): String = gn match {
+        case game.MaterializedAttackerNode(bgn, e) =>
+          gameNodeToString(baseGame, bgn) + "\\n" + e.toString().replaceAllLiterally(maxIntString, "∞")
+        case game.MaterializedDefenderNode(bgn, e) =>
+          gameNodeToString(baseGame, bgn) + "\\n" + e.toString().replaceAllLiterally(maxIntString, "∞")
+      }
+
+      def edgeToLabel(gn1: GameNode, gn2: GameNode) = {
+        baseGame.weight(materializedToBaseGameNode(game, gn1), materializedToBaseGameNode(game, gn2)).toString()
+      }
+
+    }
 
     visualizer.outputDot(attackerWin)
   }

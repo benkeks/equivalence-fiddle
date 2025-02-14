@@ -14,6 +14,7 @@ class Pipeline(val main: Control) extends ModelComponent {
   val supportedOperations = Map(
     "compare" -> "Compare two processes with respect to all strong equivalences",
     "compareSilent" -> "Compare two processes with respect to all weak equivalences",
+    "check" -> "Compare two processes with respect to a specific equivalence",
     "minimize" -> "Explore quotient minimizations with respect to all strong equivalences",
     "characterize" -> "What is special about a process when compared with the others"
   )
@@ -58,34 +59,46 @@ class Pipeline(val main: Control) extends ModelComponent {
     }
   }
   
-  def runMetaRunner(meta: String, info: String, line: Int): Boolean = meta match {
+  def runMetaRunner(meta: String, args: List[String], line: Int): Boolean = meta match {
     case "compare" =>
-      val states = info.split(",").map(_.trim())
-      if (states.length == 2) {
+      if (args.length == 2) {
         broadcast(Pipeline.PipelineStatusChange(operationLines ++ List(Pipeline.CurrentLine(line))))
-        main.dispatchAction(Structure.StructureExamineEquivalences(NodeID(states(0)), NodeID(states(1))))
+        main.dispatchAction(Structure.StructureExamineEquivalences(NodeID(args(0)), NodeID(args(1))))
         true
       } else {
-        throw new Exception("Need two process names as arguments. @compare \"proc1, proc2\"")
+        throw new Exception("Need two process names as arguments. @compare proc1, proc2")
         false
       }
     case "compareSilent" =>
-      val states = info.split(",").map(_.trim())
-      if (states.length == 2) {
+      if (args.length == 2) {
         broadcast(Pipeline.PipelineStatusChange(operationLines ++ List(Pipeline.CurrentLine(line))))
-        main.dispatchAction(Structure.StructureExamineEquivalences(NodeID(states(0)), NodeID(states(1)), silentSpectrum = true))
+        main.dispatchAction(Structure.StructureExamineEquivalences(NodeID(args(0)), NodeID(args(1)), silentSpectrum = true))
         true
       } else {
-        throw new Exception("Need two process names as arguments. @compareSilent \"proc1, proc2\"")
+        throw new Exception("Need two process names as arguments. @compareSilent proc1, proc2")
+        false
+      }
+    case "check" =>
+      if (args.length == 3) {
+        broadcast(Pipeline.PipelineStatusChange(operationLines ++ List(Pipeline.CurrentLine(line))))
+        main.dispatchAction(Structure.StructureCheckEquivalence(NodeID(args(1)), NodeID(args(2)), args(0)))
+        true
+      } else {
+        throw new Exception("Need a notion name and two process names as arguments. @check \"notion\", proc1, proc2")
         false
       }
     case "minimize" =>
-      broadcast(Pipeline.PipelineStatusChange(operationLines ++ List(Pipeline.CurrentLine(line))))
-      main.dispatchAction(Structure.StructureMinimize())
-      true
+      if (args.length == 1) {
+        broadcast(Pipeline.PipelineStatusChange(operationLines ++ List(Pipeline.CurrentLine(line))))
+        main.dispatchAction(Structure.StructureMinimize())
+        true
+      } else {
+        throw new Exception("Need one argument. @minimize \"strong\"")
+        false
+      }
     case "characterize" =>
       broadcast(Pipeline.PipelineStatusChange(operationLines ++ List(Pipeline.CurrentLine(line))))
-      main.dispatchAction(Structure.StructureCharacterize(NodeID(info.trim())))
+      main.dispatchAction(Structure.StructureCharacterize(NodeID(args(0).trim())))
       true
     case _ =>
       false
@@ -155,7 +168,7 @@ object Pipeline {
     }
   }
   
-  case class RunMetaRunner(meta: String, info: String, line: Int) extends PipelineAction {
+  case class RunMetaRunner(meta: String, info: List[String], line: Int) extends PipelineAction {
     override def implementPipeline(pipeline: Pipeline) = {
       pipeline.runMetaRunner(meta, info, line)
     }

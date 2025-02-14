@@ -8,6 +8,7 @@ import io.equiv.eqfiddle.game.SimpleGame
 import io.equiv.eqfiddle.game.SimpleGame.GameNode
 import io.equiv.eqfiddle.game.EnergyGame
 import io.equiv.eqfiddle.game.EnergyGame.Energy
+import io.equiv.eqfiddle.game.MaterializedEnergyGame
 import io.equiv.eqfiddle.hml.HennessyMilnerLogic
 import io.equiv.eqfiddle.hml.HMLInterpreter
 import io.equiv.eqfiddle.game.GameGraphVisualizer
@@ -24,6 +25,12 @@ class FastSpectroscopy[S, A, L] (
     collection.mutable.Map[(GameNode, Energy), Iterable[HennessyMilnerLogic.Formula[A]]]()
 
   var gameSize = (0, 0)
+
+  private def classToEnergy(obsClass: ObservationClassFast): Energy = {
+    val c = obsClass.toTuple
+    Energy(Array(c._1, c._2, c._3, c._4, c._5, c._6))
+  }
+
 
   def buildHMLWitness(game: EnergySpectroscopyGame[S, A, L], node: GameNode, price: Energy): Iterable[HennessyMilnerLogic.Formula[A]]
     = distinguishingFormulas.getOrElseUpdate((node, price), {
@@ -127,7 +134,6 @@ class FastSpectroscopy[S, A, L] (
 
     hmlGame.populateGame(
       init,
-      (gns => hmlGame.computeSuccessors(gns)),
       instantAttackerWin(_))
 
     debugLog("HML spectroscopy game size: " + hmlGame.discovered.size)
@@ -273,4 +279,57 @@ class FastSpectroscopy[S, A, L] (
 
     visualizer.outputDot(attackerWin)
   }
+
+  def checkIndividualPreorder(comparedPairs: Iterable[(S,S)], notion: String): SpectroscopyInterface.IndividualNotionResult[S] = {
+    val hmlGame = new EnergySpectroscopyGame(ts, energyCap = 3)
+
+    val init = for {
+      (p, q) <- comparedPairs
+      start <- List(hmlGame.AttackerObservation(p, Set(q)), hmlGame.AttackerObservation(q, Set(p)))
+    } yield start
+
+    val notionEnergy = classToEnergy(spectrum.getSpectrumClass(notion).obsClass)
+
+    def energyUpdate(gn1: GameNode, gn2: GameNode, energy: Energy): Option[Energy] = {
+      val update = hmlGame.weight(gn1, gn2)
+      val newEnergy = update.applyEnergyUpdateInfinity(energy)
+      if (gn1.isInstanceOf[SimpleGame.DefenderNode] || newEnergy.isNonNegative())
+        Some(newEnergy)
+      else
+        None
+    }
+
+    // whether to consider the baseSuccessor as a relevant node for the attacker
+    def preferredNodes(currentBaseNode: GameNode, currentEnergy: Energy, baseSuccessor: GameNode) = currentBaseNode match {
+      case hmlGame.AttackerObservation(p, qq) if currentEnergy(1) >= Int.MaxValue && qq.size > 1 =>
+        // if we have infinitely many immediate conjunctions, use them to chop down blowup on right-hand side
+        baseSuccessor.isInstanceOf[hmlGame.DefenderConjunction]
+      case _ => true
+    }
+
+    val reachabilityGame: MaterializedEnergyGame[Energy] = new MaterializedEnergyGame[Energy](
+      hmlGame, init, notionEnergy, energyUpdate, preferredNodes)
+
+    val attackerWins = reachabilityGame.computeWinningRegion()
+
+    val relation: Set[(S, String, S)] = for {
+      gn <- reachabilityGame.discovered.toSet
+      if !attackerWins(gn)
+      (p, eString, q) <- gn match {
+        case reachabilityGame.MaterializedAttackerNode(hmlGame.AttackerObservation(p, qq), energy)
+            if qq.size == 1 && energy == notionEnergy =>
+          Some((p, "", qq.head))
+        case _ =>
+          None
+      }
+    } yield (p, eString,  q)
+
+    val items = for {
+      (p, q) <- comparedPairs
+    } yield {
+      SpectroscopyInterface.IndividualNotionResultItem(p, q, relation.contains((p, "", q)))
+    }
+    SpectroscopyInterface.IndividualNotionResult(items, relation)
+  }
+
 }

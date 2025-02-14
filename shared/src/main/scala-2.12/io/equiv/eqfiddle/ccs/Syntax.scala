@@ -125,7 +125,7 @@ object Syntax {
   }
 
   
-  case class MetaDeclaration(key: String, value: String, pos: Pos = Pos0) extends Expression(pos) {
+  case class MetaDeclaration(key: String, value: List[String], pos: Pos = Pos0) extends Expression(pos) {
   }
   
   case class Definition(val defs: List[Expression]) extends Expression(Pos0) {

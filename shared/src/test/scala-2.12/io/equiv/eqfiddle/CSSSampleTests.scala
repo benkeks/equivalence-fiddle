@@ -17,9 +17,6 @@ import io.equiv.eqfiddle.hml.HennessyMilnerLogic
 import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
 
 trait CSSSampleTests[OC <: ObservationClass, CF <: HennessyMilnerLogic.Formula[String]] extends AnyFunSpec with should.Matchers  {
-
-  AlgorithmLogging.debugLogActive = false
-
   def spectrum: Spectrum[OC]
 
   private def toSpectrumClassSet(names: Iterable[String]) = (for {
@@ -40,6 +37,9 @@ trait CSSSampleTests[OC <: ObservationClass, CF <: HennessyMilnerLogic.Formula[S
       sampleNames: List[(String, String, List[String], List[String])],
       spectroscopyAlgo: (WeakTransitionSystem[NodeID,String,String]) => SpectroscopyInterface[NodeID,String,String,CF],
       title: String) = {
+
+    AlgorithmLogging.debugLogActive = false
+
     val samples = sampleNames.map {
       case (n1, n2, preords, notPreords) =>
         (n1, n2, toSpectrumClassSet(preords), toSpectrumClassSet(notPreords))

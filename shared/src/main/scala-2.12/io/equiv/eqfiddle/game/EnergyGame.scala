@@ -79,6 +79,12 @@ object EnergyGame {
       indices.fold(0){ (hash, i) => (hash << 3) ^ vector(i) }
     }
 
+    override def toString(): String =
+      vector.mkString("(", "," ,")")
+
+    def isNonNegative() =
+      vector.forall(_ >= 0)
+
     /* assumes that only energies of equal length are being compared */
     override def tryCompareTo[B >: Energy](that: B)(implicit evidence$1: B => PartiallyOrdered[B]): Option[Int] = {
       that match {
@@ -190,6 +196,19 @@ object EnergyGame {
       } yield {
         if (u <= 0) {
           e(i) + u
+        } else {
+          Math.min(e(i), e(u - 1))
+        }
+      }
+      Energy(newEnergies)
+    }
+
+    def applyEnergyUpdateInfinity(e: Energy): Energy = {
+      val newEnergies = for {
+        (u, i) <- updates.zipWithIndex
+      } yield {
+        if (u <= 0) {
+          if (e(i) == Int.MaxValue) e(i) else e(i) + u
         } else {
           Math.min(e(i), e(u - 1))
         }
