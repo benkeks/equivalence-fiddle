@@ -9,6 +9,7 @@ import io.equiv.eqfiddle.ts.WeakTransitionSystem
 import io.equiv.eqfiddle.util.LabeledRelation
 import io.equiv.eqfiddle.spectroscopy.helpers.CytoscapeHelpers
 import io.equiv.eqfiddle.hml.Spectrum
+import io.equiv.eqfiddle.hml.ObservationNotionStrong
 
 object EquivalenceSpectroscopeAPI {
 

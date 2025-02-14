@@ -26,7 +26,7 @@ import io.equiv.eqfiddle.algo.WeakTransitionSaturation
 import io.equiv.eqfiddle.algo.sigref.Bisimilarity
 import io.equiv.eqfiddle.algo.sigref.BranchingBisimilarity
 import io.equiv.eqfiddle.algo.transform.BuildQuotientSystem
-import io.equiv.eqfiddle.hml.ObservationClass
+import io.equiv.eqfiddle.hml.ObservationNotion
 
 class Structure(val main: Control) extends ModelComponent {
 
@@ -144,7 +144,7 @@ object Structure {
 
   case class StructureCommentChange(comment: String) extends ModelComponent.Change
 
-  case class StructureSpectrumChange[OC <: ObservationClass](spectrum: Spectrum[OC], preords: List[String], equations: List[String],
+  case class StructureSpectrumChange[OC <: ObservationNotion](spectrum: Spectrum[OC], preords: List[String], equations: List[String],
     distCoordsLR: List[(OC, String)], distCoordsRL: List[(OC, String)], comment: String) extends ModelComponent.Change
 
   case class StructureReplayChange(replay: List[() => AlgorithmLogging.LogEntry[NodeID]])
@@ -345,7 +345,7 @@ object Structure {
           () => AlgorithmLogging.LogRelation(result.toDistinctionRelation(), s"Left-right-distinguished by:<div class='distinctions'>$leftRightDists</div>"),
           //() => AlgorithmLogging.LogRelation(result.toDistinctionRelation(), s"Right-left-distinguished by:<div class='distinctions'>$rightLeftDists</div>"),
           () => AlgorithmLogging.LogRelation(result.toEquivalencesRelation(), s"Equated by:<div class='equations'>${equations.mkString("<br>")}</div>"),
-          () => AlgorithmLogging.LogSpectrum[NodeID, ObservationClass](result.spectrum, preords, equations, distCoordsLR, distCoordsRL, s"Show spectrum. $gameString")
+          () => AlgorithmLogging.LogSpectrum[NodeID, ObservationNotion](result.spectrum, preords, equations, distCoordsLR, distCoordsRL, s"Show spectrum. $gameString")
         )
         structure.setReplay(replay)
         structure.main.doAction(StructureDoReplayStep(), structure)

@@ -7,7 +7,7 @@ import org.scalatest.matchers.should
 
 import io.equiv.eqfiddle.tool.model.NodeID
 import io.equiv.eqfiddle.util.Relation
-import io.equiv.eqfiddle.hml.ObservationClass
+import io.equiv.eqfiddle.hml.ObservationNotion
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 import io.equiv.eqfiddle.algo.AlgorithmLogging
 import io.equiv.eqfiddle.spectroscopy.AbstractSpectroscopy
@@ -15,7 +15,7 @@ import io.equiv.eqfiddle.hml.Spectrum
 import io.equiv.eqfiddle.hml.HennessyMilnerLogic
 import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
 
-trait CSSSampleTests[OC <: ObservationClass, CF <: HennessyMilnerLogic.Formula[String]] extends AnyFunSpec with should.Matchers  {
+trait CSSSampleTests[OC <: ObservationNotion, CF <: HennessyMilnerLogic.Formula[String]] extends AnyFunSpec with should.Matchers  {
   def spectrum: Spectrum[OC]
 
   private def toSpectrumClassSet(names: Iterable[String]) = (for {

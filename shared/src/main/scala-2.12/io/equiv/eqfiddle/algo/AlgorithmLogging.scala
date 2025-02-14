@@ -4,7 +4,7 @@ import io.equiv.eqfiddle.util.Relation
 import scala.collection.mutable.ListBuffer
 import io.equiv.eqfiddle.util.Coloring
 import io.equiv.eqfiddle.util.LabeledRelation
-import io.equiv.eqfiddle.hml.ObservationClass
+import io.equiv.eqfiddle.hml.ObservationNotion
 import io.equiv.eqfiddle.hml.Spectrum
 
 trait AlgorithmLogging[S] {
@@ -46,7 +46,7 @@ object AlgorithmLogging {
 
   case class LogRichRelation[S](rel: LabeledRelation[(Set[S], String, Set[S]), String], comment: String) extends LogEntry[S]
 
-  case class LogSpectrum[S, OC <: ObservationClass](spectrum: Spectrum[OC], preords: List[String], equations: List[String], distCoordsLR: List[(OC, String)], distCoordsRL: List[(OC, String)], comment: String) extends LogEntry[S]
+  case class LogSpectrum[S, OC <: ObservationNotion](spectrum: Spectrum[OC], preords: List[String], equations: List[String], distCoordsLR: List[(OC, String)], distCoordsRL: List[(OC, String)], comment: String) extends LogEntry[S]
   
   var loggingActive = true
   
