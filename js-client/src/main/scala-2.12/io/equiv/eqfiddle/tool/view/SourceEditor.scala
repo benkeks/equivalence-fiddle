@@ -47,7 +47,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
       case el: HTMLTextAreaElement =>
         el
       case _ =>
-        println("Cannot find text area for definition display -- creating own fall back text area!")
+        AlgorithmLogging.debugLog("Cannot find text area for definition display -- creating own fall back text area!", logLevel = 5)
         val newNode = dom.document.createElement("textarea")
         dom.document.body.appendChild(newNode)
         newNode.asInstanceOf[HTMLTextAreaElement]
@@ -161,14 +161,11 @@ class SourceEditor(val main: Control) extends ViewComponent {
       .attr("download", name + ".txt")
       
     val svg = dom.document.getElementById("es-graph").asInstanceOf[SVGSVGElement]
-    println(svg)
     val svgMutator = d3.select(svg)
     val sel = svgMutator.selectAll[dom.raw.Element]("path")(0).foreach { e: EventTarget =>
         if (js.isUndefined(e)) {
-          println("undefined!!")
           "a"
         } else {
-          println(e)
           val el = e.asInstanceOf[dom.raw.Element]
           el.setAttribute("stroke-dasharray",
               dom.window.getComputedStyle(el, "").strokeDasharray)
@@ -199,7 +196,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
   def onLoadFile(ev: Event) {
     val fileBlob = ev.target.asInstanceOf[HTMLInputElement].files(0)
     
-    println("reading file: " + fileBlob.name)
+    AlgorithmLogging.debugLog("reading file: " + fileBlob.name)
     
     val reader = new dom.FileReader()
     reader.onload = (e: UIEvent) => {
@@ -213,7 +210,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
   def onImport(ev: Event) {
     val fileBlob = ev.target.asInstanceOf[HTMLInputElement].files(0)
     
-    println("reading file: " + fileBlob.name)
+    AlgorithmLogging.debugLog("reading file: " + fileBlob.name)
     
     val reader = new dom.FileReader()
     reader.onload = (e: UIEvent) => {
@@ -261,7 +258,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
   }
   
   def setOperations(ops: List[StructureOperation] ) {
-    println("set operations: "+ops)
+    AlgorithmLogging.debugLog("set operations: " + ops)
     val groupedOps = ops.groupBy(_.category)
     
     for (

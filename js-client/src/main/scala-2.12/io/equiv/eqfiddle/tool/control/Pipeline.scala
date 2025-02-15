@@ -4,6 +4,7 @@ import io.equiv.eqfiddle.tool.arch.Action
 import io.equiv.eqfiddle.tool.arch.Control
 import io.equiv.eqfiddle.tool.model.NodeID
 import io.equiv.eqfiddle.ccs.Syntax
+import io.equiv.eqfiddle.algo.AlgorithmLogging
 
 class Pipeline(val main: Control) extends ModelComponent {
   
@@ -27,7 +28,7 @@ class Pipeline(val main: Control) extends ModelComponent {
   }
   
   def stepPipeline() = {
-    println("pipeline step")
+    AlgorithmLogging.debugLog("pipeline step")
     if (pipelineSource.length <= currentStep) {
       false
     } else {
@@ -141,7 +142,7 @@ object Pipeline {
   
   case class LoadPipeline(code: String) extends PipelineAction {
     override def implementPipeline(pipeline: Pipeline) = {
-      println("pipeline: "+code)
+      AlgorithmLogging.debugLog("pipeline: "+code)
       pipeline.changePipeline(code)
       true
     }

@@ -240,7 +240,7 @@ class StrongSpectroscopy[S, A, L] (
     val hmlInterpreter = new HMLInterpreter(ts)
     val check = hmlInterpreter.isTrueAt(formula, List(p, q))
     if (!check(p) || check(q)) {
-      System.err.println("Formula " + formula.toString() + " is no sound distinguishing formula! " + check)
+      AlgorithmLogging.debugLog("Formula " + formula.toString() + " is no sound distinguishing formula! " + check, logLevel = 4)
     }
   }
 

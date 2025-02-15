@@ -6,6 +6,7 @@ import io.equiv.eqfiddle.util.Relation
 import io.equiv.eqfiddle.util.LabeledRelation
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 import io.equiv.eqfiddle.ccs.Syntax.Restrict
+import io.equiv.eqfiddle.algo.AlgorithmLogging
 
 /** Transforms a CCS term into a transition system */
 class Interpreter[S, A, L](
@@ -162,7 +163,7 @@ class Interpreter[S, A, L](
       )
       if (continuation == e) {
         // direct loop
-        System.err.println(s"Unguarded recursion at ${e.position.line}")
+        AlgorithmLogging.debugLog(s"Unguarded recursion at ${e.position.line}", logLevel = 4)
         List()
       } else {
         semantics(procEnv)(continuation)

@@ -9,6 +9,8 @@ import io.equiv.eqfiddle.hml.Spectrum
 
 trait AlgorithmLogging[S] {
   
+  val individualDebugLogActive: Boolean = true
+
   private val log = ListBuffer[() => AlgorithmLogging.LogEntry[S]]()
   
   private def logAppend[O](f: (O, String) => AlgorithmLogging.LogEntry[S])(obj: O, comment: String) = {
@@ -16,8 +18,6 @@ trait AlgorithmLogging[S] {
       log += (() => f(obj, comment))
     }
   }
-
-  var uriEncoder = (s: String) => s
 
   def logRelation =
     logAppend(AlgorithmLogging.LogRelation[S]) _
@@ -27,15 +27,10 @@ trait AlgorithmLogging[S] {
   
   def getReplay() = log toList
 
-  def debugLog(msg: => String, asLink: String = ""): String = {
-    if (AlgorithmLogging.debugLogActive) {
-      val outMsg = if (asLink == "") msg else uriEncoder(asLink + msg)
-      outMsg
-    } else {
-      ""
-    }
-  }
-
+  def debugLog(msg: => String, asLink: String = "", logLevel: Int = 8): String =
+    if (individualDebugLogActive)
+      AlgorithmLogging.debugLog(msg, asLink, logLevel)
+    else ""
 }
 
 object AlgorithmLogging {
@@ -53,4 +48,25 @@ object AlgorithmLogging {
   var maxLogLength = 100
   
   var debugLogActive = true
+
+  var uriEncoder = (s: String) => s
+
+  var globalLogLevel = 7
+
+  def debugLog(msg: => String, asLink: String = "", logLevel: Int = 8): String = {
+    if (AlgorithmLogging.debugLogActive) {
+      val outMsg = if (asLink == "") msg else uriEncoder(asLink + msg)
+      if (logLevel <= globalLogLevel) {
+        if (logLevel <= 4)
+          Console.err.println(outMsg)
+        else if (logLevel <= 6)
+          Console.out.println(Console.YELLOW + outMsg)
+        else
+          Console.out.println(outMsg)
+      }
+      outMsg
+    } else {
+      ""
+    }
+  }
 }

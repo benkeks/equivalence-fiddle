@@ -10,6 +10,7 @@ import io.equiv.eqfiddle.ccs.CCSSamples
 import io.equiv.eqfiddle.ts.Example
 import io.equiv.eqfiddle.tool.control.Structure.NodeLabel
 import io.equiv.eqfiddle.util.Parsing
+import io.equiv.eqfiddle.algo.AlgorithmLogging
 
 class Source(val main: Control) extends ModelComponent {
   
@@ -32,7 +33,7 @@ class Source(val main: Control) extends ModelComponent {
     
     parser.parse match {
       case parser.ParseSuccess(ccsDef, _) =>
-        println("Parsing took: " + (Date.now - beginParse) + "ms.")
+        AlgorithmLogging.debugLog("Parsing took: " + (Date.now - beginParse) + "ms.", logLevel = 8)
         broadcast(Source.ProblemChange(source, List()))
         setAst(ccsDef, updateSource = false)
         
@@ -47,55 +48,44 @@ class Source(val main: Control) extends ModelComponent {
     broadcast(Source.ProblemChange(source, problems))
   }
   
-  private def checkNodeName(name: String) = {
-    true // we're liberal, now!
-    //name != "" &&
-    //name.forall(c => c.isLetterOrDigit || c == '_')
-  }
-  
   def updateEventDeclarationAttributes(updates: List[(String, NodeLabel)]): Boolean = {
     val names = updates.map(_._1)
-    if (names.forall(checkNodeName(_))) {
-      val affectedAst = ast
-      val oldDecls = affectedAst.defs collect { case n: Syntax.NodeDeclaration => n }
-      
-      val newDecls = updates.map { case (nodeName, annotations) =>
-        val oldDecl = oldDecls.find(d => d.name == nodeName)
-        val pos = oldDecl.map(_.pos).getOrElse(Parsing.Pos0)
-        val attribs = oldDecl.map(_.attribs).getOrElse(List()).toMap ++ annotations.toStringPairList
-        (oldDecl, Syntax.NodeDeclaration(nodeName, attribs.toList, pos))
-      }
-      
-      // group by oldDecls and project them away
-      val newVsOldDecls = newDecls.groupBy(_._1).mapValues(_.map(_._2))
-      
-      val defsUpdatedOld = {
-        affectedAst.defs.map {
-          case d: Syntax.NodeDeclaration =>
-            newVsOldDecls.get(Some(d)) match {
-              case Some(dn :: _) =>
-                dn
-              case None =>
-                d
-              case _ =>
-                ??? // from the context we know that empty groups are not possible
-            }
-          case o => o
-        }
-      }
-      
-      // enqueue updates that dont belong to an old declaration
-      val (astBefore, astAfter) = defsUpdatedOld.splitAt(1 + defsUpdatedOld.lastIndexWhere(_.isInstanceOf[Syntax.NodeDeclaration]))
-      val newDefs = astBefore ::: newVsOldDecls.getOrElse(None, List()) ::: astAfter 
-      
-      val newAst = Syntax.Definition(
-          Syntax.fillInPos(newDefs))
-      setAst(newAst)
-      
-      true
-    } else {
-      false
+    val affectedAst = ast
+    val oldDecls = affectedAst.defs collect { case n: Syntax.NodeDeclaration => n }
+    
+    val newDecls = updates.map { case (nodeName, annotations) =>
+      val oldDecl = oldDecls.find(d => d.name == nodeName)
+      val pos = oldDecl.map(_.pos).getOrElse(Parsing.Pos0)
+      val attribs = oldDecl.map(_.attribs).getOrElse(List()).toMap ++ annotations.toStringPairList
+      (oldDecl, Syntax.NodeDeclaration(nodeName, attribs.toList, pos))
     }
+    
+    // group by oldDecls and project them away
+    val newVsOldDecls = newDecls.groupBy(_._1).mapValues(_.map(_._2))
+    
+    val defsUpdatedOld = {
+      affectedAst.defs.map {
+        case d: Syntax.NodeDeclaration =>
+          newVsOldDecls.get(Some(d)) match {
+            case Some(dn :: _) =>
+              dn
+            case None =>
+              d
+            case _ =>
+              ??? // from the context we know that empty groups are not possible
+          }
+        case o => o
+      }
+    }
+    
+    // enqueue updates that dont belong to an old declaration
+    val (astBefore, astAfter) = defsUpdatedOld.splitAt(1 + defsUpdatedOld.lastIndexWhere(_.isInstanceOf[Syntax.NodeDeclaration]))
+    val newDefs = astBefore ::: newVsOldDecls.getOrElse(None, List()) ::: astAfter 
+    
+    val newAst = Syntax.Definition(
+        Syntax.fillInPos(newDefs))
+    setAst(newAst)
+    true
   }
   
   def setAst(newAst: Syntax.Definition, updateSource: Boolean = true) {
@@ -108,7 +98,7 @@ class Source(val main: Control) extends ModelComponent {
   
   override def notify(c: ModelComponent.Change) = c match {
     case Structure.StructureChangeFailed(p) =>
-      println("structure problems " + p)
+      AlgorithmLogging.debugLog("structure problems " + p)
       val problems = p.expr.map { e => Source.Problem(p.msg, e.position.line + 1, e.position.col) } 
       markProblems(problems)
     case _ => 

@@ -56,10 +56,10 @@ class Structure(val main: Control) extends ModelComponent {
 
       interpretationResult match {
         case p: Interpreting.Problem =>
-          println("Interpretation failed after: " + (Date.now - beginInterpret) + "ms.")
+          AlgorithmLogging.debugLog("Interpretation failed after: " + (Date.now - beginInterpret) + "ms.", logLevel = 6)
           broadcast(Structure.StructureChangeFailed(p))
         case Interpreting.Success(is: Structure.TSStructure) =>
-          println("Interpretation took: " + (Date.now - beginInterpret) + "ms.")
+          AlgorithmLogging.debugLog("Interpretation took: " + (Date.now - beginInterpret) + "ms.", logLevel = 8)
           setStructure(is)
       }
     case _ =>
@@ -324,10 +324,10 @@ object Structure {
         } else {
           new StrongSpectroscopy(structure.structure)
         }
-        algo.uriEncoder = scala.scalajs.js.URIUtils.encodeURI _
+        AlgorithmLogging.uriEncoder = scala.scalajs.js.URIUtils.encodeURI _
 
         val result = algo.compute(List((n1, n2)), computeFormulas = true)
-        println("Spectroscopy took: " + (Date.now - begin) + "ms.")
+        AlgorithmLogging.debugLog("Spectroscopy took: " + (Date.now - begin) + "ms.", logLevel = 7)
 
         val gameString = result.meta.get("game") match {
           case Some(game) if game != "" => s""" <a href="$game" target="_blank">View game.</a>"""
@@ -384,10 +384,10 @@ object Structure {
               s"Notion $notion is not defined. Possible names would be: ${(ObservationNotionWeak.LTBTS.getSpectrumClass.keys ++ ObservationNotionWeak.LTBTS.getSpectrumClass.keys).mkString(", ")}")
           }
 
-        algo.uriEncoder = scala.scalajs.js.URIUtils.encodeURI _
+        AlgorithmLogging.uriEncoder = scala.scalajs.js.URIUtils.encodeURI _
 
         val result = algo.checkIndividualPreorder(List((n1, n2), (n2, n1)), notion)
-        println("Preorder check took: " + (Date.now - begin) + "ms.")
+        AlgorithmLogging.debugLog("Preorder check took: " + (Date.now - begin) + "ms.", logLevel = 7)
 
         val Some(lrResult) = result.items.find(r => r.left == n1 && r.right == n2)
         val Some(rlResult) = result.items.find(r => r.left == n2 && r.right == n1)
@@ -447,7 +447,7 @@ object Structure {
       } yield (states(n1i), states(n2j))
 
       val result = algo.compute(comparedPairs, computeFormulas = false)
-      println("Minimization Spectroscopy took: " + (Date.now - begin) + "ms.")
+      AlgorithmLogging.debugLog("Minimization Spectroscopy took: " + (Date.now - begin) + "ms.", logLevel = 7)
 
       val distRel = result.toDistancesRelation()
       val lubDists = distRel.tupleSet
@@ -490,7 +490,7 @@ object Structure {
         } yield (node, n2)
 
         val result = algo.compute(comparedPairs, computeFormulas = false)
-        println("Characterization Spectroscopy took: " + (Date.now - begin) + "ms.")
+        AlgorithmLogging.debugLog("Characterization Spectroscopy took: " + (Date.now - begin) + "ms.", logLevel = 7)
 
         for {
           res <- result.relationItems//.find(r => r.left == n1 && r.right == n2)

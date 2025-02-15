@@ -3,6 +3,7 @@ package io.equiv.eqfiddle.tool.arch
 import scala.collection.mutable.Queue
 import io.equiv.eqfiddle.tool.view.ViewComponent
 import io.equiv.eqfiddle.tool.control.ModelComponent
+import io.equiv.eqfiddle.algo.AlgorithmLogging
 
 trait Control extends ActionDispatcher {
   
@@ -26,7 +27,7 @@ trait Control extends ActionDispatcher {
       changeDeliveryRunning = true
       while(pendingChanges.nonEmpty) {
         val ch = pendingChanges.dequeue()
-        println("processing " + ch)
+        AlgorithmLogging.debugLog("processing " + ch)
         modelComponents.foreach(_.notify(ch))
         viewComponents.foreach(_.notify(ch))
       }

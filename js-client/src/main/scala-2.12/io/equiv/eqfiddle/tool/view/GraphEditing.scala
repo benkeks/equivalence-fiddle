@@ -105,7 +105,6 @@ trait GraphEditing extends ViewComponent {
   }
   
   def onDragStart(node: GraphNode, id: Double) {
-    println("dragstart: "+node)
     if (!node.selected) {
       selectNode(node)
     }

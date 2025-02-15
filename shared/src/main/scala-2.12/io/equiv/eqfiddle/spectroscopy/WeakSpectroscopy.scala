@@ -314,15 +314,14 @@ class WeakSpectroscopy[S, A, L] (
         bestPrice <- hmlGame.attackerVictoryPrices(gn)
         energyClass = energyToClass(bestPrice)
         witnessFormulas = buildHMLWitness(hmlGame, gn, bestPrice)
-        //witnessFormulas = potentialWitnesses.filter(f => spectrum.classifyFormula(f)._1 <= energyClass)
         f <- witnessFormulas.headOption
       } {
         val formulaPrice = spectrum.classifyFormula(f)._1
         if (! (formulaPrice <= energyClass) ) {
-          System.err.println(s"ERROR: Formula $f ${formulaPrice.toTuple} too expensive; not below ${energyClass.toTuple}.")
+          AlgorithmLogging.debugLog(s"ERROR: Formula $f ${formulaPrice.toTuple} too expensive; not below ${energyClass.toTuple}.", logLevel = 4)
         } else {
           if (formulaPrice < energyClass) {
-            System.err.println(s"WARNING: Witness formula $f ${formulaPrice.toTuple} is strictly cheaper than determined minimal distinction class ${energyClass.toTuple}!")
+            AlgorithmLogging.debugLog(s"WARNING: Witness formula $f ${formulaPrice.toTuple} is strictly cheaper than determined minimal distinction class ${energyClass.toTuple}!", logLevel = 5)
           }
           debugLog("Distinguished at " + energyClass.toTuple + ", " + spectrum.classifyClass(energyClass) + " preorder by " + f.toString() + " Price: " + spectrum.classifyFormula(f))
           checkDistinguishing(f, p, qq.head)
@@ -493,7 +492,7 @@ class WeakSpectroscopy[S, A, L] (
     val hmlInterpreter = new HMLInterpreter(ts)
     val check = hmlInterpreter.isTrueAt(formula, List(p, q))
     if (!check(p) || check(q)) {
-      System.err.println("Formula " + formula.toString() + " is no sound distinguishing formula! " + check)
+      AlgorithmLogging.debugLog("Formula " + formula.toString() + " is no sound distinguishing formula! " + check, logLevel = 4)
     }
   }
 

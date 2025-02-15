@@ -27,9 +27,6 @@ class RemoveLittleBrothers[S, A, L] (
       }
     } yield s2
 
-    // println("dominated transitions: " + dominatedTransitions.size + " of " + ts.step.size)
-    // println("dominated states: " + dominatedStates)
-
     val nodeLabeling = ts.nodeLabeling -- dominatedStates
 
     new WeakTransitionSystem(
