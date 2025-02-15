@@ -1,4 +1,4 @@
-package io.equiv.eqfiddle.checkers
+package io.equiv.eqfiddle.algo.checkers
 
 import io.equiv.eqfiddle.util.Relation
 import io.equiv.eqfiddle.ts.WeakTransitionSystem

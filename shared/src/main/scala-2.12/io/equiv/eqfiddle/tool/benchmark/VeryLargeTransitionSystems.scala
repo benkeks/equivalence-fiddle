@@ -12,7 +12,7 @@ import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
 import io.equiv.eqfiddle.spectroscopy.StrongSpectroscopy
 import io.equiv.eqfiddle.algo.transform.BuildQuotientSystem
 import io.equiv.eqfiddle.algo.sigref.Bisimilarity
-import io.equiv.eqfiddle.algo.WeakTransitionSaturation
+import io.equiv.eqfiddle.algo.transform.WeakTransitionSaturation
 import io.equiv.eqfiddle.algo.transform.RemoveLittleBrothers
 
 import scala.util.Random

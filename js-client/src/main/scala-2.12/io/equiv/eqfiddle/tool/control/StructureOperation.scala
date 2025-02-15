@@ -3,17 +3,12 @@ package io.equiv.eqfiddle.tool.control
 import scala.scalajs.js.Date
 
 import io.equiv.eqfiddle.algo.AlgorithmLogging
-import io.equiv.eqfiddle.algo.NaiveDivergenceFinder
-import io.equiv.eqfiddle.algo.NaiveReflexiveClosure
-import io.equiv.eqfiddle.algo.NaiveTransitiveClosure
-import io.equiv.eqfiddle.algo.WeakStepAdder
-import io.equiv.eqfiddle.algo.cs.FixedPointCoupledSimilarity
-import io.equiv.eqfiddle.algo.cs.GameCoupledSimilarity
-import io.equiv.eqfiddle.algo.cs.SchematicCoupledSimilarity
-import io.equiv.eqfiddle.algo.cs.GameCoupledSimilarityPlain
-import io.equiv.eqfiddle.algo.contra.GameContrasimilarityExponential
+import io.equiv.eqfiddle.algo.transform.NaiveDivergenceFinder
+import io.equiv.eqfiddle.algo.transform.NaiveReflexiveClosure
+import io.equiv.eqfiddle.algo.transform.NaiveTransitiveClosure
+import io.equiv.eqfiddle.algo.transform.WeakStepAdder
 import io.equiv.eqfiddle.algo.sigref
-import io.equiv.eqfiddle.checkers.NaiveCoupledSimCheck
+import io.equiv.eqfiddle.algo.checkers.NaiveCoupledSimCheck
 import io.equiv.eqfiddle.tool.control.Structure.ActionLabel
 import io.equiv.eqfiddle.tool.model.NodeID
 import io.equiv.eqfiddle.ts.DivergenceInformation
@@ -104,75 +99,6 @@ object StructureOperation {
 
     override def analyze(system: Structure.TSStructure) = {
       val algo = new sigref.WeakBisimilarity(system)
-      (algo.compute(), Some(algo))
-    }
-  }
-
-  class SchematicCoupledSimilarityAnalyzer extends StructureRelationAnalyzer {
-
-    override val name = "Schematic Coupled Similarity"
-
-    override val slug = "schematic-coupled-similarity"
-
-    override def analyze(system: Structure.TSStructure) = (new SchematicCoupledSimilarity(system).compute(), None)
-  }
-
-  class FixedPointCoupledSimilarityAnalyzer extends StructureRelationAnalyzer {
-
-    override val name = "Fixed-Point Coupled Similarity"
-
-    override val slug = "fixed-point-coupled-similarity"
-
-    override val description =
-      "Computes the coupled simulation preorder (relation) " +
-      "by iterating to the greatest fixed point of the coupled simulation rules. (Sec 4.3 in the thesis)"
-
-    override def analyze(system: Structure.TSStructure) = (new FixedPointCoupledSimilarity(system).compute(), None)
-  }
-
-  class GameCoupledSimilarityAnalyzer extends StructureRelationAnalyzer {
-
-    override val name = "Game Coupled Similarity"
-
-    override val slug = "game-coupled-similarity"
-
-    override val description =
-      "Computes the coupled simulation preorder (relation) " +
-      "by solving the minimized coupled simulation game. (Sec 4.5 in the thesis)"
-
-    override def analyze(system: Structure.TSStructure) = {
-      val algo = new GameCoupledSimilarity(system)
-      (algo.compute(), Some(algo))
-    }
-  }
-
-  class GameCoupledSimilarityPlainAnalyzer extends StructureRelationAnalyzer {
-
-    override val name = "Game Coupled Similarity Plain"
-
-    override val slug = "game-coupled-similarity-plain"
-
-    override val description =
-      "Computes the coupled simulation preorder (relation) " +
-      "by solving the full-blown coupled simulation game. (Sec 4.4 in the thesis)"
-
-    override def analyze(system: Structure.TSStructure) = {
-      val algo = new GameCoupledSimilarityPlain(system)
-      (algo.compute(), Some(algo))
-    }
-  }
-
-  class GameContrasimilarityExponentialAnalyzer extends StructureRelationAnalyzer {
-
-    override val name = "Game Comtrasimilarity Exponential EXPERIMENTAL"
-
-    override val slug = "game-contra-similarity-exponential"
-
-    override val description =
-      "Computes the contrasimulation preorder (relation) using a subset construction Experimental!"
-
-    override def analyze(system: Structure.TSStructure) = {
-      val algo = new GameContrasimilarityExponential(system)
       (algo.compute(), Some(algo))
     }
   }

@@ -7,7 +7,7 @@ import io.equiv.eqfiddle.tool.arch.Control
 import io.equiv.eqfiddle.ccs.Syntax
 import io.equiv.eqfiddle.ccs
 import io.equiv.eqfiddle.ccs.CCSSamples
-import io.equiv.eqfiddle.ts.Samples
+import io.equiv.eqfiddle.ts.Example
 import io.equiv.eqfiddle.tool.control.Structure.NodeLabel
 import io.equiv.eqfiddle.util.Parsing
 
@@ -151,7 +151,7 @@ object Source {
     override def toString() = "ProblemChange( ..., " + errs.toString() + " )" 
   }
   
-  case class ExamplesChange(samples: List[Samples.Example]) extends ModelComponent.Change {
+  case class ExamplesChange(samples: List[Example]) extends ModelComponent.Change {
     override def toString = "ExamplesChange"
   }
 }

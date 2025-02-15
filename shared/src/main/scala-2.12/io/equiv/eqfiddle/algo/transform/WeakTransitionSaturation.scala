@@ -1,4 +1,4 @@
-package io.equiv.eqfiddle.algo
+package io.equiv.eqfiddle.algo.transform
 
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 import io.equiv.eqfiddle.util.LabeledRelation

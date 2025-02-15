@@ -27,7 +27,7 @@ import org.singlespaced.d3js.Ops.fromFunction2To3
 import org.singlespaced.d3js.d3
 import io.equiv.eqfiddle.tool.arch.Control
 import io.equiv.eqfiddle.tool.control.ModelComponent
-import io.equiv.eqfiddle.ts.Samples
+import io.equiv.eqfiddle.ts.Example
 import io.equiv.eqfiddle.tool.control.Source
 import io.equiv.eqfiddle.tool.control.Structure
 import io.equiv.eqfiddle.tool.control.StructureOperation
@@ -245,17 +245,17 @@ class SourceEditor(val main: Control) extends ViewComponent {
     this.runners = runners
   }
   
-  def setSamples(samples: List[Samples.Example]) {
-    val list = js.Array[Samples.Example]()
+  def setSamples(samples: List[Example]) {
+    val list = js.Array[Example]()
     list.appendAll(samples)
     d3.select("#es-load .dropdown-menu").selectAll(".es-load-example")
       .data(list)
       .enter()
         .append("li")
         .classed("es-load-example", true)
-        .classed("divider", (s: Samples.Example, i: Int) => s.slug == "diamond")
-        .html((s: Samples.Example, i: Int) => "<a href=\"#" + s.slug + "\">" + s.name + "</a>")
-        .on("click", {(s: Samples.Example, i: Int) => 
+        .classed("divider", (s: Example, i: Int) => s.slug == "diamond")
+        .html((s: Example, i: Int) => "<a href=\"#" + s.slug + "\">" + s.name + "</a>")
+        .on("click", {(s: Example, i: Int) => 
           triggerAction(Source.LoadDefinition(s.code))
         })
   }

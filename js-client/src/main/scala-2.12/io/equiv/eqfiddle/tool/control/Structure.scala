@@ -22,7 +22,7 @@ import io.equiv.eqfiddle.hml.ObservationNotionStrong
 import io.equiv.eqfiddle.hml.ObservationNotionWeak
 import io.equiv.eqfiddle.hml.Spectrum
 import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
-import io.equiv.eqfiddle.algo.WeakTransitionSaturation
+import io.equiv.eqfiddle.algo.transform.WeakTransitionSaturation
 import io.equiv.eqfiddle.algo.sigref.Bisimilarity
 import io.equiv.eqfiddle.algo.sigref.BranchingBisimilarity
 import io.equiv.eqfiddle.algo.transform.BuildQuotientSystem

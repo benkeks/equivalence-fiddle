@@ -1,6 +1,6 @@
 package io.equiv.eqfiddle.ccs
 
-import io.equiv.eqfiddle.ts.Samples
+import io.equiv.eqfiddle.ts.Example
 
 object CCSSamples {
   val ltbts1 = """
@@ -548,41 +548,41 @@ P58 = a.(tau.b + b + tau)
        |Ptl(x=500, y=450)
        |""".stripMargin
 
-  val namedSamples = List[Samples.Example](
-    Samples.Example("ltbts1",
+  val namedSamples = List[Example](
+    Example("ltbts1",
       "Linear Time Branching Time Spectrum 1",
       ltbts1),
-    Samples.Example("ltbts2",
+    Example("ltbts2",
       "Linear Time Branching Time Spectrum 2",
       ltbts2),
-    Samples.Example("neither-failure-sim",
+    Example("neither-failure-sim",
       "Neither failure nor simulation equivalent",
       notFailureOrSim),
-    Samples.Example("ft-and-if",
+    Example("ft-and-if",
       "FT as well as IF preordered",
       failureTraceAndImpossibleFutures),
-    Samples.Example("review-counterexamples",
+    Example("review-counterexamples",
       "Spurious failure-trace preorderings in original algorithm",
       reviewCounterexamples),
-    Samples.Example("diverse-eqs",
+    Example("diverse-eqs",
       "Diverse Equivalences",
       diverseEquivalences),
-    Samples.Example("weak-sims",
+    Example("weak-sims",
       "Weak Bisim, Coupled, Contrasim",
       weakBisimCoupledSimParallel),
-    Samples.Example("strong-weak-sims",
+    Example("strong-weak-sims",
       "Eta, Branching, Delay Bisims",
       strongWeakSims),
-    Samples.Example("weak-edge-cases-david",
+    Example("weak-edge-cases-david",
       "Weak Edge Cases by David",
       davidsEdgeCases),
-    Samples.Example("stable-unstable-abstraction",
+    Example("stable-unstable-abstraction",
       "Stable vs. unstable abstraction",
       stableUnstableAbstraction),
-    Samples.Example("peterson-mutex",
+    Example("peterson-mutex",
       "Peterson Mutual exclusion",
       petersonMutex),
-    Samples.Example("peterson-mutex-silent",
+    Example("peterson-mutex-silent",
       "Peterson Mutual exclusion, silent-step version",
       petersonMutexSilent)
   )
