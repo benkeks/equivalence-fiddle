@@ -2,7 +2,7 @@ package io.equiv.eqfiddle
 
 import io.equiv.eqfiddle.ccs.CCSSamples
 import io.equiv.eqfiddle.ccs.Syntax
-import io.equiv.eqfiddle.ts.Samples
+import io.equiv.eqfiddle.ts.Example
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 import io.equiv.eqfiddle.tool.model.NodeID
 import io.equiv.eqfiddle.ccs.Interpreter
@@ -21,7 +21,7 @@ object TestSamples {
   def actionStrToInput(a: String): String = if (actionStrIsOutput(a)) actionStrToInput(a.dropRight(1)) else a
 
   val samples = for {
-    Samples.Example(slug, name, src) <- CCSSamples.namedSamples
+    Example(slug, name, src) <- CCSSamples.namedSamples
     parser: Parser = new Parser(src)
     parser.ParseSuccess(esDef, _) = parser.parse
     interpreter = new Interpreter(esDef, NodeID(_), arrowLabeling, nodeLabeling, actionStrToInput, actionStrIsOutput)

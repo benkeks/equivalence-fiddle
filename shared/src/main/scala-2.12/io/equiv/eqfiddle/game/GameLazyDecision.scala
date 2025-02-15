@@ -1,5 +1,7 @@
 package io.equiv.eqfiddle.game
 
+import io.equiv.eqfiddle.algo.AlgorithmLogging
+
 trait GameLazyDecision[P] extends AbstractGameDiscovery {
   self: SimpleGame =>
 
@@ -54,7 +56,7 @@ trait GameLazyDecision[P] extends AbstractGameDiscovery {
     discovered ++= initialNodes
 
     while (todo.nonEmpty) {
-      if (printToDoLength) println(todo.size)
+      if (printToDoLength) AlgorithmLogging.debugLog(todo.size.toString())
       val currNode = todo.dequeue()
       val instaWin = instantAttackerWin(currNode)
       if (instaWin.nonEmpty) {

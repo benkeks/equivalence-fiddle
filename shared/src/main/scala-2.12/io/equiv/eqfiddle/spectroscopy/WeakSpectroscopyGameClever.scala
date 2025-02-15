@@ -2,11 +2,11 @@ package io.equiv.eqfiddle.spectroscopy
 
 import io.equiv.eqfiddle.game.SimpleGame
 import io.equiv.eqfiddle.game.EnergyGame
-import io.equiv.eqfiddle.hml.ObservationClassFast
+import io.equiv.eqfiddle.hml.ObservationNotionStrong
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 
-class EnergyWeakSpectroscopyGameClever[S, A, L](ts: WeakTransitionSystem[S, A, L], energyCap: Int = Int.MaxValue)
-  extends EnergyWeakSpectroscopyGame(ts, energyCap) {
+class WeakSpectroscopyGameClever[S, A, L](ts: WeakTransitionSystem[S, A, L], energyCap: Int = Int.MaxValue)
+  extends WeakSpectroscopyGame(ts, energyCap) {
 
   // obs, branchingConj, unstableConj, stableConj, immediateConj, revivals, positiveHeight, negativeHeight, negations
   private val BranchingObsSubEnergyUpdate     = new EnergyGame.EnergyUpdate(Array(  6, 0, 0, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
@@ -43,7 +43,7 @@ class EnergyWeakSpectroscopyGameClever[S, A, L](ts: WeakTransitionSystem[S, A, L
   override def computeSuccessors(gn: GameNode): Iterable[GameNode] = gn match {
 
     case AttackerDelayedObservation(p0, qq0) =>
-      // mostly identical to EnergyWeakSpectroscopyGame
+      // mostly identical to WeakSpectroscopyGame
       if (optimizeSymmetryDefWins && (qq0 contains p0)) {
         List()
       } else {
@@ -71,7 +71,7 @@ class EnergyWeakSpectroscopyGameClever[S, A, L](ts: WeakTransitionSystem[S, A, L
             // (delayed) observation
             AttackerObservation(p1, qq0.flatMap(ts.post(_, a)))
           }
-          // this is where we deviate from EnergyWeakSpectroscopyGame in not building subsets of qq0
+          // this is where we deviate from WeakSpectroscopyGame in not building subsets of qq0
           val branchingConjs = for {
             (a,pp1) <- ts.post(p0)
             if qq0.size > 1

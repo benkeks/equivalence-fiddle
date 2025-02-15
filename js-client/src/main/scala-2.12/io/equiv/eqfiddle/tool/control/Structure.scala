@@ -17,17 +17,16 @@ import io.equiv.eqfiddle.util.Relation
 import io.equiv.eqfiddle.util.LabeledRelation
 import io.equiv.eqfiddle.ts.DivergenceInformation
 import io.equiv.eqfiddle.algo.AlgorithmLogging
-import io.equiv.eqfiddle.spectroscopy.{AbstractSpectroscopy, PositionalSpectroscopy, EdgeSpectroscopy, EnergyWeakSpectroscopy}
-import io.equiv.eqfiddle.spectroscopy.FastSpectroscopy
-import io.equiv.eqfiddle.hml.ObservationClassFast
-import io.equiv.eqfiddle.hml.ObservationClassEnergyWeak
+import io.equiv.eqfiddle.spectroscopy.{AbstractSpectroscopy, StrongSpectroscopy, WeakSpectroscopy}
+import io.equiv.eqfiddle.hml.ObservationNotionStrong
+import io.equiv.eqfiddle.hml.ObservationNotionWeak
 import io.equiv.eqfiddle.hml.Spectrum
 import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
-import io.equiv.eqfiddle.algo.WeakTransitionSaturation
+import io.equiv.eqfiddle.algo.transform.WeakTransitionSaturation
 import io.equiv.eqfiddle.algo.sigref.Bisimilarity
 import io.equiv.eqfiddle.algo.sigref.BranchingBisimilarity
 import io.equiv.eqfiddle.algo.transform.BuildQuotientSystem
-import io.equiv.eqfiddle.hml.ObservationClass
+import io.equiv.eqfiddle.hml.ObservationNotion
 
 class Structure(val main: Control) extends ModelComponent {
 
@@ -57,10 +56,10 @@ class Structure(val main: Control) extends ModelComponent {
 
       interpretationResult match {
         case p: Interpreting.Problem =>
-          println("Interpretation failed after: " + (Date.now - beginInterpret) + "ms.")
+          AlgorithmLogging.debugLog("Interpretation failed after: " + (Date.now - beginInterpret) + "ms.", logLevel = 6)
           broadcast(Structure.StructureChangeFailed(p))
         case Interpreting.Success(is: Structure.TSStructure) =>
-          println("Interpretation took: " + (Date.now - beginInterpret) + "ms.")
+          AlgorithmLogging.debugLog("Interpretation took: " + (Date.now - beginInterpret) + "ms.", logLevel = 8)
           setStructure(is)
       }
     case _ =>
@@ -145,7 +144,7 @@ object Structure {
 
   case class StructureCommentChange(comment: String) extends ModelComponent.Change
 
-  case class StructureSpectrumChange[OC <: ObservationClass](spectrum: Spectrum[OC], preords: List[String], equations: List[String],
+  case class StructureSpectrumChange[OC <: ObservationNotion](spectrum: Spectrum[OC], preords: List[String], equations: List[String],
     distCoordsLR: List[(OC, String)], distCoordsRL: List[(OC, String)], comment: String) extends ModelComponent.Change
 
   case class StructureReplayChange(replay: List[() => AlgorithmLogging.LogEntry[NodeID]])
@@ -321,14 +320,14 @@ object Structure {
         val begin = Date.now
 
         val algo = if (silentSpectrum) {
-          new EnergyWeakSpectroscopy(structure.structure)
+          new WeakSpectroscopy(structure.structure)
         } else {
-          new FastSpectroscopy(structure.structure)
+          new StrongSpectroscopy(structure.structure)
         }
-        algo.uriEncoder = scala.scalajs.js.URIUtils.encodeURI _
+        AlgorithmLogging.uriEncoder = scala.scalajs.js.URIUtils.encodeURI _
 
         val result = algo.compute(List((n1, n2)), computeFormulas = true)
-        println("Spectroscopy took: " + (Date.now - begin) + "ms.")
+        AlgorithmLogging.debugLog("Spectroscopy took: " + (Date.now - begin) + "ms.", logLevel = 7)
 
         val gameString = result.meta.get("game") match {
           case Some(game) if game != "" => s""" <a href="$game" target="_blank">View game.</a>"""
@@ -346,7 +345,7 @@ object Structure {
           () => AlgorithmLogging.LogRelation(result.toDistinctionRelation(), s"Left-right-distinguished by:<div class='distinctions'>$leftRightDists</div>"),
           //() => AlgorithmLogging.LogRelation(result.toDistinctionRelation(), s"Right-left-distinguished by:<div class='distinctions'>$rightLeftDists</div>"),
           () => AlgorithmLogging.LogRelation(result.toEquivalencesRelation(), s"Equated by:<div class='equations'>${equations.mkString("<br>")}</div>"),
-          () => AlgorithmLogging.LogSpectrum[NodeID, ObservationClass](result.spectrum, preords, equations, distCoordsLR, distCoordsRL, s"Show spectrum. $gameString")
+          () => AlgorithmLogging.LogSpectrum[NodeID, ObservationNotion](result.spectrum, preords, equations, distCoordsLR, distCoordsRL, s"Show spectrum. $gameString")
         )
         structure.setReplay(replay)
         structure.main.doAction(StructureDoReplayStep(), structure)
@@ -376,19 +375,19 @@ object Structure {
         val begin = Date.now
 
         val algo = 
-          if (ObservationClassEnergyWeak.LTBTS.getSpectrumClass.isDefinedAt(notion)) {
-            new EnergyWeakSpectroscopy(structure.structure)
-          } else if (ObservationClassFast.LTBTS.getSpectrumClass.isDefinedAt(notion)) {
-            new FastSpectroscopy(structure.structure)
+          if (ObservationNotionWeak.LTBTS.getSpectrumClass.isDefinedAt(notion)) {
+            new WeakSpectroscopy(structure.structure)
+          } else if (ObservationNotionStrong.LTBTS.getSpectrumClass.isDefinedAt(notion)) {
+            new StrongSpectroscopy(structure.structure)
           } else {
             throw new Exception(
-              s"Notion $notion is not defined. Possible names would be: ${(ObservationClassEnergyWeak.LTBTS.getSpectrumClass.keys ++ ObservationClassEnergyWeak.LTBTS.getSpectrumClass.keys).mkString(", ")}")
+              s"Notion $notion is not defined. Possible names would be: ${(ObservationNotionWeak.LTBTS.getSpectrumClass.keys ++ ObservationNotionWeak.LTBTS.getSpectrumClass.keys).mkString(", ")}")
           }
 
-        algo.uriEncoder = scala.scalajs.js.URIUtils.encodeURI _
+        AlgorithmLogging.uriEncoder = scala.scalajs.js.URIUtils.encodeURI _
 
         val result = algo.checkIndividualPreorder(List((n1, n2), (n2, n1)), notion)
-        println("Preorder check took: " + (Date.now - begin) + "ms.")
+        AlgorithmLogging.debugLog("Preorder check took: " + (Date.now - begin) + "ms.", logLevel = 7)
 
         val Some(lrResult) = result.items.find(r => r.left == n1 && r.right == n2)
         val Some(rlResult) = result.items.find(r => r.left == n2 && r.right == n1)
@@ -440,7 +439,7 @@ object Structure {
 
       val states = structure.structure.nodes.toList
 
-      val algo = new FastSpectroscopy(structure.structure)
+      val algo = new StrongSpectroscopy(structure.structure)
 
       val comparedPairs = for {
         n1i <- 0 until states.length
@@ -448,14 +447,14 @@ object Structure {
       } yield (states(n1i), states(n2j))
 
       val result = algo.compute(comparedPairs, computeFormulas = false)
-      println("Minimization Spectroscopy took: " + (Date.now - begin) + "ms.")
+      AlgorithmLogging.debugLog("Minimization Spectroscopy took: " + (Date.now - begin) + "ms.", logLevel = 7)
 
       val distRel = result.toDistancesRelation()
       val lubDists = distRel.tupleSet
 
       val eqLevels =
         distRel.labels.map(result.spectrum.getStrongestPreorderClassFromClass(_))
-        .flatten.toSet[Spectrum.EquivalenceNotion[ObservationClassFast]].toList.sortBy(_.obsClass.toTuple).reverse
+        .flatten.toSet[Spectrum.EquivalenceNotion[ObservationNotionStrong]].toList.sortBy(_.obsClass.toTuple).reverse
 
       val replay = for {
         Spectrum.EquivalenceNotion(name, obsClass) <- eqLevels
@@ -484,14 +483,14 @@ object Structure {
 
         val begin = Date.now
 
-        val algo = new FastSpectroscopy(structure.structure)
+        val algo = new StrongSpectroscopy(structure.structure)
 
         val comparedPairs = for {
           n2 <- structure.structure.nodes
         } yield (node, n2)
 
         val result = algo.compute(comparedPairs, computeFormulas = false)
-        println("Characterization Spectroscopy took: " + (Date.now - begin) + "ms.")
+        AlgorithmLogging.debugLog("Characterization Spectroscopy took: " + (Date.now - begin) + "ms.", logLevel = 7)
 
         for {
           res <- result.relationItems//.find(r => r.left == n1 && r.right == n2)

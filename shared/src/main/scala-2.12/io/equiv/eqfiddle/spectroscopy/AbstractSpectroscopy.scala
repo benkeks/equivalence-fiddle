@@ -10,7 +10,7 @@ import io.equiv.eqfiddle.algo.AlgorithmLogging
 import io.equiv.eqfiddle.util.LabeledRelation
 import io.equiv.eqfiddle.game.GameGraphVisualizer
 import io.equiv.eqfiddle.hml.HennessyMilnerLogic
-import io.equiv.eqfiddle.hml.ObservationClass
+import io.equiv.eqfiddle.hml.ObservationNotion
 import io.equiv.eqfiddle.hml.Spectrum
 import io.equiv.eqfiddle.hml.HMLInterpreter
 import io.equiv.eqfiddle.util.Coloring
@@ -29,7 +29,7 @@ abstract class AbstractSpectroscopy[S, A, L, CF <: HennessyMilnerLogic.Formula[A
     comparedPairs: Iterable[(S,S)],
     computeFormulas: Boolean = true,
     saveGameSize: Boolean = false
-  ): SpectroscopyResult[S, A, ObservationClass, CF]
+  ): SpectroscopyResult[S, A, ObservationNotion, CF]
 
   /* Discards distinguishing formulas that do not contribute “extreme” distinguishing notions of equivalence */
   val discardLanguageDominatedResults: Boolean = false
@@ -39,9 +39,9 @@ abstract class AbstractSpectroscopy[S, A, L, CF <: HennessyMilnerLogic.Formula[A
   def collectSpectroscopyResult(
     game: AbstractSpectroscopyGame[S, A, L],
     nodeFormulas: Map[GameNode, Iterable[CF]])
-  : SpectroscopyResult[S, A, ObservationClass, CF] = {
+  : SpectroscopyResult[S, A, ObservationNotion, CF] = {
     
-    val bestPreorders: Map[GameNode,List[Spectrum.EquivalenceNotion[ObservationClass]]] = nodeFormulas.mapValues { ffs =>
+    val bestPreorders: Map[GameNode,List[Spectrum.EquivalenceNotion[ObservationNotion]]] = nodeFormulas.mapValues { ffs =>
       val classes = ffs.flatMap(spectrum.classifyFormula(_)._2)
       spectrum.getStrongestPreorderClass(classes)
     }
@@ -58,7 +58,7 @@ abstract class AbstractSpectroscopy[S, A, L, CF <: HennessyMilnerLogic.Formula[A
         f <- distinctionFormulas.toList
         (price, eqs) = spectrum.classifyFormula[CF](f)
       } yield (f, price, eqs)
-    } yield SpectroscopyResultItem[S, A, ObservationClass, CF](p, q, distinctions, preorders)
+    } yield SpectroscopyResultItem[S, A, ObservationNotion, CF](p, q, distinctions, preorders)
 
     SpectroscopyResult(spectroResults.toList, spectrum)
   }
@@ -67,7 +67,7 @@ abstract class AbstractSpectroscopy[S, A, L, CF <: HennessyMilnerLogic.Formula[A
     val hmlInterpreter = new HMLInterpreter(ts)
     val check = hmlInterpreter.isTrueAt(formula, List(p, q))
     if (!check(p) || check(q)) {
-      System.err.println("Formula " + formula.toString() + " is no sound distinguishing formula! " + check)
+      AlgorithmLogging.debugLog("Formula " + formula.toString() + " is no sound distinguishing formula! " + check, logLevel = 4)
     }
   }
 

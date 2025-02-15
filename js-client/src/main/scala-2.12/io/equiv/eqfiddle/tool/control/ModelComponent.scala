@@ -4,6 +4,7 @@ import scala.collection.mutable.ListBuffer
 import io.equiv.eqfiddle.tool.arch.Action
 import io.equiv.eqfiddle.tool.arch.Control
 import io.equiv.eqfiddle.tool.arch.Undoable
+import io.equiv.eqfiddle.algo.AlgorithmLogging
 
 
 trait ModelComponent {
@@ -28,7 +29,7 @@ trait ModelComponent {
       val lastAction = actionLog(undoDepth)
       lastAction match {
         case ua: Undoable =>
-          println("Undo" + ua)
+          AlgorithmLogging.debugLog("Undo" + ua)
           undoDepth += 1
           return ua.undo()
       }
@@ -41,7 +42,7 @@ trait ModelComponent {
       val undineAction = actionLog(undoDepth-1)
       undineAction match {
         case ua: Undoable =>
-          println("Redo" + ua)
+          AlgorithmLogging.debugLog("Redo" + ua)
           undoDepth -= 1
           return ua.redo()
       }

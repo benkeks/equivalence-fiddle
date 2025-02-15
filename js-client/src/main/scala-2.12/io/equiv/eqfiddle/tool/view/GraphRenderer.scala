@@ -28,7 +28,7 @@ import io.equiv.eqfiddle.util.Coloring
 import io.equiv.eqfiddle.util.Relation
 import io.equiv.eqfiddle.util.LabeledRelation
 import io.equiv.eqfiddle.hml.Spectrum
-import io.equiv.eqfiddle.hml.ObservationClass
+import io.equiv.eqfiddle.hml.ObservationNotion
 
 class GraphRenderer(val main: Control)
   extends GraphView
@@ -39,8 +39,6 @@ class GraphRenderer(val main: Control)
   
   registerEditingBehavior("es-graph-move", new GraphMoveNode(this))
   registerEditingBehavior("es-graph-rename", new GraphEditNode(this))
-  registerEditingBehavior("es-graph-delete", new GraphDeleteNodeOrLink(this))
-  registerEditingBehavior("es-graph-connect-stepto", new GraphConnectStepTo(this))
   registerEditingBehavior("es-graph-examine", new GraphExamineNodes(this))
   
   behaviors.foreach{ case (n: String, b: GraphEditBehavior) =>
@@ -57,21 +55,11 @@ class GraphRenderer(val main: Control)
       .gravity(.02)
       .nodes(nodes)
       .links(links)
-      
-  val graphBendingButton = d3.selectAll("#es-graph-arrowbending")
-  graphBendingButton
-    .on("change", (a: EventTarget, b: Int) => {
-      GraphView.graphBending = graphBendingButton.node.asInstanceOf[HTMLInputElement].checked
-      force.resume()
-      println("set bending: " + GraphView.graphBending)
-    }
-  )
   
   val layerNodes = sceneRoot.append("g").classed("layer-nodes", true)
   val layerLinks = sceneRoot.append("g").classed("layer-links", true)
   val layerMeta = sceneRoot.append("g").classed("layer-meta", true)
-      
-  //var linkViews: Selection[NodeLink] = layerLinks.selectAll(".link")
+
   var linkPartViews: Selection[LinkViewPart] = layerLinks.selectAll(".link")
   var linkLabelViews: Selection[NodeLink] = layerMeta.selectAll(".link-label")
   
@@ -141,9 +129,7 @@ class GraphRenderer(val main: Control)
         .append("path")
         .attr("class", (d: LinkViewPart, i: Int) => "link " + d.link.kind.name)
         .attr("marker-end", (d: LinkViewPart, i: Int) => if (d.isEnd) "url(#" + d.link.kind.name.split(" ")(0) + ")" else "none")
-        //.call(dragLink)
-        //.on("mousemove", onHover _)
-        //.on("mouseout", onHoverEnd _)
+
     linkUp.exit().remove()
     linkPartViews = layerLinks.selectAll(".link")
     

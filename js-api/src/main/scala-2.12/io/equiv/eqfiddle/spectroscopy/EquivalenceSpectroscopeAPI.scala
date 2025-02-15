@@ -8,8 +8,8 @@ import io.equiv.eqfiddle.algo.AlgorithmLogging
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 import io.equiv.eqfiddle.util.LabeledRelation
 import io.equiv.eqfiddle.spectroscopy.helpers.CytoscapeHelpers
-import io.equiv.eqfiddle.hml.ObservationClassStrong
 import io.equiv.eqfiddle.hml.Spectrum
+import io.equiv.eqfiddle.hml.ObservationNotionStrong
 
 object EquivalenceSpectroscopeAPI {
 
@@ -70,7 +70,7 @@ object EquivalenceSpectroscopeAPI {
   @JSExportTopLevel("performSpectroscopy")
   def performSpectroscopy(lts: WeakTS, p1: String, p2: String) = {
     AlgorithmLogging.debugLogActive = false
-    val algo = new PositionalSpectroscopy(lts)
+    val algo = new StrongSpectroscopy(lts)
     val result = algo.compute(List((p1, p2)))
 
     for {
@@ -81,7 +81,7 @@ object EquivalenceSpectroscopeAPI {
   @JSExportTopLevel("LTBTS")
   def LTBTS() = {
     val classes = for {
-      Spectrum.EquivalenceNotion(name, obsClass) <- ObservationClassStrong.LTBTS.notions
+      Spectrum.EquivalenceNotion(name, obsClass) <- ObservationNotionStrong.LTBTS.notions
     } yield (name, obsClass.toTuple.productIterator.toIterable.toJSArray)
     classes.toMap.toJSDictionary
   }

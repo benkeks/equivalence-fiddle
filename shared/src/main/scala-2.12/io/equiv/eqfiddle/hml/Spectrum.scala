@@ -1,24 +1,24 @@
 package io.equiv.eqfiddle.hml
 
 object Spectrum {
-  case class EquivalenceNotion[+OC <: ObservationClass](name: String, obsClass: OC)
+  case class EquivalenceNotion[+OC <: ObservationNotion](name: String, obsClass: OC)
 
-  def fromTuples[OC <: ObservationClass](pairs: List[(String, OC)], classifier: HennessyMilnerLogic.Formula[_] => OC) = {
+  def fromTuples[OC <: ObservationNotion](pairs: List[(String, OC)], classifier: HennessyMilnerLogic.Formula[_] => OC) = {
     new Spectrum(pairs.map(p => EquivalenceNotion(p._1, p._2)), classifier)
   }
 }
 
-case class Spectrum[+OC <: ObservationClass](
+case class Spectrum[+OC <: ObservationNotion](
     notions: List[Spectrum.EquivalenceNotion[OC]],
     classifier: HennessyMilnerLogic.Formula[_] => OC) {
   import Spectrum._
 
-  /** given a group of least distinguishing observation classes, tell what weaker ObservationClasses would be the strongest fit to preorder the distinguished states */
-  def getStrongestPreorderClass(leastClassifications: Iterable[EquivalenceNotion[ObservationClass]]): List[EquivalenceNotion[OC]] = {
+  /** given a group of least distinguishing observation classes, tell what weaker ObservationNotiones would be the strongest fit to preorder the distinguished states */
+  def getStrongestPreorderClass(leastClassifications: Iterable[EquivalenceNotion[ObservationNotion]]): List[EquivalenceNotion[OC]] = {
     getStrongestPreorderClassFromClass(leastClassifications.map(_.obsClass))
   }
 
-  def getStrongestPreorderClassFromClass(leastClassifications: Iterable[ObservationClass]): List[EquivalenceNotion[OC]] = {
+  def getStrongestPreorderClassFromClass(leastClassifications: Iterable[ObservationNotion]): List[EquivalenceNotion[OC]] = {
 
     val weakerClasses = notions.filterNot { c => leastClassifications.exists(c.obsClass >= _) }
     val mostFitting = weakerClasses.filterNot { c => weakerClasses.exists(_.obsClass > c.obsClass) }
@@ -38,7 +38,7 @@ case class Spectrum[+OC <: ObservationClass](
 
 
   /** names the coarsest notion of equivalence where this classification is part of the distinguishing capacities */
-  def classifyClass(c: ObservationClass): List[EquivalenceNotion[OC]] = {
+  def classifyClass(c: ObservationNotion): List[EquivalenceNotion[OC]] = {
     val balancedClass = c // TODO maybe change?
     val classifications = notions.filter(en => (balancedClass lub en.obsClass) == en.obsClass)
     var currentMax = List[OC]()
