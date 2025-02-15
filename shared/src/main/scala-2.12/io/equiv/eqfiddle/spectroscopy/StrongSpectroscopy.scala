@@ -34,7 +34,6 @@ class StrongSpectroscopy[S, A, L] (
 
   def buildHMLWitness(game: StrongSpectroscopyGame[S, A, L], node: GameNode, price: Energy): Iterable[HennessyMilnerLogic.Formula[A]]
     = distinguishingFormulas.getOrElseUpdate((node, price), {
-    //debugLog(s"exploring: $node, $price" )
     node match {
       case game.AttackerObservation(p0, qq0) if qq0.isEmpty =>
         Set(HennessyMilnerLogic.True)
@@ -267,7 +266,7 @@ class StrongSpectroscopy[S, A, L] (
             val qqRString = qqR.mkString("{",",","}")
             s"$p, $qqSString, $qqRString"
           case _ => ""
-        }).replaceAllLiterally(".0", "") +
+        }).replaceAllLiterally(".0", "").replaceAllLiterally("\\", "\\\\") +
          (if (priceString != "") s"\\n------\\n$priceString" else "") +
          (if (formulaString != "") s"\\n------\\n$formulaString" else "")
       }

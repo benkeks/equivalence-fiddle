@@ -498,38 +498,41 @@ class WeakSpectroscopy[S, A, L] (
 
   def gameNodeToString(
       game: WeakSpectroscopyGame[S, A, L],
-      gn: GameNode) = gn match {
-    case game.AttackerObservation(p, qq: Set[_]) =>
-      val qqString = qq.mkString("{",",","}")
-      s"$p, $qqString"
-    case game.AttackerDelayedObservation(p, qq: Set[_]) =>
-      val qqString = qq.mkString("{",",","}")
-      s"$p, ≈$qqString"
-    case game.AttackerBranchingObservation(p, qq: Set[_]) =>
-      val qqString = qq.mkString("{",",","}")
-      s"$p, b$qqString"
-    case game.AttackerClause(p, q) =>
-      s"$p, $q"
-    case game.DefenderConjunction(p, qq: Set[_]) =>
-      val qqString = qq.mkString("{",",","}")
-      s"$p, $qqString"
-    case game.DefenderStableConjunction(p, qq: Set[_], qqRevivals) =>
-      val qqString = qq.mkString("{",",","}")
-      val qqRevivalsString = qq.mkString("{",",","}")
-      s"$p, s$qqString, $qqRevivalsString"
-    case game.DefenderBranchingConjunction(p0, a, p1, qq0, qq0a) =>
-      s"$p0 -${a}-> $p1, ${qq0.mkString("{",",","}")}, ${qq0a.mkString("{",",","}")}"
-    case _ =>
-      if (game.isInstanceOf[WeakSpectroscopyGameClever[S, A, L]]) {
-        val gameClever = game.asInstanceOf[WeakSpectroscopyGameClever[S, A, L]]
-        gn match {
-          case gameClever.AttackerBranchingConjunction(p0, a, p1, q0) =>
-            s"$p0 -${a}-> $p1, ${q0}"
-          case _ => ""
-        }
-      } else {
-        ""
+      gn: GameNode) = {
+    val str = gn match {
+      case game.AttackerObservation(p, qq: Set[_]) =>
+        val qqString = qq.mkString("{",",","}")
+        s"$p, $qqString"
+      case game.AttackerDelayedObservation(p, qq: Set[_]) =>
+        val qqString = qq.mkString("{",",","}")
+        s"$p, ≈$qqString"
+      case game.AttackerBranchingObservation(p, qq: Set[_]) =>
+        val qqString = qq.mkString("{",",","}")
+        s"$p, b$qqString"
+      case game.AttackerClause(p, q) =>
+        s"$p, $q"
+      case game.DefenderConjunction(p, qq: Set[_]) =>
+        val qqString = qq.mkString("{",",","}")
+        s"$p, $qqString"
+      case game.DefenderStableConjunction(p, qq: Set[_], qqRevivals) =>
+        val qqString = qq.mkString("{",",","}")
+        val qqRevivalsString = qq.mkString("{",",","}")
+        s"$p, s$qqString, $qqRevivalsString"
+      case game.DefenderBranchingConjunction(p0, a, p1, qq0, qq0a) =>
+        s"$p0 -${a}-> $p1, ${qq0.mkString("{",",","}")}, ${qq0a.mkString("{",",","}")}"
+      case _ =>
+        if (game.isInstanceOf[WeakSpectroscopyGameClever[S, A, L]]) {
+          val gameClever = game.asInstanceOf[WeakSpectroscopyGameClever[S, A, L]]
+          gn match {
+            case gameClever.AttackerBranchingConjunction(p0, a, p1, q0) =>
+              s"$p0 -${a}-> $p1, ${q0}"
+            case _ => ""
+          }
+        } else {
+          ""
       }
+    }
+    str.replaceAllLiterally(".0", "").replaceAllLiterally("\\", "\\\\")
   }
 
   def graphvizGameWithFormulas(
@@ -544,7 +547,7 @@ class WeakSpectroscopy[S, A, L] (
       def nodeToString(gn: GameNode): String = {
         val priceString = attackerVictoryPrices.getOrElse(gn,Set()).map(_.vector.mkString("(",",",")")).mkString(" / ")
         val formulaString = formulas.getOrElse(gn,Set()).mkString("\\n").replaceAllLiterally("⟩⊤","⟩")
-        gameNodeToString(game, gn).replaceAllLiterally(".0", "").replaceAllLiterally("\\", "\\\\") +
+        gameNodeToString(game, gn) +
          (if (priceString != "") s"\\n------\\n$priceString" else "") +
          (if (formulaString != "") s"\\n------\\n$formulaString" else "")
       }
