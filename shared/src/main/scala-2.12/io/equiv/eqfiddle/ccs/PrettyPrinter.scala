@@ -14,7 +14,14 @@ class PrettyPrinter {
   
   def show(e: Expression): String = e match {
     case MetaDeclaration(k, v, p0) =>
-      "@" + k + (if (v != "") " \"" + v + "\" " else "")
+      val args = for {
+        a <- v
+        str = if (a.forall(_.isLetterOrDigit) && a.length() > 0 && !a.charAt(0).isDigit)
+            a
+          else
+            "\"" + a + "\""
+      } yield str 
+      "@" + k + " " + args.mkString(", ")
     case NodeDeclaration(n, aa, p0) =>
       val name = (if (n.forall(_.isLetterOrDigit) && !n.charAt(0).isDigit) n else "\"" + n + "\"")
       if (aa.isEmpty) {
