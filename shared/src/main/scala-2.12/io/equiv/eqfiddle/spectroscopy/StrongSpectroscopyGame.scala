@@ -10,9 +10,8 @@ class StrongSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], energyC
 
   private val NoEnergyUpdate        = new EnergyGame.EnergyUpdate(Array( 0,0,0,0,0,0), energyCap = energyCap)
   private val ObsEnergyUpdate       = new EnergyGame.EnergyUpdate(Array(-1,0,0,0,0,0), energyCap = energyCap)
-  private val ConjEnergyUpdate      = new EnergyGame.EnergyUpdate(Array(0,-1,0,0,0,0), energyCap = energyCap)
-  private val RevivalEnergyUpdate   = new EnergyGame.EnergyUpdate(Array(3,0,0,0,0,0), energyCap = energyCap)
-  private val NoRevivalEnergyUpdate = new EnergyGame.EnergyUpdate(Array(0,0,0,3,0,0), energyCap = energyCap)
+  private val RevivalEnergyUpdate   = new EnergyGame.EnergyUpdate(Array(3,-1,0,0,0,0), energyCap = energyCap)
+  private val NoRevivalEnergyUpdate = new EnergyGame.EnergyUpdate(Array(0,-1,0,3,0,0), energyCap = energyCap)
   private val NegClauseEnergyUpdate = new EnergyGame.EnergyUpdate(Array(5,0,0,0,0,-1), energyCap = energyCap)
   private val PosClauseEnergyUpdate = new EnergyGame.EnergyUpdate(Array(4,0,0,0,0,0), energyCap = energyCap)
 
@@ -30,10 +29,8 @@ class StrongSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], energyC
       gn2 match {
         case AttackerObservation(p1, qq1) =>
           ObsEnergyUpdate
-        case DefenderConjunction(p1, qqS, qqR) if qq0.isEmpty =>
+        case _ => 
           NoEnergyUpdate
-        case DefenderConjunction(p1, qqS, qqR) =>
-          ConjEnergyUpdate
       }
     case AttackerClause(p0, q0) =>
       gn2 match {
