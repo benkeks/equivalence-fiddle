@@ -21,6 +21,7 @@ class StrongSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], energyC
   val optimizeConjMoves: Boolean = true
 
   case class AttackerObservation(p: S, qq: Set[S]) extends SimpleGame.AttackerPosition
+  case class AttackerPreObservation(p: S, qq: Set[S]) extends SimpleGame.AttackerPosition
   case class AttackerClause(p: S, q: S) extends SimpleGame.AttackerPosition
   case class DefenderConjunction(p: S, qqSingles: Set[S], qqRevival: Set[S]) extends SimpleGame.DefenderPosition
 
@@ -34,14 +35,19 @@ class StrongSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], energyC
       }
     case AttackerClause(p0, q0) =>
       gn2 match {
-        case AttackerObservation(p1, qq1) if p1 == p0 =>
+        case AttackerPreObservation(p1, qq1) if p1 == p0 =>
           PosClauseEnergyUpdate
-        case AttackerObservation(p1, qq1) if qq1 contains p0 =>
+        case AttackerPreObservation(p1, qq1) if qq1 contains p0 =>
           NegClauseEnergyUpdate
+      }
+    case AttackerPreObservation(p0, q0) =>
+      gn2 match {
+        case AttackerObservation(p1, qq1) =>
+          ObsEnergyUpdate
       }
     case DefenderConjunction(p0, qqS, qqR) =>
       gn2 match {
-        case AttackerObservation(p1, qq1) =>
+        case AttackerPreObservation(p1, qq1) =>
           RevivalEnergyUpdate
         case _ =>
           NoRevivalEnergyUpdate
@@ -87,12 +93,24 @@ class StrongSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], energyC
           obsMoves ++ conjMoves
         }
       }
+    case AttackerPreObservation(p0, qq0) =>
+      if (optimizeSymmetryDefWins && (qq0 contains p0)) {
+        List()
+      } else {
+        for {
+          (a,pp1) <- ts.post(p0)
+          p1 <- pp1
+          qq1 = qq0.flatMap(ts.post(_, a))
+        } yield {
+          AttackerObservation(p1, qq1)
+        }
+      }
     case AttackerClause(p0, q0) =>
-      val neg = AttackerObservation(q0, Set(p0))
-      val pos = AttackerObservation(p0, Set(q0))
+      val neg = AttackerPreObservation(q0, Set(p0))
+      val pos = AttackerPreObservation(p0, Set(q0))
       List(pos, neg)
     case DefenderConjunction(p0, qqS, qqR) =>
-      val revival = if (qqR.isEmpty) List() else List(AttackerObservation(p0, qqR))
+      val revival = if (qqR.isEmpty) List() else List(AttackerPreObservation(p0, qqR))
       (
         for {
           q1 <- qqS

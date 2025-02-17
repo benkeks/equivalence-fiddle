@@ -60,6 +60,28 @@ class StrongSpectroscopy[S, A, L] (
             case _ => Set()
           }
         successorFormulas.flatten.toSet
+      case game.AttackerPreObservation(p0, qq0) =>
+        // analogously to AttackerObservation
+        val successorFormulas =
+          for {
+            s <- game.successors(node)
+            update = game.weight(node, s)
+            newBudget = update.applyEnergyUpdate(price)
+            if game.isAttackerWinningEnergy(s, newBudget)
+          } yield s match {
+            case game.AttackerObservation(p1, qq1) =>
+              val possibleRestoredActions = for {
+                (a, pp1) <- ts.post(p0)
+                if pp1 contains p1
+                if qq1 == ts.post(qq0,a)
+              } yield a
+              for {
+                a <- possibleRestoredActions.headOption.toList
+                postForm <- buildHMLWitness(game, s, newBudget)
+              } yield HennessyMilnerLogic.Observe(a, postForm)
+            case _ => Set()
+          }
+        successorFormulas.flatten.toSet
       case game.AttackerClause(p0, q0) =>
         val successorFormulas = for {
           s <- game.successors(node)
@@ -68,7 +90,7 @@ class StrongSpectroscopy[S, A, L] (
           if game.isAttackerWinningEnergy(s, newBudget)
         } yield {
           s match {
-            case game.AttackerObservation(p1, qq1) =>
+            case game.AttackerPreObservation(p1, qq1) =>
               if (p0 == p1) {
                 buildHMLWitness(game, s, newBudget)
               } else {
@@ -259,6 +281,9 @@ class StrongSpectroscopy[S, A, L] (
           case game.AttackerObservation(p, qq: Set[_]) =>
             val qqString = qq.mkString("{",",","}")
             s"$p, $qqString"
+          case game.AttackerPreObservation(p, qq: Set[_]) =>
+            val qqString = qq.mkString("{",",","}")
+            s"!$p, $qqString"
           case game.AttackerClause(p, q) =>
             s"$p, $q"
           case game.DefenderConjunction(p, qqS: Set[_], qqR: Set[_]) =>
