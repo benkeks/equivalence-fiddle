@@ -42,8 +42,8 @@ class StrongSpectroscopy[S, A, L] (
           for {
             s <- game.successors(node)
             update = game.weight(node, s)
-            newPrice = update.applyEnergyUpdate(price)
-            if game.isAttackerWinningPrice(s, newPrice)
+            newBudget = update.applyEnergyUpdate(price)
+            if game.isAttackerWinningEnergy(s, newBudget)
           } yield s match {
             case game.AttackerObservation(p1, qq1) =>
               val possibleRestoredActions = for {
@@ -53,10 +53,10 @@ class StrongSpectroscopy[S, A, L] (
               } yield a
               for {
                 a <- possibleRestoredActions.headOption.toList // just take first option
-                postForm <- buildHMLWitness(game, s, newPrice)
+                postForm <- buildHMLWitness(game, s, newBudget)
               } yield HennessyMilnerLogic.Observe(a, postForm)
             case game.DefenderConjunction(_, _, _) =>
-              buildHMLWitness(game, s, newPrice)
+              buildHMLWitness(game, s, newBudget)
             case _ => Set()
           }
         successorFormulas.flatten.toSet
@@ -64,16 +64,16 @@ class StrongSpectroscopy[S, A, L] (
         val successorFormulas = for {
           s <- game.successors(node)
           update = game.weight(node, s)
-          newPrice = update.applyEnergyUpdate(price)
-          if game.isAttackerWinningPrice(s, newPrice)
+          newBudget = update.applyEnergyUpdate(price)
+          if game.isAttackerWinningEnergy(s, newBudget)
         } yield {
           s match {
             case game.AttackerObservation(p1, qq1) =>
               if (p0 == p1) {
-                buildHMLWitness(game, s, newPrice)
+                buildHMLWitness(game, s, newBudget)
               } else {
                 for {
-                  postForm <- buildHMLWitness(game, s, newPrice)
+                  postForm <- buildHMLWitness(game, s, newBudget)
                 } yield HennessyMilnerLogic.Negate(postForm)
               }
             }
@@ -83,9 +83,9 @@ class StrongSpectroscopy[S, A, L] (
         val possibleMoves = for {
           s <- game.successors(node)
           update = game.weight(node, s)
-          newPrice = update.applyEnergyUpdate(price)
-        } yield if (game.isAttackerWinningPrice(s, newPrice)) {
-          buildHMLWitness(game, s, newPrice)
+          newBudget = update.applyEnergyUpdate(price)
+        } yield if (game.isAttackerWinningEnergy(s, newBudget)) {
+          buildHMLWitness(game, s, newBudget)
         } else {
           Set()
         }
@@ -141,7 +141,7 @@ class StrongSpectroscopy[S, A, L] (
       for {
         gn <- init
         hmlGame.AttackerObservation(p, qq) = gn
-        bestPrice <- hmlGame.attackerVictoryPrices(gn)
+        bestPrice <- hmlGame.attackerWinningBudgets(gn)
         witnessFormula <- buildHMLWitness(hmlGame, gn, bestPrice)
       } {
         debugLog("Distinguished under " + spectrum.classifyFormula(witnessFormula) + " preorder by " + witnessFormula.toString())
@@ -160,13 +160,13 @@ class StrongSpectroscopy[S, A, L] (
       val bisimilarNodes = for {
         gn <- hmlGame.discovered
         if (gn match { case hmlGame.AttackerObservation(_, qq) => qq.size == 1; case _ => false }) &&
-          (!hmlGame.attackerVictoryPrices.isDefinedAt(gn) || hmlGame.attackerVictoryPrices(gn).isEmpty)
+          (!hmlGame.attackerWinningBudgets.isDefinedAt(gn) || hmlGame.attackerWinningBudgets(gn).isEmpty)
       } yield (gn, Set[HennessyMilnerLogic.Formula[A]]())
 
       val distinguishingNodeFormulasExtended = distinguishingNodeFormulas ++ bisimilarNodes
 
       val gameString = debugLog(
-        graphvizGameWithFormulas(hmlGame, hmlGame.attackerVictoryPrices.toMap, distinguishingNodeFormulasExtended),
+        graphvizGameWithFormulas(hmlGame, hmlGame.attackerWinningBudgets.toMap, distinguishingNodeFormulasExtended),
         asLink = "https://edotor.net/?engine=dot#"
       )
 
@@ -198,20 +198,20 @@ class StrongSpectroscopy[S, A, L] (
         gn <- init
         hmlGame.AttackerObservation(p, qq) = gn
       } {
-        hmlGame.attackerVictoryPrices(gn)
+        hmlGame.attackerWinningBudgets(gn)
       }
 
       // handle bisimilar nodes
       val bisimilarNodes = for {
         gn <- hmlGame.discovered
         if (gn match { case hmlGame.AttackerObservation(_, qq) => qq.size == 1; case _ => false }) &&
-          (!hmlGame.attackerVictoryPrices.isDefinedAt(gn) || hmlGame.attackerVictoryPrices(gn).isEmpty)
+          (!hmlGame.attackerWinningBudgets.isDefinedAt(gn) || hmlGame.attackerWinningBudgets(gn).isEmpty)
       } {
-        hmlGame.attackerVictoryPrices(gn) = List()
+        hmlGame.attackerWinningBudgets(gn) = List()
       }
 
       val bestPreorders: Map[GamePosition,(Set[ObservationNotionStrong],List[Spectrum.EquivalenceNotion[ObservationNotionStrong]])] =
-        hmlGame.attackerVictoryPrices.toMap.mapValues { energies =>
+        hmlGame.attackerWinningBudgets.toMap.mapValues { energies =>
         val fcs = energies.toSet[Energy].map(e => ObservationNotionStrong(e(0), e(1), e(2), e(3), e(4), e(5)))
         (fcs, spectrum.getStrongestPreorderClassFromClass(fcs))
       }
@@ -245,15 +245,15 @@ class StrongSpectroscopy[S, A, L] (
 
   def graphvizGameWithFormulas(
       game: StrongSpectroscopyGame[S, A, L],
-      attackerVictoryPrices: Map[GamePosition, Iterable[Energy]],
+      attackerWinningBudgets: Map[GamePosition, Iterable[Energy]],
       formulas: Map[GamePosition, Set[HennessyMilnerLogic.Formula[A]]]
   ) = {
     val visualizer = new GameGraphVisualizer(game) {
 
-      def nodeToID(gn: GamePosition): String = gn.toString().hashCode().toString()
+      def positionToID(gn: GamePosition): String = gn.toString().hashCode().toString()
 
-      def nodeToString(gn: GamePosition): String = {
-        val priceString = attackerVictoryPrices.getOrElse(gn,Set()).map(_.vector.mkString("(",",",")")).mkString(" / ")
+      def positionToString(gn: GamePosition): String = {
+        val budgetString = attackerWinningBudgets.getOrElse(gn,Set()).map(_.vector.mkString("(",",",")")).mkString(" / ")
         val formulaString = formulas.getOrElse(gn,Set()).mkString("\\n").replaceAllLiterally("⟩⊤","⟩")
         (gn match {
           case game.AttackerObservation(p, qq: Set[_]) =>
@@ -267,14 +267,14 @@ class StrongSpectroscopy[S, A, L] (
             s"$p, $qqSString, $qqRString"
           case _ => ""
         }).replaceAllLiterally(".0", "").replaceAllLiterally("\\", "\\\\") +
-         (if (priceString != "") s"\\n------\\n$priceString" else "") +
+         (if (budgetString != "") s"\\n------\\n$budgetString" else "") +
          (if (formulaString != "") s"\\n------\\n$formulaString" else "")
       }
 
-      def edgeToLabel(gn1: GamePosition, gn2: GamePosition) = game.weight(gn1, gn2).toString()
+      def moveToLabel(gn1: GamePosition, gn2: GamePosition) = game.weight(gn1, gn2).toString()
     }
 
-    val attackerWin = attackerVictoryPrices.filter(_._2.nonEmpty).keySet.toSet
+    val attackerWin = attackerWinningBudgets.filter(_._2.nonEmpty).keySet.toSet
 
     visualizer.outputDot(attackerWin)
   }

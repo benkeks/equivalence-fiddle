@@ -3,7 +3,7 @@ package io.equiv.eqfiddle.game
 trait AbstractGameDiscovery {
   self: SimpleGame =>
 
-  /** part of the game that can be reached from the initial nodes starting in the `initialNodes`. (warning: mutable!) */
+  /** part of the game that can be reached from the initial nodes starting in the `initialPositions`. (warning: mutable!) */
   val discovered = collection.mutable.Set[GamePosition]()
 
 }
@@ -17,7 +17,7 @@ trait GameDiscovery extends AbstractGameDiscovery {
   self: SimpleGame =>
   
   /** which nodes to start the discovery in. */
-  def initialNodes: Iterable[GamePosition]
+  def initialPositions: Iterable[GamePosition]
 
   /** number of successor states of discovered states (warning: mutable!) */
   val successorNum = collection.mutable.Map[GamePosition, Int]() withDefaultValue 0
@@ -31,17 +31,17 @@ trait GameDiscovery extends AbstractGameDiscovery {
   // discover relevant game nodes and count outgoing transitions
   
   private val todo = new collection.mutable.Queue[GamePosition]()
-  todo ++= initialNodes
-  discovered ++= initialNodes
+  todo ++= initialPositions
+  discovered ++= initialPositions
   
   while (todo.nonEmpty) {
-    val currNode = todo.dequeue()
-    val succs = successors(currNode)
-    successorNum(currNode) = succs.size
+    val currPos = todo.dequeue()
+    val succs = successors(currPos)
+    successorNum(currPos) = succs.size
     for {
       gn <- succs
     } {
-      computedPredecessors(gn) += currNode
+      computedPredecessors(gn) += currPos
       if (!(discovered contains gn)) {
         discovered += gn
         todo += gn

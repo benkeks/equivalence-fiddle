@@ -76,7 +76,7 @@ class GaloisEnergyGameTests extends AnyFunSpec with should.Matchers  {
 
   describe("The Espresso Energy Game") {
     it("should be winnable for the attacker at the office") {
-      game.attackerVictoryPrices(game.Office) should not be empty
+      game.attackerWinningBudgets(game.Office) should not be empty
     }
 
     val officePareto = Set(
@@ -89,7 +89,7 @@ class GaloisEnergyGameTests extends AnyFunSpec with should.Matchers  {
     )
 
     it("should have (1,10), (2,5), (4,4), (6,3), (10,2), (20,1) as optimal time/cup values for shots and energy 0 at Office") {
-      game.attackerVictoryPrices(game.Office).filter(e => e(2) == 0 && e(3) == 0).toSet should equal(officePareto)
+      game.attackerWinningBudgets(game.Office).filter(e => e(2) == 0 && e(3) == 0).toSet should equal(officePareto)
     }
 
   }

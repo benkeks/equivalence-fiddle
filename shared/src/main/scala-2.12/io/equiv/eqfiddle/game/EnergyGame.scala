@@ -6,22 +6,22 @@ trait EnergyGame extends SimpleGame with GameLazyDecision[EnergyGame.Energy] {
 
   def weight(gn1: GamePosition, gn2: GamePosition): EnergyUpdate
 
-  override def priceIsBetter(p1: Energy, p2: Energy): Boolean = p1 < p2
+  override def energyIsLower(p1: Energy, p2: Energy): Boolean = p1 < p2
 
-  override def priceIsBetterOrEq(p1: Energy, p2: Energy): Boolean = p1 <= p2
+  override def energyIsLowerOrEq(p1: Energy, p2: Energy): Boolean = p1 <= p2
 
-  override def computeCurrentPrice(node: GamePosition): Iterable[Energy] = {
+  override def computeCurrentBudget(node: GamePosition): Iterable[Energy] = {
     node match {
       case an: AttackerPosition =>
         for {
           s <- successors(node)
-          sE <- attackerVictoryPrices(s)
+          sE <- attackerWinningBudgets(s)
         } yield weight(node, s).unapplyEnergyUpdate(sE)
       case dn: DefenderPosition =>
         val possibleMoves = for {
           s <- successors(node)
           w = weight(node, s)
-        } yield attackerVictoryPrices(s).map(w.unapplyEnergyUpdate(_))
+        } yield attackerWinningBudgets(s).map(w.unapplyEnergyUpdate(_))
         if (possibleMoves.isEmpty || possibleMoves.exists(_.isEmpty)) {
           Nil // return empty if one defender option is un-winnable for attacker
         } else {

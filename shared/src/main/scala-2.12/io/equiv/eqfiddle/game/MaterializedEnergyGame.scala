@@ -21,7 +21,7 @@ class MaterializedEnergyGame[P](
     }
   }
 
-  override def initialNodes: Iterable[GamePosition] = {
+  override def initialPositions: Iterable[GamePosition] = {
     initialBaseNodes.map(materialize(_, initialEnergy))
   }
 

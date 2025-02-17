@@ -61,9 +61,9 @@ class AttackGraphBuilder[L] {
         val succPrices = for {
           (s, Some(p)) <- followUps
         } yield priceCons(n, s, p)
-        val newPrice = pricePick(n, succPrices)
-        if (!(oldPrice contains newPrice)) {
-          prices(n) = newPrice
+        val newBudget = pricePick(n, succPrices)
+        if (!(oldPrice contains newBudget)) {
+          prices(n) = newBudget
           val predecessorUpdates = graph.valuesInverse(n).filterNot(priceToDo contains _) 
           priceToDo.appendAll(predecessorUpdates)
         }
@@ -101,9 +101,9 @@ class AttackGraphBuilder[L] {
         val succPrices = for {
           (s, Some(p)) <- followUps
         } yield p
-        val newPrice = pricePick(n, succPrices)
-        if (!(oldPrice contains newPrice)) {
-          prices(n) = newPrice
+        val newBudget = pricePick(n, succPrices)
+        if (!(oldPrice contains newBudget)) {
+          prices(n) = newBudget
           val predecessorUpdates = graph.valuesInverse(n).filterNot(priceToDo contains _) 
           priceToDo.appendAll(predecessorUpdates)
         }

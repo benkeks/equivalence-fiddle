@@ -71,14 +71,14 @@ abstract class AbstractSpectroscopy[S, A, L, CF <: HennessyMilnerLogic.Formula[A
     }
   }
 
-  def gameEdgeToLabel(game: AbstractSpectroscopyGame[S, A, L], gn1: GamePosition, gn2: GamePosition): String
+  def gameMoveToLabel(game: AbstractSpectroscopyGame[S, A, L], gn1: GamePosition, gn2: GamePosition): String
 
   def graphvizGameWithFormulas(game: AbstractSpectroscopyGame[S, A, L], win: Set[GamePosition], formulas: Map[GamePosition, Iterable[CF]]) = {
     val visualizer = new GameGraphVisualizer(game) {
 
-      def nodeToID(gn: GamePosition): String = gn.hashCode().toString()
+      def positionToID(gn: GamePosition): String = gn.hashCode().toString()
 
-      def nodeToString(gn: GamePosition): String = {
+      def positionToString(gn: GamePosition): String = {
         val formulaString = formulas.getOrElse(gn,Set()).mkString("\\n").replaceAllLiterally("⟩⊤","⟩")
         (gn match {
           case game.AttackerObservation(p, qq: Set[_], kind) =>
@@ -91,7 +91,7 @@ abstract class AbstractSpectroscopy[S, A, L, CF <: HennessyMilnerLogic.Formula[A
         }).replaceAllLiterally(".0", "") + (if (formulaString != "") s"\\n------\\n$formulaString" else "")
       }
 
-      def edgeToLabel(gn1: GamePosition, gn2: GamePosition) = gameEdgeToLabel(game, gn1, gn2)
+      def moveToLabel(gn1: GamePosition, gn2: GamePosition) = gameMoveToLabel(game, gn1, gn2)
     }
 
     visualizer.outputDot(win)

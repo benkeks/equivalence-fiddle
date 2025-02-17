@@ -15,7 +15,7 @@ class HMLInterpreter[S, A, L] (
   class HMLFormulaGame(formula: Formula[A], states: Iterable[S])
     extends SimpleGame with GameDiscovery with WinningRegionComputation {
 
-    override def initialNodes: Iterable[GamePosition] =
+    override def initialPositions: Iterable[GamePosition] =
       for { s <- states } yield makeNode(s, formula)
 
     def makeNode(s: S, formula: Formula[A]) = formula match {
