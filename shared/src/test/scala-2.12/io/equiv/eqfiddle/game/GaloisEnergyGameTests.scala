@@ -6,8 +6,7 @@ import io.equiv.eqfiddle.algo.AlgorithmLogging
 
 class GaloisEnergyGameTests extends AnyFunSpec with should.Matchers  {
   
-  class EspressoEnergyGame()
-    extends SimpleGame with EnergyGame {
+  class EspressoEnergyGame() extends EnergyGame {
 
     // time, cups, shots, energization
     private def add = EnergyGame.EnergyUpdate.add(_, 4)
