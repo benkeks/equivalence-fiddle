@@ -6,19 +6,19 @@ trait GameLazyDecision[P] extends AbstractGameDiscovery {
   self: SimpleGame =>
 
   /** part of the game that can be reached from the initial nodes starting in the `initialNodes`. (warning: mutable!) */
-  override val discovered = collection.mutable.Set[GameNode]()
+  override val discovered = collection.mutable.Set[GamePosition]()
 
-  override def predecessors(gn: GameNode): Iterable[GameNode] = computedPredecessors(gn)
-  private val computedPredecessors = collection.mutable.Map[GameNode, Set[GameNode]]() withDefaultValue Set()
+  override def predecessors(gn: GamePosition): Iterable[GamePosition] = computedPredecessors(gn)
+  private val computedPredecessors = collection.mutable.Map[GamePosition, Set[GamePosition]]() withDefaultValue Set()
 
-  override def successors(gn: GameNode): Iterable[GameNode] = computedSuccessors(gn)
-  private val computedSuccessors = collection.mutable.Map[GameNode, Set[GameNode]]() withDefaultValue Set()
-  def computeSuccessors(gn: GameNode): Iterable[GameNode]
+  override def successors(gn: GamePosition): Iterable[GamePosition] = computedSuccessors(gn)
+  private val computedSuccessors = collection.mutable.Map[GamePosition, Set[GamePosition]]() withDefaultValue Set()
+  def computeSuccessors(gn: GamePosition): Iterable[GamePosition]
 
   /* set for nodes that are won by the attacker with the minimal attacker victory prices */
-  val attackerVictoryPrices = collection.mutable.Map[GameNode, List[P]]() withDefaultValue List()
+  val attackerVictoryPrices = collection.mutable.Map[GamePosition, List[P]]() withDefaultValue List()
 
-  def isAttackerWinningPrice(gn: GameNode, p: P) = attackerVictoryPrices(gn).exists(mwp => priceIsBetterOrEq(mwp, p))
+  def isAttackerWinningPrice(gn: GamePosition, p: P) = attackerVictoryPrices(gn).exists(mwp => priceIsBetterOrEq(mwp, p))
 
   /* price p1 is strictly better than p2 for an attacker win */
   def priceIsBetter(p1: P, p2: P): Boolean
@@ -33,7 +33,7 @@ trait GameLazyDecision[P] extends AbstractGameDiscovery {
   /* output todo length (for debugging purposes) */
   val printToDoLength: Boolean = false
 
-  private def priceUpdate(node: GameNode, newPrices: Iterable[P]) = {
+  private def priceUpdate(node: GamePosition, newPrices: Iterable[P]) = {
     val oldPrices = attackerVictoryPrices(node)
     val newPricesMin = newPrices.filterNot(p => newPrices.exists(op => priceIsBetter(op, p))).toList
     if (newPricesMin.forall(p => oldPrices.contains(p))) {
@@ -44,14 +44,14 @@ trait GameLazyDecision[P] extends AbstractGameDiscovery {
     }
   }
 
-  def computeCurrentPrice(node: GameNode): Iterable[P]
+  def computeCurrentPrice(node: GamePosition): Iterable[P]
 
   def populateGame(
-      initialNodes: Iterable[GameNode],
-      instantAttackerWin: GameNode => Iterable[P]) = {
+      initialNodes: Iterable[GamePosition],
+      instantAttackerWin: GamePosition => Iterable[P]) = {
 
-    val todo = collection.mutable.Queue[GameNode]()
-    val visited = collection.mutable.Set[GameNode]()
+    val todo = collection.mutable.Queue[GamePosition]()
+    val visited = collection.mutable.Set[GamePosition]()
     todo ++= initialNodes
     discovered ++= initialNodes
 

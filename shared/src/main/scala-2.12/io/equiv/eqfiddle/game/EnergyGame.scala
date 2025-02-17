@@ -4,20 +4,20 @@ trait EnergyGame extends SimpleGame with GameLazyDecision[EnergyGame.Energy] {
 
   import EnergyGame._
 
-  def weight(gn1: GameNode, gn2: GameNode): EnergyUpdate
+  def weight(gn1: GamePosition, gn2: GamePosition): EnergyUpdate
 
   override def priceIsBetter(p1: Energy, p2: Energy): Boolean = p1 < p2
 
   override def priceIsBetterOrEq(p1: Energy, p2: Energy): Boolean = p1 <= p2
 
-  override def computeCurrentPrice(node: GameNode): Iterable[Energy] = {
+  override def computeCurrentPrice(node: GamePosition): Iterable[Energy] = {
     node match {
-      case an: AttackerNode =>
+      case an: AttackerPosition =>
         for {
           s <- successors(node)
           sE <- attackerVictoryPrices(s)
         } yield weight(node, s).unapplyEnergyUpdate(sE)
-      case dn: DefenderNode =>
+      case dn: DefenderPosition =>
         val possibleMoves = for {
           s <- successors(node)
           w = weight(node, s)

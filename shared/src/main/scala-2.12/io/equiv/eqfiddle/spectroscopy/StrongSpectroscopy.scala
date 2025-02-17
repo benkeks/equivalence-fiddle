@@ -5,7 +5,7 @@ import io.equiv.eqfiddle.algo.AlgorithmLogging
 import io.equiv.eqfiddle.hml.ObservationNotionStrong
 import io.equiv.eqfiddle.hml.Spectrum
 import io.equiv.eqfiddle.game.SimpleGame
-import io.equiv.eqfiddle.game.SimpleGame.GameNode
+import io.equiv.eqfiddle.game.SimpleGame.GamePosition
 import io.equiv.eqfiddle.game.EnergyGame
 import io.equiv.eqfiddle.game.EnergyGame.Energy
 import io.equiv.eqfiddle.game.MaterializedEnergyGame
@@ -22,7 +22,7 @@ class StrongSpectroscopy[S, A, L] (
   val useCleverSpectroscopyGame: Boolean = true
 
   val distinguishingFormulas =
-    collection.mutable.Map[(GameNode, Energy), Iterable[HennessyMilnerLogic.Formula[A]]]()
+    collection.mutable.Map[(GamePosition, Energy), Iterable[HennessyMilnerLogic.Formula[A]]]()
 
   var gameSize = (0, 0)
 
@@ -32,7 +32,7 @@ class StrongSpectroscopy[S, A, L] (
   }
 
 
-  def buildHMLWitness(game: StrongSpectroscopyGame[S, A, L], node: GameNode, price: Energy): Iterable[HennessyMilnerLogic.Formula[A]]
+  def buildHMLWitness(game: StrongSpectroscopyGame[S, A, L], node: GamePosition, price: Energy): Iterable[HennessyMilnerLogic.Formula[A]]
     = distinguishingFormulas.getOrElseUpdate((node, price), {
     node match {
       case game.AttackerObservation(p0, qq0) if qq0.isEmpty =>
@@ -125,7 +125,7 @@ class StrongSpectroscopy[S, A, L] (
 
     val zeroEnergySet = Set(Energy.zeroEnergy(6))
 
-    def instantAttackerWin(gn: GameNode) = gn match {
+    def instantAttackerWin(gn: GamePosition) = gn match {
       case hmlGame.DefenderConjunction(_, qqS, qqR) if qqS.isEmpty && qqR.isEmpty => zeroEnergySet; case _ => Set.empty
     }
 
@@ -149,7 +149,7 @@ class StrongSpectroscopy[S, A, L] (
       }
       val distinguishingNodeFormulas = for {
         (node, pricedFormulas) <- distinguishingFormulas
-          .toSet[((GameNode, Energy), Iterable[HennessyMilnerLogic.Formula[A]])]
+          .toSet[((GamePosition, Energy), Iterable[HennessyMilnerLogic.Formula[A]])]
           .groupBy(kv => kv._1._1)
         formulas = for {
           (_, formulasForPrice) <- pricedFormulas
@@ -170,7 +170,7 @@ class StrongSpectroscopy[S, A, L] (
         asLink = "https://edotor.net/?engine=dot#"
       )
 
-      val bestPreorders: Map[GameNode,List[Spectrum.EquivalenceNotion[ObservationNotionStrong]]] =
+      val bestPreorders: Map[GamePosition,List[Spectrum.EquivalenceNotion[ObservationNotionStrong]]] =
         distinguishingNodeFormulasExtended.mapValues { ffs =>
         val classes = ffs.flatMap(spectrum.classifyFormula(_)._2)
         spectrum.getStrongestPreorderClass(classes)
@@ -210,7 +210,7 @@ class StrongSpectroscopy[S, A, L] (
         hmlGame.attackerVictoryPrices(gn) = List()
       }
 
-      val bestPreorders: Map[GameNode,(Set[ObservationNotionStrong],List[Spectrum.EquivalenceNotion[ObservationNotionStrong]])] =
+      val bestPreorders: Map[GamePosition,(Set[ObservationNotionStrong],List[Spectrum.EquivalenceNotion[ObservationNotionStrong]])] =
         hmlGame.attackerVictoryPrices.toMap.mapValues { energies =>
         val fcs = energies.toSet[Energy].map(e => ObservationNotionStrong(e(0), e(1), e(2), e(3), e(4), e(5)))
         (fcs, spectrum.getStrongestPreorderClassFromClass(fcs))
@@ -245,14 +245,14 @@ class StrongSpectroscopy[S, A, L] (
 
   def graphvizGameWithFormulas(
       game: StrongSpectroscopyGame[S, A, L],
-      attackerVictoryPrices: Map[GameNode, Iterable[Energy]],
-      formulas: Map[GameNode, Set[HennessyMilnerLogic.Formula[A]]]
+      attackerVictoryPrices: Map[GamePosition, Iterable[Energy]],
+      formulas: Map[GamePosition, Set[HennessyMilnerLogic.Formula[A]]]
   ) = {
     val visualizer = new GameGraphVisualizer(game) {
 
-      def nodeToID(gn: GameNode): String = gn.toString().hashCode().toString()
+      def nodeToID(gn: GamePosition): String = gn.toString().hashCode().toString()
 
-      def nodeToString(gn: GameNode): String = {
+      def nodeToString(gn: GamePosition): String = {
         val priceString = attackerVictoryPrices.getOrElse(gn,Set()).map(_.vector.mkString("(",",",")")).mkString(" / ")
         val formulaString = formulas.getOrElse(gn,Set()).mkString("\\n").replaceAllLiterally("⟩⊤","⟩")
         (gn match {
@@ -271,7 +271,7 @@ class StrongSpectroscopy[S, A, L] (
          (if (formulaString != "") s"\\n------\\n$formulaString" else "")
       }
 
-      def edgeToLabel(gn1: GameNode, gn2: GameNode) = game.weight(gn1, gn2).toString()
+      def edgeToLabel(gn1: GamePosition, gn2: GamePosition) = game.weight(gn1, gn2).toString()
     }
 
     val attackerWin = attackerVictoryPrices.filter(_._2.nonEmpty).keySet.toSet
@@ -289,17 +289,17 @@ class StrongSpectroscopy[S, A, L] (
 
     val notionEnergy = classToEnergy(spectrum.getSpectrumClass(notion).obsClass)
 
-    def energyUpdate(gn1: GameNode, gn2: GameNode, energy: Energy): Option[Energy] = {
+    def energyUpdate(gn1: GamePosition, gn2: GamePosition, energy: Energy): Option[Energy] = {
       val update = hmlGame.weight(gn1, gn2)
       val newEnergy = update.applyEnergyUpdateInfinity(energy)
-      if (gn1.isInstanceOf[SimpleGame.DefenderNode] || newEnergy.isNonNegative())
+      if (gn1.isInstanceOf[SimpleGame.DefenderPosition] || newEnergy.isNonNegative())
         Some(newEnergy)
       else
         None
     }
 
     // whether to consider the baseSuccessor as a relevant node for the attacker
-    def preferredNodes(currentBaseNode: GameNode, currentEnergy: Energy, baseSuccessor: GameNode) = currentBaseNode match {
+    def preferredNodes(currentBaseNode: GamePosition, currentEnergy: Energy, baseSuccessor: GamePosition) = currentBaseNode match {
       case hmlGame.AttackerObservation(p, qq) if currentEnergy(1) >= Int.MaxValue && qq.size > 1 =>
         // if we have infinitely many immediate conjunctions, use them to chop down blowup on right-hand side
         baseSuccessor.isInstanceOf[hmlGame.DefenderConjunction]
@@ -315,7 +315,7 @@ class StrongSpectroscopy[S, A, L] (
       gn <- reachabilityGame.discovered.toSet
       if !attackerWins(gn)
       (p, eString, q) <- gn match {
-        case reachabilityGame.MaterializedAttackerNode(hmlGame.AttackerObservation(p, qq), energy)
+        case reachabilityGame.MaterializedAttackerPosition(hmlGame.AttackerObservation(p, qq), energy)
             if qq.size == 1 && energy == notionEnergy =>
           Some((p, "", qq.head))
         case _ =>

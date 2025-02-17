@@ -3,11 +3,11 @@ package io.equiv.eqfiddle.game
 
 abstract class GameGraphVisualizer(game: SimpleGame with AbstractGameDiscovery) {
 
-  def nodeToID(gn: SimpleGame.GameNode): String
-  def nodeToString(gn: SimpleGame.GameNode): String
-  def edgeToLabel(gn1: SimpleGame.GameNode, gn2: SimpleGame.GameNode): String
+  def nodeToID(gn: SimpleGame.GamePosition): String
+  def nodeToString(gn: SimpleGame.GamePosition): String
+  def edgeToLabel(gn1: SimpleGame.GamePosition, gn2: SimpleGame.GamePosition): String
 
-  def outputDot(attackerWinningRegion: Set[SimpleGame.GameNode]): String = {
+  def outputDot(attackerWinningRegion: Set[SimpleGame.GamePosition]): String = {
 
     val edgeOutput = for {
       node <- game.discovered
@@ -20,7 +20,7 @@ abstract class GameGraphVisualizer(game: SimpleGame with AbstractGameDiscovery) 
       node <- game.discovered
       nodeID = nodeToID(node)
       nodeLabel = nodeToString(node)
-      isAttacker = node.isInstanceOf[SimpleGame.AttackerNode]
+      isAttacker = node.isInstanceOf[SimpleGame.AttackerPosition]
       shape = if (isAttacker) "square" else "circle, width=2, fixedsize=true"
       color = if (attackerWinningRegion(node)) "red" else "blue"
       style = "bold"

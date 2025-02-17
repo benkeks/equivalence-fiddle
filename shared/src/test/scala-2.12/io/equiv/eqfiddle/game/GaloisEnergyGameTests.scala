@@ -22,14 +22,14 @@ class GaloisEnergyGameTests extends AnyFunSpec with should.Matchers  {
     private val ShareCoffeeWithHead   = new EnergyGame.EnergyUpdate(Array( 0, add(-1), add(-1), 0))
     private val FinishEnergization    = new EnergyGame.EnergyUpdate(Array( 0, 0, 0, add(-10)))
 
-    case object Office extends SimpleGame.AttackerNode
-    case object CoffeeMaker extends SimpleGame.AttackerNode
-    case object CoffeeProgress extends SimpleGame.AttackerNode
-    case object DepartmentHead extends SimpleGame.DefenderNode
-    case object DepartmentHeadChat extends SimpleGame.DefenderNode
-    case object Energized extends SimpleGame.DefenderNode
+    case object Office extends SimpleGame.AttackerPosition
+    case object CoffeeMaker extends SimpleGame.AttackerPosition
+    case object CoffeeProgress extends SimpleGame.AttackerPosition
+    case object DepartmentHead extends SimpleGame.DefenderPosition
+    case object DepartmentHeadChat extends SimpleGame.DefenderPosition
+    case object Energized extends SimpleGame.DefenderPosition
 
-    override def weight(gn1: GameNode, gn2: GameNode): EnergyGame.EnergyUpdate = (gn1, gn2) match {
+    override def weight(gn1: GamePosition, gn2: GamePosition): EnergyGame.EnergyUpdate = (gn1, gn2) match {
       case (Office, Office) =>
         ConsumeShot
       case (Office, Energized) =>
@@ -48,7 +48,7 @@ class GaloisEnergyGameTests extends AnyFunSpec with should.Matchers  {
         NoEnergyUpdate
     }
 
-    def computeSuccessors(gn: GameNode): Iterable[GameNode] = gn match {
+    def computeSuccessors(gn: GamePosition): Iterable[GamePosition] = gn match {
       case Office =>
         List(Office, CoffeeMaker, Energized)
       case CoffeeMaker =>
@@ -66,7 +66,7 @@ class GaloisEnergyGameTests extends AnyFunSpec with should.Matchers  {
 
   val game = new EspressoEnergyGame()
 
-  def instantAttackerWin(gn: SimpleGame.GameNode) = gn match {
+  def instantAttackerWin(gn: SimpleGame.GamePosition) = gn match {
     case game.Energized => Set(EnergyGame.Energy.zeroEnergy(4))
     case _ => Set.empty
   }

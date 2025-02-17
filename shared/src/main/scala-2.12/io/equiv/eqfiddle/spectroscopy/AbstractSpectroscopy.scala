@@ -5,7 +5,7 @@ import io.equiv.eqfiddle.ts.WeakTransitionSystem
 import io.equiv.eqfiddle.util.FixedPoint
 import io.equiv.eqfiddle.game.WinningRegionComputation
 import io.equiv.eqfiddle.game.AttackGraphBuilder
-import io.equiv.eqfiddle.game.SimpleGame.GameNode
+import io.equiv.eqfiddle.game.SimpleGame.GamePosition
 import io.equiv.eqfiddle.algo.AlgorithmLogging
 import io.equiv.eqfiddle.util.LabeledRelation
 import io.equiv.eqfiddle.game.GameGraphVisualizer
@@ -21,7 +21,7 @@ abstract class AbstractSpectroscopy[S, A, L, CF <: HennessyMilnerLogic.Formula[A
 
   import SpectroscopyInterface._
 
-  def buildStrategyFormulas(game: AbstractSpectroscopyGame[S, A, L])(node: GameNode, possibleMoves: Iterable[Set[CF]]): Set[CF]
+  def buildStrategyFormulas(game: AbstractSpectroscopyGame[S, A, L])(node: GamePosition, possibleMoves: Iterable[Set[CF]]): Set[CF]
 
   def pruneDominated(oldFormulas: Set[CF]): Set[CF]
 
@@ -34,14 +34,14 @@ abstract class AbstractSpectroscopy[S, A, L, CF <: HennessyMilnerLogic.Formula[A
   /* Discards distinguishing formulas that do not contribute “extreme” distinguishing notions of equivalence */
   val discardLanguageDominatedResults: Boolean = false
 
-  def nodeIsRelevantForResults(game: AbstractSpectroscopyGame[S, A, L], gn: GameNode): Boolean
+  def nodeIsRelevantForResults(game: AbstractSpectroscopyGame[S, A, L], gn: GamePosition): Boolean
 
   def collectSpectroscopyResult(
     game: AbstractSpectroscopyGame[S, A, L],
-    nodeFormulas: Map[GameNode, Iterable[CF]])
+    nodeFormulas: Map[GamePosition, Iterable[CF]])
   : SpectroscopyResult[S, A, ObservationNotion, CF] = {
     
-    val bestPreorders: Map[GameNode,List[Spectrum.EquivalenceNotion[ObservationNotion]]] = nodeFormulas.mapValues { ffs =>
+    val bestPreorders: Map[GamePosition,List[Spectrum.EquivalenceNotion[ObservationNotion]]] = nodeFormulas.mapValues { ffs =>
       val classes = ffs.flatMap(spectrum.classifyFormula(_)._2)
       spectrum.getStrongestPreorderClass(classes)
     }
@@ -71,14 +71,14 @@ abstract class AbstractSpectroscopy[S, A, L, CF <: HennessyMilnerLogic.Formula[A
     }
   }
 
-  def gameEdgeToLabel(game: AbstractSpectroscopyGame[S, A, L], gn1: GameNode, gn2: GameNode): String
+  def gameEdgeToLabel(game: AbstractSpectroscopyGame[S, A, L], gn1: GamePosition, gn2: GamePosition): String
 
-  def graphvizGameWithFormulas(game: AbstractSpectroscopyGame[S, A, L], win: Set[GameNode], formulas: Map[GameNode, Iterable[CF]]) = {
+  def graphvizGameWithFormulas(game: AbstractSpectroscopyGame[S, A, L], win: Set[GamePosition], formulas: Map[GamePosition, Iterable[CF]]) = {
     val visualizer = new GameGraphVisualizer(game) {
 
-      def nodeToID(gn: GameNode): String = gn.hashCode().toString()
+      def nodeToID(gn: GamePosition): String = gn.hashCode().toString()
 
-      def nodeToString(gn: GameNode): String = {
+      def nodeToString(gn: GamePosition): String = {
         val formulaString = formulas.getOrElse(gn,Set()).mkString("\\n").replaceAllLiterally("⟩⊤","⟩")
         (gn match {
           case game.AttackerObservation(p, qq: Set[_], kind) =>
@@ -91,7 +91,7 @@ abstract class AbstractSpectroscopy[S, A, L, CF <: HennessyMilnerLogic.Formula[A
         }).replaceAllLiterally(".0", "") + (if (formulaString != "") s"\\n------\\n$formulaString" else "")
       }
 
-      def edgeToLabel(gn1: GameNode, gn2: GameNode) = gameEdgeToLabel(game, gn1, gn2)
+      def edgeToLabel(gn1: GamePosition, gn2: GamePosition) = gameEdgeToLabel(game, gn1, gn2)
     }
 
     visualizer.outputDot(win)
