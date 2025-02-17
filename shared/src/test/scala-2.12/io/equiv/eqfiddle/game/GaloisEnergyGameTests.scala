@@ -1,0 +1,96 @@
+package io.equiv.eqfiddle.game
+
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should
+import io.equiv.eqfiddle.algo.AlgorithmLogging
+
+class GaloisEnergyGameTests extends AnyFunSpec with should.Matchers  {
+  
+  class EspressoEnergyGame()
+    extends SimpleGame with EnergyGame {
+
+    // time, cups, shots, energization
+    private def add = EnergyGame.EnergyUpdate.add(_, 4)
+    private def minWith = EnergyGame.EnergyUpdate.minWith(_)
+
+    private val NoEnergyUpdate        = new EnergyGame.EnergyUpdate(Array( 0, 0, 0, 0))
+    private val ConsumeShot           = new EnergyGame.EnergyUpdate(Array( 0, 0, add(-1), add(1)))
+    private val BrewCoffee1           = new EnergyGame.EnergyUpdate(Array( 0, 0, add(1), 0))
+    private val BrewCoffee2           = new EnergyGame.EnergyUpdate(Array( 0, 0, minWith(2), 0))
+    private val ReturnFromCoffeeMaker = new EnergyGame.EnergyUpdate(Array( add(-2), 0, 0, 0))
+    private val ChatWithHead          = new EnergyGame.EnergyUpdate(Array( add(-1), 0, 0, 0))
+    private val ShareCoffeeWithHead   = new EnergyGame.EnergyUpdate(Array( 0, add(-1), add(-1), 0))
+    private val FinishEnergization    = new EnergyGame.EnergyUpdate(Array( 0, 0, 0, add(-10)))
+
+    case object Office extends SimpleGame.AttackerNode
+    case object CoffeeMaker extends SimpleGame.AttackerNode
+    case object CoffeeProgress extends SimpleGame.AttackerNode
+    case object DepartmentHead extends SimpleGame.DefenderNode
+    case object DepartmentHeadChat extends SimpleGame.DefenderNode
+    case object Energized extends SimpleGame.DefenderNode
+
+    override def weight(gn1: GameNode, gn2: GameNode): EnergyGame.EnergyUpdate = (gn1, gn2) match {
+      case (Office, Office) =>
+        ConsumeShot
+      case (Office, Energized) =>
+        FinishEnergization
+      case (CoffeeMaker, CoffeeProgress) =>
+        BrewCoffee1
+      case (CoffeeProgress, CoffeeMaker) =>
+        BrewCoffee2
+      case (CoffeeMaker, Office) =>
+        ReturnFromCoffeeMaker
+      case (DepartmentHead, DepartmentHeadChat) =>
+        ChatWithHead
+      case (DepartmentHead, Office) =>
+        ShareCoffeeWithHead
+      case _ =>
+        NoEnergyUpdate
+    }
+
+    def computeSuccessors(gn: GameNode): Iterable[GameNode] = gn match {
+      case Office =>
+        List(Office, CoffeeMaker, Energized)
+      case CoffeeMaker =>
+        List(CoffeeProgress, Office, DepartmentHead)
+      case CoffeeProgress =>
+        List(CoffeeMaker)
+      case DepartmentHead =>
+        List(DepartmentHeadChat, Office)
+      case DepartmentHeadChat =>
+        List(Office)
+      case Energized =>
+        List()
+    }
+  }
+
+  val game = new EspressoEnergyGame()
+
+  def instantAttackerWin(gn: SimpleGame.GameNode) = gn match {
+    case game.Energized => Set(EnergyGame.Energy.zeroEnergy(4))
+    case _ => Set.empty
+  }
+  game.populateGame(
+    List(game.Office),
+    instantAttackerWin(_))
+
+  describe("The Espresso Energy Game") {
+    it("should be winnable for the attacker at the office") {
+      game.attackerVictoryPrices(game.Office) should not be empty
+    }
+
+    val officePareto = Set(
+      EnergyGame.Energy(Array(1,10,0,0)),
+      EnergyGame.Energy(Array(2,5,0,0)),
+      EnergyGame.Energy(Array(4,4,0,0)),
+      EnergyGame.Energy(Array(6,3,0,0)),
+      EnergyGame.Energy(Array(10,2,0,0)),
+      EnergyGame.Energy(Array(20,1,0,0))
+    )
+
+    it("should have (1,10), (2,5), (4,4), (6,3), (10,2), (20,1) as optimal time/cup values for shots and energy 0 at Office") {
+      game.attackerVictoryPrices(game.Office).filter(e => e(2) == 0 && e(3) == 0).toSet should equal(officePareto)
+    }
+
+  }
+}

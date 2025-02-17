@@ -125,7 +125,7 @@ object EnergyGame {
   object Energy {
 
     def apply(vector: Array[Int]): Energy = {
-        new Energy(vector)
+      new Energy(vector)
     }
 
     def zeroEnergy(dim: Int) = {
@@ -143,7 +143,8 @@ object EnergyGame {
   final case class EnergyUpdate(
       /** component updates
        * - non-positive Ints = relative updates
-       * - positive Ints = min of current row with other row of number (starting to count at index 1)
+       * - positive Ints less or equal to dimensionality = min of current row with other row of number (starting to count at index 1)
+       * - positive Ints above dimensionality = relative updates (after subtraction of dimensionality)
       */
       val updates: Array[Int],
       /** bound height of energy lattice */
@@ -160,6 +161,8 @@ object EnergyGame {
       } yield {
         if (u <= 0) {
           e(i) + u
+        } else if (u >= updates.length) {
+          e(i) + u - updates.length
         } else {
           Math.min(e(i), e(u - 1))
         }
@@ -173,6 +176,8 @@ object EnergyGame {
       } yield {
         if (u <= 0) {
           if (e(i) == Int.MaxValue) e(i) else e(i) + u
+        } else if (u > updates.length) {
+          if (e(i) == Int.MaxValue) e(i) else e(i) + u - updates.length
         } else {
           Math.min(e(i), e(u - 1))
         }
@@ -190,13 +195,15 @@ object EnergyGame {
         } {
           newEnergies(i) = if (updates(i) <= 0) {
             Math.min(e(i) - updates(i), energyCap)
+          } else if (updates(i) > updates.length ) {
+            Math.min(Math.max(e(i) - updates(i) + updates.length, 0), energyCap)
           } else {
             e(i)
           }
         }
         for {
           i <- 0 until updates.length
-          if (updates(i) > 0)
+          if (updates(i) > 0 && updates(i) <= updates.length)
         } {
           newEnergies(updates(i) - 1) = Math.max(newEnergies(updates(i) - 1), e(i))
         }
@@ -206,9 +213,21 @@ object EnergyGame {
 
     override def toString(): String = {
       updates.zipWithIndex.map {
-        case (u, i) => if (u <= 0) u.toString() else s"min{$u,${i + 1}}"
+        case (u, i) => if (u <= 0 || u > updates.length) u.toString() else s"min{$u,${i + 1}}"
       }.mkString("(", ",", ")")
     }
   }
   
+  object EnergyUpdate {
+    def add(z: Int, dim: Int) = {
+      if (z <= 0)
+        z
+      else
+        z + dim
+    }
+
+    def minWith(i: Int) = {
+      i
+    }
+  }
 }
