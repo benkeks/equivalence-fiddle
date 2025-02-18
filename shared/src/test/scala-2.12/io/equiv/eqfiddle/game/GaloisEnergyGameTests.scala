@@ -8,17 +8,17 @@ class GaloisEnergyGameTests extends AnyFunSpec with should.Matchers  {
   
   class EspressoEnergyGame() extends EnergyGame {
 
-    // time, cups, shots, energization
+    // cups, time, shots, energization
     private def add = EnergyGame.EnergyUpdate.add(_, 4)
     private def minWith = EnergyGame.EnergyUpdate.minWith(_)
 
     private val NoEnergyUpdate        = new EnergyGame.EnergyUpdate(Array( 0, 0, 0, 0))
     private val ConsumeShot           = new EnergyGame.EnergyUpdate(Array( 0, 0, add(-1), add(1)))
     private val BrewCoffee1           = new EnergyGame.EnergyUpdate(Array( 0, 0, add(1), 0))
-    private val BrewCoffee2           = new EnergyGame.EnergyUpdate(Array( 0, 0, minWith(2), 0))
-    private val ReturnFromCoffeeMaker = new EnergyGame.EnergyUpdate(Array( add(-2), 0, 0, 0))
-    private val ChatWithHead          = new EnergyGame.EnergyUpdate(Array( add(-1), 0, 0, 0))
-    private val ShareCoffeeWithHead   = new EnergyGame.EnergyUpdate(Array( 0, add(-1), add(-1), 0))
+    private val BrewCoffee2           = new EnergyGame.EnergyUpdate(Array( 0, 0, minWith(1), 0))
+    private val ReturnFromCoffeeMaker = new EnergyGame.EnergyUpdate(Array( 0, add(-2), 0, 0))
+    private val ChatWithHead          = new EnergyGame.EnergyUpdate(Array( 0, add(-1), 0, 0))
+    private val ShareCoffeeWithHead   = new EnergyGame.EnergyUpdate(Array( add(-1), 0, add(-1), 0))
     private val FinishEnergization    = new EnergyGame.EnergyUpdate(Array( 0, 0, 0, add(-10)))
 
     case object Office extends SimpleGame.AttackerPosition
@@ -79,15 +79,15 @@ class GaloisEnergyGameTests extends AnyFunSpec with should.Matchers  {
     }
 
     val officePareto = Set(
-      EnergyGame.Energy(Array(1,10,0,0)),
-      EnergyGame.Energy(Array(2,5,0,0)),
+      EnergyGame.Energy(Array(10,1,0,0)),
+      EnergyGame.Energy(Array(5,2,0,0)),
       EnergyGame.Energy(Array(4,4,0,0)),
-      EnergyGame.Energy(Array(6,3,0,0)),
-      EnergyGame.Energy(Array(10,2,0,0)),
-      EnergyGame.Energy(Array(20,1,0,0))
+      EnergyGame.Energy(Array(3,6,0,0)),
+      EnergyGame.Energy(Array(2,10,0,0)),
+      EnergyGame.Energy(Array(1,20,0,0))
     )
 
-    it("should have (1,10), (2,5), (4,4), (6,3), (10,2), (20,1) as optimal time/cup values for shots and energy 0 at Office") {
+    it("should have (10,1), (5,2), (4,4), (3,6), (2,10), (1,20) as optimal time/cup values for shots and energy 0 at Office") {
       game.attackerWinningBudgets(game.Office).filter(e => e(2) == 0 && e(3) == 0).toSet should equal(officePareto)
     }
 
