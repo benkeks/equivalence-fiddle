@@ -2,19 +2,19 @@ package io.equiv.eqfiddle.game
 
 trait SimpleGame {
   
-  type GameNode = SimpleGame.GameNode
-  type AttackerNode = SimpleGame.AttackerNode
-  type DefenderNode = SimpleGame.DefenderNode
+  type GamePosition = SimpleGame.GamePosition
+  type AttackerPosition = SimpleGame.AttackerPosition
+  type DefenderPosition = SimpleGame.DefenderPosition
   
-  def successors(gn: GameNode): Iterable[GameNode]
+  def successors(gn: GamePosition): Iterable[GamePosition]
   
-  def predecessors(gn: GameNode): Iterable[GameNode]
+  def predecessors(gn: GamePosition): Iterable[GamePosition]
 }
 
 object SimpleGame {
   
-  abstract class GameNode
-  abstract class AttackerNode extends GameNode
-  abstract class DefenderNode extends GameNode
+  abstract class GamePosition
+  abstract class AttackerPosition extends GamePosition
+  abstract class DefenderPosition extends GamePosition
   
 }

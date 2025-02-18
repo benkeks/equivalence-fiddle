@@ -29,6 +29,6 @@ abstract class AbstractSpectroscopyGame[S, A, L](val ts: WeakTransitionSystem[S,
   /* This will abort the game construction in nodes where the attacker cannot win because p is contained in qq. */
   val optimizeSymmetryDefWins: Boolean = false
 
-  case class AttackerObservation(p: S, qq: Set[S], arrivingMove: MoveKind) extends SimpleGame.AttackerNode
-  case class DefenderConjunction(p: S, qqPart: List[Set[S]]) extends SimpleGame.DefenderNode
+  case class AttackerObservation(p: S, qq: Set[S], arrivingMove: MoveKind) extends SimpleGame.AttackerPosition
+  case class DefenderConjunction(p: S, qqPart: List[Set[S]]) extends SimpleGame.DefenderPosition
 }

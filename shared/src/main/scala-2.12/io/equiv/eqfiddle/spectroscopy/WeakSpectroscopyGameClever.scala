@@ -13,9 +13,9 @@ class WeakSpectroscopyGameClever[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
   private val BranchingConjEarlyEnergyUpdate  = new EnergyGame.EnergyUpdate(Array( -1, 0, 0, 0,-1, 0, 0, 0, 0), energyCap = energyCap)
   private val BranchingConjLateEnergyUpdate   = new EnergyGame.EnergyUpdate(Array( -1, 0,-1, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
 
-  case class AttackerBranchingConjunction(p0: S, a: A, p1: S, q0: S) extends SimpleGame.AttackerNode
+  case class AttackerBranchingConjunction(p0: S, a: A, p1: S, q0: S) extends SimpleGame.AttackerPosition
 
-  override def weight(gn1: GameNode, gn2: GameNode): EnergyGame.EnergyUpdate = gn1 match {
+  override def weight(gn1: GamePosition, gn2: GamePosition): EnergyGame.EnergyUpdate = gn1 match {
     case DefenderBranchingConjunction(p10, a, p11, qq0, qq0a) =>
       BranchingConjEnergyUpdate
     case AttackerBranchingConjunction(_, _, _, _) =>
@@ -40,7 +40,7 @@ class WeakSpectroscopyGameClever[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
       super.weight(gn1, gn2)
   }
 
-  override def computeSuccessors(gn: GameNode): Iterable[GameNode] = gn match {
+  override def computeSuccessors(gn: GamePosition): Iterable[GamePosition] = gn match {
 
     case AttackerDelayedObservation(p0, qq0) =>
       // mostly identical to WeakSpectroscopyGame

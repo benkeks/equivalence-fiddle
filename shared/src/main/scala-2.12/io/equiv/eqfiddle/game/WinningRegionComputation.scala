@@ -10,11 +10,11 @@ trait WinningRegionComputation {
   def computeWinningRegion() = {
     // this set collects the nodes won by the attacker.
     // initially, we assume that the defender wins everywhere.
-    val win = collection.mutable.Set[GameNode]()
+    val win = collection.mutable.Set[GamePosition]()
     
     // this procedure is called every time we are sure that a specific
     // game node is won by the attacker.
-    def propagateAttackerWin(gn: GameNode) {
+    def propagateAttackerWin(gn: GamePosition) {
       if (!win(gn)) {
         win += gn
         for (pred <- predecessors(gn)) {
@@ -22,7 +22,7 @@ trait WinningRegionComputation {
           // if the attacker can decide in `pred` to move to `gn` or if we just
           // killed the last remaining potentially winning move for the defender in
           // `pred`, then clearly the attacker wins in `pred`.
-          if (pred.isInstanceOf[AttackerNode] || successorNum(pred) == 0) {
+          if (pred.isInstanceOf[AttackerPosition] || successorNum(pred) == 0) {
             propagateAttackerWin(pred)
           }
         }
@@ -31,7 +31,7 @@ trait WinningRegionComputation {
     
     for {
       gn <- discovered
-      if successorNum(gn) == 0 && !gn.isInstanceOf[AttackerNode]
+      if successorNum(gn) == 0 && !gn.isInstanceOf[AttackerPosition]
     } {
       propagateAttackerWin(gn)
     }

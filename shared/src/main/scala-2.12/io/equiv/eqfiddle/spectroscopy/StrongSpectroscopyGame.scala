@@ -10,9 +10,8 @@ class StrongSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], energyC
 
   private val NoEnergyUpdate        = new EnergyGame.EnergyUpdate(Array( 0,0,0,0,0,0), energyCap = energyCap)
   private val ObsEnergyUpdate       = new EnergyGame.EnergyUpdate(Array(-1,0,0,0,0,0), energyCap = energyCap)
-  private val ConjEnergyUpdate      = new EnergyGame.EnergyUpdate(Array(0,-1,0,0,0,0), energyCap = energyCap)
-  private val RevivalEnergyUpdate   = new EnergyGame.EnergyUpdate(Array(3,0,0,0,0,0), energyCap = energyCap)
-  private val NoRevivalEnergyUpdate = new EnergyGame.EnergyUpdate(Array(0,0,0,3,0,0), energyCap = energyCap)
+  private val RevivalEnergyUpdate   = new EnergyGame.EnergyUpdate(Array(3,-1,0,0,0,0), energyCap = energyCap)
+  private val NoRevivalEnergyUpdate = new EnergyGame.EnergyUpdate(Array(0,-1,0,3,0,0), energyCap = energyCap)
   private val NegClauseEnergyUpdate = new EnergyGame.EnergyUpdate(Array(5,0,0,0,0,-1), energyCap = energyCap)
   private val PosClauseEnergyUpdate = new EnergyGame.EnergyUpdate(Array(4,0,0,0,0,0), energyCap = energyCap)
 
@@ -21,19 +20,17 @@ class StrongSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], energyC
   val optimizeAttackerWins: Boolean = true
   val optimizeConjMoves: Boolean = true
 
-  case class AttackerObservation(p: S, qq: Set[S]) extends SimpleGame.AttackerNode
-  case class AttackerClause(p: S, q: S) extends SimpleGame.AttackerNode
-  case class DefenderConjunction(p: S, qqSingles: Set[S], qqRevival: Set[S]) extends SimpleGame.DefenderNode
+  case class AttackerObservation(p: S, qq: Set[S]) extends SimpleGame.AttackerPosition
+  case class AttackerClause(p: S, q: S) extends SimpleGame.AttackerPosition
+  case class DefenderConjunction(p: S, qqSingles: Set[S], qqRevival: Set[S]) extends SimpleGame.DefenderPosition
 
-  override def weight(gn1: GameNode, gn2: GameNode): EnergyGame.EnergyUpdate = gn1 match {
+  override def weight(gn1: GamePosition, gn2: GamePosition): EnergyGame.EnergyUpdate = gn1 match {
     case AttackerObservation(p0, qq0) =>
       gn2 match {
         case AttackerObservation(p1, qq1) =>
           ObsEnergyUpdate
-        case DefenderConjunction(p1, qqS, qqR) if qq0.isEmpty =>
+        case _ => 
           NoEnergyUpdate
-        case DefenderConjunction(p1, qqS, qqR) =>
-          ConjEnergyUpdate
       }
     case AttackerClause(p0, q0) =>
       gn2 match {
@@ -53,7 +50,7 @@ class StrongSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], energyC
       NoEnergyUpdate
   }
 
-  def computeSuccessors(gn: GameNode): Iterable[GameNode] = gn match {
+  def computeSuccessors(gn: GamePosition): Iterable[GamePosition] = gn match {
     case AttackerObservation(p0, qq0) =>
       if (optimizeSymmetryDefWins && (qq0 contains p0)) {
         List()
