@@ -9,13 +9,13 @@ import io.equiv.eqfiddle.game.GameDiscovery
 class HMLInterpreter[S, A, L] (
     val ts: WeakTransitionSystem[S, A, L]) {
   
-  case class HMLAttack(s: S, formula: Formula[A]) extends SimpleGame.AttackerNode
-  case class HMLDefense(s: S, formula: Formula[A]) extends SimpleGame.DefenderNode
+  case class HMLAttack(s: S, formula: Formula[A]) extends SimpleGame.AttackerPosition
+  case class HMLDefense(s: S, formula: Formula[A]) extends SimpleGame.DefenderPosition
 
   class HMLFormulaGame(formula: Formula[A], states: Iterable[S])
     extends SimpleGame with GameDiscovery with WinningRegionComputation {
 
-    override def initialNodes: Iterable[GameNode] =
+    override def initialPositions: Iterable[GamePosition] =
       for { s <- states } yield makeNode(s, formula)
 
     def makeNode(s: S, formula: Formula[A]) = formula match {
@@ -25,7 +25,7 @@ class HMLInterpreter[S, A, L] (
         HMLAttack(s, formula)
     }
 
-    def successors(gn: GameNode): Iterable[GameNode] = gn match {
+    def successors(gn: GamePosition): Iterable[GamePosition] = gn match {
       case HMLAttack(s, And(subterms)) =>
         for {
           f <- subterms

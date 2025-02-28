@@ -1,20 +1,20 @@
 package io.equiv.eqfiddle.game
 
 import io.equiv.eqfiddle.util.Relation
-import io.equiv.eqfiddle.game.SimpleGame.GameNode
+import io.equiv.eqfiddle.game.SimpleGame.GamePosition
 
 class AttackGraphBuilder[L] {
 
   def buildAttackGraph(
       game: SimpleGame,
-      win: Set[GameNode],
-      nodes: Iterable[GameNode]):
-    Relation[GameNode] = {
+      win: Set[GamePosition],
+      nodes: Iterable[GamePosition]):
+    Relation[GamePosition] = {
 
-    val visited = collection.mutable.Set[GameNode]()
-    val edges = collection.mutable.Queue[(GameNode, GameNode)]()
+    val visited = collection.mutable.Set[GamePosition]()
+    val edges = collection.mutable.Queue[(GamePosition, GamePosition)]()
 
-    def buildAttackTreeEdges(node: GameNode): Unit = {
+    def buildAttackTreeEdges(node: GamePosition): Unit = {
       
       if (!visited(node)) {
         visited += node
@@ -36,14 +36,14 @@ class AttackGraphBuilder[L] {
   }
 
   def accumulatePrices(
-      graph: Relation[GameNode],
-      priceCons: (GameNode, GameNode, L) => L,
-      pricePick: (GameNode, Iterable[L]) => L,
+      graph: Relation[GamePosition],
+      priceCons: (GamePosition, GamePosition, L) => L,
+      pricePick: (GamePosition, Iterable[L]) => L,
       supPrice: L,
-      nodes: Iterable[GameNode]): Map[GameNode, L] = {
+      nodes: Iterable[GamePosition]): Map[GamePosition, L] = {
     
-    val prices = collection.mutable.Map[GameNode, L]()
-    val priceToDo = collection.mutable.ListBuffer[GameNode]()
+    val prices = collection.mutable.Map[GamePosition, L]()
+    val priceToDo = collection.mutable.ListBuffer[GamePosition]()
     priceToDo.appendAll(nodes)
 
     while (priceToDo.nonEmpty) {
@@ -61,9 +61,9 @@ class AttackGraphBuilder[L] {
         val succPrices = for {
           (s, Some(p)) <- followUps
         } yield priceCons(n, s, p)
-        val newPrice = pricePick(n, succPrices)
-        if (!(oldPrice contains newPrice)) {
-          prices(n) = newPrice
+        val newBudget = pricePick(n, succPrices)
+        if (!(oldPrice contains newBudget)) {
+          prices(n) = newBudget
           val predecessorUpdates = graph.valuesInverse(n).filterNot(priceToDo contains _) 
           priceToDo.appendAll(predecessorUpdates)
         }
@@ -77,13 +77,13 @@ class AttackGraphBuilder[L] {
 
 
   def accumulateNodePrices(
-      graph: Relation[GameNode],
-      pricePick: (GameNode, Iterable[L]) => L,
+      graph: Relation[GamePosition],
+      pricePick: (GamePosition, Iterable[L]) => L,
       supPrice: L,
-      nodes: Iterable[GameNode]): Map[GameNode, L] = {
+      nodes: Iterable[GamePosition]): Map[GamePosition, L] = {
 
-    val prices = collection.mutable.Map[GameNode, L]()
-    val priceToDo = collection.mutable.ListBuffer[GameNode]()
+    val prices = collection.mutable.Map[GamePosition, L]()
+    val priceToDo = collection.mutable.ListBuffer[GamePosition]()
     priceToDo.appendAll(nodes)
 
     while (priceToDo.nonEmpty) {
@@ -101,9 +101,9 @@ class AttackGraphBuilder[L] {
         val succPrices = for {
           (s, Some(p)) <- followUps
         } yield p
-        val newPrice = pricePick(n, succPrices)
-        if (!(oldPrice contains newPrice)) {
-          prices(n) = newPrice
+        val newBudget = pricePick(n, succPrices)
+        if (!(oldPrice contains newBudget)) {
+          prices(n) = newBudget
           val predecessorUpdates = graph.valuesInverse(n).filterNot(priceToDo contains _) 
           priceToDo.appendAll(predecessorUpdates)
         }

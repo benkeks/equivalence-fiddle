@@ -1,34 +1,34 @@
 package io.equiv.eqfiddle.game
 
-import io.equiv.eqfiddle.game.SimpleGame.{GameNode, AttackerNode, DefenderNode}
+import io.equiv.eqfiddle.game.SimpleGame.{GamePosition, AttackerPosition, DefenderPosition}
 
 class MaterializedEnergyGame[P](
     val baseGame: GameLazyDecision[P],
-    initialBaseNodes: Iterable[GameNode],
+    initialBaseNodes: Iterable[GamePosition],
     initialEnergy: P,
-    energyUpdate: (GameNode, GameNode, P) => Option[P],
-    preferredNodes: (GameNode, P, GameNode) => Boolean)
+    energyUpdate: (GamePosition, GamePosition, P) => Option[P],
+    preferredNodes: (GamePosition, P, GamePosition) => Boolean)
   extends SimpleGame with GameDiscovery with WinningRegionComputation {
   
-  case class MaterializedAttackerNode(baseNode: GameNode, energy: P) extends AttackerNode
-  case class MaterializedDefenderNode(baseNode: GameNode, energy: P) extends DefenderNode
+  case class MaterializedAttackerPosition(baseNode: GamePosition, energy: P) extends AttackerPosition
+  case class MaterializedDefenderPosition(baseNode: GamePosition, energy: P) extends DefenderPosition
 
-  def materialize(baseNode: GameNode, energy: P) = {
-    if (baseNode.isInstanceOf[AttackerNode]) {
-      MaterializedAttackerNode(baseNode, energy)
+  def materialize(baseNode: GamePosition, energy: P) = {
+    if (baseNode.isInstanceOf[AttackerPosition]) {
+      MaterializedAttackerPosition(baseNode, energy)
     } else {
-      MaterializedDefenderNode(baseNode, energy)
+      MaterializedDefenderPosition(baseNode, energy)
     }
   }
 
-  override def initialNodes: Iterable[GameNode] = {
+  override def initialPositions: Iterable[GamePosition] = {
     initialBaseNodes.map(materialize(_, initialEnergy))
   }
 
-  override def successors(gn: GameNode): Iterable[GameNode] = {
+  override def successors(gn: GamePosition): Iterable[GamePosition] = {
     val (baseNode, energy) = gn match {
-      case MaterializedAttackerNode(b, e) => (b, e)
-      case MaterializedDefenderNode(b, e) => (b, e)
+      case MaterializedAttackerPosition(b, e) => (b, e)
+      case MaterializedDefenderPosition(b, e) => (b, e)
     }
     for {
       s <- baseGame.computeSuccessors(baseNode)

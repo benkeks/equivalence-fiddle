@@ -5,26 +5,26 @@ import io.equiv.eqfiddle.algo.AlgorithmLogging
 trait GameLazyDecision[P] extends AbstractGameDiscovery {
   self: SimpleGame =>
 
-  /** part of the game that can be reached from the initial nodes starting in the `initialNodes`. (warning: mutable!) */
-  override val discovered = collection.mutable.Set[GameNode]()
+  /** part of the game that can be reached from the initial nodes starting in the `initialPositions`. (warning: mutable!) */
+  override val discovered = collection.mutable.Set[GamePosition]()
 
-  override def predecessors(gn: GameNode): Iterable[GameNode] = computedPredecessors(gn)
-  private val computedPredecessors = collection.mutable.Map[GameNode, Set[GameNode]]() withDefaultValue Set()
+  override def predecessors(gn: GamePosition): Iterable[GamePosition] = computedPredecessors(gn)
+  private val computedPredecessors = collection.mutable.Map[GamePosition, Set[GamePosition]]() withDefaultValue Set()
 
-  override def successors(gn: GameNode): Iterable[GameNode] = computedSuccessors(gn)
-  private val computedSuccessors = collection.mutable.Map[GameNode, Set[GameNode]]() withDefaultValue Set()
-  def computeSuccessors(gn: GameNode): Iterable[GameNode]
+  override def successors(gn: GamePosition): Iterable[GamePosition] = computedSuccessors(gn)
+  private val computedSuccessors = collection.mutable.Map[GamePosition, Set[GamePosition]]() withDefaultValue Set()
+  def computeSuccessors(gn: GamePosition): Iterable[GamePosition]
 
   /* set for nodes that are won by the attacker with the minimal attacker victory prices */
-  val attackerVictoryPrices = collection.mutable.Map[GameNode, List[P]]() withDefaultValue List()
+  val attackerWinningBudgets = collection.mutable.Map[GamePosition, List[P]]() withDefaultValue List()
 
-  def isAttackerWinningPrice(gn: GameNode, p: P) = attackerVictoryPrices(gn).exists(mwp => priceIsBetterOrEq(mwp, p))
+  def isAttackerWinningEnergy(gn: GamePosition, p: P) = attackerWinningBudgets(gn).exists(mwp => energyIsLowerOrEq(mwp, p))
 
   /* price p1 is strictly better than p2 for an attacker win */
-  def priceIsBetter(p1: P, p2: P): Boolean
+  def energyIsLower(p1: P, p2: P): Boolean
 
   /* price p1 is better than or equivalent to p2 for an attacker win */
-  def priceIsBetterOrEq(p1: P, p2: P): Boolean
+  def energyIsLowerOrEq(p1: P, p2: P): Boolean
 
   def showSuccessors(): String = computedSuccessors.toString
 
@@ -33,56 +33,56 @@ trait GameLazyDecision[P] extends AbstractGameDiscovery {
   /* output todo length (for debugging purposes) */
   val printToDoLength: Boolean = false
 
-  private def priceUpdate(node: GameNode, newPrices: Iterable[P]) = {
-    val oldPrices = attackerVictoryPrices(node)
-    val newPricesMin = newPrices.filterNot(p => newPrices.exists(op => priceIsBetter(op, p))).toList
-    if (newPricesMin.forall(p => oldPrices.contains(p))) {
+  private def energyUpdate(node: GamePosition, newBudgets: Iterable[P]) = {
+    val oldBudgets = attackerWinningBudgets(node)
+    val newBudgetsMin = newBudgets.filterNot(p => newBudgets.exists(op => energyIsLower(op, p))).toList
+    if (newBudgetsMin.forall(p => oldBudgets.contains(p))) {
       false
     } else {
-      attackerVictoryPrices(node) = newPricesMin
+      attackerWinningBudgets(node) = newBudgetsMin
       true
     }
   }
 
-  def computeCurrentPrice(node: GameNode): Iterable[P]
+  def computeCurrentBudget(node: GamePosition): Iterable[P]
 
   def populateGame(
-      initialNodes: Iterable[GameNode],
-      instantAttackerWin: GameNode => Iterable[P]) = {
+      initialPositions: Iterable[GamePosition],
+      instantAttackerWin: GamePosition => Iterable[P]) = {
 
-    val todo = collection.mutable.Queue[GameNode]()
-    val visited = collection.mutable.Set[GameNode]()
-    todo ++= initialNodes
-    discovered ++= initialNodes
+    val todo = collection.mutable.Queue[GamePosition]()
+    val visited = collection.mutable.Set[GamePosition]()
+    todo ++= initialPositions
+    discovered ++= initialPositions
 
     while (todo.nonEmpty) {
       if (printToDoLength) AlgorithmLogging.debugLog(todo.size.toString())
-      val currNode = todo.dequeue()
-      val instaWin = instantAttackerWin(currNode)
+      val currPos = todo.dequeue()
+      val instaWin = instantAttackerWin(currPos)
       if (instaWin.nonEmpty) {
-        if (priceUpdate(currNode, instaWin)) {
+        if (energyUpdate(currPos, instaWin)) {
           // propagate a new win
-          predecessors(currNode).foreach(_ +=: todo)
+          predecessors(currPos).foreach(_ +=: todo)
         }
       } else {
-        if (!(visited contains currNode)) {
-          visited += currNode
-          val succs = computeSuccessors(currNode)
-          computedSuccessors(currNode) = succs.toSet
+        if (!(visited contains currPos)) {
+          visited += currPos
+          val succs = computeSuccessors(currPos)
+          computedSuccessors(currPos) = succs.toSet
           for {
             gn <- succs
           } {
-            computedPredecessors(gn) += currNode
+            computedPredecessors(gn) += currPos
             if (!(discovered contains gn)) {
               discovered += gn
               todo += gn
             }
           }
         }
-        val updatedPrice = computeCurrentPrice(currNode)
-        if (priceUpdate(currNode, updatedPrice) ) {
+        val updatedBudget = computeCurrentBudget(currPos)
+        if (energyUpdate(currPos, updatedBudget) ) {
           // propagate a new win
-          predecessors(currNode).foreach(_ +=: todo)
+          predecessors(currPos).foreach(_ +=: todo)
         }
       }
     }
