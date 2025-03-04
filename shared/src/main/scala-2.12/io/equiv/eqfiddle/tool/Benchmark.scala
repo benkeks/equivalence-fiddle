@@ -21,6 +21,7 @@ object Benchmark extends App {
       |  help       Print this help
       |  formulas   Output example distinguishing formulas of the LTBT spectrum 1
       |  benchmark  Run benchmarks on VLTS
+      |  sizemark   Compare sizes of spectroscopy games
       |
       |General options:
       | --unclever-spectroscopy  Use the exponentially-branching energy game (instead of the clever energy game)
@@ -38,26 +39,21 @@ object Benchmark extends App {
       |Source:    https://github.com/benkeks/equivalence-fiddle
       |""".stripMargin
 
-  def algorithm[S,A,L](system: WeakTransitionSystem[S, A, L]): SpectroscopyInterface[S,A,L,HennessyMilnerLogic.Formula[A]] = {
-    AlgorithmLogging.loggingActive = true
-    AlgorithmLogging.debugLogActive = false
+  val baseConfig = SpectroscopyInterface.SpectroscopyConfig(
+    useCleverSpectroscopyGame = (args.contains("--unclever-spectroscopy")),
+    useSymmetryPruning = true
+  )
 
-    if (args.contains("--unclever-spectroscopy")) {
-      new StrongSpectroscopy(system) {
-        override val useCleverSpectroscopyGame: Boolean = false
-      }
-    } else {
-      new StrongSpectroscopy(system)
-    }
-  }
+  AlgorithmLogging.loggingActive = true
+  AlgorithmLogging.debugLogActive = false
 
   args.headOption match {
     case Some("formulas") =>
-      new LTBTSDistinctions(algorithm).run()
+      new LTBTSDistinctions(new StrongSpectroscopy(_), baseConfig).run()
     case Some("help") =>
       println(usage)
     case Some("about") =>
-      println(usage)
+      println(about)
     case Some("benchmark") =>
       val includeHardExamples = args.contains("--include-hard")
       val shuffleExamples = args.contains("--shuffle")
@@ -66,19 +62,21 @@ object Benchmark extends App {
       val timeout = args.collectFirst { case timeoutRegex(timeout) => timeout.toInt }.getOrElse(500000)
 
       if (reducedSizes) {
-        new VeryLargeTransitionSystems(algorithm).run(
+        new VeryLargeTransitionSystems(new StrongSpectroscopy(_), baseConfig).run(
           includeHardExamples = includeHardExamples,
           shuffleExamples = shuffleExamples,
           timeoutTime = timeout
         )
       } else {
-        new VeryLargeTransitionSystems(algorithm).run(
+        new VeryLargeTransitionSystems(new StrongSpectroscopy(_), baseConfig).run(
           includeHardExamples = includeHardExamples,
           shuffleExamples = shuffleExamples,
           outputMinimizationSizes = List(),
           timeoutTime = timeout
         )
       }
+    case Some("sizemark") =>
+      
     case _ =>
       println("Usage: [COMMAND] [OPTIONS]\n  Run `help` for details.")
   }

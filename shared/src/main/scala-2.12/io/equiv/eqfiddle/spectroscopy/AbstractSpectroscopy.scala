@@ -27,8 +27,7 @@ abstract class AbstractSpectroscopy[S, A, L, CF <: HennessyMilnerLogic.Formula[A
 
   def compute(
     comparedPairs: Iterable[(S,S)],
-    computeFormulas: Boolean = true,
-    saveGameSize: Boolean = false
+    config: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig()
   ): SpectroscopyResult[S, A, ObservationNotion, CF]
 
   /* Discards distinguishing formulas that do not contribute “extreme” distinguishing notions of equivalence */

@@ -19,8 +19,6 @@ class WeakSpectroscopy[S, A, L] (
     ts: WeakTransitionSystem[S, A, L])
   extends SpectroscopyInterface[S, A, L, HennessyMilnerLogic.Formula[A]] with AlgorithmLogging[S] {
 
-  val useCleverBranching: Boolean = true
-
   val spectrum = ObservationNotionWeak.LTBTS
 
   val distinguishingFormulas =
@@ -32,7 +30,7 @@ class WeakSpectroscopy[S, A, L] (
     spectrum.getLeastDistinguishing(oldFormulas)
   }
 
-  def buildHMLWitness(game: WeakSpectroscopyGame[S, A, L], node: GamePosition, price: Energy): Iterable[HennessyMilnerLogic.Formula[A]]
+  def buildHMLWitness(game: WeakSpectroscopyGame[S, A, L], node: GamePosition, price: Energy, config: SpectroscopyInterface.SpectroscopyConfig): Iterable[HennessyMilnerLogic.Formula[A]]
     = distinguishingFormulas.getOrElseUpdate((node, price), {
     node match {
       case game.AttackerObservation(p0, qq0) =>
@@ -45,10 +43,10 @@ class WeakSpectroscopy[S, A, L] (
           } yield s match {
             case game.AttackerDelayedObservation(p1, qq1) =>
               for {
-                postForm <- buildHMLWitness(game, s, newBudget)
+                postForm <- buildHMLWitness(game, s, newBudget, config)
               } yield HennessyMilnerLogic.Pass(postForm)
             case game.DefenderConjunction(p1, qq1) =>
-              buildHMLWitness(game, s, newBudget)
+              buildHMLWitness(game, s, newBudget, config)
             case _ => Set()
           }
         //pruneDominated(successorFormulas.flatten.toSet)
@@ -79,14 +77,14 @@ class WeakSpectroscopy[S, A, L] (
               } yield a
               for {
                 a <- possibleRestoredActions.headOption.toList // just take first option
-                postForm <- buildHMLWitness(game, s, newBudget)
+                postForm <- buildHMLWitness(game, s, newBudget, config)
               } yield HennessyMilnerLogic.Observe(a, postForm)
             case game.DefenderConjunction(p1, qq1) =>
-              buildHMLWitness(game, s, newBudget)
+              buildHMLWitness(game, s, newBudget, config)
             case game.DefenderStableConjunction(p1, qq1, qq1revivals) =>
-              buildHMLWitness(game, s, newBudget)
+              buildHMLWitness(game, s, newBudget, config)
             case game.DefenderBranchingConjunction(p01, a, p1, qq01, qq01a) =>
-              buildHMLWitness(game, s, newBudget)
+              buildHMLWitness(game, s, newBudget, config)
             case _ => Set()
           }
         pruneDominated(successorFormulas.flatMap(_.headOption).toSet).headOption
@@ -97,7 +95,7 @@ class WeakSpectroscopy[S, A, L] (
           update = game.weight(node, s)
           newBudget = update.applyEnergyUpdate(price)
           if game.isAttackerWinningEnergy(s, newBudget)
-          f <- buildHMLWitness(game, s, newBudget)
+          f <- buildHMLWitness(game, s, newBudget, config)
         } yield if (s.isInstanceOf[game.AttackerDelayedObservation]) HennessyMilnerLogic.Pass(f) else f
       case _ : game.AttackerClause | _ : game.AttackerClauseStable =>
         val (p0, q0) = node match {
@@ -114,24 +112,24 @@ class WeakSpectroscopy[S, A, L] (
             case game.AttackerDelayedObservation(p1, qq1) =>
               if (p0 == p1) {
                 for {
-                  postForm <- buildHMLWitness(game, s, newBudget)
+                  postForm <- buildHMLWitness(game, s, newBudget, config)
                 } yield HennessyMilnerLogic.Pass(postForm)
               } else {
                 for {
-                  postForm <- buildHMLWitness(game, s, newBudget)
+                  postForm <- buildHMLWitness(game, s, newBudget, config)
                 } yield HennessyMilnerLogic.Negate(HennessyMilnerLogic.Pass(postForm))
               }
             }
           }
         successorFormulas.flatten
-      case game.DefenderBranchingConjunction(p0, a, p1, qq0, qq0a) if !useCleverBranching =>
+      case game.DefenderBranchingConjunction(p0, a, p1, qq0, qq0a) if !config.useCleverSpectroscopyGame =>
         val aBranches = for {
           s <- game.successors(node)
           if s.isInstanceOf[game.AttackerBranchingObservation]
           update = game.weight(node, s)
           newBudget = update.applyEnergyUpdate(price)
           if game.isAttackerWinningEnergy(s, newBudget)
-          subformula <- buildHMLWitness(game, s, newBudget)
+          subformula <- buildHMLWitness(game, s, newBudget, config)
         } yield {
           s match {
             case game.AttackerBranchingObservation(_, _) if ts.silentActions(a) =>
@@ -148,7 +146,7 @@ class WeakSpectroscopy[S, A, L] (
           newBudget = update.applyEnergyUpdate(price)
           if !s.isInstanceOf[game.AttackerBranchingObservation]
         } yield if (game.isAttackerWinningEnergy(s, newBudget)) {
-          (buildHMLWitness(game, s, newBudget))
+          (buildHMLWitness(game, s, newBudget, config))
         } else {
           Seq()
         }) ++ Seq(aBranches)
@@ -160,7 +158,7 @@ class WeakSpectroscopy[S, A, L] (
           HennessyMilnerLogic.And(moves).asInstanceOf[HennessyMilnerLogic.Formula[A]]
         }
         pruneDominated(conjs.toSet)
-      case game.DefenderBranchingConjunction(p0, a, p1, qq0, qq0a) if useCleverBranching =>
+      case game.DefenderBranchingConjunction(p0, a, p1, qq0, qq0a) if config.useCleverSpectroscopyGame =>
         // note: qq0a is always empty for clever game
         val gameClever = game.asInstanceOf[WeakSpectroscopyGameClever[S, A, L]]
 
@@ -174,7 +172,7 @@ class WeakSpectroscopy[S, A, L] (
             s2 <- gameClever.successors(s1)
             update2 = gameClever.weight(s1, s2)
             newBudget2 = update2.applyEnergyUpdate(newBudget1)
-            subformula <- buildHMLWitness(game, s2, newBudget2)
+            subformula <- buildHMLWitness(game, s2, newBudget2, config)
           } yield {
             s2 match {
               case gameClever.AttackerBranchingObservation(_, _) if ts.silentActions(a) =>
@@ -239,7 +237,7 @@ class WeakSpectroscopy[S, A, L] (
             case _ => true
           })
         } yield if (game.isAttackerWinningEnergy(s, newBudget)) {
-          buildHMLWitness(game, s, newBudget)
+          buildHMLWitness(game, s, newBudget, config)
         } else {
           Set()
         }
@@ -268,23 +266,16 @@ class WeakSpectroscopy[S, A, L] (
   }
 
   def compute(
-      comparedPairs: Iterable[(S,S)]
-    ): SpectroscopyInterface.SpectroscopyResult[S, A, ObservationNotionWeak, HennessyMilnerLogic.Formula[A]] = {
-    compute(comparedPairs, computeFormulas = true)
-  }
-
-  def compute(
       comparedPairs: Iterable[(S,S)],
-      computeFormulas: Boolean = true,
-      saveGameSize: Boolean = false
+      config: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig()
     ): SpectroscopyInterface.SpectroscopyResult[S, A, ObservationNotionWeak, HennessyMilnerLogic.Formula[A]] = {
 
     debugLog(s"Start spectroscopy on ${ts.nodes.size} node transition system with ${comparedPairs.size} compared pairs.")
 
-    val hmlGame = if (useCleverBranching) {
-      new WeakSpectroscopyGameClever(ts, energyCap = if (computeFormulas) Int.MaxValue else 3)
+    val hmlGame = if (config.useCleverSpectroscopyGame) {
+      new WeakSpectroscopyGameClever(ts, energyCap = if (config.computeFormulas) Int.MaxValue else 3)
     } else {
-      new WeakSpectroscopyGame(ts, energyCap = if (computeFormulas) Int.MaxValue else 3)
+      new WeakSpectroscopyGame(ts, energyCap = if (config.computeFormulas) Int.MaxValue else 3)
     }
 
     val init = for {
@@ -307,13 +298,13 @@ class WeakSpectroscopy[S, A, L] (
 
     debugLog("HML spectroscopy game size: " + hmlGame.discovered.size)
 
-    if (computeFormulas) {
+    if (config.computeFormulas) {
       for {
         gn <- init
         hmlGame.AttackerObservation(p, qq) = gn
         bestPrice <- hmlGame.attackerWinningBudgets(gn)
         energyClass = energyToClass(bestPrice)
-        witnessFormulas = buildHMLWitness(hmlGame, gn, bestPrice)
+        witnessFormulas = buildHMLWitness(hmlGame, gn, bestPrice, config)
         f <- witnessFormulas.headOption
       } {
         val formulaPrice = spectrum.classifyFormula(f)._1
@@ -370,7 +361,7 @@ class WeakSpectroscopy[S, A, L] (
         } yield (f, price, eqs)
       } yield SpectroscopyInterface.SpectroscopyResultItem[S, A, ObservationNotionWeak, HennessyMilnerLogic.Formula[A]](p, q, distinctions, preorders)
 
-      if (saveGameSize) gameSize = hmlGame.gameSize()
+      if (config.saveGameSize) gameSize = hmlGame.gameSize()
 
       SpectroscopyInterface.SpectroscopyResult[S, A, ObservationNotionWeak, HennessyMilnerLogic.Formula[A]](spectroResults.toList, spectrum, meta = Map("game" -> gameString))
     } else {
@@ -410,16 +401,20 @@ class WeakSpectroscopy[S, A, L] (
         } yield (HennessyMilnerLogic.True[A], price, spectrum.classifyClass(price))
       } yield SpectroscopyInterface.SpectroscopyResultItem[S, A, ObservationNotionWeak, HennessyMilnerLogic.Formula[A]](p, q, distinctions.toList, preorders)
 
-      if (saveGameSize) gameSize = hmlGame.gameSize()
+      if (config.saveGameSize) gameSize = hmlGame.gameSize()
 
       SpectroscopyInterface.SpectroscopyResult[S, A, ObservationNotionWeak, HennessyMilnerLogic.Formula[A]](spectroResults.toList, spectrum)
     }
 
   }
 
-  def checkIndividualPreorder(comparedPairs: Iterable[(S,S)], notion: String): SpectroscopyInterface.IndividualNotionResult[S] = {
+  def checkIndividualPreorder(
+      comparedPairs: Iterable[(S,S)],
+      notion: String,
+      config: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig()
+  ): SpectroscopyInterface.IndividualNotionResult[S] = {
     val hmlGame =
-      if (useCleverBranching) {
+      if (config.useCleverSpectroscopyGame) {
         new WeakSpectroscopyGameClever(ts, energyCap = 2)
       } else {
         new WeakSpectroscopyGame(ts, energyCap = 2)
@@ -446,7 +441,7 @@ class WeakSpectroscopy[S, A, L] (
       case hmlGame.AttackerObservation(p, qq) if currentEnergy(4) >= Int.MaxValue && qq.size > 1 =>
         // if we have infinitely many immediate conjunctions, use them to chop down blowup on right-hand side
         baseSuccessor.isInstanceOf[hmlGame.DefenderConjunction]
-      case hmlGame.AttackerBranchingObservation(p, qq) if useCleverBranching && currentEnergy(4) >= Int.MaxValue && qq.size > 1 =>
+      case hmlGame.AttackerBranchingObservation(p, qq) if config.useCleverSpectroscopyGame && currentEnergy(4) >= Int.MaxValue && qq.size > 1 =>
         // same as previous case
         baseSuccessor.isInstanceOf[hmlGame.DefenderConjunction]
       case hmlGame.AttackerDelayedObservation(_, _) if (currentEnergy(3) == 0 || currentEnergy(5) == currentEnergy(6)) && baseSuccessor.isInstanceOf[hmlGame.DefenderStableConjunction] =>

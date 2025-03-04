@@ -16,7 +16,8 @@ import io.equiv.eqfiddle.hml.HennessyMilnerLogic
  * Creates the distinguishing formulas that are used in the paper / the classic LTBTS to illustrate the output of the algorithm.
  */
 class LTBTSDistinctions(
-  algorithm: (WeakTransitionSystem[NodeID,String,String]) => SpectroscopyInterface[NodeID,String,String,HennessyMilnerLogic.Formula[String]]
+  algorithm: (WeakTransitionSystem[NodeID,String,String]) => SpectroscopyInterface[NodeID,String,String,HennessyMilnerLogic.Formula[String]],
+  config: SpectroscopyInterface.SpectroscopyConfig
 ) {
 
   val examplePairs = List(
@@ -59,7 +60,7 @@ class LTBTSDistinctions(
 
       val result = {
         val algo = algorithm(ltbtsSystem)
-        algo.compute(List((n1, n2)))
+        algo.compute(List((n1, n2)), SpectroscopyInterface.SpectroscopyConfig(computeFormulas = true))
       }
 
       for {

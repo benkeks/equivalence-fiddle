@@ -13,13 +13,12 @@ import io.equiv.eqfiddle.hml.HennessyMilnerLogic
 import io.equiv.eqfiddle.hml.HMLInterpreter
 import io.equiv.eqfiddle.game.GameGraphVisualizer
 
+
 class StrongSpectroscopy[S, A, L] (
     ts: WeakTransitionSystem[S, A, L])
   extends SpectroscopyInterface[S, A, L, HennessyMilnerLogic.Formula[A]] with AlgorithmLogging[S] {
 
   val spectrum = ObservationNotionStrong.LTBTS
-
-  val useCleverSpectroscopyGame: Boolean = true
 
   val distinguishingFormulas =
     collection.mutable.Map[(GamePosition, Energy), Iterable[HennessyMilnerLogic.Formula[A]]]()
@@ -102,20 +101,20 @@ class StrongSpectroscopy[S, A, L] (
   def compute(
       comparedPairs: Iterable[(S,S)]
     ): SpectroscopyInterface.SpectroscopyResult[S, A, ObservationNotionStrong, HennessyMilnerLogic.Formula[A]] = {
-    compute(comparedPairs, computeFormulas = true)
+    compute(comparedPairs, SpectroscopyInterface.SpectroscopyConfig())
   }
 
   def compute(
       comparedPairs: Iterable[(S,S)],
-      computeFormulas: Boolean = true,
-      saveGameSize: Boolean = false
+      config: SpectroscopyInterface.SpectroscopyConfig
     ): SpectroscopyInterface.SpectroscopyResult[S, A, ObservationNotionStrong, HennessyMilnerLogic.Formula[A]] = {
 
 
     debugLog(s"Start spectroscopy on ${ts.nodes.size} node transition system with ${comparedPairs.size} compared pairs.")
 
-    val hmlGame = new StrongSpectroscopyGame(ts, energyCap = if (computeFormulas) Int.MaxValue else 3) {
-      override val optimizeConjMoves: Boolean = useCleverSpectroscopyGame
+    val hmlGame = new StrongSpectroscopyGame(ts, energyCap = if (config.computeFormulas) Int.MaxValue else 3) {
+      override val optimizeConjMoves: Boolean = config.useCleverSpectroscopyGame
+      override val optimizeSymmetryDefWins: Boolean = config.useSymmetryPruning
     }
 
     val init = for {
@@ -137,7 +136,7 @@ class StrongSpectroscopy[S, A, L] (
 
     debugLog("HML spectroscopy game size: " + hmlGame.discovered.size)
 
-    if (computeFormulas) {
+    if (config.computeFormulas) {
       for {
         gn <- init
         hmlGame.AttackerObservation(p, qq) = gn
@@ -190,7 +189,7 @@ class StrongSpectroscopy[S, A, L] (
         } yield (f, price, eqs)
       } yield SpectroscopyInterface.SpectroscopyResultItem[S, A, ObservationNotionStrong, HennessyMilnerLogic.Formula[A]](p, q, distinctions, preorders)
 
-      if (saveGameSize) gameSize = hmlGame.gameSize()
+      if (config.saveGameSize) gameSize = hmlGame.gameSize()
 
       SpectroscopyInterface.SpectroscopyResult[S, A, ObservationNotionStrong, HennessyMilnerLogic.Formula[A]](spectroResults.toList, spectrum, meta = Map("game" -> gameString))
     } else {
@@ -228,7 +227,7 @@ class StrongSpectroscopy[S, A, L] (
         } yield (HennessyMilnerLogic.True[A], price, spectrum.classifyClass(price))
       } yield SpectroscopyInterface.SpectroscopyResultItem[S, A, ObservationNotionStrong, HennessyMilnerLogic.Formula[A]](p, q, distinctions.toList, preorders)
 
-      if (saveGameSize) gameSize = hmlGame.gameSize()
+      if (config.saveGameSize) gameSize = hmlGame.gameSize()
 
       SpectroscopyInterface.SpectroscopyResult[S, A, ObservationNotionStrong, HennessyMilnerLogic.Formula[A]](spectroResults.toList, spectrum)
     }
@@ -279,7 +278,11 @@ class StrongSpectroscopy[S, A, L] (
     visualizer.outputDot(attackerWin)
   }
 
-  def checkIndividualPreorder(comparedPairs: Iterable[(S,S)], notion: String): SpectroscopyInterface.IndividualNotionResult[S] = {
+  def checkIndividualPreorder(
+      comparedPairs: Iterable[(S,S)],
+      notion: String,
+      config: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig()
+  ) : SpectroscopyInterface.IndividualNotionResult[S] = {
     val hmlGame = new StrongSpectroscopyGame(ts, energyCap = 3)
 
     val init = for {

@@ -326,7 +326,7 @@ object Structure {
         }
         AlgorithmLogging.uriEncoder = scala.scalajs.js.URIUtils.encodeURI _
 
-        val result = algo.compute(List((n1, n2)), computeFormulas = true)
+        val result = algo.compute(List((n1, n2)), SpectroscopyInterface.SpectroscopyConfig(computeFormulas = true))
         AlgorithmLogging.debugLog("Spectroscopy took: " + (Date.now - begin) + "ms.", logLevel = 7)
 
         val gameString = result.meta.get("game") match {
@@ -446,7 +446,7 @@ object Structure {
         n2j <- (n1i + 1) until states.length
       } yield (states(n1i), states(n2j))
 
-      val result = algo.compute(comparedPairs, computeFormulas = false)
+      val result = algo.compute(comparedPairs, SpectroscopyInterface.SpectroscopyConfig(computeFormulas = false))
       AlgorithmLogging.debugLog("Minimization Spectroscopy took: " + (Date.now - begin) + "ms.", logLevel = 7)
 
       val distRel = result.toDistancesRelation()
@@ -489,7 +489,7 @@ object Structure {
           n2 <- structure.structure.nodes
         } yield (node, n2)
 
-        val result = algo.compute(comparedPairs, computeFormulas = false)
+        val result = algo.compute(comparedPairs, SpectroscopyInterface.SpectroscopyConfig(computeFormulas = false))
         AlgorithmLogging.debugLog("Characterization Spectroscopy took: " + (Date.now - begin) + "ms.", logLevel = 7)
 
         for {
