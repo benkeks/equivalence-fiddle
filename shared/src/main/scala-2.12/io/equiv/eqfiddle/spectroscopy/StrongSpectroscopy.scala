@@ -112,10 +112,7 @@ class StrongSpectroscopy[S, A, L] (
 
     debugLog(s"Start spectroscopy on ${ts.nodes.size} node transition system with ${comparedPairs.size} compared pairs.")
 
-    val hmlGame = new StrongSpectroscopyGame(ts, energyCap = if (config.computeFormulas) Int.MaxValue else 3) {
-      override val optimizeConjMoves: Boolean = config.useCleverSpectroscopyGame
-      override val optimizeSymmetryDefWins: Boolean = config.useSymmetryPruning
-    }
+    val hmlGame = new StrongSpectroscopyGame(ts, config)
 
     val init = for {
       (p, q) <- comparedPairs
@@ -283,7 +280,7 @@ class StrongSpectroscopy[S, A, L] (
       notion: String,
       config: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig()
   ) : SpectroscopyInterface.IndividualNotionResult[S] = {
-    val hmlGame = new StrongSpectroscopyGame(ts, energyCap = 3)
+    val hmlGame = new StrongSpectroscopyGame(ts, config)
 
     val init = for {
       (p, q) <- comparedPairs

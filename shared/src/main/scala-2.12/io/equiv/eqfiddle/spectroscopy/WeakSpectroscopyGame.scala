@@ -5,25 +5,23 @@ import io.equiv.eqfiddle.game.EnergyGame
 import io.equiv.eqfiddle.hml.ObservationNotionStrong
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 
-class WeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], energyCap: Int = Int.MaxValue)
+class WeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], val config: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig())
   extends SimpleGame with EnergyGame {
 
   // obs, branchingConj, unstableConj, stableConj, immediateConj, revivals, positiveHeight, negativeHeight, negations
-  protected val NoEnergyUpdate              = new EnergyGame.EnergyUpdate(Array( 0, 0, 0, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
-  protected val ObsEnergyUpdate             = new EnergyGame.EnergyUpdate(Array(-1, 0, 0, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
-  protected val InstableConjEnergyUpdate    = new EnergyGame.EnergyUpdate(Array( 0, 0,-1, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
-  protected val StableConjEnergyUpdate      = new EnergyGame.EnergyUpdate(Array( 0, 0, 0,-1, 0, 0, 6, 0, 0), energyCap = energyCap)
-  protected val StableRevivalEnergyUpdate   = new EnergyGame.EnergyUpdate(Array( 6, 0, 0,-1, 0, 0, 0, 0, 0), energyCap = energyCap)
-  protected val StabilityCheckEnergyUpdate  = new EnergyGame.EnergyUpdate(Array( 0, 0, 0,-1, 0, 0, 0, 0,-1), energyCap = energyCap)
-  protected val ImmediateConjEnergyUpdate   = new EnergyGame.EnergyUpdate(Array( 0, 0, 0, 0,-1, 0, 0, 0, 0), energyCap = energyCap)
-  protected val BranchingObsEnergyUpdate    = new EnergyGame.EnergyUpdate(Array( 6,-1,-1, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
-  protected val BranchingConjEnergyUpdate   = new EnergyGame.EnergyUpdate(Array( 0,-1,-1, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
-  protected val NegClauseEnergyUpdate       = new EnergyGame.EnergyUpdate(Array( 8, 0, 0, 0, 0, 0, 0, 0,-1), energyCap = energyCap)
-  protected val PosClauseEnergyUpdate       = new EnergyGame.EnergyUpdate(Array( 6, 0, 0, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
-  protected val PosClauseStableEnergyUpdate = new EnergyGame.EnergyUpdate(Array( 7, 0, 0, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
+  protected val NoEnergyUpdate              = new EnergyGame.EnergyUpdate(Array( 0, 0, 0, 0, 0, 0, 0, 0, 0), energyCap = config.energyCap)
+  protected val ObsEnergyUpdate             = new EnergyGame.EnergyUpdate(Array(-1, 0, 0, 0, 0, 0, 0, 0, 0), energyCap = config.energyCap)
+  protected val InstableConjEnergyUpdate    = new EnergyGame.EnergyUpdate(Array( 0, 0,-1, 0, 0, 0, 0, 0, 0), energyCap = config.energyCap)
+  protected val StableConjEnergyUpdate      = new EnergyGame.EnergyUpdate(Array( 0, 0, 0,-1, 0, 0, 6, 0, 0), energyCap = config.energyCap)
+  protected val StableRevivalEnergyUpdate   = new EnergyGame.EnergyUpdate(Array( 6, 0, 0,-1, 0, 0, 0, 0, 0), energyCap = config.energyCap)
+  protected val StabilityCheckEnergyUpdate  = new EnergyGame.EnergyUpdate(Array( 0, 0, 0,-1, 0, 0, 0, 0,-1), energyCap = config.energyCap)
+  protected val ImmediateConjEnergyUpdate   = new EnergyGame.EnergyUpdate(Array( 0, 0, 0, 0,-1, 0, 0, 0, 0), energyCap = config.energyCap)
+  protected val BranchingObsEnergyUpdate    = new EnergyGame.EnergyUpdate(Array( 6,-1,-1, 0, 0, 0, 0, 0, 0), energyCap = config.energyCap)
+  protected val BranchingConjEnergyUpdate   = new EnergyGame.EnergyUpdate(Array( 0,-1,-1, 0, 0, 0, 0, 0, 0), energyCap = config.energyCap)
+  protected val NegClauseEnergyUpdate       = new EnergyGame.EnergyUpdate(Array( 8, 0, 0, 0, 0, 0, 0, 0,-1), energyCap = config.energyCap)
+  protected val PosClauseEnergyUpdate       = new EnergyGame.EnergyUpdate(Array( 6, 0, 0, 0, 0, 0, 0, 0, 0), energyCap = config.energyCap)
+  protected val PosClauseStableEnergyUpdate = new EnergyGame.EnergyUpdate(Array( 7, 0, 0, 0, 0, 0, 0, 0, 0), energyCap = config.energyCap)
 
-  /* This will abort the game construction in nodes where the attacker cannot win because p is contained in qq. */
-  val optimizeSymmetryDefWins: Boolean = true
   val optimizeAttackerWins: Boolean = true
 
   case class AttackerObservation(p: S, qq: Set[S]) extends SimpleGame.AttackerPosition
@@ -90,7 +88,7 @@ class WeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], energyCap
 
   def computeSuccessors(gn: GamePosition): Iterable[GamePosition] = gn match {
     case AttackerObservation(p0, qq0) =>
-      if (optimizeSymmetryDefWins && (qq0 contains p0)) {
+      if (config.useSymmetryPruning && (qq0 contains p0)) {
         List()
       } else {
         val conjMoves = List(DefenderConjunction(p0, qq0))
@@ -102,7 +100,7 @@ class WeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], energyCap
         // }
       }
     case AttackerDelayedObservation(p0, qq0) =>
-      if (optimizeSymmetryDefWins && (qq0 contains p0)) {
+      if (config.useSymmetryPruning && (qq0 contains p0)) {
         List()
       } else {
         val unstableConjMove = DefenderConjunction(p0, qq0)

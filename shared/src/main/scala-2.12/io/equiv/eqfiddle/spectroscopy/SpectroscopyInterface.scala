@@ -33,10 +33,12 @@ object SpectroscopyInterface {
 
   case class SpectroscopyConfig(
     val useCleverSpectroscopyGame: Boolean = true,
+    val useBranchingSpectroscopyGame: Boolean = true,
     val useSymmetryPruning: Boolean = true,
     val useBisimMinimization: Boolean = true,
     val computeFormulas: Boolean = false,
-    val saveGameSize: Boolean = true
+    val saveGameSize: Boolean = true,
+    val energyCap: Int = Int.MaxValue
   )
 
   case class SpectroscopyResultItem[S, A, +OC <: ObservationNotion, +OF <: HennessyMilnerLogic.Formula[A]](

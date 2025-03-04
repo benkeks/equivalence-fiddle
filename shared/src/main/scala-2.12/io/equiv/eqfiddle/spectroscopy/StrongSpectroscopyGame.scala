@@ -5,20 +5,17 @@ import io.equiv.eqfiddle.game.EnergyGame
 import io.equiv.eqfiddle.hml.ObservationNotionStrong
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 
-class StrongSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], energyCap: Int = Int.MaxValue)
+class StrongSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], config: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig() )
   extends SimpleGame with EnergyGame {
 
-  private val NoEnergyUpdate        = new EnergyGame.EnergyUpdate(Array( 0,0,0,0,0,0), energyCap = energyCap)
-  private val ObsEnergyUpdate       = new EnergyGame.EnergyUpdate(Array(-1,0,0,0,0,0), energyCap = energyCap)
-  private val RevivalEnergyUpdate   = new EnergyGame.EnergyUpdate(Array(3,-1,0,0,0,0), energyCap = energyCap)
-  private val NoRevivalEnergyUpdate = new EnergyGame.EnergyUpdate(Array(0,-1,0,3,0,0), energyCap = energyCap)
-  private val NegClauseEnergyUpdate = new EnergyGame.EnergyUpdate(Array(5,0,0,0,0,-1), energyCap = energyCap)
-  private val PosClauseEnergyUpdate = new EnergyGame.EnergyUpdate(Array(4,0,0,0,0,0), energyCap = energyCap)
+  private val NoEnergyUpdate        = new EnergyGame.EnergyUpdate(Array( 0,0,0,0,0,0), energyCap = config.energyCap)
+  private val ObsEnergyUpdate       = new EnergyGame.EnergyUpdate(Array(-1,0,0,0,0,0), energyCap = config.energyCap)
+  private val RevivalEnergyUpdate   = new EnergyGame.EnergyUpdate(Array(3,-1,0,0,0,0), energyCap = config.energyCap)
+  private val NoRevivalEnergyUpdate = new EnergyGame.EnergyUpdate(Array(0,-1,0,3,0,0), energyCap = config.energyCap)
+  private val NegClauseEnergyUpdate = new EnergyGame.EnergyUpdate(Array(5,0,0,0,0,-1), energyCap = config.energyCap)
+  private val PosClauseEnergyUpdate = new EnergyGame.EnergyUpdate(Array(4,0,0,0,0,0), energyCap = config.energyCap)
 
-  /* This will abort the game construction in nodes where the attacker cannot win because p is contained in qq. */
-  val optimizeSymmetryDefWins: Boolean = true
   val optimizeAttackerWins: Boolean = true
-  val optimizeConjMoves: Boolean = true
 
   case class AttackerObservation(p: S, qq: Set[S]) extends SimpleGame.AttackerPosition
   case class AttackerClause(p: S, q: S) extends SimpleGame.AttackerPosition
@@ -52,14 +49,14 @@ class StrongSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], energyC
 
   def computeSuccessors(gn: GamePosition): Iterable[GamePosition] = gn match {
     case AttackerObservation(p0, qq0) =>
-      if (optimizeSymmetryDefWins && (qq0 contains p0)) {
+      if (config.useSymmetryPruning && (qq0 contains p0)) {
         List()
       } else {
         if (optimizeAttackerWins && qq0.isEmpty) {
           // prioritize instant wins because of stuck defender
           List(DefenderConjunction(p0, qq0, Set.empty))
         } else {
-          val conjMoves = if (optimizeConjMoves) {
+          val conjMoves = if (config.useCleverSpectroscopyGame) {
             val failChallengedQ = qq0.filter(q0 => ts.enabled(q0) subsetOf ts.enabled(p0))
             val offerChallengedQ = qq0.filter(q0 => ts.enabled(p0) subsetOf ts.enabled(q0))
             val readyChallengedQ = failChallengedQ intersect offerChallengedQ

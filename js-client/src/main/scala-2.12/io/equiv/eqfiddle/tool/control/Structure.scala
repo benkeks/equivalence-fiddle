@@ -446,7 +446,7 @@ object Structure {
         n2j <- (n1i + 1) until states.length
       } yield (states(n1i), states(n2j))
 
-      val result = algo.compute(comparedPairs, SpectroscopyInterface.SpectroscopyConfig(computeFormulas = false))
+      val result = algo.compute(comparedPairs, SpectroscopyInterface.SpectroscopyConfig(computeFormulas = false, energyCap = 3))
       AlgorithmLogging.debugLog("Minimization Spectroscopy took: " + (Date.now - begin) + "ms.", logLevel = 7)
 
       val distRel = result.toDistancesRelation()
@@ -489,7 +489,7 @@ object Structure {
           n2 <- structure.structure.nodes
         } yield (node, n2)
 
-        val result = algo.compute(comparedPairs, SpectroscopyInterface.SpectroscopyConfig(computeFormulas = false))
+        val result = algo.compute(comparedPairs, SpectroscopyInterface.SpectroscopyConfig(computeFormulas = false, energyCap = 3))
         AlgorithmLogging.debugLog("Characterization Spectroscopy took: " + (Date.now - begin) + "ms.", logLevel = 7)
 
         for {
