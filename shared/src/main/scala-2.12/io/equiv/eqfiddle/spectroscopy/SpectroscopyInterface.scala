@@ -35,7 +35,7 @@ object SpectroscopyInterface {
     val useCleverSpectroscopyGame: Boolean = true,
     val useBranchingSpectroscopyGame: Boolean = true,
     val useSymmetryPruning: Boolean = true,
-    val useBisimMinimization: Boolean = true,
+    val useBisimMinimization: Boolean = false,
     val computeFormulas: Boolean = false,
     val saveGameSize: Boolean = true,
     val energyCap: Int = Int.MaxValue

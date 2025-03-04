@@ -9,6 +9,7 @@ import io.equiv.eqfiddle.ts.WeakTransitionSystem
 import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
 import io.equiv.eqfiddle.spectroscopy.StrongSpectroscopy
 import io.equiv.eqfiddle.hml.HennessyMilnerLogic
+import io.equiv.eqfiddle.tool.benchmark.Sizemark
 
 object Benchmark extends App {
 
@@ -40,9 +41,12 @@ object Benchmark extends App {
       |""".stripMargin
 
   val baseConfig = SpectroscopyInterface.SpectroscopyConfig(
-    useCleverSpectroscopyGame = (args.contains("--unclever-spectroscopy")),
+    useCleverSpectroscopyGame = !(args.contains("--unclever-spectroscopy")),
     useSymmetryPruning = true
   )
+
+  val timeoutRegex = raw"--timeout=(\d+)".r
+  val timeout = args.collectFirst { case timeoutRegex(timeout) => timeout.toInt }.getOrElse(500000)
 
   AlgorithmLogging.loggingActive = true
   AlgorithmLogging.debugLogActive = false
@@ -58,8 +62,6 @@ object Benchmark extends App {
       val includeHardExamples = args.contains("--include-hard")
       val shuffleExamples = args.contains("--shuffle")
       val reducedSizes = args.contains("--reduced-sizes")
-      val timeoutRegex = raw"--timeout=(\d+)".r
-      val timeout = args.collectFirst { case timeoutRegex(timeout) => timeout.toInt }.getOrElse(500000)
 
       if (reducedSizes) {
         new VeryLargeTransitionSystems(new StrongSpectroscopy(_), baseConfig).run(
@@ -76,7 +78,9 @@ object Benchmark extends App {
         )
       }
     case Some("sizemark") =>
-      
+      new Sizemark(new StrongSpectroscopy(_)).run(
+        timeoutTime = timeout
+      )
     case _ =>
       println("Usage: [COMMAND] [OPTIONS]\n  Run `help` for details.")
   }
