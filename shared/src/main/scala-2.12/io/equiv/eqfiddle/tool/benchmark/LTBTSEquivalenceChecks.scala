@@ -56,12 +56,26 @@ class LTBTSEquivalenceChecks(
       val n2 = NodeID(n2s)
       val algo = algorithm(ltbtsSystem)
 
+      println(
+      s"""|{
+          |  left:  $n1s,
+          |  right: $n2s,
+          |  comparisons: {""".stripMargin
+      )
       for (notion <- algo.spectrum.notions) {
         val checkStartTime = System.nanoTime()
         val result = algo.checkIndividualPreorder(List((n1, n2)), notion.name, cfg)
         val checkTime = System.nanoTime() - checkStartTime
-        println(s"${notion.name} on $n1s ~ $n2s: ${result.items.head.isMaintained} | Time: ${checkTime / 1000} µs | Game size: ${algo.gameSize}")
+        println(
+        s"""|    ${notion.name}: {
+            |      result:    ${result.items.head.isMaintained},
+            |      time_us:   ${checkTime / 1000},
+            |      game_size: ${algo.gameSize._1 + algo.gameSize._2}
+            |    },""".stripMargin
+        )
       }
+      println("  }")
+      println("},")
     }
   }
 }

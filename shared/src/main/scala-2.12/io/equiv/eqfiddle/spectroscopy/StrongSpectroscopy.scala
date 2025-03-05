@@ -246,7 +246,8 @@ class StrongSpectroscopy[S, A, L] (
   ) = {
     val visualizer = new GameGraphVisualizer(game) {
 
-      def positionToID(gn: GamePosition): String = gn.toString().hashCode().toString()
+      def positionToID(gn: GamePosition): String =
+        gn.toString().hashCode().toString().replace("-", "n")
 
       def positionToString(gn: GamePosition): String = {
         val budgetString = attackerWinningBudgets.getOrElse(gn,Set()).map(_.vector.mkString("(",",",")")).mkString(" / ")
@@ -261,7 +262,7 @@ class StrongSpectroscopy[S, A, L] (
             val qqSString = qqS.mkString("{",",","}")
             val qqRString = qqR.mkString("{",",","}")
             s"$p, $qqSString, $qqRString"
-          case _ => ""
+          case _ => "ERROR"
         }).replaceAllLiterally(".0", "").replaceAllLiterally("\\", "\\\\") +
          (if (budgetString != "") s"\\n------\\n$budgetString" else "") +
          (if (formulaString != "") s"\\n------\\n$formulaString" else "")
