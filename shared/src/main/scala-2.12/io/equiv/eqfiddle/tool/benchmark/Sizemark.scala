@@ -1,21 +1,13 @@
 package io.equiv.eqfiddle.tool.benchmark
 
-import io.equiv.eqfiddle.ccs.CCSSamples
-import io.equiv.eqfiddle.ccs.Parser
-import io.equiv.eqfiddle.ccs.Interpreter
 import io.equiv.eqfiddle.ccs.Syntax
 import io.equiv.eqfiddle.util.Interpreting
-import io.equiv.eqfiddle.tool.model.NodeID
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 import io.equiv.eqfiddle.ts.CSVTSLoader
 import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
-import io.equiv.eqfiddle.spectroscopy.StrongSpectroscopy
 import io.equiv.eqfiddle.algo.transform.BuildQuotientSystem
 import io.equiv.eqfiddle.algo.sigref.Bisimilarity
-import io.equiv.eqfiddle.algo.transform.WeakTransitionSaturation
-import io.equiv.eqfiddle.algo.transform.RemoveLittleBrothers
 
-import scala.util.Random
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent._
 import scala.concurrent.duration._

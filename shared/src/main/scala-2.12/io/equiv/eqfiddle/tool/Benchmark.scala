@@ -3,6 +3,7 @@ package io.equiv.eqfiddle.tool
 import io.equiv.eqfiddle.algo.AlgorithmLogging
 import io.equiv.eqfiddle.algo.AlgorithmLogging.{LogRelation, LogRichRelation}
 import io.equiv.eqfiddle.tool.benchmark.LTBTSDistinctions
+import io.equiv.eqfiddle.tool.benchmark.LTBTSEquivalenceChecks
 import io.equiv.eqfiddle.tool.benchmark.VeryLargeTransitionSystems
 
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
@@ -21,6 +22,7 @@ object Benchmark extends App {
       |Commands:
       |  help       Print this help
       |  formulas   Output example distinguishing formulas of the LTBT spectrum 1
+      |  eqchecks   Check each individual notion of the strong spectrum on the LTBTS examples
       |  benchmark  Run benchmarks on VLTS
       |  sizemark   Compare sizes of spectroscopy games
       |
@@ -52,12 +54,14 @@ object Benchmark extends App {
   AlgorithmLogging.debugLogActive = false
 
   args.headOption match {
-    case Some("formulas") =>
-      new LTBTSDistinctions(new StrongSpectroscopy(_), baseConfig).run()
     case Some("help") =>
       println(usage)
     case Some("about") =>
       println(about)
+    case Some("formulas") =>
+      new LTBTSDistinctions(new StrongSpectroscopy(_), baseConfig).run()
+    case Some("eqchecks") =>
+      new LTBTSEquivalenceChecks(new StrongSpectroscopy(_), baseConfig).run()
     case Some("benchmark") =>
       val includeHardExamples = args.contains("--include-hard")
       val shuffleExamples = args.contains("--shuffle")
