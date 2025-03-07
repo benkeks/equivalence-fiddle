@@ -492,7 +492,7 @@ class WeakSpectroscopy[S, A, L] (
     }
   }
 
-  def GamePositionToString(
+  def gamePositionToString(
       game: WeakSpectroscopyGame[S, A, L],
       gn: GamePosition) = {
     val str = gn match {
@@ -543,7 +543,7 @@ class WeakSpectroscopy[S, A, L] (
       def positionToString(gn: GamePosition): String = {
         val budgetString = attackerWinningBudgets.getOrElse(gn,Set()).map(_.vector.mkString("(",",",")")).mkString(" / ")
         val formulaString = formulas.getOrElse(gn,Set()).mkString("\\n").replaceAllLiterally("⟩⊤","⟩")
-        GamePositionToString(game, gn) +
+        gamePositionToString(game, gn) +
          (if (budgetString != "") s"\\n------\\n$budgetString" else "") +
          (if (formulaString != "") s"\\n------\\n$formulaString" else "")
       }
@@ -575,9 +575,9 @@ class WeakSpectroscopy[S, A, L] (
 
       def positionToString(gn: GamePosition): String = gn match {
         case game.MaterializedAttackerPosition(bgn, e) =>
-          GamePositionToString(baseGame, bgn) + "\\n" + e.toString().replaceAllLiterally(maxIntString, "∞")
+          gamePositionToString(baseGame, bgn) + "\\n" + e.toString().replaceAllLiterally(maxIntString, "∞")
         case game.MaterializedDefenderPosition(bgn, e) =>
-          GamePositionToString(baseGame, bgn) + "\\n" + e.toString().replaceAllLiterally(maxIntString, "∞")
+          gamePositionToString(baseGame, bgn) + "\\n" + e.toString().replaceAllLiterally(maxIntString, "∞")
       }
 
       def moveToLabel(gn1: GamePosition, gn2: GamePosition) = {

@@ -239,6 +239,24 @@ class StrongSpectroscopy[S, A, L] (
     }
   }
 
+  def gamePositionToString(
+      game: StrongSpectroscopyGame[S, A, L],
+      gn: GamePosition) = {
+    val str = gn match {
+      case game.AttackerObservation(p, qq: Set[_]) =>
+        val qqString = qq.mkString("{",",","}")
+        s"$p, $qqString"
+      case game.AttackerClause(p, q) =>
+        s"$p, $q"
+      case game.DefenderConjunction(p, qqS: Set[_], qqR: Set[_]) =>
+        val qqSString = qqS.mkString("{",",","}")
+        val qqRString = qqR.mkString("{",",","}")
+        s"$p, $qqSString, $qqRString"
+      case _ => "ERROR"
+    }
+    str.replaceAllLiterally(".0", "").replaceAllLiterally("\\", "\\\\")
+  }
+
   def graphvizGameWithFormulas(
       game: StrongSpectroscopyGame[S, A, L],
       attackerWinningBudgets: Map[GamePosition, Iterable[Energy]],
@@ -252,18 +270,7 @@ class StrongSpectroscopy[S, A, L] (
       def positionToString(gn: GamePosition): String = {
         val budgetString = attackerWinningBudgets.getOrElse(gn,Set()).map(_.vector.mkString("(",",",")")).mkString(" / ")
         val formulaString = formulas.getOrElse(gn,Set()).mkString("\\n").replaceAllLiterally("⟩⊤","⟩")
-        (gn match {
-          case game.AttackerObservation(p, qq: Set[_]) =>
-            val qqString = qq.mkString("{",",","}")
-            s"$p, $qqString"
-          case game.AttackerClause(p, q) =>
-            s"$p, $q"
-          case game.DefenderConjunction(p, qqS: Set[_], qqR: Set[_]) =>
-            val qqSString = qqS.mkString("{",",","}")
-            val qqRString = qqR.mkString("{",",","}")
-            s"$p, $qqSString, $qqRString"
-          case _ => "ERROR"
-        }).replaceAllLiterally(".0", "").replaceAllLiterally("\\", "\\\\") +
+        gamePositionToString(game, gn) +
          (if (budgetString != "") s"\\n------\\n$budgetString" else "") +
          (if (formulaString != "") s"\\n------\\n$formulaString" else "")
       }
@@ -313,6 +320,11 @@ class StrongSpectroscopy[S, A, L] (
     val attackerWins = reachabilityGame.computeWinningRegion()
     if (config.saveGameSize) gameSize = reachabilityGame.gameSize()
 
+    val gameString = debugLog(
+      graphvizMaterializedGame(reachabilityGame, attackerWins),
+      asLink = "https://edotor.net/?engine=dot#"
+    )
+
     val relation: Set[(S, String, S)] = for {
       gn <- reachabilityGame.discovered.toSet
       if !attackerWins(gn)
@@ -330,7 +342,40 @@ class StrongSpectroscopy[S, A, L] (
     } yield {
       SpectroscopyInterface.IndividualNotionResultItem(p, q, relation.contains((p, "", q)))
     }
-    SpectroscopyInterface.IndividualNotionResult(items, relation)
+    SpectroscopyInterface.IndividualNotionResult(items, relation, meta = Map("game" -> gameString))
+  }
+
+  def materializedToBaseGamePosition(game: MaterializedEnergyGame[Energy], gn: GamePosition) = gn match {
+    case game.MaterializedAttackerPosition(bgn, e) =>
+      bgn
+    case game.MaterializedDefenderPosition(bgn, e) =>
+      bgn
+  }
+
+  def graphvizMaterializedGame(
+      game: MaterializedEnergyGame[Energy],
+      attackerWin: Set[GamePosition]
+  ) = {
+    val baseGame = game.baseGame.asInstanceOf[StrongSpectroscopyGame[S, A, L]]
+    val maxIntString = Int.MaxValue.toString()
+    val visualizer = new GameGraphVisualizer(game) {
+
+      def positionToID(gn: GamePosition): String = gn.toString().hashCode().toString()
+
+      def positionToString(gn: GamePosition): String = gn match {
+        case game.MaterializedAttackerPosition(bgn, e) =>
+          gamePositionToString(baseGame, bgn) + "\\n" + e.toString().replaceAllLiterally(maxIntString, "∞")
+        case game.MaterializedDefenderPosition(bgn, e) =>
+          gamePositionToString(baseGame, bgn) + "\\n" + e.toString().replaceAllLiterally(maxIntString, "∞")
+      }
+
+      def moveToLabel(gn1: GamePosition, gn2: GamePosition) = {
+        baseGame.weight(materializedToBaseGamePosition(game, gn1), materializedToBaseGamePosition(game, gn2)).toString()
+      }
+
+    }
+
+    visualizer.outputDot(attackerWin)
   }
 
 }
