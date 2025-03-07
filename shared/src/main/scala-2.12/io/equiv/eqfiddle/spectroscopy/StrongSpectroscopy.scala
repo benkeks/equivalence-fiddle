@@ -307,11 +307,22 @@ class StrongSpectroscopy[S, A, L] (
     }
 
     // whether to consider the baseSuccessor as a relevant node for the attacker
-    def preferredNodes(currentBaseNode: GamePosition, currentEnergy: Energy, baseSuccessor: GamePosition) = currentBaseNode match {
-      case hmlGame.AttackerObservation(p, qq) if currentEnergy(1) >= Int.MaxValue && qq.size > 1 =>
-        // if we have infinitely many immediate conjunctions, use them to chop down blowup on right-hand side
-        baseSuccessor.isInstanceOf[hmlGame.DefenderConjunction]
-      case _ => true
+    def preferredNodes(currentBaseNode: GamePosition, currentEnergy: Energy, baseSuccessor: GamePosition): Boolean = {
+      (currentBaseNode match {
+        case hmlGame.AttackerObservation(p, qq) if currentEnergy(1) >= Int.MaxValue && qq.size > 1 =>
+          // if we have infinitely many immediate conjunctions, use them to chop down blowup on right-hand side
+          baseSuccessor.isInstanceOf[hmlGame.DefenderConjunction]
+        case hmlGame.AttackerObservation(p, qq) if (currentEnergy(1) == 0) && qq.size >= 1 =>
+          // dont use conjunction moves the attacker cannot survive
+          !baseSuccessor.isInstanceOf[hmlGame.DefenderConjunction]
+        case _ => true
+      }) && (
+      // also: don't consider revivals if they make no difference!
+        baseSuccessor match {
+          case hmlGame.DefenderConjunction(p1, qq1, qqRevival) =>
+            currentEnergy(2) != currentEnergy(3) || qqRevival.isEmpty
+          case _ => true
+      })
     }
 
     val reachabilityGame: MaterializedEnergyGame[Energy] = new MaterializedEnergyGame[Energy](
