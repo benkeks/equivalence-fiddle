@@ -78,6 +78,7 @@ object ObservationNotionStrong {
   // observationHeight, conjunctionLevels, revivalHeight, positiveConjHeight, negativeConjHeight, negationLevels
   // The Linear-time Branching-time Spectrum
   val BaseLTBTS = List(
+    "universal" ->          ObservationNotionStrong(    0,     0,    0,    0,    0,    0),
     "enabledness" ->        ObservationNotionStrong(    1,     0,    0,    0,    0,    0),
     "traces" ->             ObservationNotionStrong(INFTY,     0,    0,    0,    0,    0),
     "failure" ->            ObservationNotionStrong(INFTY,     1,    0,    0,    1,    1),
