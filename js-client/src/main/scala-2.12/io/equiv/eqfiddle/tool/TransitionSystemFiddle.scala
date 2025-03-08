@@ -25,10 +25,17 @@ object TransitionSystemFiddle extends Control with ActionDispatcher {
   def main(): Unit = {
     source.init()
     structure.init()
+    val initialCodeParameter = editor.getURLSampleSlug()
     val initialCode =
-      CCSSamples.getExample(editor.getURLSampleSlug())
+      CCSSamples.getExample(initialCodeParameter)
       .map(_.code)
-      .getOrElse(CCSSamples.default)
+      .getOrElse {
+        // if the url parameter does not name an example, try to decode it as a code snippet
+        if (initialCodeParameter.startsWith("code=")) 
+          new String(java.util.Base64.getUrlDecoder().decode(initialCodeParameter.substring(5)))
+        else
+          CCSSamples.default
+      }
     doAction(Source.LoadDefinition(initialCode), source)
   }
 
