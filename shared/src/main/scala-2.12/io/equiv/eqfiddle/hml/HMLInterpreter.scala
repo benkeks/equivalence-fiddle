@@ -15,9 +15,6 @@ class HMLInterpreter[S, A, L] (
   class HMLFormulaGame(formula: Formula[A], states: Iterable[S])
     extends SimpleGame with GameDiscovery with WinningRegionComputation {
 
-    override def initialPositions: Iterable[GamePosition] =
-      for { s <- states } yield makeNode(s, formula)
-
     def makeNode(s: S, formula: Formula[A]) = formula match {
       case Observe(_, _) | ObserveInternal(_, _) | Negate(And(_)) | Pass(_) =>
         HMLDefense(s, formula)
@@ -61,6 +58,10 @@ class HMLInterpreter[S, A, L] (
           s1 <- ts.silentReachable(s)
         } yield makeNode(s1, andThen)
     }
+
+    populate(
+      for { s <- states } yield makeNode(s, formula)
+    )
   }
 
   def isTrueAt(f: Formula[A], states: Iterable[S]) = {

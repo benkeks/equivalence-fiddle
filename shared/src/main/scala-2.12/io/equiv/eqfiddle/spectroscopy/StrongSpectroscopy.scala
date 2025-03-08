@@ -265,7 +265,7 @@ class StrongSpectroscopy[S, A, L] (
     val visualizer = new GameGraphVisualizer(game) {
 
       def positionToID(gn: GamePosition): String =
-        gn.toString().hashCode().toString().replace("-", "n")
+        gn.hashCode().toString().replace("-", "n")
 
       def positionToString(gn: GamePosition): String = {
         val budgetString = attackerWinningBudgets.getOrElse(gn,Set()).map(_.vector.mkString("(",",",")")).mkString(" / ")
@@ -326,7 +326,7 @@ class StrongSpectroscopy[S, A, L] (
     }
 
     val reachabilityGame: MaterializedEnergyGame[Energy] = new MaterializedEnergyGame[Energy](
-      hmlGame, init, notionEnergy, energyUpdate, preferredNodes)
+      hmlGame, init, notionEnergy, energyUpdate, if (config.useCleverInstanceBranching) preferredNodes else ((_ ,_ ,_ ) => true))
 
     val attackerWins = reachabilityGame.computeWinningRegion()
     if (config.saveGameSize) gameSize = reachabilityGame.gameSize()
@@ -371,7 +371,7 @@ class StrongSpectroscopy[S, A, L] (
     val maxIntString = Int.MaxValue.toString()
     val visualizer = new GameGraphVisualizer(game) {
 
-      def positionToID(gn: GamePosition): String = gn.toString().hashCode().toString()
+      def positionToID(gn: GamePosition): String = gn.hashCode().toString()
 
       def positionToString(gn: GamePosition): String = gn match {
         case game.MaterializedAttackerPosition(bgn, e) =>

@@ -5,9 +5,6 @@ import io.equiv.eqfiddle.algo.AlgorithmLogging
 trait GameLazyDecision[P] extends AbstractGameDiscovery {
   self: SimpleGame =>
 
-  /** part of the game that can be reached from the initial nodes starting in the `initialPositions`. (warning: mutable!) */
-  override val discovered = collection.mutable.Set[GamePosition]()
-
   override def predecessors(gn: GamePosition): Iterable[GamePosition] = computedPredecessors(gn)
   private val computedPredecessors = collection.mutable.Map[GamePosition, Set[GamePosition]]() withDefaultValue Set()
 

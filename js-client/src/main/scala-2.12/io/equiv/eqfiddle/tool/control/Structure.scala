@@ -17,7 +17,7 @@ import io.equiv.eqfiddle.util.Relation
 import io.equiv.eqfiddle.util.LabeledRelation
 import io.equiv.eqfiddle.ts.DivergenceInformation
 import io.equiv.eqfiddle.algo.AlgorithmLogging
-import io.equiv.eqfiddle.spectroscopy.{AbstractSpectroscopy, StrongSpectroscopy, WeakSpectroscopy}
+import io.equiv.eqfiddle.spectroscopy.{StrongSpectroscopy, WeakSpectroscopy}
 import io.equiv.eqfiddle.hml.ObservationNotionStrong
 import io.equiv.eqfiddle.hml.ObservationNotionWeak
 import io.equiv.eqfiddle.hml.Spectrum

@@ -10,7 +10,6 @@ import io.equiv.eqfiddle.util.Relation
 import io.equiv.eqfiddle.hml.ObservationNotion
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 import io.equiv.eqfiddle.algo.AlgorithmLogging
-import io.equiv.eqfiddle.spectroscopy.AbstractSpectroscopy
 import io.equiv.eqfiddle.hml.Spectrum
 import io.equiv.eqfiddle.hml.HennessyMilnerLogic
 import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
