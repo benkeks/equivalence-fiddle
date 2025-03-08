@@ -10,7 +10,6 @@ import io.equiv.eqfiddle.util.Relation
 import io.equiv.eqfiddle.hml.ObservationNotion
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 import io.equiv.eqfiddle.algo.AlgorithmLogging
-import io.equiv.eqfiddle.spectroscopy.AbstractSpectroscopy
 import io.equiv.eqfiddle.hml.Spectrum
 import io.equiv.eqfiddle.hml.HennessyMilnerLogic
 import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
@@ -35,7 +34,8 @@ trait CSSSampleTests[OC <: ObservationNotion, CF <: HennessyMilnerLogic.Formula[
       sampleSystem: WeakTransitionSystem[NodeID,String,String],
       sampleNames: List[(String, String, List[String], List[String])],
       spectroscopyAlgo: (WeakTransitionSystem[NodeID,String,String]) => SpectroscopyInterface[NodeID,String,String,CF],
-      title: String) = {
+      title: String,
+      spectroscopyConfig: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig()) = {
 
     AlgorithmLogging.debugLogActive = false
 
@@ -54,7 +54,7 @@ trait CSSSampleTests[OC <: ObservationNotion, CF <: HennessyMilnerLogic.Formula[
           val preordsStr = preords.map(_.name)
           val notPreordsStr = notPreords.map(_.name).intersect(algo.spectrum.notionNames)
 
-          val result = algo.compute(List((n1, n2)))
+          val result = algo.compute(List((n1, n2)), spectroscopyConfig)
 
           val foundDistinctions = result.foundDistinctions(n1, n2).map(
             d => d.name match { case "2bisimulation" => "bisimulation"; case "2trace" => "trace"; case n => n }

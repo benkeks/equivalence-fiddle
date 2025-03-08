@@ -10,14 +10,15 @@ abstract class GameGraphVisualizer(game: SimpleGame with AbstractGameDiscovery) 
   def outputDot(attackerWinningRegion: Set[SimpleGame.GamePosition]): String = {
 
     val edgeOutput = for {
-      pos <- game.discovered
+      pos <- game.discovered.toSeq
       successor <- game.successors(pos)
+      if game.discovered(successor)
       color = "black"
       label = "\"" + moveToLabel(pos, successor) + "\""
     } yield positionToID(pos) + "->" + positionToID(successor) + s"[color=$color, label=$label]"
     
     val nodeOutput = for {
-      pos <- game.discovered
+      pos <- game.discovered.toSeq
       posID = positionToID(pos)
       posLabel = positionToString(pos)
       isAttacker = pos.isInstanceOf[SimpleGame.AttackerPosition]

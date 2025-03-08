@@ -5,13 +5,13 @@ import io.equiv.eqfiddle.game.EnergyGame
 import io.equiv.eqfiddle.hml.ObservationNotionStrong
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 
-class WeakSpectroscopyGameClever[S, A, L](ts: WeakTransitionSystem[S, A, L], energyCap: Int = Int.MaxValue)
-  extends WeakSpectroscopyGame(ts, energyCap) {
+class WeakSpectroscopyGameBranching[S, A, L](ts: WeakTransitionSystem[S, A, L], config: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig())
+  extends WeakSpectroscopyGame(ts, config) {
 
   // obs, branchingConj, unstableConj, stableConj, immediateConj, revivals, positiveHeight, negativeHeight, negations
-  private val BranchingObsSubEnergyUpdate     = new EnergyGame.EnergyUpdate(Array(  6, 0, 0, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
-  private val BranchingConjEarlyEnergyUpdate  = new EnergyGame.EnergyUpdate(Array( -1, 0, 0, 0,-1, 0, 0, 0, 0), energyCap = energyCap)
-  private val BranchingConjLateEnergyUpdate   = new EnergyGame.EnergyUpdate(Array( -1, 0,-1, 0, 0, 0, 0, 0, 0), energyCap = energyCap)
+  private val BranchingObsSubEnergyUpdate     = new EnergyGame.EnergyUpdate(Array(  6, 0, 0, 0, 0, 0, 0, 0, 0), energyCap = config.energyCap)
+  private val BranchingConjEarlyEnergyUpdate  = new EnergyGame.EnergyUpdate(Array( -1, 0, 0, 0,-1, 0, 0, 0, 0), energyCap = config.energyCap)
+  private val BranchingConjLateEnergyUpdate   = new EnergyGame.EnergyUpdate(Array( -1, 0,-1, 0, 0, 0, 0, 0, 0), energyCap = config.energyCap)
 
   case class AttackerBranchingConjunction(p0: S, a: A, p1: S, q0: S) extends SimpleGame.AttackerPosition
 
@@ -44,7 +44,7 @@ class WeakSpectroscopyGameClever[S, A, L](ts: WeakTransitionSystem[S, A, L], ene
 
     case AttackerDelayedObservation(p0, qq0) =>
       // mostly identical to WeakSpectroscopyGame
-      if (optimizeSymmetryDefWins && (qq0 contains p0)) {
+      if (config.useSymmetryPruning && (qq0 contains p0)) {
         List()
       } else {
         val unstableConjMove = DefenderConjunction(p0, qq0)

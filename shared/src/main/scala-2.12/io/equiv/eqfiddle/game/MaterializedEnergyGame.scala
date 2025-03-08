@@ -21,10 +21,6 @@ class MaterializedEnergyGame[P](
     }
   }
 
-  override def initialPositions: Iterable[GamePosition] = {
-    initialBaseNodes.map(materialize(_, initialEnergy))
-  }
-
   override def successors(gn: GamePosition): Iterable[GamePosition] = {
     val (baseNode, energy) = gn match {
       case MaterializedAttackerPosition(b, e) => (b, e)
@@ -36,4 +32,6 @@ class MaterializedEnergyGame[P](
       if preferredNodes(baseNode, energy, s)
     } yield materialize(s, updatedEnergy)
   }
+
+  populate(initialBaseNodes.map(materialize(_, initialEnergy)))
 }

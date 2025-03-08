@@ -19,8 +19,6 @@ class WeakSpectroscopy[S, A, L] (
     ts: WeakTransitionSystem[S, A, L])
   extends SpectroscopyInterface[S, A, L, HennessyMilnerLogic.Formula[A]] with AlgorithmLogging[S] {
 
-  val useCleverBranching: Boolean = true
-
   val spectrum = ObservationNotionWeak.LTBTS
 
   val distinguishingFormulas =
@@ -124,7 +122,7 @@ class WeakSpectroscopy[S, A, L] (
             }
           }
         successorFormulas.flatten
-      case game.DefenderBranchingConjunction(p0, a, p1, qq0, qq0a) if !useCleverBranching =>
+      case game.DefenderBranchingConjunction(p0, a, p1, qq0, qq0a) if !game.config.useBranchingSpectroscopyGame =>
         val aBranches = for {
           s <- game.successors(node)
           if s.isInstanceOf[game.AttackerBranchingObservation]
@@ -160,26 +158,26 @@ class WeakSpectroscopy[S, A, L] (
           HennessyMilnerLogic.And(moves).asInstanceOf[HennessyMilnerLogic.Formula[A]]
         }
         pruneDominated(conjs.toSet)
-      case game.DefenderBranchingConjunction(p0, a, p1, qq0, qq0a) if useCleverBranching =>
-        // note: qq0a is always empty for clever game
-        val gameClever = game.asInstanceOf[WeakSpectroscopyGameClever[S, A, L]]
+      case game.DefenderBranchingConjunction(p0, a, p1, qq0, qq0a) if game.config.useBranchingSpectroscopyGame =>
+        // note: qq0a is always empty for branching-style game
+        val gameBranching = game.asInstanceOf[WeakSpectroscopyGameBranching[S, A, L]]
 
         // at first we collect optional distinguishing formulas for each q in qq0 as in usual conjunctions
         val possibleMoves: Iterable[Iterable[HennessyMilnerLogic.Formula[A]]] = for {
-          s1 <- gameClever.successors(node)
-          update1 = gameClever.weight(node, s1)
+          s1 <- gameBranching.successors(node)
+          update1 = gameBranching.weight(node, s1)
           newBudget1 = update1.applyEnergyUpdate(price)
-        } yield (if (gameClever.isAttackerWinningEnergy(s1, newBudget1)) {
+        } yield (if (gameBranching.isAttackerWinningEnergy(s1, newBudget1)) {
           for {
-            s2 <- gameClever.successors(s1)
-            update2 = gameClever.weight(s1, s2)
+            s2 <- gameBranching.successors(s1)
+            update2 = gameBranching.weight(s1, s2)
             newBudget2 = update2.applyEnergyUpdate(newBudget1)
             subformula <- buildHMLWitness(game, s2, newBudget2)
           } yield {
             s2 match {
-              case gameClever.AttackerBranchingObservation(_, _) if ts.silentActions(a) =>
+              case gameBranching.AttackerBranchingObservation(_, _) if ts.silentActions(a) =>
                 HennessyMilnerLogic.ObserveInternal(subformula, opt = true)
-              case gameClever.AttackerBranchingObservation(_, _) =>
+              case gameBranching.AttackerBranchingObservation(_, _) =>
                 HennessyMilnerLogic.Observe(a, subformula)
               case _ =>
               subformula
@@ -268,23 +266,16 @@ class WeakSpectroscopy[S, A, L] (
   }
 
   def compute(
-      comparedPairs: Iterable[(S,S)]
-    ): SpectroscopyInterface.SpectroscopyResult[S, A, ObservationNotionWeak, HennessyMilnerLogic.Formula[A]] = {
-    compute(comparedPairs, computeFormulas = true)
-  }
-
-  def compute(
       comparedPairs: Iterable[(S,S)],
-      computeFormulas: Boolean = true,
-      saveGameSize: Boolean = false
+      config: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig()
     ): SpectroscopyInterface.SpectroscopyResult[S, A, ObservationNotionWeak, HennessyMilnerLogic.Formula[A]] = {
 
     debugLog(s"Start spectroscopy on ${ts.nodes.size} node transition system with ${comparedPairs.size} compared pairs.")
 
-    val hmlGame = if (useCleverBranching) {
-      new WeakSpectroscopyGameClever(ts, energyCap = if (computeFormulas) Int.MaxValue else 3)
+    val hmlGame = if (config.useBranchingSpectroscopyGame) {
+      new WeakSpectroscopyGameBranching(ts, config)
     } else {
-      new WeakSpectroscopyGame(ts, energyCap = if (computeFormulas) Int.MaxValue else 3)
+      new WeakSpectroscopyGame(ts, config)
     }
 
     val init = for {
@@ -307,7 +298,7 @@ class WeakSpectroscopy[S, A, L] (
 
     debugLog("HML spectroscopy game size: " + hmlGame.discovered.size)
 
-    if (computeFormulas) {
+    if (config.computeFormulas) {
       for {
         gn <- init
         hmlGame.AttackerObservation(p, qq) = gn
@@ -370,7 +361,7 @@ class WeakSpectroscopy[S, A, L] (
         } yield (f, price, eqs)
       } yield SpectroscopyInterface.SpectroscopyResultItem[S, A, ObservationNotionWeak, HennessyMilnerLogic.Formula[A]](p, q, distinctions, preorders)
 
-      if (saveGameSize) gameSize = hmlGame.gameSize()
+      if (config.saveGameSize) gameSize = hmlGame.gameSize()
 
       SpectroscopyInterface.SpectroscopyResult[S, A, ObservationNotionWeak, HennessyMilnerLogic.Formula[A]](spectroResults.toList, spectrum, meta = Map("game" -> gameString))
     } else {
@@ -410,19 +401,23 @@ class WeakSpectroscopy[S, A, L] (
         } yield (HennessyMilnerLogic.True[A], price, spectrum.classifyClass(price))
       } yield SpectroscopyInterface.SpectroscopyResultItem[S, A, ObservationNotionWeak, HennessyMilnerLogic.Formula[A]](p, q, distinctions.toList, preorders)
 
-      if (saveGameSize) gameSize = hmlGame.gameSize()
+      if (config.saveGameSize) gameSize = hmlGame.gameSize()
 
       SpectroscopyInterface.SpectroscopyResult[S, A, ObservationNotionWeak, HennessyMilnerLogic.Formula[A]](spectroResults.toList, spectrum)
     }
 
   }
 
-  def checkIndividualPreorder(comparedPairs: Iterable[(S,S)], notion: String): SpectroscopyInterface.IndividualNotionResult[S] = {
+  def checkIndividualPreorder(
+      comparedPairs: Iterable[(S,S)],
+      notion: String,
+      config: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig()
+  ): SpectroscopyInterface.IndividualNotionResult[S] = {
     val hmlGame =
-      if (useCleverBranching) {
-        new WeakSpectroscopyGameClever(ts, energyCap = 2)
+      if (config.useBranchingSpectroscopyGame) {
+        new WeakSpectroscopyGameBranching(ts, config)
       } else {
-        new WeakSpectroscopyGame(ts, energyCap = 2)
+        new WeakSpectroscopyGame(ts, config)
       }
 
     val init = for {
@@ -446,7 +441,7 @@ class WeakSpectroscopy[S, A, L] (
       case hmlGame.AttackerObservation(p, qq) if currentEnergy(4) >= Int.MaxValue && qq.size > 1 =>
         // if we have infinitely many immediate conjunctions, use them to chop down blowup on right-hand side
         baseSuccessor.isInstanceOf[hmlGame.DefenderConjunction]
-      case hmlGame.AttackerBranchingObservation(p, qq) if useCleverBranching && currentEnergy(4) >= Int.MaxValue && qq.size > 1 =>
+      case hmlGame.AttackerBranchingObservation(p, qq) if config.useBranchingSpectroscopyGame && currentEnergy(4) >= Int.MaxValue && qq.size > 1 =>
         // same as previous case
         baseSuccessor.isInstanceOf[hmlGame.DefenderConjunction]
       case hmlGame.AttackerDelayedObservation(_, _) if (currentEnergy(3) == 0 || currentEnergy(5) == currentEnergy(6)) && baseSuccessor.isInstanceOf[hmlGame.DefenderStableConjunction] =>
@@ -462,6 +457,7 @@ class WeakSpectroscopy[S, A, L] (
       hmlGame, init, notionEnergy, energyUpdate, preferredNodes)
 
     val attackerWins = reachabilityGame.computeWinningRegion()
+    if (config.saveGameSize) gameSize = reachabilityGame.gameSize()
 
     val gameString = debugLog(
       graphvizMaterializedGame(reachabilityGame, attackerWins),
@@ -496,7 +492,7 @@ class WeakSpectroscopy[S, A, L] (
     }
   }
 
-  def GamePositionToString(
+  def gamePositionToString(
       game: WeakSpectroscopyGame[S, A, L],
       gn: GamePosition) = {
     val str = gn match {
@@ -521,10 +517,10 @@ class WeakSpectroscopy[S, A, L] (
       case game.DefenderBranchingConjunction(p0, a, p1, qq0, qq0a) =>
         s"$p0 -${a}-> $p1, ${qq0.mkString("{",",","}")}, ${qq0a.mkString("{",",","}")}"
       case _ =>
-        if (game.isInstanceOf[WeakSpectroscopyGameClever[S, A, L]]) {
-          val gameClever = game.asInstanceOf[WeakSpectroscopyGameClever[S, A, L]]
+        if (game.isInstanceOf[WeakSpectroscopyGameBranching[S, A, L]]) {
+          val gameBranching = game.asInstanceOf[WeakSpectroscopyGameBranching[S, A, L]]
           gn match {
-            case gameClever.AttackerBranchingConjunction(p0, a, p1, q0) =>
+            case gameBranching.AttackerBranchingConjunction(p0, a, p1, q0) =>
               s"$p0 -${a}-> $p1, ${q0}"
             case _ => ""
           }
@@ -542,12 +538,12 @@ class WeakSpectroscopy[S, A, L] (
   ) = {
     val visualizer = new GameGraphVisualizer(game) {
 
-      def positionToID(gn: GamePosition): String = gn.toString().hashCode().toString()
+      def positionToID(gn: GamePosition): String = gn.hashCode().toString()
 
       def positionToString(gn: GamePosition): String = {
         val budgetString = attackerWinningBudgets.getOrElse(gn,Set()).map(_.vector.mkString("(",",",")")).mkString(" / ")
         val formulaString = formulas.getOrElse(gn,Set()).mkString("\\n").replaceAllLiterally("⟩⊤","⟩")
-        GamePositionToString(game, gn) +
+        gamePositionToString(game, gn) +
          (if (budgetString != "") s"\\n------\\n$budgetString" else "") +
          (if (formulaString != "") s"\\n------\\n$formulaString" else "")
       }
@@ -575,13 +571,13 @@ class WeakSpectroscopy[S, A, L] (
     val maxIntString = Int.MaxValue.toString()
     val visualizer = new GameGraphVisualizer(game) {
 
-      def positionToID(gn: GamePosition): String = gn.toString().hashCode().toString()
+      def positionToID(gn: GamePosition): String = gn.hashCode().toString()
 
       def positionToString(gn: GamePosition): String = gn match {
         case game.MaterializedAttackerPosition(bgn, e) =>
-          GamePositionToString(baseGame, bgn) + "\\n" + e.toString().replaceAllLiterally(maxIntString, "∞")
+          gamePositionToString(baseGame, bgn) + "\\n" + e.toString().replaceAllLiterally(maxIntString, "∞")
         case game.MaterializedDefenderPosition(bgn, e) =>
-          GamePositionToString(baseGame, bgn) + "\\n" + e.toString().replaceAllLiterally(maxIntString, "∞")
+          gamePositionToString(baseGame, bgn) + "\\n" + e.toString().replaceAllLiterally(maxIntString, "∞")
       }
 
       def moveToLabel(gn1: GamePosition, gn2: GamePosition) = {

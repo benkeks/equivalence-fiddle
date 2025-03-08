@@ -4,18 +4,17 @@ import io.equiv.eqfiddle.ccs.CCSSamples
 import io.equiv.eqfiddle.ccs.Parser
 import io.equiv.eqfiddle.ccs.Interpreter
 import io.equiv.eqfiddle.ccs.Syntax
+import io.equiv.eqfiddle.hml.HennessyMilnerLogic
 import io.equiv.eqfiddle.util.Interpreting
 import io.equiv.eqfiddle.tool.model.NodeID
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
 import io.equiv.eqfiddle.spectroscopy.StrongSpectroscopy
-import io.equiv.eqfiddle.hml.HennessyMilnerLogic
-
 
 /**
- * Creates the distinguishing formulas that are used in the paper / the classic LTBTS to illustrate the output of the algorithm.
+ * Checks each individual equivalence for each individual eq example of the strong spectrum.
  */
-class LTBTSDistinctions(
+class LTBTSEquivalenceChecks(
   algorithm: (WeakTransitionSystem[NodeID,String,String]) => SpectroscopyInterface[NodeID,String,String,HennessyMilnerLogic.Formula[String]],
   config: SpectroscopyInterface.SpectroscopyConfig
 ) {
@@ -50,26 +49,33 @@ class LTBTSDistinctions(
     val Interpreting.Success(is) = interpreter.result(new WeakTransitionSystem(_, _, Set()))
     val ltbtsSystem = is.asInstanceOf[WeakTransitionSystem[NodeID, String, String]]
 
+    val cfg = config copy (saveGameSize = true)
+
     for ((n1s, n2s) <- examplePairs) {
       val n1 = NodeID(n1s)
       val n2 = NodeID(n2s)
+      val algo = algorithm(ltbtsSystem)
 
-      println("--------------------")
-      esDef.getDeclaration(n1s) map (_.process) foreach (println(_))
-      esDef.getDeclaration(n2s) map (_.process) foreach (println(_))
-
-      val result = {
-        val algo = algorithm(ltbtsSystem)
-        algo.compute(List((n1, n2)), SpectroscopyInterface.SpectroscopyConfig(computeFormulas = true))
+      println(
+      s"""|{
+          |  left:  $n1s,
+          |  right: $n2s,
+          |  comparisons: {""".stripMargin
+      )
+      for (notion <- algo.spectrum.notions) {
+        val checkStartTime = System.nanoTime()
+        val result = algo.checkIndividualPreorder(List((n1, n2)), notion.name, cfg)
+        val checkTime = System.nanoTime() - checkStartTime
+        println(
+        s"""|    ${notion.name}: {
+            |      result:    ${result.items.head.isMaintained},
+            |      time_us:   ${checkTime / 1000},
+            |      game_size: ${algo.gameSize._1 + algo.gameSize._2}
+            |    },""".stripMargin
+        )
       }
-
-      for {
-        res <- result.relationItems
-        if res.left == n1 && res.right == n2
-        (formula, obsClass, notions) <- res.distinctions
-      } {
-        println(formula.toString() + " ∈ " + notions.map(_.name).mkString(" ∩ "))
-      }
+      println("  }")
+      println("},")
     }
   }
 }

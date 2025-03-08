@@ -16,9 +16,6 @@ trait AbstractGameDiscovery {
 trait GameDiscovery extends AbstractGameDiscovery {
   self: SimpleGame =>
   
-  /** which nodes to start the discovery in. */
-  def initialPositions: Iterable[GamePosition]
-
   /** number of successor states of discovered states (warning: mutable!) */
   val successorNum = collection.mutable.Map[GamePosition, Int]() withDefaultValue 0
   
@@ -29,23 +26,25 @@ trait GameDiscovery extends AbstractGameDiscovery {
   def gameSize(): (Int, Int) = (discovered.size, computedPredecessors.values.map(_.size).sum)
 
   // discover relevant game nodes and count outgoing transitions
-  
-  private val todo = new collection.mutable.Queue[GamePosition]()
-  todo ++= initialPositions
-  discovered ++= initialPositions
-  
-  while (todo.nonEmpty) {
-    val currPos = todo.dequeue()
-    val succs = successors(currPos)
-    successorNum(currPos) = succs.size
-    for {
-      gn <- succs
-    } {
-      computedPredecessors(gn) += currPos
-      if (!(discovered contains gn)) {
-        discovered += gn
-        todo += gn
+  def populate(initialPositions: Iterable[GamePosition]) = {
+    val todo = new collection.mutable.Queue[GamePosition]()
+    todo ++= initialPositions
+    discovered ++= initialPositions
+    
+    while (todo.nonEmpty) {
+      val currPos = todo.dequeue()
+      val succs = successors(currPos)
+      successorNum(currPos) = succs.size
+      for {
+        gn <- succs
+      } {
+        computedPredecessors(gn) += currPos
+        if (!(discovered contains gn)) {
+          discovered += gn
+          todo += gn
+        }
       }
     }
   }
+
 }

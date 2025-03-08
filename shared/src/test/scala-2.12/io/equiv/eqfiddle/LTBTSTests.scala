@@ -3,11 +3,19 @@ package io.equiv.eqfiddle
 import io.equiv.eqfiddle.spectroscopy.StrongSpectroscopy
 import io.equiv.eqfiddle.hml.ObservationNotionStrong
 import io.equiv.eqfiddle.hml.HennessyMilnerLogic
+import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
 
 
 class LTBTSTests extends CSSSampleTests[ObservationNotionStrong, HennessyMilnerLogic.Formula[String]] {
 
   override val spectrum = ObservationNotionStrong.LTBTS
+
+  val configs = Seq(
+    "unoptimized" -> SpectroscopyInterface.SpectroscopyConfig(useSymmetryPruning = false, useCleverSpectroscopyGame = false, energyCap = 3),
+    "symmetry-pruned" -> SpectroscopyInterface.SpectroscopyConfig(useSymmetryPruning = true, useCleverSpectroscopyGame = false, energyCap = 3),
+    "clever-spectro" -> SpectroscopyInterface.SpectroscopyConfig(useSymmetryPruning = false, useCleverSpectroscopyGame = true, energyCap = 3),
+    "symmetry-pruned-clever" -> SpectroscopyInterface.SpectroscopyConfig(useSymmetryPruning = true, useCleverSpectroscopyGame = true, energyCap = 3),
+  )
 
   val ltbtsSystem = TestSamples.samples.find(_._1 == "ltbts1").get._2
 
@@ -34,5 +42,7 @@ class LTBTSTests extends CSSSampleTests[ObservationNotionStrong, HennessyMilnerL
     ("R50", "L50", List("ready-trace", "impossible-future"), List("possible-future", "simulation"))
   )
 
-  runTest(ltbtsSystem, sampleNames, new StrongSpectroscopy(_), "(energy-labeled)")
+  for ((cfgName, cfg) <- configs) {
+    runTest(ltbtsSystem, sampleNames, new StrongSpectroscopy(_), s"(energy-labeled, $cfgName)", cfg)
+  }
 }
