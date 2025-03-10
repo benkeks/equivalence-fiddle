@@ -161,7 +161,10 @@ object GraphView {
       srcCenter = if (sources.nonEmpty) (
         (sources.map(_.centerX).sum / sources.size),
         (sources.map(_.centerY).sum / sources.size)
-      ) else (tarCenter._1 - 50, tarCenter._2 - 50)
+      ) else (
+        tarCenter._1 - 50,
+        tarCenter._2 - 50
+      )
       tarCenter = if (targets.nonEmpty) (
         (targets.map(_.centerX).sum / targets.size),
         (targets.map(_.centerY).sum / targets.size)

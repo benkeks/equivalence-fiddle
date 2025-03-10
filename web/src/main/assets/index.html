@@ -81,6 +81,7 @@
     }
 
     .node-label {
+      opacity: .4;
       -moz-user-select: none;
       -khtml-user-select: none;
       -webkit-user-select: none;
@@ -88,7 +89,14 @@
       user-select: none;
       pointer-events: none;
     }
+    .node-label.main {
+      opacity: 1;
+    }
 
+    .link.stepto.tau, .link-label.stepto.tau {
+      opacity: .4;
+    }
+    
     .link.relation {
       stroke: #149;
       stroke-opacity: .6;
