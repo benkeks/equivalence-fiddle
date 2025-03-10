@@ -309,8 +309,8 @@ class StrongSpectroscopy[S, A, L] (
     // whether to consider the baseSuccessor as a relevant node for the attacker
     def preferredNodes(currentBaseNode: GamePosition, currentEnergy: Energy, baseSuccessor: GamePosition): Boolean = {
       (currentBaseNode match {
-        case hmlGame.AttackerObservation(p, qq) if currentEnergy(1) >= Int.MaxValue && qq.size > 1 =>
-          // if we have infinitely many immediate conjunctions, use them to chop down blowup on right-hand side
+        case hmlGame.AttackerObservation(p, qq) if currentEnergy(1) >= Int.MaxValue && currentEnergy(2) >= Int.MaxValue && currentEnergy(3) >= Int.MaxValue && qq.size > 1 =>
+          // if we have infinitely many conjunctions of unbounded positive depth, use them to chop down blowup on right-hand side
           baseSuccessor.isInstanceOf[hmlGame.DefenderConjunction]
         case hmlGame.AttackerObservation(p, qq) if (currentEnergy(1) == 0) && qq.size >= 1 =>
           // dont use conjunction moves the attacker cannot survive
