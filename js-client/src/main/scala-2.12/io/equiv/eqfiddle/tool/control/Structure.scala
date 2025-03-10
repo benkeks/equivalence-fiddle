@@ -110,10 +110,16 @@ class Structure(val main: Control) extends ModelComponent {
   }
 
   def setStructure(is: Structure.TSStructure) = {
-    structure = is
-    broadcast(Structure.StructureChange(structure))
-    setPartition(Coloring.fromPartition(Set(is.nodes)))
-    setRelation(Relation[NodeID]())
+    if (structure != null && structure.sameGraphAs(is)) {
+      // only a layout change!
+      structure = is
+      broadcast(Structure.StructureChange(structure, minorChange = true))
+    } else {
+      structure = is
+      broadcast(Structure.StructureChange(structure))
+      setPartition(Coloring.fromPartition(Set(is.nodes)))
+      setRelation(Relation[NodeID]())
+    }
   }
 }
 
@@ -132,7 +138,7 @@ object Structure {
     def implementStructure(structure: Structure): Boolean
   }
 
-  case class StructureChange(tsStructure: TSStructure) extends ModelComponent.Change
+  case class StructureChange(tsStructure: TSStructure, minorChange: Boolean = false) extends ModelComponent.Change
 
   case class StructureChangeFailed(problem: Interpreting.Problem) extends ModelComponent.Change
 

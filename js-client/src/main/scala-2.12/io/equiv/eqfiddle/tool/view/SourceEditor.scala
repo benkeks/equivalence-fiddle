@@ -345,7 +345,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
       setOperations(ops.values.toList)
     case Structure.StructureReplayChange(replay) =>
       setReplay(replay)
-    case Structure.StructureChange(tsStructure) =>
+    case Structure.StructureChange(tsStructure, _) =>
       setStructure(tsStructure)
     case _ => 
   }

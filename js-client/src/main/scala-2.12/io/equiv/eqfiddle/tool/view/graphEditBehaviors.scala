@@ -70,7 +70,7 @@ class GraphMoveNode(renderer: GraphEditing) extends GraphEditBehavior {
       n.fixed = 1
       (n.nameId.name, Structure.NodeLabel(node.meta.act, n.px.toOption, n.py.toOption))
     }
-    renderer.triggerAction(Source.UpdateEventDeclarationAttributes(updates))
+    renderer.triggerAction(Source.UpdateNodeDeclarationAttributes(updates))
   }
 }
 
@@ -136,7 +136,7 @@ class GraphEditNode(renderer: GraphEditing) extends GraphEditBehavior {
     if (newNode.isDefined) {
       activeNode.foreach { n =>
 //        if (inputElem.value != "newEvent") {
-//          renderer.triggerAction(Source.UpdateEventDeclarationAttributes(
+//          renderer.triggerAction(Source.UpdateNodeDeclarationAttributes(
 //              List((inputElem.value, Structure.EventAnnotation(n.px.toOption, n.py.toOption)))))
 //        }
       }

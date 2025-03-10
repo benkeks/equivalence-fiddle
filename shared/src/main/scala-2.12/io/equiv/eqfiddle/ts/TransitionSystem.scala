@@ -49,4 +49,6 @@ case class TransitionSystem[S, A, L](
   val actions = step.labels
     
   def isFreshNode(s: S) = !nodes.contains(s)
+
+  def sameGraphAs(ts: TransitionSystem[S, A, L]) = step == ts.step && nodes == ts.nodes
 }

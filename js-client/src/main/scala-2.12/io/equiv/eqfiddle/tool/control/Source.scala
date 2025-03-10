@@ -48,7 +48,7 @@ class Source(val main: Control) extends ModelComponent {
     broadcast(Source.ProblemChange(source, problems))
   }
   
-  def updateEventDeclarationAttributes(updates: List[(String, NodeLabel)]): Boolean = {
+  def updateNodeDeclarationAttributes(updates: List[(String, NodeLabel)]): Boolean = {
     val names = updates.map(_._1)
     val affectedAst = ast
     val oldDecls = affectedAst.defs collect { case n: Syntax.NodeDeclaration => n }
@@ -127,9 +127,9 @@ object Source {
     }
   }
   
-  case class UpdateEventDeclarationAttributes(updates: List[(String, NodeLabel)]) extends SourceAction {
+  case class UpdateNodeDeclarationAttributes(updates: List[(String, NodeLabel)]) extends SourceAction {
     override def implementSource(source: Source) = {
-      source.updateEventDeclarationAttributes(updates)
+      source.updateNodeDeclarationAttributes(updates)
     }
   }
   

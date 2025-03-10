@@ -230,11 +230,13 @@ class GraphRenderer(val main: Control)
   }
   
   def notify(change: ModelComponent.Change) = change match {
-    case Structure.StructureChange(structure) =>
-      setComment("")
+    case Structure.StructureChange(structure, minor) =>
       this.structure = Some(structure)
-      relation = LabeledRelation()
-      baseRelation = Set()
+      if (!minor) {
+        setComment("")
+        relation = LabeledRelation()
+        baseRelation = Set()
+      }
       setStructure()
     case Structure.StructurePartitionChange(partition) =>
       colorize(partition)
