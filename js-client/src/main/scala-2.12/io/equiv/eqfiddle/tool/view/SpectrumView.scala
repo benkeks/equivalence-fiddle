@@ -18,7 +18,7 @@ class SpectrumView[+OC <: ObservationNotion](
     distCoordsRL: List[(OC, String)],
     parentId: String) {
   val width = 550
-  val height = 400
+  val height = 405
 
   val axes = if (spectrum.notions.head.obsClass.toTuple.productArity > 6)
     List(
