@@ -15,7 +15,8 @@ class Interpreter[S, A, L](
     arrowLabeling: Option[Syntax.Label] => Interpreting.Result[A],
     nodeLabeling: Option[Syntax.NodeDeclaration] => Interpreting.Result[L],
     toInput: A => A,
-    isOutput: A => Boolean
+    isOutput: A => Boolean,
+    maxStates: Int = 5000
   ) {
   
   val silentActions = Set(arrowLabeling(Some(Syntax.Label("tau"))).get)
@@ -26,17 +27,31 @@ class Interpreter[S, A, L](
 
   val transitions = collection.mutable.Map[S, List[(A, S)]]()
   private val todo = collection.mutable.Buffer[Syntax.ProcessExpression]()
+  var stateCounter = 0
 
   def result[R](factory: (LabeledRelation[S, A], Map[S, L]) => R = defaultFactory): Result[R] = {
-
+   
     val procEnv = ccsDef.defs collect {
       case d@Syntax.ProcessDeclaration(name, proc, _) =>
         scheduleConversion(Syntax.ProcessName(Syntax.Label(name)))
         (name, proc)
     } toMap;
 
-    val intialProcs = todo.toList
+    // Check for unguarded recursion (up to level 4)
+    val unguarded = procEnv.mapValues(_.unguardedNames).withDefaultValue(Set[String]())
+    val unguarded4 = unguarded.mapValues(_.flatMap(unguarded(_))).mapValues(_.flatMap(unguarded(_))).mapValues(_.flatMap(unguarded(_)))
+    val unguardedRecursion = for {
+      (name, unguardedNames) <- unguarded4
+      if unguardedNames contains name
+    } yield {
+      procEnv(name)
+    }
+    if (unguardedRecursion.nonEmpty) {
+      return Problem("Unguarded recursion not allowed.", unguardedRecursion.toList)
+    }
 
+    // translate all processes
+    val intialProcs = todo.toList
     while (todo.nonEmpty) {
       val proc0 = todo.remove(0)
       val state0 = stateIds(proc0.toString)
@@ -46,6 +61,9 @@ class Interpreter[S, A, L](
         } yield {
           (a, scheduleConversion(proc1))
         }
+      }
+      if (stateCounter > maxStates) {
+        return Problem(s"Too many states. Stopped translation at $stateCounter. (Check that you don't have accidental dynamic growth in parallel compositions!)", intialProcs)
       }
     }
 
@@ -88,6 +106,13 @@ class Interpreter[S, A, L](
     val stateId = stateIds(e.toString)
     if (!transitions.isDefinedAt(stateId)) {
       todo += e
+      stateCounter += 1
+      if (stateCounter % 100 == 0) {
+        AlgorithmLogging.debugLog(s"State count: $stateCounter", logLevel = 8)
+      }
+      if (todo.size >= 400 && todo.size % 100 == 0) {
+        AlgorithmLogging.debugLog(s"Todo length: ${todo.size}", logLevel = 5)
+      }
     }
     stateId
   }
@@ -161,7 +186,7 @@ class Interpreter[S, A, L](
         l.name,
         Syntax.Prefix(l, Syntax.NullProcess(pos), pos)
       )
-      if (continuation == e) {
+      if (continuation.unguardedNames().contains(l.name)) {
         // direct loop
         AlgorithmLogging.debugLog(s"Unguarded recursion at ${e.position.line}", logLevel = 4)
         List()

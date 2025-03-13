@@ -43,6 +43,16 @@ object Syntax {
         case Definition(defs) => Definition(defs.map(_.prunePos))
       }).asInstanceOf[this.type]
     }
+
+    def unguardedNames(): Set[String] = this match {
+      case Prefix(l, proc, _) => Set()
+      case Choice(procs, _) => procs.flatMap(_.unguardedNames()).toSet
+      case Parallel(procs, _) => procs.flatMap(_.unguardedNames()).toSet
+      case Restrict(names, proc, _) => proc.unguardedNames()
+      case Renaming(renamings, proc, _) => proc.unguardedNames()
+      case ProcessName(l, _) => Set(l.name)
+      case _ => Set()
+    }
     
   }
     
