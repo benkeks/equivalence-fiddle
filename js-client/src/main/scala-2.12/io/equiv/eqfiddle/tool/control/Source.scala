@@ -7,7 +7,7 @@ import io.equiv.eqfiddle.tool.arch.Control
 import io.equiv.eqfiddle.ccs.Syntax
 import io.equiv.eqfiddle.ccs
 import io.equiv.eqfiddle.ccs.CCSSamples
-import io.equiv.eqfiddle.ts.Example
+import io.equiv.eqfiddle.hml.Example
 import io.equiv.eqfiddle.tool.control.Structure.NodeLabel
 import io.equiv.eqfiddle.util.Parsing
 import io.equiv.eqfiddle.algo.AlgorithmLogging

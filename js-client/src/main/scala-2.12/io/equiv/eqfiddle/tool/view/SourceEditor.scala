@@ -27,7 +27,7 @@ import org.singlespaced.d3js.Ops.fromFunction2To3
 import org.singlespaced.d3js.d3
 import io.equiv.eqfiddle.tool.arch.Control
 import io.equiv.eqfiddle.tool.control.ModelComponent
-import io.equiv.eqfiddle.ts.Example
+import io.equiv.eqfiddle.hml.Example
 import io.equiv.eqfiddle.tool.control.Source
 import io.equiv.eqfiddle.tool.control.Structure
 import io.equiv.eqfiddle.tool.control.StructureOperation

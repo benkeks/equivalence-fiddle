@@ -2,7 +2,7 @@ package io.equiv.eqfiddle
 
 import io.equiv.eqfiddle.ccs.CCSSamples
 import io.equiv.eqfiddle.ccs.Syntax
-import io.equiv.eqfiddle.ts.Example
+import io.equiv.eqfiddle.hml.Example
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 import io.equiv.eqfiddle.tool.model.NodeID
 import io.equiv.eqfiddle.ccs.Interpreter
