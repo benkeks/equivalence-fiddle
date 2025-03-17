@@ -95,7 +95,7 @@ class WeakSpectroscopyGameBranching[S, A, L](ts: WeakTransitionSystem[S, A, L], 
       } else {
         ts.post(q0, a)
       }
-      List(AttackerBranchingObservation(p1, qq1), AttackerClause(p0, q0))
+      List(AttackerBranchingObservation(p1, qq1), AttackerConjunct(p0, q0))
     case AttackerBranchingObservation(p0, qq0) =>
       List(DefenderConjunction(p0, qq0), AttackerObservation(p0, qq0))
     case _ =>

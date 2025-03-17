@@ -97,10 +97,10 @@ class WeakSpectroscopy[S, A, L] (
           if game.isAttackerWinningEnergy(s, newBudget)
           f <- buildHMLWitness(game, s, newBudget)
         } yield if (s.isInstanceOf[game.AttackerDelayedObservation]) HennessyMilnerLogic.Pass(f) else f
-      case _ : game.AttackerClause | _ : game.AttackerClauseStable =>
+      case _ : game.AttackerConjunct | _ : game.AttackerConjunctStable =>
         val (p0, q0) = node match {
-          case game.AttackerClause(p0, q0) => (p0, q0)
-          case game.AttackerClauseStable(p0, q0) => (p0, q0)
+          case game.AttackerConjunct(p0, q0) => (p0, q0)
+          case game.AttackerConjunctStable(p0, q0) => (p0, q0)
         }
         val successorFormulas = for {
           s <- game.successors(node)
@@ -505,9 +505,9 @@ class WeakSpectroscopy[S, A, L] (
       case game.AttackerBranchingObservation(p, qq: Set[_]) =>
         val qqString = qq.mkString("{",",","}")
         s"$p, b$qqString"
-      case game.AttackerClause(p, q) =>
+      case game.AttackerConjunct(p, q) =>
         s"$p, $q"
-      case game.AttackerClauseStable(p, q) =>
+      case game.AttackerConjunctStable(p, q) =>
         s"$p, s$q"
       case game.DefenderConjunction(p, qq: Set[_]) =>
         val qqString = qq.mkString("{",",","}")
@@ -543,8 +543,8 @@ class WeakSpectroscopy[S, A, L] (
         case game.AttackerObservation(_, _) => "attackerObservation"
         case game.AttackerDelayedObservation(_, _) => "attackerDelayedObservation"
         case game.AttackerBranchingObservation(_, _) => "attackerBranchingObservation"
-        case game.AttackerClause(_, _) => "attackerConjunct"
-        case game.AttackerClauseStable(_, _) => "attackerConjunctStable"
+        case game.AttackerConjunct(_, _) => "attackerConjunct"
+        case game.AttackerConjunctStable(_, _) => "attackerConjunctStable"
         case game.DefenderConjunction(_, _) => "defenderConjunction"
         case game.DefenderStableConjunction(_, _, _) => "defenderStableConjunction"
         case game.DefenderBranchingConjunction(_, _, _, _, _) => "defenderBranchingConjunction"
@@ -596,8 +596,8 @@ class WeakSpectroscopy[S, A, L] (
         case baseGame.AttackerObservation(_, _) => "attackerObservation"
         case baseGame.AttackerDelayedObservation(_, _) => "attackerDelayedObservation"
         case baseGame.AttackerBranchingObservation(_, _) => "attackerBranchingObservation"
-        case baseGame.AttackerClause(_, _) => "attackerConjunct"
-        case baseGame.AttackerClauseStable(_, _) => "attackerConjunctStable"
+        case baseGame.AttackerConjunct(_, _) => "attackerConjunct"
+        case baseGame.AttackerConjunctStable(_, _) => "attackerConjunctStable"
         case baseGame.DefenderConjunction(_, _) => "defenderConjunction"
         case baseGame.DefenderStableConjunction(_, _, _) => "defenderStableConjunction"
         case baseGame.DefenderBranchingConjunction(_, _, _, _, _) => "defenderBranchingConjunction"

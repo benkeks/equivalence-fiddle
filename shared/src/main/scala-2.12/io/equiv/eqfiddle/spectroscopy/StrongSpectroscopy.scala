@@ -59,7 +59,7 @@ class StrongSpectroscopy[S, A, L] (
             case _ => Set()
           }
         successorFormulas.flatten.toSet
-      case game.AttackerClause(p0, q0) =>
+      case game.AttackerConjunct(p0, q0) =>
         val successorFormulas = for {
           s <- game.successors(node)
           update = game.weight(node, s)
@@ -246,7 +246,7 @@ class StrongSpectroscopy[S, A, L] (
       case game.AttackerObservation(p, qq: Set[_]) =>
         val qqString = qq.mkString("{",",","}")
         s"$p, $qqString"
-      case game.AttackerClause(p, q) =>
+      case game.AttackerConjunct(p, q) =>
         s"$p, $q"
       case game.DefenderConjunction(p, qqS: Set[_], qqR: Set[_]) =>
         val qqSString = qqS.mkString("{",",","}")
