@@ -11,19 +11,23 @@ class PrettyPrinter {
       k + "=" + v
     }
   }
+
+  def renderStringAtom(str: String): String = {
+    if (str.forall(Parser.idChars(_)) && str.length() > 0 && !str.charAt(0).isDigit && str.charAt(0) != '-')
+      str
+    else
+      "\"" + str + "\""
+  }
   
   def show(e: Expression): String = e match {
     case MetaDeclaration(k, v, p0) =>
       val args = for {
         a <- v
-        str = if (a.forall(_.isLetterOrDigit) && a.length() > 0 && !a.charAt(0).isDigit)
-            a
-          else
-            "\"" + a + "\""
+        str = renderStringAtom(a)
       } yield str 
       "@" + k + " " + args.mkString(", ")
     case NodeDeclaration(n, aa, p0) =>
-      val name = (if (n.forall(_.isLetterOrDigit) && !n.charAt(0).isDigit) n else "\"" + n + "\"")
+      val name = renderStringAtom(n)
       if (aa.isEmpty) {
         name
       } else {

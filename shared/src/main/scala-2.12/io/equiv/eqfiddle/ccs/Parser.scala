@@ -3,11 +3,15 @@ package io.equiv.eqfiddle.ccs
 import io.equiv.eqfiddle.util.Parsing
 import io.equiv.eqfiddle.ccs.Syntax._
 
+object Parser {
+  /** characters that may appear in identifiers */
+  val idChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789τ-".toSet
+}
+
 class Parser(val input: String) extends Parsing {
   
-  val idChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789τ".toSet
-  
   import Parsing._
+  import Parser._
   
   abstract sealed class Token(val position: Pos)
   case class Identifier(name: String, pos: Pos) extends Token(pos)
