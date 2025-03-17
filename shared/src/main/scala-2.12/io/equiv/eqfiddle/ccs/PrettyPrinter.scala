@@ -35,6 +35,8 @@ class PrettyPrinter {
       }
     case ProcessDeclaration(name, proc, p0) =>
       name + " = " + show(proc)
+    case Prefix(l, Choice(Nil, pos), p0) if l.isOutput =>
+      show(l.toInput) + "!"
     case Prefix(l, proc, p0) if l.isOutput =>
       show(l.toInput) + "!" + show(proc)
     case Prefix(l, proc, p0) =>

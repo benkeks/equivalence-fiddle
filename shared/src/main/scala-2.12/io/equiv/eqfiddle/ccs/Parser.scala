@@ -157,6 +157,8 @@ class Parser(val input: String) extends Parsing {
           case Bang(_) :: in3 =>
             processPrefixes(in3) flatMap { (e2, rt) =>
               ParseSuccess(Prefix(name.toOutput, e2, name.pos), rt)
+            } orElse { _ =>
+              ParseSuccess(Prefix(name.toOutput, NullProcess(name.pos), name.pos), in3)
             }
           case other =>
             ParseSuccess(ProcessName(name, name.pos), other)
