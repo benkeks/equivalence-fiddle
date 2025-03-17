@@ -265,7 +265,7 @@ class StrongSpectroscopy[S, A, L] (
     val visualizer = new GameGraphVisualizer(game) {
 
       def positionToID(gn: GamePosition): String =
-        gn.hashCode().toString().replace("-", "n")
+        gn.hashCode().toString().replace('-', 'n')
 
       def positionToString(gn: GamePosition): String = {
         val budgetString = attackerWinningBudgets.getOrElse(gn,Set()).map(_.vector.mkString("(",",",")")).mkString(" / ")

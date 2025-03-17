@@ -507,9 +507,11 @@ class WeakSpectroscopy[S, A, L] (
         s"$p, b$qqString"
       case game.AttackerClause(p, q) =>
         s"$p, $q"
+      case game.AttackerClauseStable(p, q) =>
+        s"$p, s$q"
       case game.DefenderConjunction(p, qq: Set[_]) =>
         val qqString = qq.mkString("{",",","}")
-        s"$p, $qqString"
+        s"$p, d$qqString"
       case game.DefenderStableConjunction(p, qq: Set[_], qqRevivals) =>
         val qqString = qq.mkString("{",",","}")
         val qqRevivalsString = qq.mkString("{",",","}")
@@ -525,7 +527,7 @@ class WeakSpectroscopy[S, A, L] (
             case _ => ""
           }
         } else {
-          ""
+          "ERROR"
       }
     }
     str.replaceAllLiterally(".0", "").replaceAllLiterally("\\", "\\\\")
@@ -537,8 +539,20 @@ class WeakSpectroscopy[S, A, L] (
       formulas: Map[GamePosition, Set[HennessyMilnerLogic.Formula[A]]]
   ) = {
     val visualizer = new GameGraphVisualizer(game) {
+      def positionToType(gn: GamePosition): String = gn match {
+        case game.AttackerObservation(_, _) => "attackerObservation"
+        case game.AttackerDelayedObservation(_, _) => "attackerDelayedObservation"
+        case game.AttackerBranchingObservation(_, _) => "attackerBranchingObservation"
+        case game.AttackerClause(_, _) => "attackerConjunct"
+        case game.AttackerClauseStable(_, _) => "attackerConjunctStable"
+        case game.DefenderConjunction(_, _) => "defenderConjunction"
+        case game.DefenderStableConjunction(_, _, _) => "defenderStableConjunction"
+        case game.DefenderBranchingConjunction(_, _, _, _, _) => "defenderBranchingConjunction"
+        case _ => "unknown"
+      }
 
-      def positionToID(gn: GamePosition): String = gn.hashCode().toString()
+      def positionToID(gn: GamePosition): String =
+        positionToType(gn) + gn.hashCode().toString().replace('-', 'n')
 
       def positionToString(gn: GamePosition): String = {
         val budgetString = attackerWinningBudgets.getOrElse(gn,Set()).map(_.vector.mkString("(",",",")")).mkString(" / ")
@@ -571,13 +585,30 @@ class WeakSpectroscopy[S, A, L] (
     val maxIntString = Int.MaxValue.toString()
     val visualizer = new GameGraphVisualizer(game) {
 
-      def positionToID(gn: GamePosition): String = gn.hashCode().toString()
-
-      def positionToString(gn: GamePosition): String = gn match {
+      def toEnergy(gn: GamePosition) = gn match {
         case game.MaterializedAttackerPosition(bgn, e) =>
-          gamePositionToString(baseGame, bgn) + "\\n" + e.toString().replaceAllLiterally(maxIntString, "∞")
+          e
         case game.MaterializedDefenderPosition(bgn, e) =>
-          gamePositionToString(baseGame, bgn) + "\\n" + e.toString().replaceAllLiterally(maxIntString, "∞")
+          e
+      }
+
+      def positionToType(gn: GamePosition): String = materializedToBaseGamePosition(game, gn) match {
+        case baseGame.AttackerObservation(_, _) => "attackerObservation"
+        case baseGame.AttackerDelayedObservation(_, _) => "attackerDelayedObservation"
+        case baseGame.AttackerBranchingObservation(_, _) => "attackerBranchingObservation"
+        case baseGame.AttackerClause(_, _) => "attackerConjunct"
+        case baseGame.AttackerClauseStable(_, _) => "attackerConjunctStable"
+        case baseGame.DefenderConjunction(_, _) => "defenderConjunction"
+        case baseGame.DefenderStableConjunction(_, _, _) => "defenderStableConjunction"
+        case baseGame.DefenderBranchingConjunction(_, _, _, _, _) => "defenderBranchingConjunction"
+        case _ => "unknown"
+      }
+
+      def positionToID(gn: GamePosition): String =
+        positionToType(gn) + gn.hashCode().toString().replace('-', 'n')
+
+      def positionToString(gn: GamePosition): String = {
+        gamePositionToString(baseGame, materializedToBaseGamePosition(game, gn)) + "\\n" + toEnergy(gn).toString().replaceAllLiterally(maxIntString, "∞")
       }
 
       def moveToLabel(gn1: GamePosition, gn2: GamePosition) = {
