@@ -80,7 +80,7 @@ object ObservationNotionStrong {
   val BaseLTBTS = List(
     "universal" ->          ObservationNotionStrong(    0,     0,    0,    0,    0,    0),
     "enabledness" ->        ObservationNotionStrong(    1,     0,    0,    0,    0,    0),
-    "traces" ->             ObservationNotionStrong(INFTY,     0,    0,    0,    0,    0),
+    "trace" ->              ObservationNotionStrong(INFTY,     0,    0,    0,    0,    0),
     "failure" ->            ObservationNotionStrong(INFTY,     1,    0,    0,    1,    1),
     "revivals" ->           ObservationNotionStrong(INFTY,     1,    1,    0,    1,    1),
     "readiness" ->          ObservationNotionStrong(INFTY,     1,    1,    1,    1,    1),
