@@ -62,7 +62,7 @@ object EquivalenceSpectroscopeAPI {
     } yield (s, proc)).toMap
 
     val silentAction: String =
-      if (js.isUndefined(lts.silent)) "tau" else lts.silent.asInstanceOf[String]
+      if (js.isUndefined(lts.silent)) "τ" else lts.silent.asInstanceOf[String]
 
     new WeakTS(step, nodeLabeling, Set(silentAction))
   }

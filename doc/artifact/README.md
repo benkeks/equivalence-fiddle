@@ -65,12 +65,12 @@ Div = tau.Div
 S1 = tau.S1 + enA.Div
 S = tau.S + tau.Div + enA.Div
 
-@compare "S, S1" 
+@compare S, S1
 ```
 
 This should lead to the output:
 
-> @compare "S, S1" 
+> @compare S, S1
 >- 0: Preordered by:
 >     simulation
 >- 1: Distinguished by:

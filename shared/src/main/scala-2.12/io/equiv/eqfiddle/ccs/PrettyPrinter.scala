@@ -52,7 +52,7 @@ class PrettyPrinter {
     case Restrict(names, proc, pos) =>
       show(proc) + " \\ " + names.map(show(_)).mkString("{", ", ", "}")
     case Renaming(renamings, proc, pos) =>
-      val renamingString = if (renamings.forall(_._2.name == "tau")) {
+      val renamingString = if (renamings.forall(_._2.name == "τ")) {
         renamings.map(_._1).mkString(" \\csp {",",","}")
       } else {
         renamings.map { case (from, to) => s"$from -> $to" }.mkString("[", ",", "]")

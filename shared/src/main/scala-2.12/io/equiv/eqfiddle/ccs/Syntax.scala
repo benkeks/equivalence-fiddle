@@ -121,7 +121,7 @@ object Syntax {
 
     override def toString() = {
       val ps = proc.toString()
-      val renamingString = if (renamings.forall(_._2.name == "tau")) {
+      val renamingString = if (renamings.forall(_._2.name == "τ")) {
         renamings.map(_._1).mkString(" \\csp {",",","}")
       } else {
         renamings.map { case (from, to) => s"$from -> $to" }.mkString("[", ",", "]")

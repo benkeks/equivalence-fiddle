@@ -215,11 +215,11 @@ object Structure {
 
   val emptyLabel = NodeLabel(Set())
 
-  val silentLabel = NodeLabel(Set('tau))
+  val silentLabel = NodeLabel(Set('τ))
 
   val emptyActionLabel = new ActionLabel("")
 
-  val silentActionLabel = ActionLabel('tau)
+  val silentActionLabel = ActionLabel('τ)
 
   def nodeAnnotator(nodeDecl: Option[Syntax.NodeDeclaration]): Interpreting.Result[NodeLabel] = nodeDecl match {
     case Some(nD @ Syntax.NodeDeclaration(name, attribs, pos)) =>
@@ -242,7 +242,7 @@ object Structure {
     case Some(aL @ Syntax.Label(name, pos)) =>
       try {
         val l = ActionLabel(
-          act = Symbol(if (name == "τ") "tau" else name)
+          act = Symbol(if (name == "tau") "τ" else name)
         )
         Interpreting.Success(l)
       } catch {
@@ -265,7 +265,7 @@ object Structure {
       oldTs: Option[Structure.TSStructure] = None)
     : WeakTransitionSystem[NodeID,ActionLabel,NodeLabel] = {
 
-    val silentActions = rel.labels filter (_.act == 'tau)
+    val silentActions = rel.labels filter (_.act == 'τ)
     val mainNodes = (labels.collect { case (id, label) if label.act.contains('main) => id }).toSet
     val ts = new WeakTransitionSystem(rel, labels, silentActions.toSet)
 

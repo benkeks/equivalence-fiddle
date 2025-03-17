@@ -19,7 +19,7 @@ class Interpreter[S, A, L](
     maxStates: Int = 5000
   ) {
   
-  val silentActions = Set(arrowLabeling(Some(Syntax.Label("tau"))).get)
+  val silentActions = Set(arrowLabeling(Some(Syntax.Label("τ"))).get)
 
   val silentAction = silentActions.head
   
