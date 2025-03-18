@@ -336,7 +336,9 @@ object Structure {
         AlgorithmLogging.debugLog("Spectroscopy took: " + (Date.now - begin) + "ms.", logLevel = 7)
 
         val gameString = result.meta.get("game") match {
-          case Some(game) if game != "" => s""" <a href="$game" target="_blank">View game.</a>"""
+          case Some(game) if game != "" =>
+            val (positionNum, moveNum) = algo.gameSize
+            s"""<a href="$game" target="_blank">View game (with $positionNum positions).</a>"""
           case _ => ""
         }
 
@@ -412,7 +414,9 @@ object Structure {
                 "States are <strong>not</strong> preordered (nor equivalent)"
             } + {
               result.meta.get("game") match {
-                case Some(game) if game != "" => s"""<p><a href="$game" target="_blank">View game.</a></p>"""
+                case Some(game) if game != "" =>
+                  val (positionNum, moveNum) = algo.gameSize
+                  s"""<p><a href="$game" target="_blank">View game (with $positionNum positions).</a></p>"""
                 case _ => ""
               }
             }
