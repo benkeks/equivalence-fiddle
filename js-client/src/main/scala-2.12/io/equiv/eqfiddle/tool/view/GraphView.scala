@@ -271,7 +271,7 @@ object GraphView {
 
   class LinkViewPart(val link: NodeLink, val node: Linkable, val isEnd: Boolean = true) {
 
-    private val endShortening = if (node.isInstanceOf[GraphNode]) 5.0 else 0
+    private val endShortening = if (node.isInstanceOf[GraphNode]) 10.0 else 0
 
     def toSVGPathString = {
       if (link.tarCenter._1.isNaN()) throw new Exception("NaN tar!")
@@ -282,7 +282,7 @@ object GraphView {
           "M"   + (node.centerX + 9) + " " + (node.centerY) +
             "A 30 30, 0, 1, 1, " + (link.centerX) + " " + (link.centerY + 9)
         } else if (link.hasDanglingEnd) {
-          "M "   + link.centerX       +","+ link.centerY + 
+          "M "   + link.centerX +","+ link.centerY + 
               " Q " + (link.centerX + .2 * link.length * link.dir._1) +","+ (link.centerY + .2 * link.length * link.dir._2)+
               " " + (.5 * (link.centerX + link.tarCenter._1)) +","+ (.5 * (link.centerY + link.tarCenter._2))
         } else {
@@ -299,7 +299,7 @@ object GraphView {
           "M " + link.centerX       +","+ link.centerY +
               " C" + (link.centerX - .3 * link.length * link.dir._1) +","+ (link.centerY - .3 * link.length * link.dir._2)+
               " " + (.5 * (link.centerX + link.srcCenter._1)) +","+ (.5 * (link.centerY + link.srcCenter._2)) +
-              " " + node.centerX             +","+ node.centerY
+              " " + (node.centerX + endShortening * link.dir._1)  +","+ (node.centerY + endShortening * link.dir._2)
         }
       }
     }

@@ -20,20 +20,26 @@
       r: 7;
       fill: #777;
     }
+    .node:hover {
+      r: 7;
+      fill: #898;
+    }
 
     .node.selected {
-      r: 7;
+      r: 8;
       stroke: #343;
       stroke-opacity: 1.0;
       stroke-width: 3px;
     }
 
-    .node.true {
-      fill: #393;
+    .node.main {
+      fill: rgb(121, 225, 233);
+      r: 8;
     }
 
-    .node.red, .node.main {
-      fill: red;
+    .node.main:hover {
+      fill: rgb(141, 250, 255);
+      r: 8;
     }
 
     .node.green {
