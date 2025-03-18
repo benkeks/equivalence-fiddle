@@ -131,7 +131,7 @@ class Parser(val input: String) extends Parsing {
     case Identifier(n, p) :: rest =>
       ParseSuccess(Label(n, p), rest)
     case LiteralString(s, p) :: rest =>
-      ParseSuccess(Label(s, p), rest) 
+      ParseSuccess(Label(s, p), rest)
     case other =>
       ParseFail("Expected process or action identifier.", other)
   }

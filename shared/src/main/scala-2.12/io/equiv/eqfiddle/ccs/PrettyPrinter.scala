@@ -74,7 +74,9 @@ class PrettyPrinter {
     } toList
     
     d.defs.map { e =>
-      " " * e.position.col + show(e)
+      val exprStr = show(e)
+      " " * e.position.col + exprStr + (if (exprStr.endsWith("!")) "0" else "")
+      // the trailing 0 ensures that a following process declaration is not accidentally merged with the last prefix
     } zip lineOffsets map { case (l, o) =>
       "\n"*o + l
     } mkString
