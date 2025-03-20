@@ -15,7 +15,8 @@ import io.equiv.eqfiddle.util.LabeledRelation
 class BuildQuotientSystem[S, A, L] (
     ts: WeakTransitionSystem[S, A, L],
     coloring: Coloring[S],
-    protectedNodes: Set[S] = Set[S]()
+    protectedNodes: Set[S] = Set[S](),
+    tauCyclesOn: Option[Set[S]] = None
   ) {
   
   def build() = {
@@ -29,13 +30,20 @@ class BuildQuotientSystem[S, A, L] (
       srcRep = reps(color)
       tarRep = reps(coloring(tar))
     } yield (srcRep, a, tarRep)
+
+    val tauCycledTransitions = tauCyclesOn match {
+      case Some(tauCycles) if ts.silentActions.nonEmpty =>
+        tauCycles.map(s => (s, ts.silentActions.head, s)) ++
+          (transitions.filter {case (s1, a, s2) => !ts.silentActions(a) || s1 != s2})
+      case _ => transitions
+    }
     
     val nodeLabeling = for {
       rep <- reps.values
     } yield (rep, ts.nodeLabeling(rep))
     
     new WeakTransitionSystem(
-        new LabeledRelation(transitions.toSet),
+        new LabeledRelation(tauCycledTransitions.toSet),
         nodeLabeling.toMap,
         ts.silentActions)
   }

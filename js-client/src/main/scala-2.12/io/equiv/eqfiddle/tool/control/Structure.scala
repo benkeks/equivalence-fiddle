@@ -15,7 +15,6 @@ import io.equiv.eqfiddle.util.Coloring
 import io.equiv.eqfiddle.util.Interpreting
 import io.equiv.eqfiddle.util.Relation
 import io.equiv.eqfiddle.util.LabeledRelation
-import io.equiv.eqfiddle.ts.DivergenceInformation
 import io.equiv.eqfiddle.algo.AlgorithmLogging
 import io.equiv.eqfiddle.spectroscopy.{StrongSpectroscopy, WeakSpectroscopy}
 import io.equiv.eqfiddle.hml.ObservationNotionStrong
@@ -27,6 +26,7 @@ import io.equiv.eqfiddle.algo.sigref.Bisimilarity
 import io.equiv.eqfiddle.algo.sigref.BranchingBisimilarity
 import io.equiv.eqfiddle.algo.transform.BuildQuotientSystem
 import io.equiv.eqfiddle.hml.ObservationNotion
+import io.equiv.eqfiddle.algo.transform.DivergenceFinder
 
 class Structure(val main: Control) extends ModelComponent {
 
@@ -288,12 +288,13 @@ object Structure {
     val branchingBisimMinimizedIds =
       labels.collect { case (id, label) if label.act.contains('srbb_minimized) => id }
     val minimizedTs2 = if (branchingBisimMinimizedIds.nonEmpty) {
+      val divergenceInfo = new DivergenceFinder(minimizedTs).compute()
       val bisimColoring = new BranchingBisimilarity(
         minimizedTs,
         Some(rel.getReachablePart(branchingBisimMinimizedIds) -- mainNodes),
         stabilityRespecting = true
       ).computePartition()
-      new BuildQuotientSystem(minimizedTs, bisimColoring, mainNodes).build()
+      new BuildQuotientSystem(minimizedTs, bisimColoring, protectedNodes = mainNodes, tauCyclesOn = Some(divergenceInfo)).build()
     } else {
       minimizedTs
     }
