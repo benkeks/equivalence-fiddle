@@ -126,6 +126,8 @@ object ObservationNotionWeak {
     "2-nested-weak-simulation"->      ObservationNotionWeak(INFTY,     0, INFTY,     0,     0, INFTY,    0,INFTY,    1),
     "contrasimulation" ->             ObservationNotionWeak(INFTY,     0, INFTY,     0,     0,     0,    0,INFTY,INFTY),
     "stable-bisimulation" ->          ObservationNotionWeak(INFTY,     0,     0, INFTY,     0, INFTY,INFTY,INFTY,INFTY),
+    // sr-contrasimulation can only be added if we distinguish stable and instable positive conjuncts; otherwise we cannot position it such that it correctly dominates both contrasim and stable bisim without becoming too distinctive.
+    //"sr-contrasimulation" ->          ObservationNotionWeak(INFTY,     0, INFTY, INFTY,     0,     0,    0,INFTY,INFTY),
     "weak-bisimulation" ->            ObservationNotionWeak(INFTY,     0, INFTY,     0,     0, INFTY,    0,INFTY,INFTY),
     //"sr-weak-bisimulation" ->    ObservationNotionWeak(INFTY,     0, INFTY, INFTY,     0, INFTY,INFTY,INFTY,INFTY),
     "delay-bisimulation" ->           ObservationNotionWeak(INFTY,     0, INFTY,     0, INFTY, INFTY,    0,INFTY,INFTY),
