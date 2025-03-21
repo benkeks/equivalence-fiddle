@@ -11,14 +11,7 @@ import scala.scalajs.js.|.from
 import org.scalajs.dom
 import org.scalajs.dom.raw.EventTarget
 import org.scalajs.dom.raw.HTMLInputElement
-import org.singlespaced.d3js.Ops.asPrimitive
-import org.singlespaced.d3js.Ops.fromFunction1To2
-import org.singlespaced.d3js.Ops.fromFunction1To3
-import org.singlespaced.d3js.Ops.fromFunction2To3
-import org.singlespaced.d3js.Ops.fromFunction2To3DoublePrimitive
-import org.singlespaced.d3js.Ops.fromFunction2To3StringPrimitive
-import org.singlespaced.d3js.Selection
-import org.singlespaced.d3js.d3
+import d3v4._
 import io.equiv.eqfiddle.tool.arch.Control
 import io.equiv.eqfiddle.tool.control.ModelComponent
 import io.equiv.eqfiddle.tool.control.Structure
@@ -47,12 +40,10 @@ class GraphRenderer(val main: Control)
   
   setEditingBehavior("es-graph-move")
   
-  val force = d3.layout.force[GraphNode, NodeLink] ()
-      .charge(-100.0)
-      .chargeDistance(150.0)
-      .linkStrength(0.3)
-      .size((700.0, 700.0))
-      .gravity(.02)
+  val force = d3.forceSimulation[GraphNode]()
+      .force("charge", d3.forceManyBody().strength(-100))
+      .force("link", d3.forceLink[GraphNode, NodeLink]().distance(80))
+      .force("center", d3.forceCenter(350, 350))
       .nodes(nodes)
       .links(links)
   

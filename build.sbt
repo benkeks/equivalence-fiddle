@@ -18,7 +18,7 @@ lazy val web = (project in file("web")).settings(
   scalaJSProjects := Seq(jsClient),
   Assets / pipelineStages := Seq(scalaJSPipeline),
   Compile / compile := ((Compile / compile) dependsOn scalaJSPipeline).value,
-  packageJSDependencies / skip := false,
+  //packageJSDependencies / skip := false,
   libraryDependencies ++= Seq(
     "org.webjars" % "codemirror" % "5.13",
     "org.webjars" % "jquery" % "2.1.3",
@@ -32,7 +32,7 @@ lazy val shared = (project in file("shared")).settings(
   scalacOptions ++= scalacOpts,
   assembly / test := {},
   libraryDependencies ++= Seq(
-    "org.scalaz" %%% "scalaz-core" % "7.2.29",
+    "org.scalaz" %%% "scalaz-core" % "7.3.8",
     "org.scalactic" %% "scalactic" % "3.2.0",
     "org.scalatest" %% "scalatest" % "3.2.0" % "test"
   )
@@ -42,22 +42,23 @@ lazy val jsClient = (project in file("js-client")).settings(
   scalaVersion := "2.12.13",
   name := "eqfiddle-client",
   ThisBuild / parallelExecution := false,
+  resolvers += "jitpack" at "https://jitpack.io",
   scalacOptions ++= scalacOpts,
   libraryDependencies ++= Seq(
-    "org.scalaz" %%% "scalaz-core" % "7.2.29",
-    "org.singlespaced" %%% "scalajs-d3" % "0.3.4",
+    "org.scalaz" %%% "scalaz-core" % "7.3.8",
+    "com.github.fdietze.scala-js-d3v4" %%% "scala-js-d3v4" % "64a2cca",
     //"org.denigma" %%% "codemirror-facade" % "5.22.0-0.8", // now placed in js-client/lib
-    "com.github.karasiq" %%% "scalajs-bootstrap" % "2.3.5"
+    "com.github.karasiq" %%% "scalajs-bootstrap" % "2.4.2"
   ),
   Compile / fastOptJS / artifactPath :=
       ((fastOptJS / target).value /
         ((fastOptJS / moduleName).value + ".js")),
   Compile / fullOptJS / artifactPath := (Compile / fastOptJS / artifactPath).value,
-  jsDependencies ++= Seq(
-    "org.webjars" % "codemirror" % "5.13" / "codemirror.js",
-    "org.webjars" % "jquery" % "2.1.3" / "2.1.3/jquery.js",
-    "org.webjars" % "bootstrap" % "3.4.1" / "bootstrap.min.js"
-  ),
+  // jsDependencies ++= Seq(
+  //   "org.webjars" % "codemirror" % "5.13" / "codemirror.js",
+  //   "org.webjars" % "jquery" % "2.1.3" / "2.1.3/jquery.js",
+  //   "org.webjars" % "bootstrap" % "3.4.1" / "bootstrap.min.js"
+  // ),
   Compile / unmanagedSourceDirectories +=
       baseDirectory.value / ".." / "shared" / "src" / "main" / "scala-2.12"
 ).aggregate(shared).dependsOn(shared).enablePlugins(ScalaJSPlugin, ScalaJSWeb)

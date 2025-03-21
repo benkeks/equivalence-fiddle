@@ -1,14 +1,10 @@
 package io.equiv.eqfiddle.tool.view
 
-import org.singlespaced.d3js.d3
 import scala.scalajs.js
 import scala.collection.mutable.HashMap
 import org.scalajs.dom
 import org.scalajs.dom.raw.EventTarget
-import org.singlespaced.d3js.svg.Brush
-import org.singlespaced.d3js.Ops.fromFunction1To2
-import org.singlespaced.d3js.Ops.fromFunction1To3
-import org.singlespaced.d3js.Ops.fromFunction2To3
+import d3v4._
 
 /**
  * GraphEditing manages the interplay of HTML-Events, node selection, scrolling/zooming
@@ -24,20 +20,20 @@ trait GraphEditing extends ViewComponent {
   val svg = d3.select("#es-graph")
   
   // these scales ensure that zoom behavior and box selection behavior by sharing them use the same view port
-  val viewportX = d3.scale.linear().domain(js.Array(0, 1000)).range(js.Array(0, 1000))
-  val viewportY = d3.scale.linear().domain(js.Array(0, 1000)).range(js.Array(0, 1000))
+  val viewportX = d3.scaleLinear().domain(js.Array(0, 1000)).range(js.Array(0, 1000))
+  val viewportY = d3.scaleLinear().domain(js.Array(0, 1000)).range(js.Array(0, 1000))
    
-  val brush = d3.svg.brush().asInstanceOf[Brush[EventTarget]]
-    .x(viewportX)
-    .y(viewportY)
-    .on("brushstart", onSelectionBrushStart _)
-    .on("brush", onSelectionBrush _)
-    .on("brushend", onSelectionBrushEnd _)
+  // val brush = d3.svg.brush().asInstanceOf[Brush[EventTarget]]
+  //   .x(viewportX)
+  //   .y(viewportY)
+  //   .on("brushstart", onSelectionBrushStart _)
+  //   .on("brush", onSelectionBrush _)
+  //   .on("brushend", onSelectionBrushEnd _)
   
-  val brushRect = svg.append("g")
-    .classed("brush", true)
+  // val brushRect = svg.append("g")
+  //   .classed("brush", true)
     
-  val zoomWindow = d3.behavior.zoom[EventTarget]()
+  val zoomWindow = d3zoom[EventTarget]()
   zoomWindow
     .x(viewportX)
     .y(viewportY)
@@ -46,13 +42,13 @@ trait GraphEditing extends ViewComponent {
   svg.call(zoomWindow)
     .on("click", onClickBackground _)
   
-  val drag = d3.behavior.drag[GraphNode]()
+  val drag = d3drag[GraphNode]()
     .origin((d: GraphNode, _: Double) => d.asInstanceOf[js.Any])
     .on("dragstart", onDragStart _)
     .on("drag", onDrag _)
     .on("dragend", onDragEnd _)
     
-  val dragLink = d3.behavior.drag[NodeLink]()
+  val dragLink = d3drag[NodeLink]()
     .origin((d: NodeLink, _: Double) => d.asInstanceOf[js.Any])
     .on("dragstart", onDragStart _)
     .on("drag", onDrag _)
@@ -179,43 +175,43 @@ trait GraphEditing extends ViewComponent {
   }
   
   def onSelectionBrush(et: Any, id: Double) {
-    val ext = brush.extent().asInstanceOf[js.Array[js.Array[Double]]]
-    nodes.foreach { node: GraphNode =>
-      node.selected = ((node.x.get >= ext(0)(0) && node.x.get <= ext(1)(0) &&
-                        node.y.get >= ext(0)(1) && node.y.get <= ext(1)(1))
-                    ^  (node.previouslySelected && selectionExtensionActive))
-      node.selected
-    }
-    onSelectionChange()
-    editingBehavior.onSelectionChange()
+    // val ext = brush.extent().asInstanceOf[js.Array[js.Array[Double]]]
+    // nodes.foreach { node: GraphNode =>
+    //   node.selected = ((node.x.get >= ext(0)(0) && node.x.get <= ext(1)(0) &&
+    //                     node.y.get >= ext(0)(1) && node.y.get <= ext(1)(1))
+    //                 ^  (node.previouslySelected && selectionExtensionActive))
+    //   node.selected
+    // }
+    // onSelectionChange()
+    // editingBehavior.onSelectionChange()
   }
   
   def onSelectionBrushEnd(et: EventTarget, id: Double) {
-    brush.clear()
-    brushRect.call(brush) // something like this is done in http://bl.ocks.org/pkerpedjiev/0389e39fad95e1cf29ce
-        // it ensures that the brush stays usable when the shift key is released. but it introduces the bug
-        // that in such situations, subsequent zoom-scrolling also activates the selection brush.
+    // brush.clear()
+    // brushRect.call(brush) // something like this is done in http://bl.ocks.org/pkerpedjiev/0389e39fad95e1cf29ce
+    //     // it ensures that the brush stays usable when the shift key is released. but it introduces the bug
+    //     // that in such situations, subsequent zoom-scrolling also activates the selection brush.
   }
   
   def setSelectionExtension(active: Boolean) = {
-    selectionExtensionActive = active
-    if (selectionExtensionActive) {
-      svg.call(zoomWindow)
-        .on("mousedown.zoom", null)
-        .on("touchstart.zoom", null)                                                                      
-        .on("touchmove.zoom", null)                                                                       
-        .on("touchend.zoom", null)
-      brushRect.select(".background").style("cursor", "crosshair")
-      brushRect.call(brush)
-    } else {
-      brushRect.call(brush)
-       .on("mousedown.brush", null)
-       .on("touchstart.brush", null)                                                                      
-       .on("touchmove.brush", null)                                                                       
-       .on("touchend.brush", null)
-      brushRect.select(".background").style("cursor", "auto")
-      svg.call(zoomWindow)
-    }
+    // selectionExtensionActive = active
+    // if (selectionExtensionActive) {
+    //   svg.call(zoomWindow)
+    //     .on("mousedown.zoom", null)
+    //     .on("touchstart.zoom", null)                                                                      
+    //     .on("touchmove.zoom", null)                                                                       
+    //     .on("touchend.zoom", null)
+    //   brushRect.select(".background").style("cursor", "crosshair")
+    //   brushRect.call(brush)
+    // } else {
+    //   brushRect.call(brush)
+    //    .on("mousedown.brush", null)
+    //    .on("touchstart.brush", null)                                                                      
+    //    .on("touchmove.brush", null)                                                                       
+    //    .on("touchend.brush", null)
+    //   brushRect.select(".background").style("cursor", "auto")
+    //   svg.call(zoomWindow)
+    // }
   }
   
   def deselectAll() {
