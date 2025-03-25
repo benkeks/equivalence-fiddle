@@ -40,6 +40,7 @@ class Parser(val input: String) extends Parsing {
   override def getTokenPosition(token: Token) = token.position
   
   val symbolToks = Set("(", ")", "{", "}", ",", "=", "-->", "|-", "->", "*", "%", "+", "\\", "!", ":", "|", ".", "@")
+  val reservedNames = Set("csp", "tau!", "τ!")
   
   def toToken(txt: String, pos: Pos) = txt match {
     case "(" => RoundBracketOpen(pos)
@@ -149,17 +150,22 @@ class Parser(val input: String) extends Parsing {
 
     nullProcess(in) orElse { _ =>
       node(in) flatMap { (name, in2) =>
-        if (name.name.forall(Parser.idChars)) {
+        if (name.name.forall(Parser.idChars) && !reservedNames.contains(name.name)) {
           in2 match {
             case Dot(_) :: in3 =>
               processPrefixes(in3) flatMap { (e2, rt) =>
                 ParseSuccess(Prefix(name, e2, name.pos), rt)
               }
             case Bang(_) :: in3 =>
-              processPrefixes(in3) flatMap { (e2, rt) =>
-                ParseSuccess(Prefix(name.toOutput, e2, name.pos), rt)
-              } orElse { _ =>
-                ParseSuccess(Prefix(name.toOutput, NullProcess(name.pos), name.pos), in3)
+              val outputName = name.toOutput
+              if (reservedNames.contains(outputName.name)) {
+                ParseFail(s"Illegal action identifier: ‹$outputName›", in2)
+              } else {
+                processPrefixes(in3) flatMap { (e2, rt) =>
+                  ParseSuccess(Prefix(name.toOutput, e2, name.pos), rt)
+                } orElse { _ =>
+                  ParseSuccess(Prefix(name.toOutput, NullProcess(name.pos), name.pos), in3)
+                }
               }
             case other =>
               ParseSuccess(ProcessName(name, name.pos), other)
@@ -246,7 +252,7 @@ class Parser(val input: String) extends Parsing {
     node(in) flatMap { (processName, in2) =>
       in2 match {
         case Equals(_) :: in3 =>
-          if (processName.name.forall(Parser.idChars)) {
+          if (processName.name.forall(Parser.idChars) && !reservedNames.contains(processName.name)) {
             process(in3) flatMap { (e2, rt) =>
               ParseSuccess(ProcessDeclaration(processName.name, e2, processName.pos), rt)
             }

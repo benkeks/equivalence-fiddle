@@ -23,10 +23,10 @@ trait Parsing {
         case ParseFail(msg2, remainder2) =>
           if (remainder2.size < remainder.size) {
             ParseFail(msg2, remainder2)
-          } else if (remainder2.size > remainder.size) {
+          } else if (remainder2.size > remainder.size || msg.indexOf(msg2) != -1) {
             ParseFail(msg, remainder)
           } else {
-          ParseFail(msg + "\nOR: " + msg2, remainder)
+            ParseFail(msg + "\n+ " + msg2, remainder)
           }
         case ok => ok
       }
