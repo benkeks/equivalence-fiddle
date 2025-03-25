@@ -10,6 +10,7 @@ import io.equiv.eqfiddle.tool.arch.Control
 import io.equiv.eqfiddle.tool.model.NodeID
 import io.equiv.eqfiddle.ccs.Interpreter
 import io.equiv.eqfiddle.ccs.Syntax
+import io.equiv.eqfiddle.ccs.Parser
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 import io.equiv.eqfiddle.util.Coloring
 import io.equiv.eqfiddle.util.Interpreting
@@ -238,15 +239,21 @@ object Structure {
       Interpreting.Success(emptyLabel)
   }
 
+  val actionChars: Set[Char] = Parser.idChars + '!'
+
   def arrowAnnotator(arrowLabel: Option[Syntax.Label]): Interpreting.Result[ActionLabel] = arrowLabel match {
     case Some(aL @ Syntax.Label(name, pos)) =>
-      try {
-        val l = ActionLabel(
-          act = Symbol(if (name == "tau") "τ" else name)
-        )
-        Interpreting.Success(l)
-      } catch {
-        case e: Exception => Interpreting.Problem(e.toString(), List(aL))
+      if (name.forall(actionChars)) {
+        try {
+          val l = ActionLabel(
+            act = Symbol(if (name == "tau") "τ" else name)
+          )
+          Interpreting.Success(l)
+        } catch {
+          case e: Exception => Interpreting.Problem(e.toString(), List(aL))
+        }
+      } else {
+        Interpreting.Problem("Invalid action name: " + name, List(aL))
       }
     case None =>
       Interpreting.Success(emptyActionLabel)

@@ -12,7 +12,7 @@ trait Parsing {
     def map[B](f: A => B): Parsed[B]
     def flatMap[B](f: (A, List[Token]) => Parsed[B]): Parsed[B]
     def orElse[B >: A](f: List[Token] => Parsed[B]): Parsed[B]
-    def or[B >: A](alternative: Parsed[B]): Parsed[B] = orElse(toks => alternative)
+    def or[B >: A](alternative: Parsed[B]): Parsed[B] = orElse(_ => alternative)
   }
   
   case class ParseFail[+A](msg: String, remainder: List[Token]) extends Parsed[A] {
@@ -26,9 +26,9 @@ trait Parsing {
           } else if (remainder2.size > remainder.size) {
             ParseFail(msg, remainder)
           } else {
-            ParseFail(msg + "\n" + msg2, remainder)
+          ParseFail(msg + "\nOR: " + msg2, remainder)
           }
-        case o => o
+        case ok => ok
       }
     }
     

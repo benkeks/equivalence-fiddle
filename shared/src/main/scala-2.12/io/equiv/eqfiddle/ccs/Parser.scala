@@ -149,19 +149,23 @@ class Parser(val input: String) extends Parsing {
 
     nullProcess(in) orElse { _ =>
       node(in) flatMap { (name, in2) =>
-        in2 match {
-          case Dot(_) :: in3 =>
-            processPrefixes(in3) flatMap { (e2, rt) =>
-              ParseSuccess(Prefix(name, e2, name.pos), rt)
-            }
-          case Bang(_) :: in3 =>
-            processPrefixes(in3) flatMap { (e2, rt) =>
-              ParseSuccess(Prefix(name.toOutput, e2, name.pos), rt)
-            } orElse { _ =>
-              ParseSuccess(Prefix(name.toOutput, NullProcess(name.pos), name.pos), in3)
-            }
-          case other =>
-            ParseSuccess(ProcessName(name, name.pos), other)
+        if (name.name.forall(Parser.idChars)) {
+          in2 match {
+            case Dot(_) :: in3 =>
+              processPrefixes(in3) flatMap { (e2, rt) =>
+                ParseSuccess(Prefix(name, e2, name.pos), rt)
+              }
+            case Bang(_) :: in3 =>
+              processPrefixes(in3) flatMap { (e2, rt) =>
+                ParseSuccess(Prefix(name.toOutput, e2, name.pos), rt)
+              } orElse { _ =>
+                ParseSuccess(Prefix(name.toOutput, NullProcess(name.pos), name.pos), in3)
+              }
+            case other =>
+              ParseSuccess(ProcessName(name, name.pos), other)
+          }
+        } else {
+          ParseFail(s"Illegal action identifier: ‹$name›", in2)
         }
       }
     } orElse { _ => in match {
@@ -242,11 +246,15 @@ class Parser(val input: String) extends Parsing {
     node(in) flatMap { (processName, in2) =>
       in2 match {
         case Equals(_) :: in3 =>
-          process(in3) flatMap { (e2, rt) =>
-            ParseSuccess(ProcessDeclaration(processName.name, e2, processName.pos), rt)
+          if (processName.name.forall(Parser.idChars)) {
+            process(in3) flatMap { (e2, rt) =>
+              ParseSuccess(ProcessDeclaration(processName.name, e2, processName.pos), rt)
+            }
+          } else {
+            ParseFail(s"Illegal process identifier: ‹${processName.name}›", in2)
           }
         case other =>
-          ParseFail("Expected declaration symbol.", other)
+          ParseFail("Expected declaration symbol ‹=›.", other)
       }
     }
   }
@@ -271,7 +279,7 @@ class Parser(val input: String) extends Parsing {
       if (in2.headOption.exists(_.isInstanceOf[RoundBracketOpen])) {
         attributeList(in2.tail, List()) map (NodeDeclaration(e.name, _, e.position))
       } else {
-        ParseSuccess(NodeDeclaration(e.name, List(), e.position), in2)
+        ParseFail("Expected attribute list. ‹(..., ...)›", in2)
       }
     }
   }
