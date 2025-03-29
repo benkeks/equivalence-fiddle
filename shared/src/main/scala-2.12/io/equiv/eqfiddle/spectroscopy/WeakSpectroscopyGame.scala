@@ -110,11 +110,24 @@ class WeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], val confi
         } else {
           val stableConjMove = if (ts.isStable(p0)) {
             val qq0stable = qq0.filter(ts.isStable(_))
-            (
+            if (config.useCleverSpectroscopyGame) {
+              val failChallengedQ = qq0stable.filter(q0 => ts.enabled(q0) subsetOf ts.enabled(p0))
+              val offerChallengedQ = qq0stable.filter(q0 => ts.enabled(p0) subsetOf ts.enabled(q0))
+              val readyChallengedQ = failChallengedQ intersect offerChallengedQ
+              Set(
+                DefenderStableConjunction(p0, qq0stable, Set.empty)
+              ) ++ {
+                if (failChallengedQ.size < qq0stable.size) Set(DefenderStableConjunction(p0, qq0stable -- failChallengedQ, failChallengedQ)) else Set()
+              } ++ {
+                if (offerChallengedQ.size < qq0stable.size) Set(DefenderStableConjunction(p0, qq0stable -- offerChallengedQ, offerChallengedQ)) else Set()
+              } ++ {
+                if (readyChallengedQ.size < qq0stable.size) Set(DefenderStableConjunction(p0, qq0stable -- readyChallengedQ, readyChallengedQ)) else Set()
+              }
+            } else {
               for {
                 qqRevivals <- qq0stable.subsets()
               } yield DefenderStableConjunction(p0, qq0stable -- qqRevivals, qqRevivals)
-            ).toList
+            }
           } else List()
           val dn = for {
             (a,pp1) <- ts.post(p0)
