@@ -43,6 +43,6 @@ class LTBTSTests extends CSSSampleTests[ObservationNotionStrong, HennessyMilnerL
   )
 
   for ((cfgName, cfg) <- configs) {
-    runTest(ltbtsSystem, sampleNames, new StrongSpectroscopy(_), s"(energy-labeled, $cfgName)", cfg)
+    runTest(ltbtsSystem, sampleNames, new StrongSpectroscopy(_), s"(strong, $cfgName)", cfg)
   }
 }
