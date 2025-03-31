@@ -555,8 +555,8 @@ P58 = a.(tau.b + b + tau)
        |Pe = (op.Ae + op.Be)
        |Pl = (op.Al + op.Bl)
        |
-       |Pte = Pe \csp { idle }
-       |Ptl = Pl \csp { idle }
+       |Pte = Pe \hide { idle }
+       |Ptl = Pl \hide { idle }
        |
        |@compareSilent Pe, Pl
        |@compareSilent Pte, Ptl

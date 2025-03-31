@@ -40,7 +40,7 @@ class Parser(val input: String) extends Parsing {
   override def getTokenPosition(token: Token) = token.position
   
   val symbolToks = Set("(", ")", "{", "}", ",", "=", "-->", "|-", "->", "*", "%", "+", "\\", "!", ":", "|", ".", "@")
-  val reservedNames = Set("csp", "tau!", "τ!")
+  val reservedNames = Set("hide", "tau!", "τ!")
   
   def toToken(txt: String, pos: Pos) = txt match {
     case "(" => RoundBracketOpen(pos)
@@ -215,7 +215,7 @@ class Parser(val input: String) extends Parsing {
             case (labels, rt) =>
               ParseSuccess(Restrict(labels, proc, proc.position), rt)
           }
-        case Backslash(_) :: Identifier("csp", p) :: CurlyBracketOpen(_) :: in5 =>
+        case Backslash(_) :: Identifier("hide", p) :: CurlyBracketOpen(_) :: in5 =>
           parseLabelSet(in5) flatMap {
             case (labels, rt) =>
               ParseSuccess(Renaming(labels.map(l => (l, Label("τ", p))), proc, proc.position), rt)
