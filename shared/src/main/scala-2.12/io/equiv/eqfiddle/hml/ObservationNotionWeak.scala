@@ -108,9 +108,10 @@ object ObservationNotionWeak {
   val BaseLTBTS = List( 
     "weak-enabledness" ->             ObservationNotionWeak(    1,     0,     0,     0,     0,     0,    0,    0,    0),
     "weak-trace" ->                   ObservationNotionWeak(INFTY,     0,     0,     0,     0,     0,    0,    0,    0),
-    "weak-failure" ->             ObservationNotionWeak(INFTY,     0,     1,     0,     0,     0,    0,    1,    1),
+    "weak-failure" ->                 ObservationNotionWeak(INFTY,     0,     1,     0,     0,     0,    0,    1,    1),
     "stable-failure" ->               ObservationNotionWeak(INFTY,     0,     0,     1,     0,     0,    0,    1,    1),
-    "weak-readiness" ->           ObservationNotionWeak(INFTY,     0,     1,     0,     0,     1,    0,    1,    1),
+    "weak-readiness" ->               ObservationNotionWeak(INFTY,     0,     1,     0,     0,     1,    0,    1,    1),
+    "stable-revival" ->               ObservationNotionWeak(INFTY,     0,     0,     1,     0,     1,    0,    1,    1),
     "stable-readiness" ->             ObservationNotionWeak(INFTY,     0,     0,     1,     0,     1,    1,    1,    1),
     "stable-failure-trace" ->         ObservationNotionWeak(INFTY,     0,     0, INFTY,     0, INFTY,    0,    1,    1),
     "stable-ready-trace" ->           ObservationNotionWeak(INFTY,     0,     0, INFTY,     0, INFTY,    1,    1,    1),

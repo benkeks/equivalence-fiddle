@@ -35,7 +35,7 @@ class LTBTS2Tests extends CSSSampleTests[ObservationNotionWeak, HennessyMilnerLo
     ("P54", "P55", List("branching-bisimulation"), List("stable-failure", "stable-simulation")),
     ("P55", "P56", List("eta-simulation", "2-nested-weak-simulation", "stable-bisimulation"), List("contrasimulation", "sr-delay-bisimulation")),
     ("P57", "P56", List("branching-bisimulation"), List("stable-failure", "stable-simulation")),
-    ("P58", "P57", List("s-impossible-future", "eta-simulation", "2-nested-weak-simulation"), List("contrasimulation", "stable-simulation", "stable-readiness", "stable-failure-trace")),
+    ("P58", "P57", List("s-impossible-future", "eta-simulation", "2-nested-weak-simulation"), List("contrasimulation", "stable-simulation", "stable-revival")),
   )
   for ((cfgName, cfg) <- configs) {
     runTest(ltbtsSystem, sampleNames, new WeakSpectroscopy(_), s"(weak, $cfgName)", cfg)
