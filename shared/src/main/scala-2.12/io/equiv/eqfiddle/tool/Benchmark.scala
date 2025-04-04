@@ -5,10 +5,12 @@ import io.equiv.eqfiddle.algo.AlgorithmLogging.{LogRelation, LogRichRelation}
 import io.equiv.eqfiddle.tool.benchmark.LTBTSDistinctions
 import io.equiv.eqfiddle.tool.benchmark.LTBTSEquivalenceChecks
 import io.equiv.eqfiddle.tool.benchmark.VeryLargeTransitionSystems
+import io.equiv.eqfiddle.tool.model.NodeID
 
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
 import io.equiv.eqfiddle.spectroscopy.StrongSpectroscopy
+import io.equiv.eqfiddle.spectroscopy.WeakSpectroscopy
 import io.equiv.eqfiddle.hml.HennessyMilnerLogic
 import io.equiv.eqfiddle.tool.benchmark.Sizemark
 
@@ -28,6 +30,7 @@ object Benchmark extends App {
       |
       |General options:
       | --unclever-spectroscopy  Use the exponentially-branching energy game (instead of the clever energy game)
+      | --strong-game  Use the strong spectroscopy game (instead of the weak variant)
       |
       |Benchmark options:
       | --shuffle        Perform benchmarks in random order
@@ -47,6 +50,19 @@ object Benchmark extends App {
     useSymmetryPruning = true
   )
 
+  val algoVLTS: (WeakTransitionSystem[Int,Symbol,Unit]) => SpectroscopyInterface[Int,Symbol,Unit,HennessyMilnerLogic.Formula[Symbol]] =
+    if (args.contains("--strong-game")) {
+      new StrongSpectroscopy(_)
+    } else {
+      new WeakSpectroscopy(_)
+  }
+  val algoCCS: (WeakTransitionSystem[NodeID,String,String]) => SpectroscopyInterface[NodeID,String,String,HennessyMilnerLogic.Formula[String]] =
+    if (args.contains("--strong-game")) {
+      new StrongSpectroscopy(_)
+    } else {
+      new WeakSpectroscopy(_)
+  }
+
   val timeoutRegex = raw"--timeout=(\d+)".r
   val timeout = args.collectFirst { case timeoutRegex(timeout) => timeout.toInt }.getOrElse(500000)
 
@@ -59,22 +75,22 @@ object Benchmark extends App {
     case Some("about") =>
       println(about)
     case Some("formulas") =>
-      new LTBTSDistinctions(new StrongSpectroscopy(_), baseConfig).run()
+      new LTBTSDistinctions(algoCCS, baseConfig).run()
     case Some("eqchecks") =>
-      new LTBTSEquivalenceChecks(new StrongSpectroscopy(_), baseConfig).run()
+      new LTBTSEquivalenceChecks(algoCCS, baseConfig).run()
     case Some("benchmark") =>
       val includeHardExamples = args.contains("--include-hard")
       val shuffleExamples = args.contains("--shuffle")
       val reducedSizes = args.contains("--reduced-sizes")
 
       if (reducedSizes) {
-        new VeryLargeTransitionSystems(new StrongSpectroscopy(_), baseConfig).run(
+        new VeryLargeTransitionSystems(algoVLTS, baseConfig).run(
           includeHardExamples = includeHardExamples,
           shuffleExamples = shuffleExamples,
           timeoutTime = timeout
         )
       } else {
-        new VeryLargeTransitionSystems(new StrongSpectroscopy(_), baseConfig).run(
+        new VeryLargeTransitionSystems(algoVLTS, baseConfig).run(
           includeHardExamples = includeHardExamples,
           shuffleExamples = shuffleExamples,
           outputMinimizationSizes = List(),
@@ -82,7 +98,7 @@ object Benchmark extends App {
         )
       }
     case Some("sizemark") =>
-      new Sizemark(new StrongSpectroscopy(_)).run(
+      new Sizemark(algoVLTS).run(
         timeoutTime = timeout
       )
     case _ =>
