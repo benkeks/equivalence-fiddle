@@ -26,14 +26,14 @@ class PrettyPrinter {
         str = renderStringAtom(a)
       } yield str 
       "@" + k + " " + args.mkString(", ")
-    case NodeDeclaration(n, aa, p0) =>
+    case NodeAnnotation(n, aa, p0) =>
       val name = renderStringAtom(n)
       if (aa.isEmpty) {
         name
       } else {
         name + aa.map(showAttribute).mkString("(", ", ", ")")
       }
-    case ProcessDeclaration(name, proc, p0) =>
+    case ProcessDefinition(name, proc, p0) =>
       name + " = " + show(proc)
     case Prefix(l, Choice(Nil, pos), p0) if l.isOutput =>
       show(l.toInput) + "!"

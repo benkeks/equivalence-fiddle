@@ -248,13 +248,13 @@ class Parser(val input: String) extends Parsing {
     }
   }
   
-  def processDeclaration(in: List[Token]): Parsed[ProcessDeclaration] = {
+  def processDeclaration(in: List[Token]): Parsed[ProcessDefinition] = {
     node(in) flatMap { (processName, in2) =>
       in2 match {
         case Equals(_) :: in3 =>
           if (processName.name.forall(Parser.idChars) && !reservedNames.contains(processName.name)) {
             process(in3) flatMap { (e2, rt) =>
-              ParseSuccess(ProcessDeclaration(processName.name, e2, processName.pos), rt)
+              ParseSuccess(ProcessDefinition(processName.name, e2, processName.pos), rt)
             }
           } else {
             ParseFail(s"Illegal process identifier: ‹${processName.name}›", in2)
@@ -280,10 +280,10 @@ class Parser(val input: String) extends Parsing {
       ParseFail("Expected comma separated attribute list.", other)
   }
   
-  def nodeDeclaration(in: List[Token]): Parsed[NodeDeclaration] = {
+  def nodeDeclaration(in: List[Token]): Parsed[NodeAnnotation] = {
     node(in) flatMap { (e, in2) =>
       if (in2.headOption.exists(_.isInstanceOf[RoundBracketOpen])) {
-        attributeList(in2.tail, List()) map (NodeDeclaration(e.name, _, e.position))
+        attributeList(in2.tail, List()) map (NodeAnnotation(e.name, _, e.position))
       } else {
         ParseFail("Expected attribute list. ‹(..., ...)›", in2)
       }

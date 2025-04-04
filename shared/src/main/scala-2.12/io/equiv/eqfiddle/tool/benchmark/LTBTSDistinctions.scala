@@ -36,7 +36,7 @@ class LTBTSDistinctions(
   def arrowLabeling(o: Option[Syntax.Label]) = {
     Interpreting.fromOption(o.map(_.name) orElse(Some("")))
   }
-  def nodeLabeling(o: Option[Syntax.NodeDeclaration]) = {
+  def nodeLabeling(o: Option[Syntax.NodeAnnotation]) = {
     Interpreting.fromOption(o.map(_.name) orElse(Some("")))
   }
   def actionIsOutput(a: String) = a.endsWith("!")

@@ -2,6 +2,7 @@ package io.equiv.eqfiddle.ccs
 
 import io.equiv.eqfiddle.util.Interpreting
 import io.equiv.eqfiddle.util.Interpreting._
+import io.equiv.eqfiddle.util.Parsing.Pos0
 import io.equiv.eqfiddle.util.Relation
 import io.equiv.eqfiddle.util.LabeledRelation
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
@@ -13,7 +14,7 @@ class Interpreter[S, A, L](
     ccsDef: Syntax.Definition,
     stateIds: String => S,
     arrowLabeling: Option[Syntax.Label] => Interpreting.Result[A],
-    nodeLabeling: Option[Syntax.NodeDeclaration] => Interpreting.Result[L],
+    nodeLabeling: Option[Syntax.NodeAnnotation] => Interpreting.Result[L],
     toInput: A => A,
     isOutput: A => Boolean,
     maxStates: Int = 5000
@@ -32,7 +33,7 @@ class Interpreter[S, A, L](
   def result[R](factory: (LabeledRelation[S, A], Map[S, L]) => R = defaultFactory): Result[R] = {
    
     val procEnv = ccsDef.defs collect {
-      case d@Syntax.ProcessDeclaration(name, proc, _) =>
+      case d@Syntax.ProcessDefinition(name, proc, _) =>
         scheduleConversion(Syntax.ProcessName(Syntax.Label(name)))
         (name, proc)
     } toMap;
@@ -66,15 +67,37 @@ class Interpreter[S, A, L](
         return Problem(s"Too many states. Stopped translation at $stateCounter. (Check that you don't have accidental dynamic growth in parallel compositions!)", intialProcs)
       }
     }
-
-    for {
-      nodeDecls <- factorResults ( ccsDef.defs collect {
-        case d: Syntax.NodeDeclaration => convertNodeDeclaration(d)
-      } )
-    } yield {
-      val mainNodes = ccsDef.defs collect {
-        case d: Syntax.NodeDeclaration if d.attributeDefined("main") => d.name
+    val mainNodes = ccsDef.defs collect {
+      case d: Syntax.NodeAnnotation if d.attributeDefined("main") => d.name
+    }
+    val interestingNodes =
+      if (mainNodes.isEmpty)
+        procEnv.keys.toList
+      else
+        mainNodes
+    val nodeAnnotations = ccsDef.defs collect {
+      case d: Syntax.NodeAnnotation => d
+    }
+    // add dummy annotations for interesting nodes that lack any
+    val completedAnnotations = nodeAnnotations ++ {
+      for {
+        node <- interestingNodes
+        if !nodeAnnotations.exists(_.name == node)
+      } yield {
+        Syntax.NodeAnnotation(node, List(), Pos0)
       }
+    }
+      
+    for {
+      nodeDecls <- factorResults ( completedAnnotations collect {
+        case d @ Syntax.NodeAnnotation(name, attribs, pos) =>
+          if (mainNodes.isEmpty && procEnv.isDefinedAt(name)) {
+            convertNodeAnnotation(Syntax.NodeAnnotation(name, attribs :+ ("main", ""), pos))
+          } else {
+            convertNodeAnnotation(d)
+          }
+      })
+    } yield {
       val interestingNodes =
         if (mainNodes.isEmpty)
           procEnv.keys.toList
@@ -95,8 +118,8 @@ class Interpreter[S, A, L](
     }
   }
   
-  private def convertNodeDeclaration(n: Syntax.NodeDeclaration): Result[(S, L)] = n match {
-    case d @ Syntax.NodeDeclaration(name, attribs, pos) =>
+  private def convertNodeAnnotation(n: Syntax.NodeAnnotation): Result[(S, L)] = n match {
+    case d @ Syntax.NodeAnnotation(name, attribs, pos) =>
       nodeLabeling(Some(d)).map((stateIds(name), _))
     case _ =>
       Problem("Node not accepted.", List(n))

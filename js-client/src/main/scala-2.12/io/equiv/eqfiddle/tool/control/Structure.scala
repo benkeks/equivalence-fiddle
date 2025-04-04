@@ -222,8 +222,8 @@ object Structure {
 
   val silentActionLabel = ActionLabel('τ)
 
-  def nodeAnnotator(nodeDecl: Option[Syntax.NodeDeclaration]): Interpreting.Result[NodeLabel] = nodeDecl match {
-    case Some(nD @ Syntax.NodeDeclaration(name, attribs, pos)) =>
+  def nodeAnnotator(nodeDecl: Option[Syntax.NodeAnnotation]): Interpreting.Result[NodeLabel] = nodeDecl match {
+    case Some(nD @ Syntax.NodeAnnotation(name, attribs, pos)) =>
       val labels = attribs collect { case (k, _) if k != "x" && k != "y" => Symbol(k) }
       try {
         val l = NodeLabel(

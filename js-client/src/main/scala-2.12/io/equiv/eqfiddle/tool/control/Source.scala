@@ -48,16 +48,16 @@ class Source(val main: Control) extends ModelComponent {
     broadcast(Source.ProblemChange(source, problems))
   }
   
-  def updateNodeDeclarationAttributes(updates: List[(String, NodeLabel)]): Boolean = {
+  def updateNodeAnnotationAttributes(updates: List[(String, NodeLabel)]): Boolean = {
     val names = updates.map(_._1)
     val affectedAst = ast
-    val oldDecls = affectedAst.defs collect { case n: Syntax.NodeDeclaration => n }
+    val oldDecls = affectedAst.defs collect { case n: Syntax.NodeAnnotation => n }
     
     val newDecls = updates.map { case (nodeName, annotations) =>
       val oldDecl = oldDecls.find(d => d.name == nodeName)
       val pos = oldDecl.map(_.pos).getOrElse(Parsing.Pos0)
       val attribs = oldDecl.map(_.attribs).getOrElse(List()).toMap ++ annotations.toStringPairList
-      (oldDecl, Syntax.NodeDeclaration(nodeName, attribs.toList, pos))
+      (oldDecl, Syntax.NodeAnnotation(nodeName, attribs.toList, pos))
     }
     
     // group by oldDecls and project them away
@@ -65,7 +65,7 @@ class Source(val main: Control) extends ModelComponent {
     
     val defsUpdatedOld = {
       affectedAst.defs.map {
-        case d: Syntax.NodeDeclaration =>
+        case d: Syntax.NodeAnnotation =>
           newVsOldDecls.get(Some(d)) match {
             case Some(dn :: _) =>
               dn
@@ -79,7 +79,7 @@ class Source(val main: Control) extends ModelComponent {
     }
     
     // enqueue updates that dont belong to an old declaration
-    val (astBefore, astAfter) = defsUpdatedOld.splitAt(1 + defsUpdatedOld.lastIndexWhere(_.isInstanceOf[Syntax.NodeDeclaration]))
+    val (astBefore, astAfter) = defsUpdatedOld.splitAt(1 + defsUpdatedOld.lastIndexWhere(_.isInstanceOf[Syntax.NodeAnnotation]))
     val newDefs = astBefore ::: newVsOldDecls.getOrElse(None, List()) ::: astAfter 
     
     val newAst = Syntax.Definition(
@@ -127,9 +127,9 @@ object Source {
     }
   }
   
-  case class UpdateNodeDeclarationAttributes(updates: List[(String, NodeLabel)]) extends SourceAction {
+  case class UpdateNodeAnnotationAttributes(updates: List[(String, NodeLabel)]) extends SourceAction {
     override def implementSource(source: Source) = {
-      source.updateNodeDeclarationAttributes(updates)
+      source.updateNodeAnnotationAttributes(updates)
     }
   }
   
