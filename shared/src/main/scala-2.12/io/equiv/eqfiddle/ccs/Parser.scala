@@ -194,7 +194,22 @@ class Parser(val input: String) extends Parsing {
 
     val firstPrefix = processPrefixes(in)
 
-    val complexTerm = firstPrefix flatMap { (proc, in4) => 
+    val withRestriction = firstPrefix flatMap { (proc, in2) =>
+      in2 match {
+        case Backslash(_) :: CurlyBracketOpen(_) :: in3 =>
+          parseLabelSet(in3) flatMap { (labels, rt) =>
+            ParseSuccess(Restrict(labels, proc, proc.position), rt)
+          }
+        case Backslash(_) :: Identifier("hide", p) :: CurlyBracketOpen(_) :: in3 =>
+          parseLabelSet(in3) flatMap { (labels, rt) =>
+            ParseSuccess(Renaming(labels.map(l => (l, Label("τ", p))), proc, proc.position), rt)
+          }
+        case other =>
+          ParseSuccess(proc, in2)
+      }
+    }
+
+    val complexTerm = withRestriction flatMap { (proc, in4) => 
       in4 match {
         case Plus(_) :: in5 =>
           process(in5) flatMap {
@@ -210,22 +225,12 @@ class Parser(val input: String) extends Parsing {
             case (e, rt) =>
               ParseSuccess(Parallel(proc :: e :: Nil, proc.position), rt)
           }
-        case Backslash(_) :: CurlyBracketOpen(_) :: in5 =>
-          parseLabelSet(in5) flatMap {
-            case (labels, rt) =>
-              ParseSuccess(Restrict(labels, proc, proc.position), rt)
-          }
-        case Backslash(_) :: Identifier("hide", p) :: CurlyBracketOpen(_) :: in5 =>
-          parseLabelSet(in5) flatMap {
-            case (labels, rt) =>
-              ParseSuccess(Renaming(labels.map(l => (l, Label("τ", p))), proc, proc.position), rt)
-          }
         case other =>
           ParseFail("Expected process continuation.", other)
       }
     }
 
-    complexTerm or firstPrefix
+    complexTerm or withRestriction
   }
 
   def parseLabelSet(in: List[Token]): Parsed[List[Label]] = {
