@@ -233,7 +233,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
     for (Source.Problem(msg, line, col) <- errs) {
       val problemNode = dom.document.createElement("div").asInstanceOf[HTMLElement]
       problemNode.setAttribute("class", "es-problem")
-      problemNode.setAttribute("title", msg)
+      problemNode.setAttribute("title", s"$msg (at $col)")
       editor.setGutterMarker(line - 1, PROBLEM_GUTTER, problemNode)
     }
   }

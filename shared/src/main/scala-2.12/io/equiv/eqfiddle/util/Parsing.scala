@@ -11,6 +11,7 @@ trait Parsing {
   abstract sealed class Parsed[+A] {
     def map[B](f: A => B): Parsed[B]
     def flatMap[B](f: (A, List[Token]) => Parsed[B]): Parsed[B]
+    def takeMap[B >: A](f: (B, List[Token]) => Parsed[B]): Parsed[B]
     def orElse[B >: A](f: List[Token] => Parsed[B]): Parsed[B]
     def or[B >: A](alternative: Parsed[B]): Parsed[B] = orElse(_ => alternative)
   }
@@ -18,6 +19,8 @@ trait Parsing {
   case class ParseFail[+A](msg: String, remainder: List[Token]) extends Parsed[A] {
     override def map[B](f: A => B): Parsed[B] = ParseFail[B](msg, remainder)
     override def flatMap[B](f: (A, List[Token]) => Parsed[B]): Parsed[B] = ParseFail[B](msg, remainder)
+
+    override def takeMap[B >: A](f: (B, List[Token]) => Parsed[B]): Parsed[B] = this
     override def orElse[B >: A](f: List[Token] => Parsed[B]): Parsed[B] = {
       f(remainder) match {
         case ParseFail(msg2, remainder2) =>
@@ -38,6 +41,21 @@ trait Parsing {
   case class ParseSuccess[+A](get: A, remainder: List[Token]) extends Parsed[A] {
     override def map[B](f: A => B): Parsed[B] = ParseSuccess[B](f(get), remainder)
     override def flatMap[B](f: (A, List[Token]) => Parsed[B]): Parsed[B] = f(get, remainder)
+
+    override def takeMap[B >: A](f: (B, List[Token]) => Parsed[B]): Parsed[B] = {
+      var res: B = get
+      var rt = remainder
+      while (rt.nonEmpty) {
+        f(res, rt) match {
+          case ParseSuccess(resNew, rtNew) =>
+            res = resNew
+            rt = rtNew
+          case ParseFail(msg, r2) =>
+            return ParseSuccess(res, rt)
+        }
+      }
+      return ParseSuccess(res, rt)
+    }
     override def orElse[B >: A](f: List[Token] => Parsed[B]): Parsed[B] = this
   }
 }
