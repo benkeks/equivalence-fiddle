@@ -25,7 +25,7 @@ object TestSamples {
     parser: Parser = new Parser(src)
     parser.ParseSuccess(esDef, _) = parser.parse
     interpreter = new Interpreter(esDef, NodeID(_), arrowLabeling, nodeLabeling, actionStrToInput, actionStrIsOutput)
-    Interpreting.Success(is) = interpreter.result(new WeakTransitionSystem(_, _, Set("tau")))
+    Interpreting.Success(is) = interpreter.result()
   } yield (slug, is.asInstanceOf[WeakTransitionSystem[NodeID, String, String]])
   
 }

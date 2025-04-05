@@ -54,7 +54,6 @@ abstract class SignatureRefinement[S, A, L] (
       
       val oldSize = size
       size = colorMap.size
-      //logRelation(Relation.fromColoring(partition), "refinement "+size)
       
       debugLog(s"sigref: $size")
       

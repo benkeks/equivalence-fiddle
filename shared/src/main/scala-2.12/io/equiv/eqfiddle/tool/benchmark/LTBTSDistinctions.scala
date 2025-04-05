@@ -47,7 +47,7 @@ class LTBTSDistinctions(
     val parser: Parser = new Parser(CCSSamples.ltbts1)
     val parser.ParseSuccess(esDef, _) = parser.parse
     val interpreter = new Interpreter(esDef, NodeID(_), arrowLabeling, nodeLabeling, actionToInput, actionIsOutput)
-    val Interpreting.Success(is) = interpreter.result(new WeakTransitionSystem(_, _, Set()))
+    val Interpreting.Success(is) = interpreter.result()
     val ltbtsSystem = is.asInstanceOf[WeakTransitionSystem[NodeID, String, String]]
 
     for ((n1s, n2s) <- examplePairs) {

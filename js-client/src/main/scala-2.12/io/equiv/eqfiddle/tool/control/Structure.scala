@@ -22,12 +22,7 @@ import io.equiv.eqfiddle.hml.ObservationNotionStrong
 import io.equiv.eqfiddle.hml.ObservationNotionWeak
 import io.equiv.eqfiddle.hml.Spectrum
 import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
-import io.equiv.eqfiddle.algo.transform.WeakTransitionSaturation
-import io.equiv.eqfiddle.algo.sigref.Bisimilarity
-import io.equiv.eqfiddle.algo.sigref.BranchingBisimilarity
-import io.equiv.eqfiddle.algo.transform.BuildQuotientSystem
 import io.equiv.eqfiddle.hml.ObservationNotion
-import io.equiv.eqfiddle.algo.transform.DivergenceFinder
 
 class Structure(val main: Control) extends ModelComponent {
 
@@ -270,43 +265,11 @@ object Structure {
       rel: LabeledRelation[NodeID, ActionLabel],
       labels: Map[NodeID, Structure.NodeLabel],
       oldTs: Option[Structure.TSStructure] = None)
-    : WeakTransitionSystem[NodeID,ActionLabel,NodeLabel] = {
+    : (Set[NodeID], WeakTransitionSystem[NodeID,ActionLabel,NodeLabel]) = {
 
     val silentActions = rel.labels filter (_.act == 'τ)
     val mainNodes = (labels.collect { case (id, label) if label.act.contains('main) => id }).toSet
-    val ts = new WeakTransitionSystem(rel, labels, silentActions.toSet)
-
-    val weaknessSaturated = labels.collect { case (id, label) if label.act.contains('weakness_saturated) => id }
-    val saturatedTs = if (weaknessSaturated.nonEmpty) {
-      new WeakTransitionSaturation(ts, Some(rel.getReachablePart(weaknessSaturated))).compute()
-    } else {
-      ts
-    }
-
-    val bisimMinimizedIds =
-      labels.collect { case (id, label) if label.act.contains('bisim_minimized) => id }
-    val minimizedTs = if (bisimMinimizedIds.nonEmpty) {
-      val bisimColoring = new Bisimilarity(saturatedTs, Some(rel.getReachablePart(bisimMinimizedIds) -- mainNodes)).computePartition()
-      new BuildQuotientSystem(saturatedTs, bisimColoring, mainNodes).build()
-    } else {
-      saturatedTs
-    }
-
-    val branchingBisimMinimizedIds =
-      labels.collect { case (id, label) if label.act.contains('srbb_minimized) => id }
-    val minimizedTs2 = if (branchingBisimMinimizedIds.nonEmpty) {
-      val divergenceInfo = new DivergenceFinder(minimizedTs).compute()
-      val bisimColoring = new BranchingBisimilarity(
-        minimizedTs,
-        Some(rel.getReachablePart(branchingBisimMinimizedIds) -- mainNodes),
-        stabilityRespecting = true
-      ).computePartition()
-      new BuildQuotientSystem(minimizedTs, bisimColoring, protectedNodes = mainNodes, tauCyclesOn = Some(divergenceInfo)).build()
-    } else {
-      minimizedTs
-    }
-
-    minimizedTs2
+    (mainNodes, new WeakTransitionSystem(rel, labels, silentActions.toSet))
   }
 
   case class StructureCallOperation(slug: String, resetReplay: Boolean = true) extends StructureAction {

@@ -307,10 +307,10 @@ Spec = (ecA.lcA.Spec + ecB.lcB.Spec)
 @minimize "strong"
 
 
-Peterson(x=35, weakness_saturated, y=63, main, bisim_minimized)
-Spec(x=-289, y=-26, main, weakness_saturated)
+Peterson(x=35, y=63, main)
+Spec(x=-289, y=-26, main)
 
-
+@preprocessing weakness_saturated, bisim_minimized
 
 @section "---------- below here, there's only layout information! ----------" 
 
@@ -382,9 +382,11 @@ Spec(x=-289, y=-26, main, weakness_saturated)
        |
        |@snip "---------- below here, there's only layout information! ----------"
        |
-       |Peterson(x=886, y=335, main, srbb_minimized)
+       |Peterson(x=886, y=335, main)
        |MxSpec1(main, x=122, y=225)
        |MxSpec2(main, x=390, y=520)
+       |
+       |@preprocessing srbb_minimized
        |
        |"(A1 | setTurnA!B11 | TurnA | ReadyAf | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=877, y=228)
        |"(setTurnB!A11 | B1 | TurnA | ReadyAt | ReadyBf) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=681, y=398)

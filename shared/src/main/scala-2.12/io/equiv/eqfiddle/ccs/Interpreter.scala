@@ -9,6 +9,12 @@ import io.equiv.eqfiddle.ts.WeakTransitionSystem
 import io.equiv.eqfiddle.ccs.Syntax.Restrict
 import io.equiv.eqfiddle.algo.AlgorithmLogging
 
+import io.equiv.eqfiddle.algo.transform.WeakTransitionSaturation
+import io.equiv.eqfiddle.algo.sigref.Bisimilarity
+import io.equiv.eqfiddle.algo.sigref.BranchingBisimilarity
+import io.equiv.eqfiddle.algo.transform.BuildQuotientSystem
+import io.equiv.eqfiddle.algo.transform.DivergenceFinder
+
 /** Transforms a CCS term into a transition system */
 class Interpreter[S, A, L](
     ccsDef: Syntax.Definition,
@@ -20,17 +26,18 @@ class Interpreter[S, A, L](
     maxStates: Int = 5000
   ) {
   
-  val silentActions = Set(arrowLabeling(Some(Syntax.Label("τ"))).get)
+  val silentActions = Set(arrowLabeling(Some(Syntax.Label("τ"))).get, arrowLabeling(Some(Syntax.Label("tau"))).get)
 
   val silentAction = silentActions.head
   
-  val defaultFactory = new WeakTransitionSystem[S, A, L](_: LabeledRelation[S, A], _: Map[S, L], silentActions)
+  def defaultFactory(steps: LabeledRelation[S, A], labels: Map[S, L]) =
+    (labels.keySet, new WeakTransitionSystem[S, A, L](steps, labels, silentActions))
 
   val transitions = collection.mutable.Map[S, List[(A, S)]]()
   private val todo = collection.mutable.Buffer[Syntax.ProcessExpression]()
   var stateCounter = 0
 
-  def result[R](factory: (LabeledRelation[S, A], Map[S, L]) => R = defaultFactory): Result[R] = {
+  def result(factory: (LabeledRelation[S, A], Map[S, L]) => (Set[S], WeakTransitionSystem[S, A, L]) = defaultFactory _): Result[WeakTransitionSystem[S, A, L]] = {
    
     val procEnv = ccsDef.defs collect {
       case d@Syntax.ProcessDefinition(name, proc, _) =>
@@ -114,7 +121,37 @@ class Interpreter[S, A, L](
       val emptyLabels = (relation.lhs ++ relation.rhs) map { n => (n, nodeLabeling(None).get) } toMap
       val labels = emptyLabels ++ labelMap
 
-      factory(relation, labels)
+      val metaSettings = for {
+        (name, attribsNested) <- ccsDef.defs collect {
+          case Syntax.MetaDeclaration(name, attribs, _) => (name, attribs) 
+        } groupBy(_._1)
+        attribs = attribsNested.map(_._2).flatten
+      } yield {
+        (name, attribs)
+      }
+
+      val (mainConcreteNodes, genTs) = factory(relation, labels)
+      var ts = genTs
+
+      val preprocessing = metaSettings.getOrElse("preprocessing", List[String]())
+      for (
+        method <- preprocessing
+      ) {
+        method match {
+          case "weakness_saturated" =>
+            ts = new WeakTransitionSaturation[S, A, L](ts).compute()
+          case "bisim_minimized" =>
+            val bisimColoring = new Bisimilarity[S, A, L](ts).computePartition()
+            ts = new BuildQuotientSystem[S, A, L](ts, bisimColoring, mainConcreteNodes).build()
+          case "srbb_minimized" =>
+            val divergenceInfo = new DivergenceFinder[S, A, L](ts).compute()
+            val bisimColoring = new BranchingBisimilarity[S, A, L](
+              ts, stabilityRespecting = true
+            ).computePartition()
+            ts = new BuildQuotientSystem[S, A, L](ts, bisimColoring, protectedNodes = mainConcreteNodes, tauCyclesOn = Some(divergenceInfo)).build()
+        }
+      }
+      ts
     }
   }
   
