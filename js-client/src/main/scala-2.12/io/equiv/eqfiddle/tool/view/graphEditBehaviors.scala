@@ -68,7 +68,7 @@ class GraphMoveNode(renderer: GraphEditing) extends GraphEditBehavior {
   override def onDragEnd(node: GraphNode) {
     val updates = affectedNodes.map { n =>
       n.fixed = 1
-      (n.nameId.name, Structure.NodeLabel(node.meta.act, n.px.toOption, n.py.toOption))
+      (n.nameId.name, Structure.NodeLabel(node.meta.act - Symbol("implicit-main"), n.px.toOption, n.py.toOption))
     }
     renderer.triggerAction(Source.UpdateNodeAnnotationAttributes(updates))
   }

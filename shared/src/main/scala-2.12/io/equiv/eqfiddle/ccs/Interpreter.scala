@@ -68,7 +68,7 @@ class Interpreter[S, A, L](
       }
     }
     val mainNodes = ccsDef.defs collect {
-      case d: Syntax.NodeAnnotation if d.attributeDefined("main") => d.name
+      case d: Syntax.NodeAnnotation if d.attributeDefined("main") || d.attributeDefined("implicit-main") => d.name
     }
     val interestingNodes =
       if (mainNodes.isEmpty)
@@ -92,7 +92,7 @@ class Interpreter[S, A, L](
       nodeDecls <- factorResults ( completedAnnotations collect {
         case d @ Syntax.NodeAnnotation(name, attribs, pos) =>
           if (mainNodes.isEmpty && procEnv.isDefinedAt(name)) {
-            convertNodeAnnotation(Syntax.NodeAnnotation(name, attribs :+ ("main", ""), pos))
+            convertNodeAnnotation(Syntax.NodeAnnotation(name, attribs :+ ("implicit-main", ""), pos))
           } else {
             convertNodeAnnotation(d)
           }
