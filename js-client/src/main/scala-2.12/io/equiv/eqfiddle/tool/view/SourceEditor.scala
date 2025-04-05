@@ -65,12 +65,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
   val sourceDoc = editor.getDoc
   sourceDoc.setValue("")
   
-  // document to display the simulation state
-  val pipelineDoc = sourceDoc.copy(false)
-  pipelineDoc.setValue("")
-  
   var lastText = ""
-  var lastPipelineText = ""
   
   var runners = List[(String, List[String], Int)]()
   
@@ -96,39 +91,11 @@ class SourceEditor(val main: Control) extends ViewComponent {
     .on("click", onExport _)
     
   val sourceButton = jQuery("#es-graph-mode-edit")
-  val pipelineButton = jQuery("#es-graph-mode-pipeline")
   
   sourceButton.on("click", { ev: JQueryEventObject => 
     editor.swapDoc(sourceDoc)
     null
   })
-  pipelineButton.on("click", { ev: JQueryEventObject => 
-    editor.swapDoc(pipelineDoc)
-    null
-  })
-  
-  val pipelineStepButton = jQuery("#es-pipeline-step")
-  val pipelineStepMicroButton = jQuery("#es-pipeline-step-micro")
-  val pipelineRunButton = jQuery("#es-pipeline-run")
-  val pipelineResetButton = jQuery("#es-pipeline-reset")
-  
-  pipelineStepButton.on("click", { ev: JQueryEventObject => 
-    triggerAction(Pipeline.StepPipeline())
-    null
-  })
-  pipelineStepMicroButton.on("click", { ev: JQueryEventObject => 
-    triggerAction(Structure.StructureDoReplayStep())
-    null
-  })
-  pipelineRunButton.on("click", { ev: JQueryEventObject => 
-    triggerAction(Pipeline.RunPipeline())
-    null
-  })
-  pipelineResetButton.on("click", { ev: JQueryEventObject => 
-    triggerAction(Pipeline.ResetPipeline())
-    null
-  })
-  
   def triggerLineAction(line: Int) = {
     for {
       (meta, info, l) <- runners
@@ -143,12 +110,6 @@ class SourceEditor(val main: Control) extends ViewComponent {
     if (newText != lastText) {
       lastText = newText
       triggerAction(Source.LoadDefinition(newText))
-    }
-    
-    val newPipelineText = pipelineDoc.getValue()
-    if (newPipelineText != lastPipelineText) {
-      lastPipelineText = newPipelineText
-      triggerAction(Pipeline.LoadPipeline(newPipelineText))
     }
   }
     

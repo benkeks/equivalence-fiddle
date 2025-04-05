@@ -140,35 +140,6 @@ object Pipeline {
     def implementPipeline(pipeline: Pipeline): Boolean
   }
   
-  case class LoadPipeline(code: String) extends PipelineAction {
-    override def implementPipeline(pipeline: Pipeline) = {
-      AlgorithmLogging.debugLog("pipeline: "+code)
-      pipeline.changePipeline(code)
-      true
-    }
-  }
-  
-  case class StepPipeline() extends PipelineAction {
-    override def implementPipeline(pipeline: Pipeline) = {
-      pipeline.stepPipeline()
-      true
-    }
-  }
-  
-  case class RunPipeline() extends PipelineAction {
-    override def implementPipeline(pipeline: Pipeline) = {
-      pipeline.runPipeline()
-      true
-    }
-  }
-  
-  case class ResetPipeline() extends PipelineAction {
-    override def implementPipeline(pipeline: Pipeline) = {
-      pipeline.resetPipeline()
-      true
-    }
-  }
-  
   case class RunMetaRunner(meta: String, info: List[String], line: Int) extends PipelineAction {
     override def implementPipeline(pipeline: Pipeline) = {
       pipeline.runMetaRunner(meta, info, line)

@@ -30,7 +30,7 @@ class Source(val main: Control) extends ModelComponent {
     
     val beginParse = Date.now
     val parser = new ccs.Parser(code)
-    
+
     parser.parse match {
       case parser.ParseSuccess(ccsDef, _) =>
         AlgorithmLogging.debugLog("Parsing took: " + (Date.now - beginParse) + "ms.", logLevel = 8)

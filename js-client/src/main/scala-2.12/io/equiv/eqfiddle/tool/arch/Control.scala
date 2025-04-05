@@ -25,13 +25,16 @@ trait Control extends ActionDispatcher {
     
     if (!changeDeliveryRunning) {
       changeDeliveryRunning = true
-      while(pendingChanges.nonEmpty) {
-        val ch = pendingChanges.dequeue()
-        AlgorithmLogging.debugLog("processing " + ch)
-        modelComponents.foreach(_.notify(ch))
-        viewComponents.foreach(_.notify(ch))
+      try {
+        while(pendingChanges.nonEmpty) {
+          val ch = pendingChanges.dequeue()
+          AlgorithmLogging.debugLog("processing " + ch)
+          modelComponents.foreach(_.notify(ch))
+          viewComponents.foreach(_.notify(ch))
+        }
+      } finally {
+        changeDeliveryRunning = false
       }
-      changeDeliveryRunning = false
     }
   }
   
