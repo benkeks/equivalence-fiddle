@@ -80,14 +80,14 @@ class GraphRenderer(val main: Control)
     
     val nodeLinks = for {
       ((e1, e2), ees) <- ts.step.tupleSet.groupBy(t => (t._1, t._3))
-      en1 = nodes(e1)
-      en2 = nodes(e2)
+      en1 <- nodes.get(e1)
+      en2 <- nodes.get(e2)
     } yield new NodeLink('stepto, ees.map(_._2.toActString).mkString(", "), Set(en1), Set(en2), (en1, en2))
 
     val relationLinks = for {
       ((e1, e2), ll) <- baseRelation.groupBy(t => (t._1, t._3)).toIterable
-      en1 = e1 map nodes
-      en2 = e2 map nodes
+      en1 = e1 flatMap nodes.get
+      en2 = e2 flatMap nodes.get
       (l0, i) <- ll.toList.zipWithIndex
       l = (" " * i) + l0._2
     } yield new NodeLink(Symbol("relation " + l0._2), l, en1.toSet, en2.toSet, (e1, l0._2, e2))
