@@ -33,12 +33,12 @@ case class Spectrum[+OC <: ObservationNotion](
   /** names the coarsest notion of equivalence where this formula is part of the distinguishing formulas */
   def classifyFormula[CF <: HennessyMilnerLogic.Formula[_]](f: CF): (OC, List[EquivalenceNotion[OC]]) = {
     val balancedClass = classifier(f)
-    (balancedClass, classifyClass(balancedClass))
+    (balancedClass, classifyNotion(balancedClass))
   }
 
 
   /** names the coarsest notion of equivalence where this classification is part of the distinguishing capacities */
-  def classifyClass(c: ObservationNotion): List[EquivalenceNotion[OC]] = {
+  def classifyNotion(c: ObservationNotion): List[EquivalenceNotion[OC]] = {
     val balancedClass = c // TODO maybe change?
     val classifications = notions.filter(en => (balancedClass lub en.obsNotion) == en.obsNotion)
     var currentMax = List[OC]()

@@ -71,14 +71,14 @@ trait SpectroscopyFramework[S, A, L, CF <: HennessyMilnerLogic.Formula[A]]
     debugLog("HML spectroscopy game size: " + spectroscopyGame.discovered.size)
 
     // if enabled, build distinguishing formulas for the compared states. (assumes side-effect: that `distinguishingFormulas` is populated by this construction.)
-    // if there are problems, print errors / warnings.
-    for {
-      gn <- init
-      (p, q) <- gamePositionToRelationItem(gn)
-      bestPrice <- spectroscopyGame.attackerWinningBudgets(gn)
-      energyClass = energyToNotion(bestPrice)
-    } {
-      if (config.computeFormulas) {
+    // if there are problems, print errors / warnings. (these problems mean that the algorithm might be buggy! they should never appear in practice, if the implementation is correct.)
+    if (config.computeFormulas) {
+      for {
+        gn <- init
+        (p, q) <- gamePositionToRelationItem(gn)
+        bestPrice <- spectroscopyGame.attackerWinningBudgets(gn)
+        energyClass = energyToNotion(bestPrice)
+      } {
         for (witnessFormula <- buildHMLWitness(spectroscopyGame, gn, bestPrice).headOption) {
           val (formulaPrice, correspondingNotions) = spectrum.classifyFormula(witnessFormula)
           if (! (formulaPrice <= energyClass) ) {
@@ -87,7 +87,7 @@ trait SpectroscopyFramework[S, A, L, CF <: HennessyMilnerLogic.Formula[A]]
             if (formulaPrice < energyClass) {
               AlgorithmLogging.debugLog(s"WARNING: Witness formula $witnessFormula ${formulaPrice.toTuple} is strictly cheaper than determined minimal distinction class ${energyClass.toTuple}!", logLevel = 5)
             }
-            debugLog(s"Distinguished at ${energyClass.toTuple}, ${spectrum.classifyClass(energyClass)} preorder by ${witnessFormula}; Price: $formulaPrice, $correspondingNotions")
+            debugLog(s"Distinguished at ${energyClass.toTuple}, ${spectrum.classifyNotion(energyClass)} preorder by ${witnessFormula}; Price: $formulaPrice, $correspondingNotions")
             checkDistinguishing(witnessFormula, p, q)
           }
         }
@@ -123,7 +123,7 @@ trait SpectroscopyFramework[S, A, L, CF <: HennessyMilnerLogic.Formula[A]]
         price <- prices
         formula = distinguishingPositionFormulas(gn).headOption
           .getOrElse(HennessyMilnerLogic.True[A].asInstanceOf[CF]) // if no formulas have been computed, take True as dummy
-      } yield (formula, price, spectrum.classifyClass(price))
+      } yield (formula, price, spectrum.classifyNotion(price))
     } yield SpectroscopyInterface.SpectroscopyResultItem[S, A, Notion, CF](p, q, distinctions.toList, preorders)
 
     // collect some diagnostic information (unless disabled)
