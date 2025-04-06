@@ -71,7 +71,7 @@ object EquivalenceSpectroscopeAPI {
   def performSpectroscopy(lts: WeakTS, p1: String, p2: String) = {
     AlgorithmLogging.debugLogActive = false
     val algo = new StrongSpectroscopy(lts)
-    val result = algo.compute(List((p1, p2)))
+    val result = algo.decideAll(List((p1, p2)))
 
     for {
       res <- result.relationItems.toJSArray

@@ -85,7 +85,7 @@ class VeryLargeTransitionSystems(
 
     val algo = algorithm(system)
 
-    val result = algo.compute(comparedPairs, config.copy(computeFormulas = false, energyCap = 3, saveGameSize = true))
+    val result = algo.decideAll(comparedPairs, config.copy(computeFormulas = false, energyCap = 3, saveGameSize = true))
     printTiming(startTime, "Spectroscopy")
 
     output("Game positions", result.meta("game-positions"))

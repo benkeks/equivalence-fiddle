@@ -60,7 +60,7 @@ class LTBTSDistinctions(
 
       val result = {
         val algo = algorithm(ltbtsSystem)
-        algo.compute(List((n1, n2)), SpectroscopyInterface.SpectroscopyConfig(computeFormulas = true))
+        algo.decideAll(List((n1, n2)), SpectroscopyInterface.SpectroscopyConfig(computeFormulas = true))
       }
 
       for {

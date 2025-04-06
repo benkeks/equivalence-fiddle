@@ -73,7 +73,7 @@ class Sizemark(
 
     val algo = algorithm(system)
 
-    val result = algo.compute(comparedPairs, config)
+    val result = algo.decideAll(comparedPairs, config)
 
     output("Game positions", result.meta("game-positions"))
     output("Game moves", result.meta("game-moves"))

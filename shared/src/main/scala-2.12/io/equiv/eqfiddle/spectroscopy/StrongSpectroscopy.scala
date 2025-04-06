@@ -15,10 +15,11 @@ import io.equiv.eqfiddle.game.GameGraphVisualizer
 
 class StrongSpectroscopy[S, A, L] (
     override val ts: WeakTransitionSystem[S, A, L])
-  extends SpectroscopyInterface[S, A, L, HennessyMilnerLogic.Formula[A]] {
+  extends SpectroscopyInterface[S, A, L, HennessyMilnerLogic.Formula[A]]
+  with SpectroscopyFramework[S, A, L, HennessyMilnerLogic.Formula[A]] 
+  with SpectroscopyEquivalenceChecking[S, A, L, HennessyMilnerLogic.Formula[A]] {
 
   import StrongSpectroscopyGame._
-  import MaterializedEnergyGame._
 
   type Notion = ObservationNotionStrong
   type SpectroscopyGame = StrongSpectroscopyGame[S, A, L]
