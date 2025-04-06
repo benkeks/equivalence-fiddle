@@ -8,6 +8,8 @@ class EnergyGameTests extends AnyFunSpec with should.Matchers  {
   
   class TestEnergyGame() extends EnergyGame[SimpleGame.GamePosition] {
 
+    override def dimensionality: Int = 2
+
     private def add = EnergyGame.EnergyUpdate.add(_, 2)
 
     case object G1 extends SimpleGame.AttackerPosition
@@ -42,13 +44,7 @@ class EnergyGameTests extends AnyFunSpec with should.Matchers  {
 
   val game = new TestEnergyGame()
 
-  def instantAttackerWin(gn: SimpleGame.GamePosition) = gn match {
-    case game.G6 => Set(EnergyGame.Energy.zeroEnergy(2))
-    case _ => Set.empty
-  }
-  game.populateGame(
-    List(game.G1),
-    instantAttackerWin(_))
+  game.populateGame(List(game.G1))
 
   describe("The Example Energy Game") {
     it("should be winnable for the attacker at G2") {

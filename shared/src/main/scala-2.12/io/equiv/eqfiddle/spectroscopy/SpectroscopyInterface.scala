@@ -35,10 +35,12 @@ trait SpectroscopyInterface[S, A, L, CF <: HennessyMilnerLogic.Formula[A]] {
   def notionToEnergy(obsNotion: Notion): Energy
   def energyToNotion(e: Energy): Notion
 
-
+  /** Place to memoize distinguishing formulas per position */
   val distinguishingFormulas =
     collection.mutable.Map[(GamePosition, Energy), Iterable[HennessyMilnerLogic.Formula[A]]]()
 
+  def buildSpectroscopyGame(configuration: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig()): SpectroscopyGame
+  
   def buildHMLWitness(
     game: SpectroscopyGame,
     node: GamePosition,

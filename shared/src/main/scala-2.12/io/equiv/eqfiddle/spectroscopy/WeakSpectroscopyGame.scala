@@ -39,6 +39,8 @@ class WeakSpectroscopyGame[S, A, L](
   import WeakSpectroscopyGame._
   type GamePosition = WeakSpectroscopyGamePosition[S, A]
 
+  override def dimensionality: Int = 9
+
   // obs, branchingConj, unstableConj, stableConj, immediateConj, revivals, positiveHeight, negativeHeight, negations
   protected val NoEnergyUpdate              = new EnergyGame.EnergyUpdate(Array( 0, 0, 0, 0, 0, 0, 0, 0, 0), energyCap = config.energyCap)
   protected val ObsEnergyUpdate             = new EnergyGame.EnergyUpdate(Array(-1, 0, 0, 0, 0, 0, 0, 0, 0), energyCap = config.energyCap)

@@ -6,6 +6,11 @@ trait EnergyGame[GamePosition <: SimpleGame.GamePosition] extends SimpleGame[Gam
 
   def weight(gn1: GamePosition, gn2: GamePosition): EnergyUpdate
 
+  def dimensionality: Int
+
+  def zeroVec = Energy.zeroEnergy(dimensionality)
+  private def zeroVecSet = Set(zeroVec)
+
   override def energyIsLower(p1: Energy, p2: Energy): Boolean = p1 < p2
 
   override def energyIsLowerOrEq(p1: Energy, p2: Energy): Boolean = p1 <= p2
@@ -22,7 +27,9 @@ trait EnergyGame[GamePosition <: SimpleGame.GamePosition] extends SimpleGame[Gam
           s <- successors(node)
           w = weight(node, s)
         } yield attackerWinningBudgets(s).map(w.unapplyEnergyUpdate(_))
-        if (possibleMoves.isEmpty || possibleMoves.exists(_.isEmpty)) {
+        if (possibleMoves.isEmpty) {
+          zeroVecSet // the attacker wins with all energies if the defender has no options
+        } else if (possibleMoves.exists(_.isEmpty)) {
           Nil // return empty if one defender option is un-winnable for attacker
         } else {
           var productMoves = possibleMoves.head

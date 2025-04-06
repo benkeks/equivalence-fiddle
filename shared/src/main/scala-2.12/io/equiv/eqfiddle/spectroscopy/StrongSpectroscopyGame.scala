@@ -24,6 +24,8 @@ class StrongSpectroscopyGame[S, A, L](
   import StrongSpectroscopyGame._
   type GamePosition = StrongSpectroscopyGamePosition[S]
 
+  override def dimensionality: Int = 6
+
   private val NoEnergyUpdate        = new EnergyGame.EnergyUpdate(Array( 0,0,0,0,0,0), energyCap = config.energyCap)
   private val ObsEnergyUpdate       = new EnergyGame.EnergyUpdate(Array(-1,0,0,0,0,0), energyCap = config.energyCap)
   private val RevivalEnergyUpdate   = new EnergyGame.EnergyUpdate(Array(3,-1,0,0,0,0), energyCap = config.energyCap)

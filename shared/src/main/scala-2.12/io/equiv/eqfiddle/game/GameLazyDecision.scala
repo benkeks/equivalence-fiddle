@@ -44,8 +44,7 @@ trait GameLazyDecision[GamePosition <: SimpleGame.GamePosition, P] extends Abstr
   def computeCurrentBudget(node: GamePosition): Iterable[P]
 
   def populateGame(
-      initialPositions: Iterable[GamePosition],
-      instantAttackerWin: GamePosition => Iterable[P]) = {
+      initialPositions: Iterable[GamePosition]) = {
 
     val todo = collection.mutable.Queue[GamePosition]()
     val visited = collection.mutable.Set[GamePosition]()
@@ -55,32 +54,24 @@ trait GameLazyDecision[GamePosition <: SimpleGame.GamePosition, P] extends Abstr
     while (todo.nonEmpty) {
       if (printToDoLength) AlgorithmLogging.debugLog(todo.size.toString())
       val currPos = todo.dequeue()
-      val instaWin = instantAttackerWin(currPos)
-      if (instaWin.nonEmpty) {
-        if (energyUpdate(currPos, instaWin)) {
-          // propagate a new win
-          predecessors(currPos).foreach(_ +=: todo)
-        }
-      } else {
-        if (!(visited contains currPos)) {
-          visited += currPos
-          val succs = computeSuccessors(currPos)
-          computedSuccessors(currPos) = succs.toSet
-          for {
-            gn <- succs
-          } {
-            computedPredecessors(gn) += currPos
-            if (!(discovered contains gn)) {
-              discovered += gn
-              todo += gn
-            }
+      if (!(visited contains currPos)) {
+        visited += currPos
+        val succs = computeSuccessors(currPos)
+        computedSuccessors(currPos) = succs.toSet
+        for {
+          gn <- succs
+        } {
+          computedPredecessors(gn) += currPos
+          if (!(discovered contains gn)) {
+            discovered += gn
+            todo += gn
           }
         }
-        val updatedBudget = computeCurrentBudget(currPos)
-        if (energyUpdate(currPos, updatedBudget) ) {
-          // propagate a new win
-          predecessors(currPos).foreach(_ +=: todo)
-        }
+      }
+      val updatedBudget = computeCurrentBudget(currPos)
+      if (energyUpdate(currPos, updatedBudget) ) {
+        // propagate a new win
+        predecessors(currPos).foreach(_ +=: todo)
       }
     }
   }
