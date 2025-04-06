@@ -79,7 +79,11 @@ trait SpectroscopyFramework[S, A, L, CF <: HennessyMilnerLogic.Formula[A]]
         bestPrice <- spectroscopyGame.attackerWinningBudgets(gn)
         energyClass = energyToNotion(bestPrice)
       } {
-        for (witnessFormula <- buildHMLWitness(spectroscopyGame, gn, bestPrice).headOption) {
+        val witness = buildHMLWitness(spectroscopyGame, gn, bestPrice).headOption
+        if (witness.isEmpty) {
+          AlgorithmLogging.debugLog(s"ERROR: No witness formula for $gn with price ${bestPrice} found!", logLevel = 4)
+        }
+        for (witnessFormula <- witness) {
           val (formulaPrice, correspondingNotions) = spectrum.classifyFormula(witnessFormula)
           if (! (formulaPrice <= energyClass) ) {
             AlgorithmLogging.debugLog(s"ERROR: Formula $witnessFormula ${formulaPrice.toTuple} too expensive; not below ${energyClass.toTuple}.", logLevel = 4)
@@ -148,7 +152,7 @@ trait SpectroscopyFramework[S, A, L, CF <: HennessyMilnerLogic.Formula[A]]
     val hmlInterpreter = new HMLInterpreter(ts)
     val check = hmlInterpreter.isTrueAt(formula, List(p, q))
     if (!check(p) || check(q)) {
-      AlgorithmLogging.debugLog("Formula " + formula.toString() + " is no sound distinguishing formula! " + check, logLevel = 4)
+      AlgorithmLogging.debugLog("ERROR: Formula " + formula.toString() + " is no sound distinguishing formula! " + check, logLevel = 4)
       false
     } else {
       true

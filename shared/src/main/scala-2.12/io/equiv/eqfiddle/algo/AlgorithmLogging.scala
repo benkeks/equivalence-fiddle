@@ -58,7 +58,7 @@ object AlgorithmLogging {
       val outMsg = if (asLink == "") msg else uriEncoder(asLink + msg)
       if (logLevel <= globalLogLevel) {
         if (logLevel <= 4)
-          Console.err.println(outMsg)
+          Console.err.println(Console.RED + outMsg)
         else if (logLevel <= 6)
           Console.out.println(Console.YELLOW + outMsg)
         else

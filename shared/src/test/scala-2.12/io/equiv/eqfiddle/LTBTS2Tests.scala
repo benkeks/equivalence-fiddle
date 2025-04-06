@@ -14,6 +14,7 @@ class LTBTS2Tests extends CSSSampleTests[ObservationNotionWeak, HennessyMilnerLo
   val configs = Seq(
     "unoptimized" -> SpectroscopyInterface.SpectroscopyConfig(useSymmetryPruning = false, useBranchingSpectroscopyGame = false, useCleverSpectroscopyGame = false, energyCap = 3),
     "unoptimized-formulas" -> SpectroscopyInterface.SpectroscopyConfig(useSymmetryPruning = false, useBranchingSpectroscopyGame = false, useCleverSpectroscopyGame = false, computeFormulas = true),
+    "branching-formulas" -> SpectroscopyInterface.SpectroscopyConfig(useSymmetryPruning = false, useBranchingSpectroscopyGame = true, useCleverSpectroscopyGame = false, computeFormulas = true),
     "symmetry-pruned" -> SpectroscopyInterface.SpectroscopyConfig(useSymmetryPruning = true, useBranchingSpectroscopyGame = false, useCleverSpectroscopyGame = false, energyCap = 3),
     "clever-spectro" -> SpectroscopyInterface.SpectroscopyConfig(useSymmetryPruning = false, useBranchingSpectroscopyGame = false, useCleverSpectroscopyGame = true, energyCap = 3),
     "symmetry-pruned-clever" -> SpectroscopyInterface.SpectroscopyConfig(useSymmetryPruning = true, useBranchingSpectroscopyGame = false, useCleverSpectroscopyGame = true, energyCap = 3),

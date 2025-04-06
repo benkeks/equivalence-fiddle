@@ -37,8 +37,6 @@ trait CSSSampleTests[OC <: ObservationNotion, CF <: HennessyMilnerLogic.Formula[
       title: String,
       spectroscopyConfig: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig()) = {
 
-    AlgorithmLogging.debugLogActive = false
-
     val samples = sampleNames.map {
       case (n1, n2, preords, notPreords) =>
         (n1, n2, toSpectrumClassSet(preords), toSpectrumClassSet(notPreords))
