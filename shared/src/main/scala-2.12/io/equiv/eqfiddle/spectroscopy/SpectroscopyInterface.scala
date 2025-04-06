@@ -72,17 +72,41 @@ trait SpectroscopyInterface[S, A, L, CF <: HennessyMilnerLogic.Formula[A]]
 
     debugLog("HML spectroscopy game size: " + spectroscopyGame.discovered.size)
 
-    if (config.computeFormulas) {
-      for {
-        gn <- init
-        (p, q) <- gamePositionToRelationItem(gn)
-        bestPrice <- spectroscopyGame.attackerWinningBudgets(gn)
-        witnessFormula <- buildHMLWitness(spectroscopyGame, gn, bestPrice)
-      } {
-        debugLog("Distinguished under " + spectrum.classifyFormula(witnessFormula) + " preorder by " + witnessFormula.toString())
-        checkDistinguishing(witnessFormula, p, q)
+    for {
+      gn <- init
+      (p, q) <- gamePositionToRelationItem(gn)
+      bestPrice <- spectroscopyGame.attackerWinningBudgets(gn)
+      energyClass = energyToNotion(bestPrice)
+    } {
+      if (config.computeFormulas) {
+        for (witnessFormula <- buildHMLWitness(spectroscopyGame, gn, bestPrice).headOption) {
+          val (formulaPrice, correspondingNotions) = spectrum.classifyFormula(witnessFormula)
+          if (! (formulaPrice <= energyClass) ) {
+            AlgorithmLogging.debugLog(s"ERROR: Formula $witnessFormula ${formulaPrice.toTuple} too expensive; not below ${energyClass.toTuple}.", logLevel = 4)
+          } else {
+            if (formulaPrice < energyClass) {
+              AlgorithmLogging.debugLog(s"WARNING: Witness formula $witnessFormula ${formulaPrice.toTuple} is strictly cheaper than determined minimal distinction class ${energyClass.toTuple}!", logLevel = 5)
+            }
+            debugLog(s"Distinguished at ${energyClass.toTuple}, ${spectrum.classifyClass(energyClass)} preorder by ${witnessFormula}; Price: $formulaPrice, $correspondingNotions")
+            checkDistinguishing(witnessFormula, p, q)
+          }
+        }
       }
-      val distinguishingNodeFormulas = for {
+    }
+        
+    // discovered positions with not attacker winning budgets are won by the defender and thus bisimilar
+    val bisimilarNodes = for {
+      gn <- spectroscopyGame.discovered
+      if (gamePositionToRelationItem(gn).isDefined) &&
+        (!spectroscopyGame.attackerWinningBudgets.isDefinedAt(gn) || spectroscopyGame.attackerWinningBudgets(gn).isEmpty)
+    } yield {
+      spectroscopyGame.attackerWinningBudgets(gn) = List()
+      (gn, Set[CF]())
+    }
+
+
+    val distinguishingNodeFormulas = (if (config.computeFormulas) {
+       for {
         (node, pricedFormulas) <- distinguishingFormulas
           .toSet[((GamePosition, Energy), Iterable[CF])]
           .groupBy(kv => kv._1._1)
@@ -91,76 +115,33 @@ trait SpectroscopyInterface[S, A, L, CF <: HennessyMilnerLogic.Formula[A]]
           f <- spectrum.getLeastDistinguishing(formulasForPrice)
         } yield f
       } yield (node, formulas)
+    } else Map[GamePosition, Set[CF]]()).withDefaultValue(Set[CF]())
 
-      val bisimilarNodes = for {
-        gn <- spectroscopyGame.discovered
-        if (gamePositionToRelationItem(gn).isDefined) &&
-          (!spectroscopyGame.attackerWinningBudgets.isDefinedAt(gn) || spectroscopyGame.attackerWinningBudgets(gn).isEmpty)
-      } yield (gn, Set[CF]())
-
-      val distinguishingNodeFormulasExtended = distinguishingNodeFormulas ++ bisimilarNodes
-
-      val gameString = debugLog(
-        graphvizGameWithFormulas(spectroscopyGame, spectroscopyGame.attackerWinningBudgets.toMap, distinguishingNodeFormulasExtended),
-        asLink = "https://edotor.net/?engine=dot#"
-      )
-
-      val bestPreorders: Map[GamePosition,List[Spectrum.EquivalenceNotion[Notion]]] =
-        distinguishingNodeFormulasExtended.mapValues { ffs =>
-        val classes = ffs.flatMap(spectrum.classifyFormula(_)._2)
-        spectrum.getStrongestPreorderClass(classes)
-      }
-
-      val spectroResults = for {
-        gn <- spectroscopyGame.discovered
-        (p, q) <- gamePositionToRelationItem(gn)
-        preorders <- bestPreorders.get(gn)
-        distinctionFormulas = distinguishingNodeFormulasExtended(gn)
-        distinctions = for {
-          f <- distinctionFormulas.toList
-          (price, eqs) = spectrum.classifyFormula(f)
-        } yield (f, price, eqs)
-      } yield SpectroscopyInterface.SpectroscopyResultItem[S, A, Notion, CF](p, q, distinctions, preorders)
-
-      if (config.saveGameSize) gameSize = spectroscopyGame.gameSize()
-
-      SpectroscopyInterface.SpectroscopyResult[S, A, Notion, CF](spectroResults.toList, spectrum, meta = Map("game" -> gameString))
-    } else {
-      for {
-        gn <- init
-        (p, q) <- gamePositionToRelationItem(gn)
-      } {
-        spectroscopyGame.attackerWinningBudgets(gn)
-      }
-
-      // handle bisimilar nodes
-      val bisimilarNodes = for {
-        gn <- spectroscopyGame.discovered
-        if (gamePositionToRelationItem(gn).isDefined) &&
-          (!spectroscopyGame.attackerWinningBudgets.isDefinedAt(gn) || spectroscopyGame.attackerWinningBudgets(gn).isEmpty)
-      } {
-        spectroscopyGame.attackerWinningBudgets(gn) = List()
-      }
-
-      val bestPreorders: Map[GamePosition,(Set[Notion],List[Spectrum.EquivalenceNotion[Notion]])] =
-        spectroscopyGame.attackerWinningBudgets.toMap.mapValues { energies =>
-        val fcs = energies.toSet[Energy].map(energyToNotion(_))
-        (fcs, spectrum.getStrongestPreorderClassFromClass(fcs))
-      }
-
-      val spectroResults = for {
-        gn <- spectroscopyGame.discovered
-        (p, q) <- gamePositionToRelationItem(gn)
-        (prices, preorders) <- bestPreorders.get(gn)
-        distinctions = for {
-          price <- prices
-        } yield (HennessyMilnerLogic.True[A].asInstanceOf[CF], price, spectrum.classifyClass(price))
-      } yield SpectroscopyInterface.SpectroscopyResultItem[S, A, Notion, CF](p, q, distinctions.toList, preorders)
-
-      if (config.saveGameSize) gameSize = spectroscopyGame.gameSize()
-
-      SpectroscopyInterface.SpectroscopyResult[S, A, Notion, CF](spectroResults.toList, spectrum)
+    val bestPreorders: Map[GamePosition,(Set[Notion],List[Spectrum.EquivalenceNotion[Notion]])] =
+      spectroscopyGame.attackerWinningBudgets.toMap.mapValues { energies =>
+      val fcs = energies.toSet[Energy].map(energyToNotion(_))
+      (fcs, spectrum.getStrongestPreorderClassFromClass(fcs))
     }
+
+    val spectroResults = for {
+      gn <- spectroscopyGame.discovered
+      (p, q) <- gamePositionToRelationItem(gn)
+      (prices, preorders) <- bestPreorders.get(gn)
+      distinctions = for {
+        price <- prices
+        formula = distinguishingNodeFormulas(gn).headOption
+          .getOrElse(HennessyMilnerLogic.True[A].asInstanceOf[CF]) // if no formulas have been computed, take true as dummy
+      } yield (formula, price, spectrum.classifyClass(price))
+    } yield SpectroscopyInterface.SpectroscopyResultItem[S, A, Notion, CF](p, q, distinctions.toList, preorders)
+
+    if (config.saveGameSize) gameSize = spectroscopyGame.gameSize()
+
+    val gameString = debugLog(
+      graphvizGameWithFormulas(spectroscopyGame, spectroscopyGame.attackerWinningBudgets.toMap, distinguishingNodeFormulas),
+      asLink = "https://edotor.net/?engine=dot#"
+    )
+
+    SpectroscopyInterface.SpectroscopyResult[S, A, Notion, CF](spectroResults.toList, spectrum, meta = Map("game" -> gameString))
 
   }
 
