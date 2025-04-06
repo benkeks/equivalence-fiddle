@@ -81,8 +81,8 @@ object EquivalenceSpectroscopeAPI {
   @JSExportTopLevel("LTBTS")
   def LTBTS() = {
     val classes = for {
-      Spectrum.EquivalenceNotion(name, obsClass) <- ObservationNotionStrong.LTBTS.notions
-    } yield (name, obsClass.toTuple.productIterator.toIterable.toJSArray)
+      Spectrum.EquivalenceNotion(name, obsNotion) <- ObservationNotionStrong.LTBTS.notions
+    } yield (name, obsNotion.toTuple.productIterator.toIterable.toJSArray)
     classes.toMap.toJSDictionary
   }
 }

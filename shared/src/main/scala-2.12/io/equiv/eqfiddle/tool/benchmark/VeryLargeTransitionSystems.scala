@@ -99,7 +99,7 @@ class VeryLargeTransitionSystems(
       val quotientSystem = new BuildQuotientSystem(system, quotient).build()
       if (littleBrotherElimination) {
         val minimizedSystem = new RemoveLittleBrothers(quotientSystem, { (p: Int, q: Int) =>
-          result.foundPreorders(p, q).exists(eq => eq.obsClass >= notion.obsClass)
+          result.foundPreorders(p, q).exists(eq => eq.obsNotion >= notion.obsNotion)
         }).build()
         output(notion.name, minimizedSystem.nodes.size.toString)
       } else {

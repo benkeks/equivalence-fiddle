@@ -10,12 +10,14 @@ import io.equiv.eqfiddle.hml.Spectrum
 
 trait SpectroscopyInterface[S, A, L, CF <: HennessyMilnerLogic.Formula[A]] {
 
-  def spectrum: Spectrum[ObservationNotion]
+  type Notion <: ObservationNotion
+
+  def spectrum: Spectrum[Notion]
 
   def compute(
     comparedPairs: Iterable[(S,S)],
     configuration: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig()
-  ) : SpectroscopyInterface.SpectroscopyResult[S, A, ObservationNotion, CF]
+  ) : SpectroscopyInterface.SpectroscopyResult[S, A, Notion, CF]
 
   def checkIndividualPreorder(
     comparedPairs: Iterable[(S,S)],
@@ -132,7 +134,7 @@ object SpectroscopyInterface {
         eq <- eqs
       } yield {
         distances.toQuotientColoring(
-          dist => !dist.exists(d => d <= eq.obsClass),
+          dist => !dist.exists(d => d <= eq.obsNotion),
           rep
         )
       }
@@ -149,7 +151,7 @@ object SpectroscopyInterface {
       val preords = foundPreorders(p, q)
       for {
         eq <- eqs
-        if preords.exists(p => eq.obsClass <= p.obsClass)
+        if preords.exists(p => eq.obsNotion <= p.obsNotion)
       } yield eq
     }
 

@@ -66,7 +66,7 @@ class LTBTSDistinctions(
       for {
         res <- result.relationItems
         if res.left == n1 && res.right == n2
-        (formula, obsClass, notions) <- res.distinctions
+        (formula, obsNotion, notions) <- res.distinctions
       } {
         println(formula.toString() + " ∈ " + notions.map(_.name).mkString(" ∩ "))
       }

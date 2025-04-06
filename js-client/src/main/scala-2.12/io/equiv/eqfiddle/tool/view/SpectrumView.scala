@@ -20,7 +20,7 @@ class SpectrumView[+OC <: ObservationNotion](
   val width = 550
   val height = 405
 
-  val axes = if (spectrum.notions.head.obsClass.toTuple.productArity > 6)
+  val axes = if (spectrum.notions.head.obsNotion.toTuple.productArity > 6)
     List(
       (0,-10), // obs
       (-25,-10), // branch
@@ -73,11 +73,11 @@ class SpectrumView[+OC <: ObservationNotion](
   }
 
   def southOfEquivalenceBoundary(oc: ObservationNotion): Boolean = {
-    equations.exists(e => oc <= spectrum.getSpectrumClass(e).obsClass)
+    equations.exists(e => oc <= spectrum.getSpectrumClass(e).obsNotion)
   }
 
   def southOfPreorderBoundary(oc: ObservationNotion): Boolean = {
-    preords.exists(e => oc <= spectrum.getSpectrumClass(e).obsClass)
+    preords.exists(e => oc <= spectrum.getSpectrumClass(e).obsNotion)
   }
 
   def render() = {
@@ -85,7 +85,7 @@ class SpectrumView[+OC <: ObservationNotion](
     // draw lattice structure
 
     val positions =
-      spectrum.notions.map(_.obsClass)
+      spectrum.notions.map(_.obsNotion)
 
     val neighbors = for {
       p1 <- positions
@@ -134,16 +134,16 @@ class SpectrumView[+OC <: ObservationNotion](
       .data(spectrum.notions.toJSArray)
       .enter()
       .append("circle")
-        .attr("cx", (eq: Spectrum.EquivalenceNotion[OC], _: Int) => positionOfNotion(eq.obsClass)._1 )
-        .attr("cy", (eq: Spectrum.EquivalenceNotion[OC], _: Int) => positionOfNotion(eq.obsClass)._2 )
+        .attr("cx", (eq: Spectrum.EquivalenceNotion[OC], _: Int) => positionOfNotion(eq.obsNotion)._1 )
+        .attr("cy", (eq: Spectrum.EquivalenceNotion[OC], _: Int) => positionOfNotion(eq.obsNotion)._2 )
         .attr("r", 4)
         .style("fill", (eq: Spectrum.EquivalenceNotion[OC], _: Int) =>
-          if (southOfEquivalenceBoundary(eq.obsClass)) "#1177dd" else if (southOfPreorderBoundary(eq.obsClass)) "#5577aa" else "#992211")
+          if (southOfEquivalenceBoundary(eq.obsNotion)) "#1177dd" else if (southOfPreorderBoundary(eq.obsNotion)) "#5577aa" else "#992211")
         .style("stroke-width", (eq: Spectrum.EquivalenceNotion[OC], _: Int) =>
           if (equations.contains(eq.name)) 4.0 else 0.0)
         .style("stroke", "#33aaff")
         .html((eq: Spectrum.EquivalenceNotion[OC], _: Int, _: js.UndefOr[Int]) =>
-          s"<title>${eq.obsClass.toTuple}</title>".replaceAll(Int.MaxValue.toString(),"∞"))
+          s"<title>${eq.obsNotion.toTuple}</title>".replaceAll(Int.MaxValue.toString(),"∞"))
 
 
     val lrDistinctions = svg.append("g")
@@ -177,12 +177,12 @@ class SpectrumView[+OC <: ObservationNotion](
       .enter()
       .append("text")
         .attr("x", (eq: Spectrum.EquivalenceNotion[OC], _: Int) => {
-          val pos = positionOfNotion(eq.obsClass)._1
+          val pos = positionOfNotion(eq.obsNotion)._1
           if (pos < 0) pos - 5 else pos + 5
         })
-        .attr("y", (eq: Spectrum.EquivalenceNotion[OC], _: Int) => positionOfNotion(eq.obsClass)._2 + 5 )
+        .attr("y", (eq: Spectrum.EquivalenceNotion[OC], _: Int) => positionOfNotion(eq.obsNotion)._2 + 5 )
         .attr("text-anchor", (eq: Spectrum.EquivalenceNotion[OC], _: Int) =>
-          if (positionOfNotion(eq.obsClass)._1 < 0) "end" else "start")
+          if (positionOfNotion(eq.obsNotion)._1 < 0) "end" else "start")
         .text((eq: Spectrum.EquivalenceNotion[OC], _: Int) => eq.name)
 
   }

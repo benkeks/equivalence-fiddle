@@ -435,15 +435,15 @@ object Structure {
 
       val eqLevels =
         distRel.labels.map(result.spectrum.getStrongestPreorderClassFromClass(_))
-        .flatten.toSet[Spectrum.EquivalenceNotion[ObservationNotionStrong]].toList.sortBy(_.obsClass.toTuple).reverse
+        .flatten.toSet[Spectrum.EquivalenceNotion[ObservationNotionStrong]].toList.sortBy(_.obsNotion.toTuple).reverse
 
       val replay = for {
-        Spectrum.EquivalenceNotion(name, obsClass) <- eqLevels
+        Spectrum.EquivalenceNotion(name, obsNotion) <- eqLevels
         resultRelation = for {
           (p, d, q) <- lubDists
-          if !d.exists(_ <= obsClass)
+          if !d.exists(_ <= obsNotion)
         } yield (p, "eq", q)
-        msg = obsClass.toTuple.toString().replace(Int.MaxValue.toString(), "∞") + " " + name
+        msg = obsNotion.toTuple.toString().replace(Int.MaxValue.toString(), "∞") + " " + name
       } yield () => AlgorithmLogging.LogRelation(new LabeledRelation(resultRelation), msg)
 
       structure.setReplay(replay.toList)
