@@ -14,7 +14,7 @@ class MaterializedEnergyGame[G <: SimpleGame.GamePosition, P](
     initialBaseNodes: Iterable[G],
     initialEnergy: P,
     energyUpdate: (G, G, P) => Option[P],
-    preferredNodes: (G, P, G) => Boolean)
+    preferredPositions: (G, P, G) => Boolean)
   extends SimpleGame[MaterializedEnergyGame.MaterializedGamePosition[G, P]]
   with GameDiscovery[MaterializedEnergyGame.MaterializedGamePosition[G, P]]
   with WinningRegionComputation[MaterializedEnergyGame.MaterializedGamePosition[G, P]] {
@@ -39,7 +39,7 @@ class MaterializedEnergyGame[G <: SimpleGame.GamePosition, P](
     for {
       s <- baseGame.computeSuccessors(baseNode)
       updatedEnergy <- energyUpdate(baseNode, s, energy)
-      if preferredNodes(baseNode, energy, s)
+      if preferredPositions(baseNode, energy, s)
     } yield materialize(s, updatedEnergy)
   }
 

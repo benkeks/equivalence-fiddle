@@ -66,6 +66,9 @@ trait SpectroscopyInterface[S, A, L, CF <: HennessyMilnerLogic.Formula[A]]
   val distinguishingFormulas =
     collection.mutable.Map[(GamePosition, Energy), Iterable[CF]]()
 
+  /* whether to consider the baseSuccessor as a relevant move for the attacker in derived equivalence games */
+  def preferredPositions(config: SpectroscopyInterface.SpectroscopyConfig)(currentBaseNode: GamePosition, currentEnergy: Energy, baseSuccessor: GamePosition): Boolean
+
   /* ***** from here on, the provided methods start. ***** */
   
   /** Position type for derived equivalence games. */
@@ -167,15 +170,68 @@ trait SpectroscopyInterface[S, A, L, CF <: HennessyMilnerLogic.Formula[A]]
         "game-positions" -> gamePositionNum.toString,
         "game-moves" -> gameMoveNum.toString)
     )
-    
   }
 
-
   def checkIndividualPreorder(
-    comparedPairs: Iterable[(S,S)],
-    notion: String,
-    config: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig()
-  ) : SpectroscopyInterface.IndividualNotionResult[S]
+      comparedPairs: Iterable[(S,S)],
+      notion: String,
+      config: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig()
+  ) : SpectroscopyInterface.IndividualNotionResult[S] = {
+    val spectroscopyGame = buildSpectroscopyGame(config)
+    val init = for {
+      (p, q) <- comparedPairs
+      start <- List(relationItemToGamePosition(p, q), relationItemToGamePosition(q, p))
+    } yield start
+
+    val notionEnergy = notionToEnergy(spectrum.getSpectrumClass(notion).obsNotion)
+
+    def energyUpdate(gn1: GamePosition, gn2: GamePosition, energy: Energy): Option[Energy] = {
+      val update = spectroscopyGame.weight(gn1, gn2)
+      val newEnergy = update.applyEnergyUpdateInfinity(energy)
+      if (gn1.isInstanceOf[SimpleGame.DefenderPosition] || newEnergy.isNonNegative())
+        Some(newEnergy)
+      else
+        None
+    }
+
+    val reachabilityGame: MaterializedEnergyGame[GamePosition, Energy] = new MaterializedEnergyGame[GamePosition, Energy](
+      spectroscopyGame, init, notionEnergy, energyUpdate, if (config.useCleverInstanceBranching) preferredPositions(config) else ((_ ,_ ,_ ) => true))
+
+    val attackerWins = reachabilityGame.computeWinningRegion()
+
+    val (gamePositionNum, gameMoveNum) = if (config.saveGameSize) reachabilityGame.gameSize() else (0, 0)
+
+    val gameString = debugLog(
+      graphvizMaterializedGame(reachabilityGame, attackerWins),
+      asLink = "https://edotor.net/?engine=dot#"
+    )
+
+    val relation: Set[(S, String, S)] = for {
+      gn <- reachabilityGame.discovered.toSet
+      if !attackerWins(gn)
+      (p, eString, q) <- gn match {
+        case MaterializedAttackerPosition(gn, energy) if energy == notionEnergy =>
+          gamePositionToRelationItem(gn).map { case (p, q) => (p, "", q) }
+        case _ =>
+          None
+      }
+    } yield (p, eString,  q)
+
+    val items = for {
+      (p, q) <- comparedPairs
+    } yield {
+      SpectroscopyInterface.IndividualNotionResultItem(p, q, relation.contains((p, "", q)))
+    }
+    SpectroscopyInterface.IndividualNotionResult(
+      items,
+      relation, 
+      meta = Map(
+        "game" -> gameString,
+        "game-positions" -> gamePositionNum.toString,
+        "game-moves" -> gameMoveNum.toString
+      )
+    )
+  }
 
   def materializedToBaseGamePosition(gn: MaterializedPosition) = gn match {
     case MaterializedAttackerPosition(bgn, e) =>

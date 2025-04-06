@@ -134,86 +134,23 @@ class StrongSpectroscopy[S, A, L] (
   override def gamePositionToID(gn: GamePosition): String =
     gn.hashCode().toString().replace('-', 'n')
 
-  def checkIndividualPreorder(
-      comparedPairs: Iterable[(S,S)],
-      notion: String,
-      config: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig()
-  ) : SpectroscopyInterface.IndividualNotionResult[S] = {
-    val spectroscopyGame = new StrongSpectroscopyGame(ts, config)
-
-    val init = for {
-      (p, q) <- comparedPairs
-      start <- List(AttackerObservation(p, Set(q)), AttackerObservation(q, Set(p)))
-    } yield start
-
-    val notionEnergy = notionToEnergy(spectrum.getSpectrumClass(notion).obsNotion)
-
-    def energyUpdate(gn1: GamePosition, gn2: GamePosition, energy: Energy): Option[Energy] = {
-      val update = spectroscopyGame.weight(gn1, gn2)
-      val newEnergy = update.applyEnergyUpdateInfinity(energy)
-      if (gn1.isInstanceOf[SimpleGame.DefenderPosition] || newEnergy.isNonNegative())
-        Some(newEnergy)
-      else
-        None
-    }
-
-    // whether to consider the baseSuccessor as a relevant node for the attacker
-    def preferredNodes(currentBaseNode: GamePosition, currentEnergy: Energy, baseSuccessor: GamePosition): Boolean = {
-      (currentBaseNode match {
-        case AttackerObservation(p, qq) if currentEnergy(1) >= Int.MaxValue && currentEnergy(2) >= Int.MaxValue && currentEnergy(3) >= Int.MaxValue && qq.size > 1 =>
-          // if we have infinitely many conjunctions of unbounded positive depth, use them to chop down blowup on right-hand side
-          baseSuccessor.isInstanceOf[DefenderConjunction[S]]
-        case AttackerObservation(p, qq) if (currentEnergy(1) == 0) && qq.size >= 1 =>
-          // dont use conjunction moves the attacker cannot survive
-          !baseSuccessor.isInstanceOf[DefenderConjunction[S]]
+  // whether to consider the baseSuccessor as a relevant node for the attacker
+  def preferredPositions(config: SpectroscopyInterface.SpectroscopyConfig)(currentBaseNode: GamePosition, currentEnergy: Energy, baseSuccessor: GamePosition): Boolean = {
+    (currentBaseNode match {
+      case AttackerObservation(p, qq) if currentEnergy(1) >= Int.MaxValue && currentEnergy(2) >= Int.MaxValue && currentEnergy(3) >= Int.MaxValue && qq.size > 1 =>
+        // if we have infinitely many conjunctions of unbounded positive depth, use them to chop down blowup on right-hand side
+        baseSuccessor.isInstanceOf[DefenderConjunction[S]]
+      case AttackerObservation(p, qq) if (currentEnergy(1) == 0) && qq.size >= 1 =>
+        // dont use conjunction moves the attacker cannot survive
+        !baseSuccessor.isInstanceOf[DefenderConjunction[S]]
+      case _ => true
+    }) && (
+    // also: don't consider revivals if they make no difference!
+      baseSuccessor match {
+        case DefenderConjunction(p1, qq1, qqRevival) =>
+          currentEnergy(2) != currentEnergy(3) || qqRevival.isEmpty
         case _ => true
-      }) && (
-      // also: don't consider revivals if they make no difference!
-        baseSuccessor match {
-          case DefenderConjunction(p1, qq1, qqRevival) =>
-            currentEnergy(2) != currentEnergy(3) || qqRevival.isEmpty
-          case _ => true
-      })
-    }
-
-    val reachabilityGame: MaterializedEnergyGame[GamePosition, Energy] = new MaterializedEnergyGame[GamePosition, Energy](
-      spectroscopyGame, init, notionEnergy, energyUpdate, if (config.useCleverInstanceBranching) preferredNodes else ((_ ,_ ,_ ) => true))
-
-    val attackerWins = reachabilityGame.computeWinningRegion()
-
-    val (gamePositionNum, gameMoveNum) = if (config.saveGameSize) spectroscopyGame.gameSize() else (0, 0)
-
-    val gameString = debugLog(
-      graphvizMaterializedGame(reachabilityGame, attackerWins),
-      asLink = "https://edotor.net/?engine=dot#"
-    )
-
-    val relation: Set[(S, String, S)] = for {
-      gn <- reachabilityGame.discovered.toSet
-      if !attackerWins(gn)
-      (p, eString, q) <- gn match {
-        case MaterializedAttackerPosition(AttackerObservation(p, qq), energy)
-            if qq.size == 1 && energy == notionEnergy =>
-          Some((p, "", qq.head))
-        case _ =>
-          None
-      }
-    } yield (p, eString,  q)
-
-    val items = for {
-      (p, q) <- comparedPairs
-    } yield {
-      SpectroscopyInterface.IndividualNotionResultItem(p, q, relation.contains((p, "", q)))
-    }
-    SpectroscopyInterface.IndividualNotionResult(
-      items,
-      relation, 
-      meta = Map(
-        "game" -> gameString,
-        "game-positions" -> gamePositionNum.toString,
-        "game-moves" -> gameMoveNum.toString
-      )
-    )
+    })
   }
 
 }

@@ -281,81 +281,21 @@ class WeakSpectroscopy[S, A, L] (
     val c = obsNotion.toTuple
     Energy(Array(c._1, c._2, c._3, c._4, c._5, c._6, c._7, c._8, c._9))
   }
-
-  def checkIndividualPreorder(
-      comparedPairs: Iterable[(S,S)],
-      notion: String,
-      config: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig()
-  ): SpectroscopyInterface.IndividualNotionResult[S] = {
-    val spectroscopyGame =
-      if (config.useBranchingSpectroscopyGame) {
-        new WeakSpectroscopyGameBranching(ts, config)
-      } else {
-        new WeakSpectroscopyGame(ts, config)
-      }
-
-    val init = for {
-      (p, q) <- comparedPairs
-      start <- List(AttackerObservation(p, Set(q)), AttackerObservation(q, Set(p)))
-    } yield start
-
-    val notionEnergy = notionToEnergy(spectrum.getSpectrumClass(notion).obsNotion)
-
-    def energyUpdate(gn1: GamePosition, gn2: GamePosition, energy: Energy): Option[Energy] = {
-      val update = spectroscopyGame.weight(gn1, gn2)
-      val newEnergy = update.applyEnergyUpdateInfinity(energy)
-      if (gn1.isInstanceOf[SimpleGame.DefenderPosition] || newEnergy.isNonNegative())
-        Some(newEnergy)
-      else
-        None
-    }
-
-    // whether to consider the baseSuccessor as a relevant node for the attacker
-    def preferredNodes(currentBaseNode: GamePosition, currentEnergy: Energy, baseSuccessor: GamePosition) = currentBaseNode match {
-      case AttackerObservation(p, qq) if currentEnergy(4) >= Int.MaxValue && qq.size > 1 =>
-        // if we have infinitely many immediate conjunctions, use them to chop down blowup on right-hand side
-        baseSuccessor.isInstanceOf[DefenderConjunction[S, A]]
-      case AttackerBranchingObservation(p, qq) if config.useBranchingSpectroscopyGame && currentEnergy(4) >= Int.MaxValue && qq.size > 1 =>
-        // same as previous case
-        baseSuccessor.isInstanceOf[DefenderConjunction[S, A]]
-      case AttackerDelayedObservation(_, _) if (currentEnergy(3) == 0 || currentEnergy(5) == currentEnergy(6)) && baseSuccessor.isInstanceOf[DefenderStableConjunction[S, A]] =>
-        // disregard revival partitions if they make no difference
-        baseSuccessor.asInstanceOf[DefenderStableConjunction[S, A]].qqRevival.isEmpty
-      case AttackerDelayedObservation(_, qq) if currentEnergy(1) >= Int.MaxValue && qq.size > 1 =>
-        // focus on branching observations if we have infinite supply of them
-        !baseSuccessor.isInstanceOf[AttackerObservation[S, A]]
-      case _ => true
-    }
-
-    val reachabilityGame: MaterializedEnergyGame[GamePosition, Energy] = new MaterializedEnergyGame[GamePosition, Energy](
-      spectroscopyGame, init, notionEnergy, energyUpdate, preferredNodes)
-
-    val attackerWins = reachabilityGame.computeWinningRegion()
-    //if (config.saveGameSize) gameSize = reachabilityGame.gameSize()
-
-    val gameString = debugLog(
-      graphvizMaterializedGame(reachabilityGame, attackerWins),
-      asLink = "https://edotor.net/?engine=dot#"//"https://dreampuf.github.io/GraphvizOnline/#"
-    )
-
-    val relation: Set[(S, String, S)] = for {
-      gn <- reachabilityGame.discovered.toSet
-      if !attackerWins(gn)
-      (p, eString, q) <- gn match {
-        case MaterializedEnergyGame.MaterializedAttackerPosition(AttackerObservation(p, qq), energy)
-            if qq.size == 1 && energy == notionEnergy =>
-          Some((p, "", qq.head))
-        case _ =>
-          None
-      }
-    } yield (p, eString,  q)
-
-    val items = for {
-      (p, q) <- comparedPairs
-    } yield {
-      SpectroscopyInterface.IndividualNotionResultItem(p, q, relation.contains((p, "", q)))
-    }
-    SpectroscopyInterface.IndividualNotionResult(items, relation, meta = Map("game" -> gameString))
+  
+  override def preferredPositions(config: SpectroscopyInterface.SpectroscopyConfig)(currentBaseNode: GamePosition, currentEnergy: Energy, baseSuccessor: GamePosition) = currentBaseNode match {
+    case AttackerObservation(p, qq) if currentEnergy(4) >= Int.MaxValue && qq.size > 1 =>
+      // if we have infinitely many immediate conjunctions, use them to chop down blowup on right-hand side
+      baseSuccessor.isInstanceOf[DefenderConjunction[S, A]]
+    case AttackerBranchingObservation(p, qq) if config.useBranchingSpectroscopyGame && currentEnergy(4) >= Int.MaxValue && qq.size > 1 =>
+      // same as previous case
+      baseSuccessor.isInstanceOf[DefenderConjunction[S, A]]
+    case AttackerDelayedObservation(_, _) if (currentEnergy(3) == 0 || currentEnergy(5) == currentEnergy(6)) && baseSuccessor.isInstanceOf[DefenderStableConjunction[S, A]] =>
+      // disregard revival partitions if they make no difference
+      baseSuccessor.asInstanceOf[DefenderStableConjunction[S, A]].qqRevival.isEmpty
+    case AttackerDelayedObservation(_, qq) if currentEnergy(1) >= Int.MaxValue && qq.size > 1 =>
+      // focus on branching observations if we have infinite supply of them
+      !baseSuccessor.isInstanceOf[AttackerObservation[S, A]]
+    case _ => true
   }
 
   override def gamePositionToString(gn: GamePosition) = {
