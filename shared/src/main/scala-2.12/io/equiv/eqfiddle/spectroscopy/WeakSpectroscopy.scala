@@ -15,26 +15,23 @@ import io.equiv.eqfiddle.util.FixedPoint
 import io.equiv.eqfiddle.game.MaterializedEnergyGame
 
 class WeakSpectroscopy[S, A, L] (
-    ts: WeakTransitionSystem[S, A, L])
+    override val ts: WeakTransitionSystem[S, A, L])
   extends SpectroscopyInterface[S, A, L, HennessyMilnerLogic.Formula[A]] with AlgorithmLogging[S] {
 
   import WeakSpectroscopyGame._
-  type GamePosition = WeakSpectroscopyGamePosition[S, A]
+  import MaterializedEnergyGame._
 
   type Notion = ObservationNotionWeak
+  type GamePosition = WeakSpectroscopyGamePosition[S, A]
+  type SpectroscopyGame = WeakSpectroscopyGame[S, A, L]
 
   val spectrum = ObservationNotionWeak.LTBTS
-
-  val distinguishingFormulas =
-    collection.mutable.Map[(GamePosition, Energy), Iterable[HennessyMilnerLogic.Formula[A]]]()
-
-  var gameSize = (0, 0)
 
   def pruneDominated(oldFormulas: Set[HennessyMilnerLogic.Formula[A]]) = {
     spectrum.getLeastDistinguishing(oldFormulas)
   }
 
-  def buildHMLWitness(game: WeakSpectroscopyGame[S, A, L], node: GamePosition, price: Energy): Iterable[HennessyMilnerLogic.Formula[A]]
+  def buildHMLWitness(game: SpectroscopyGame, node: GamePosition, price: Energy): Iterable[HennessyMilnerLogic.Formula[A]]
     = distinguishingFormulas.getOrElseUpdate((node, price), {
     node match {
       case AttackerObservation(p0, qq0) =>
@@ -259,11 +256,11 @@ class WeakSpectroscopy[S, A, L] (
     }
   })
 
-  private def energyToClass(e: Energy): Notion = {
+  override def energyToNotion(e: Energy): Notion = {
     ObservationNotionWeak(e(0), e(1), e(2), e(3), e(4), e(5), e(6), e(7), e(8))
   }
 
-  private def classToEnergy(obsNotion: Notion): Energy = {
+  override def notionToEnergy(obsNotion: Notion): Energy = {
     val c = obsNotion.toTuple
     Energy(Array(c._1, c._2, c._3, c._4, c._5, c._6, c._7, c._8, c._9))
   }
@@ -306,7 +303,7 @@ class WeakSpectroscopy[S, A, L] (
         gn <- init
         AttackerObservation(p, qq) = gn
         bestPrice <- hmlGame.attackerWinningBudgets(gn)
-        energyClass = energyToClass(bestPrice)
+        energyClass = energyToNotion(bestPrice)
         witnessFormulas = buildHMLWitness(hmlGame, gn, bestPrice)
         f <- witnessFormulas.headOption
       } {
@@ -388,7 +385,7 @@ class WeakSpectroscopy[S, A, L] (
 
       val bestPreorders: Map[GamePosition,(Set[Notion],List[Spectrum.EquivalenceNotion[Notion]])] =
         hmlGame.attackerWinningBudgets.toMap.mapValues { energies =>
-        val fcs = energies.toSet[Energy].map(energyToClass _)
+        val fcs = energies.toSet[Energy].map(energyToNotion _)
         (fcs, spectrum.getStrongestPreorderClassFromClass(fcs))
       }
 
@@ -428,7 +425,7 @@ class WeakSpectroscopy[S, A, L] (
       start <- List(AttackerObservation(p, Set(q)), AttackerObservation(q, Set(p)))
     } yield start
 
-    val notionEnergy = classToEnergy(spectrum.getSpectrumClass(notion).obsNotion)
+    val notionEnergy = notionToEnergy(spectrum.getSpectrumClass(notion).obsNotion)
 
     def energyUpdate(gn1: GamePosition, gn2: GamePosition, energy: Energy): Option[Energy] = {
       val update = hmlGame.weight(gn1, gn2)
@@ -487,17 +484,7 @@ class WeakSpectroscopy[S, A, L] (
     SpectroscopyInterface.IndividualNotionResult(items, relation, meta = Map("game" -> gameString))
   }
 
-  def checkDistinguishing(formula: HennessyMilnerLogic.Formula[A], p: S, q: S) = {
-    val hmlInterpreter = new HMLInterpreter(ts)
-    val check = hmlInterpreter.isTrueAt(formula, List(p, q))
-    if (!check(p) || check(q)) {
-      AlgorithmLogging.debugLog("Formula " + formula.toString() + " is no sound distinguishing formula! " + check, logLevel = 4)
-    }
-  }
-
-  def gamePositionToString(
-      game: WeakSpectroscopyGame[S, A, L],
-      gn: GamePosition) = {
+  override def gamePositionToString(gn: GamePosition) = {
     val str = gn match {
       case AttackerObservation(p, qq: Set[_]) =>
         val qqString = qq.mkString("{",",","}")
@@ -529,58 +516,26 @@ class WeakSpectroscopy[S, A, L] (
     str.replaceAllLiterally(".0", "").replaceAllLiterally("\\", "\\\\")
   }
 
-  def graphvizGameWithFormulas(
-      spectroscopyGame: WeakSpectroscopyGame[S, A, L],
-      attackerWinningBudgets: Map[GamePosition, Iterable[Energy]],
-      formulas: Map[GamePosition, Set[HennessyMilnerLogic.Formula[A]]]
-  ) = {
-    val visualizer = new GameGraphVisualizer(spectroscopyGame) {
-      def positionToType(gn: GamePosition): String = gn match {
-        case AttackerObservation(_, _) => "attackerObservation"
-        case AttackerDelayedObservation(_, _) => "attackerDelayedObservation"
-        case AttackerBranchingObservation(_, _) => "attackerBranchingObservation"
-        case AttackerConjunct(_, _) => "attackerConjunct"
-        case AttackerConjunctStable(_, _) => "attackerConjunctStable"
-        case DefenderConjunction(_, _) => "defenderConjunction"
-        case DefenderStableConjunction(_, _, _) => "defenderStableConjunction"
-        case DefenderBranchingConjunction(_, _, _, _, _) => "defenderBranchingConjunction"
-        case _ => "unknown"
-      }
-
-      def positionToID(gn: GamePosition): String =
-        positionToType(gn) + gn.hashCode().toString().replace('-', 'n')
-
-      def positionToString(gn: GamePosition): String = {
-        val budgetString = attackerWinningBudgets.getOrElse(gn,Set()).map(_.vector.mkString("(",",",")")).mkString(" / ")
-        val formulaString = formulas.getOrElse(gn,Set()).mkString("\\n").replaceAllLiterally("⟩⊤","⟩")
-        gamePositionToString(spectroscopyGame, gn) +
-         (if (budgetString != "") s"\\n------\\n$budgetString" else "") +
-         (if (formulaString != "") s"\\n------\\n$formulaString" else "")
-      }
-
-      def moveToLabel(gn1: GamePosition, gn2: GamePosition) = spectroscopyGame.weight(gn1, gn2).toString()
-    }
-
-    val attackerWin = attackerWinningBudgets.filter(_._2.nonEmpty).keySet.toSet
-
-    visualizer.outputDot(attackerWin)
+  def positionToType(gn: GamePosition): String = gn match {
+    case AttackerObservation(_, _) => "attackerObservation"
+    case AttackerDelayedObservation(_, _) => "attackerDelayedObservation"
+    case AttackerBranchingObservation(_, _) => "attackerBranchingObservation"
+    case AttackerConjunct(_, _) => "attackerConjunct"
+    case AttackerConjunctStable(_, _) => "attackerConjunctStable"
+    case DefenderConjunction(_, _) => "defenderConjunction"
+    case DefenderStableConjunction(_, _, _) => "defenderStableConjunction"
+    case DefenderBranchingConjunction(_, _, _, _, _) => "defenderBranchingConjunction"
+    case _ => "unknown"
   }
 
-  import MaterializedEnergyGame._
-  type MaterializedPosition = MaterializedGamePosition[GamePosition, Energy]
-
-  def materializedToBaseGamePosition(gn: MaterializedPosition) = gn match {
-    case MaterializedAttackerPosition(bgn, e) =>
-      bgn
-    case MaterializedDefenderPosition(bgn, e) =>
-      bgn
-  }
+  override def gamePositionToID(gn: GamePosition): String =
+    positionToType(gn) + gn.hashCode().toString().replace('-', 'n')
 
   def graphvizMaterializedGame(
       game: MaterializedEnergyGame[GamePosition, Energy],
       attackerWin: Set[MaterializedPosition]
   ) = {
-    val baseGame = game.baseGame.asInstanceOf[WeakSpectroscopyGame[S, A, L]]
+    val baseGame = game.baseGame.asInstanceOf[SpectroscopyGame]
     val maxIntString = Int.MaxValue.toString()
     val visualizer = new GameGraphVisualizer(game) {
 
@@ -591,23 +546,11 @@ class WeakSpectroscopy[S, A, L] (
           e
       }
 
-      def positionToType(gn: MaterializedPosition): String = materializedToBaseGamePosition(gn) match {
-        case AttackerObservation(_, _) => "attackerObservation"
-        case AttackerDelayedObservation(_, _) => "attackerDelayedObservation"
-        case AttackerBranchingObservation(_, _) => "attackerBranchingObservation"
-        case AttackerConjunct(_, _) => "attackerConjunct"
-        case AttackerConjunctStable(_, _) => "attackerConjunctStable"
-        case DefenderConjunction(_, _) => "defenderConjunction"
-        case DefenderStableConjunction(_, _, _) => "defenderStableConjunction"
-        case DefenderBranchingConjunction(_, _, _, _, _) => "defenderBranchingConjunction"
-        case _ => "unknown"
-      }
-
       def positionToID(gn: MaterializedPosition): String =
-        positionToType(gn) + gn.hashCode().toString().replace('-', 'n')
+        positionToType(materializedToBaseGamePosition(gn)) + gn.hashCode().toString().replace('-', 'n')
 
       def positionToString(gn: MaterializedPosition): String = {
-        gamePositionToString(baseGame, materializedToBaseGamePosition(gn)) + "\\n" + toEnergy(gn).toString().replaceAllLiterally(maxIntString, "∞")
+        gamePositionToString(materializedToBaseGamePosition(gn)) + "\\n" + toEnergy(gn).toString().replaceAllLiterally(maxIntString, "∞")
       }
 
       def moveToLabel(gn1: MaterializedPosition, gn2: MaterializedPosition) = {

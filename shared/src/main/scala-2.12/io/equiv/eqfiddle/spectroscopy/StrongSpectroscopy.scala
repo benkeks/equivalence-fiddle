@@ -14,27 +14,25 @@ import io.equiv.eqfiddle.game.GameGraphVisualizer
 
 
 class StrongSpectroscopy[S, A, L] (
-    ts: WeakTransitionSystem[S, A, L])
+    override val ts: WeakTransitionSystem[S, A, L])
   extends SpectroscopyInterface[S, A, L, HennessyMilnerLogic.Formula[A]] with AlgorithmLogging[S] {
 
-  type Notion =  ObservationNotionStrong
+  import StrongSpectroscopyGame._
+  import MaterializedEnergyGame._
+
+  type Notion = ObservationNotionStrong
+  type SpectroscopyGame = StrongSpectroscopyGame[S, A, L]
+  type GamePosition = StrongSpectroscopyGamePosition[S]
 
   val spectrum = ObservationNotionStrong.LTBTS
 
-  val distinguishingFormulas =
-    collection.mutable.Map[(GamePosition, Energy), Iterable[HennessyMilnerLogic.Formula[A]]]()
-
-  type SpectroscopyGame = StrongSpectroscopyGame[S, A, L]
-  import StrongSpectroscopyGame._
-  type GamePosition = StrongSpectroscopyGamePosition[S]
-
-  var gameSize = (0, 0)
-
-  private def classToEnergy(obsNotion: Notion): Energy = {
+  override def notionToEnergy(obsNotion: Notion): Energy = {
     val c = obsNotion.toTuple
     Energy(Array(c._1, c._2, c._3, c._4, c._5, c._6))
   }
-
+  override def energyToNotion(energy: Energy): Notion = {
+    ObservationNotionStrong(energy(0), energy(1), energy(2), energy(3), energy(4), energy(5))
+  }
 
   def buildHMLWitness(game: SpectroscopyGame, node: GamePosition, price: Energy): Iterable[HennessyMilnerLogic.Formula[A]]
     = distinguishingFormulas.getOrElseUpdate((node, price), {
@@ -212,7 +210,7 @@ class StrongSpectroscopy[S, A, L] (
 
       val bestPreorders: Map[GamePosition,(Set[Notion],List[Spectrum.EquivalenceNotion[Notion]])] =
         hmlGame.attackerWinningBudgets.toMap.mapValues { energies =>
-        val fcs = energies.toSet[Energy].map(e => ObservationNotionStrong(e(0), e(1), e(2), e(3), e(4), e(5)))
+        val fcs = energies.toSet[Energy].map(energyToNotion(_))
         (fcs, spectrum.getStrongestPreorderClassFromClass(fcs))
       }
 
@@ -235,16 +233,7 @@ class StrongSpectroscopy[S, A, L] (
 
   }
 
-  def checkDistinguishing(formula: HennessyMilnerLogic.Formula[A], p: S, q: S) = {
-    val hmlInterpreter = new HMLInterpreter(ts)
-    val check = hmlInterpreter.isTrueAt(formula, List(p, q))
-    if (!check(p) || check(q)) {
-      AlgorithmLogging.debugLog("Formula " + formula.toString() + " is no sound distinguishing formula! " + check, logLevel = 4)
-    }
-  }
-
-  def gamePositionToString(
-      game: SpectroscopyGame,
+  override def gamePositionToString(
       gn: GamePosition) = {
     val str = gn match {
       case AttackerObservation(p, qq: Set[_]) =>
@@ -261,34 +250,8 @@ class StrongSpectroscopy[S, A, L] (
     str.replaceAllLiterally(".0", "").replaceAllLiterally("\\", "\\\\")
   }
 
-  def graphvizGameWithFormulas(
-      spectroGame: SpectroscopyGame,
-      attackerWinningBudgets: Map[GamePosition, Iterable[Energy]],
-      formulas: Map[GamePosition, Set[HennessyMilnerLogic.Formula[A]]]
-  ) = {
-    val visualizer = new GameGraphVisualizer(spectroGame) {
-
-      def positionToID(gn: GamePosition): String =
-        gn.hashCode().toString().replace('-', 'n')
-
-      def positionToString(gn: GamePosition): String = {
-        val budgetString = attackerWinningBudgets.getOrElse(gn,Set()).map(_.vector.mkString("(",",",")")).mkString(" / ")
-        val formulaString = formulas.getOrElse(gn,Set()).mkString("\\n").replaceAllLiterally("⟩⊤","⟩")
-        gamePositionToString(spectroGame, gn) +
-         (if (budgetString != "") s"\\n------\\n$budgetString" else "") +
-         (if (formulaString != "") s"\\n------\\n$formulaString" else "")
-      }
-
-      def moveToLabel(gn1: GamePosition, gn2: GamePosition) = spectroGame.weight(gn1, gn2).toString()
-    }
-
-    val attackerWin = attackerWinningBudgets.filter(_._2.nonEmpty).keySet.toSet
-
-    visualizer.outputDot(attackerWin)
-  }
-
-  import MaterializedEnergyGame._
-  type MaterializedPosition = MaterializedGamePosition[GamePosition, Energy]
+  override def gamePositionToID(gn: GamePosition): String =
+    gn.hashCode().toString().replace('-', 'n')
 
   def checkIndividualPreorder(
       comparedPairs: Iterable[(S,S)],
@@ -302,7 +265,7 @@ class StrongSpectroscopy[S, A, L] (
       start <- List(AttackerObservation(p, Set(q)), AttackerObservation(q, Set(p)))
     } yield start
 
-    val notionEnergy = classToEnergy(spectrum.getSpectrumClass(notion).obsNotion)
+    val notionEnergy = notionToEnergy(spectrum.getSpectrumClass(notion).obsNotion)
 
     def energyUpdate(gn1: GamePosition, gn2: GamePosition, energy: Energy): Option[Energy] = {
       val update = hmlGame.weight(gn1, gn2)
@@ -363,13 +326,6 @@ class StrongSpectroscopy[S, A, L] (
     SpectroscopyInterface.IndividualNotionResult(items, relation, meta = Map("game" -> gameString))
   }
 
-  def materializedToBaseGamePosition(gn: MaterializedPosition) = gn match {
-    case MaterializedAttackerPosition(bgn, e) =>
-      bgn
-    case MaterializedDefenderPosition(bgn, e) =>
-      bgn
-  }
-
   def graphvizMaterializedGame(
       game: MaterializedEnergyGame[GamePosition, Energy],
       attackerWin: Set[MaterializedPosition]
@@ -382,9 +338,9 @@ class StrongSpectroscopy[S, A, L] (
 
       def positionToString(gn: MaterializedPosition): String = gn match {
         case MaterializedAttackerPosition(bgn, e) =>
-          gamePositionToString(baseGame, bgn) + "\\n" + e.toString().replaceAllLiterally(maxIntString, "∞")
+          gamePositionToString(bgn) + "\\n" + e.toString().replaceAllLiterally(maxIntString, "∞")
         case MaterializedDefenderPosition(bgn, e) =>
-          gamePositionToString(baseGame, bgn) + "\\n" + e.toString().replaceAllLiterally(maxIntString, "∞")
+          gamePositionToString(bgn) + "\\n" + e.toString().replaceAllLiterally(maxIntString, "∞")
       }
 
       def moveToLabel(gn1: MaterializedPosition, gn2: MaterializedPosition) = {

@@ -4,15 +4,46 @@ import io.equiv.eqfiddle.util.Relation
 import io.equiv.eqfiddle.util.LabeledRelation
 import io.equiv.eqfiddle.util.Coloring
 
+import io.equiv.eqfiddle.algo.AlgorithmLogging
+
 import io.equiv.eqfiddle.hml.HennessyMilnerLogic
+import io.equiv.eqfiddle.hml.HMLInterpreter
 import io.equiv.eqfiddle.hml.ObservationNotion
 import io.equiv.eqfiddle.hml.Spectrum
+
+import io.equiv.eqfiddle.game.SimpleGame
+import io.equiv.eqfiddle.game.AbstractGameDiscovery
+import io.equiv.eqfiddle.game.GameGraphVisualizer
+import io.equiv.eqfiddle.game.EnergyGame.Energy
+import io.equiv.eqfiddle.game.MaterializedEnergyGame
+import io.equiv.eqfiddle.game.MaterializedEnergyGame._
+
+import io.equiv.eqfiddle.ts.WeakTransitionSystem
+import io.equiv.eqfiddle.game.EnergyGame
 
 trait SpectroscopyInterface[S, A, L, CF <: HennessyMilnerLogic.Formula[A]] {
 
   type Notion <: ObservationNotion
+  type GamePosition <: SimpleGame.GamePosition
+  type MaterializedPosition = MaterializedGamePosition[GamePosition, Energy]
+  type SpectroscopyGame <: SimpleGame[GamePosition] with AbstractGameDiscovery[GamePosition] with EnergyGame[GamePosition]
 
-  def spectrum: Spectrum[Notion]
+  val ts: WeakTransitionSystem[S, A, L]
+  val spectrum: Spectrum[Notion]
+  var gameSize: (Int, Int) = (0, 0)
+
+  def notionToEnergy(obsNotion: Notion): Energy
+  def energyToNotion(e: Energy): Notion
+
+
+  val distinguishingFormulas =
+    collection.mutable.Map[(GamePosition, Energy), Iterable[HennessyMilnerLogic.Formula[A]]]()
+
+  def buildHMLWitness(
+    game: SpectroscopyGame,
+    node: GamePosition,
+    price: Energy
+  ): Iterable[CF]
 
   def compute(
     comparedPairs: Iterable[(S,S)],
@@ -25,10 +56,55 @@ trait SpectroscopyInterface[S, A, L, CF <: HennessyMilnerLogic.Formula[A]] {
     config: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig()
   ) : SpectroscopyInterface.IndividualNotionResult[S]
 
-  /**
-    * output the game size in positions and moves after the algorithm has run (if saveGameSize was selected)
-    */
-  def gameSize: (Int, Int)
+  def materializedToBaseGamePosition(gn: MaterializedPosition) = gn match {
+    case MaterializedAttackerPosition(bgn, e) =>
+      bgn
+    case MaterializedDefenderPosition(bgn, e) =>
+      bgn
+  }
+
+  def graphvizMaterializedGame(
+    game: MaterializedEnergyGame[GamePosition, Energy],
+    attackerWin: Set[MaterializedPosition]
+  ): String
+
+  def checkDistinguishing(formula: HennessyMilnerLogic.Formula[A], p: S, q: S) = {
+    val hmlInterpreter = new HMLInterpreter(ts)
+    val check = hmlInterpreter.isTrueAt(formula, List(p, q))
+    if (!check(p) || check(q)) {
+      AlgorithmLogging.debugLog("Formula " + formula.toString() + " is no sound distinguishing formula! " + check, logLevel = 4)
+    }
+  }
+
+  def gamePositionToString(gn: GamePosition): String
+  def gamePositionToID(gn: GamePosition): String
+
+  def graphvizGameWithFormulas(
+    spectroscopyGame: SpectroscopyGame,
+    attackerWinningBudgets: Map[GamePosition, Iterable[Energy]],
+    formulas: Map[GamePosition, Set[HennessyMilnerLogic.Formula[A]]]
+  ) = {
+    val visualizer = new GameGraphVisualizer(spectroscopyGame) {
+
+      def positionToID(gn: GamePosition): String =
+        gamePositionToID(gn)
+
+      def positionToString(gn: GamePosition): String = {
+        val budgetString = attackerWinningBudgets.getOrElse(gn,Set()).map(_.vector.mkString("(",",",")")).mkString(" / ")
+        val formulaString = formulas.getOrElse(gn,Set()).mkString("\\n").replaceAllLiterally("⟩⊤","⟩")
+        gamePositionToString(gn) +
+         (if (budgetString != "") s"\\n------\\n$budgetString" else "") +
+         (if (formulaString != "") s"\\n------\\n$formulaString" else "")
+      }
+
+      def moveToLabel(gn1: GamePosition, gn2: GamePosition) = spectroscopyGame.weight(gn1, gn2).toString()
+    }
+
+    val attackerWin = attackerWinningBudgets.filter(_._2.nonEmpty).keySet.toSet
+
+    visualizer.outputDot(attackerWin)
+  }
+
 }
 
 object SpectroscopyInterface {
