@@ -79,8 +79,13 @@ class Source(val main: Control) extends ModelComponent {
     }
     
     // enqueue updates that dont belong to an old declaration
-    val (astBefore, astAfter) = defsUpdatedOld.splitAt(1 + defsUpdatedOld.lastIndexWhere(_.isInstanceOf[Syntax.NodeAnnotation]))
-    val newDefs = astBefore ::: newVsOldDecls.getOrElse(None, List()) ::: astAfter 
+    val lastDeclPos = defsUpdatedOld.lastIndexWhere(_.isInstanceOf[Syntax.NodeAnnotation])
+    val newDefs = if (lastDeclPos == -1) {
+      defsUpdatedOld ::: newVsOldDecls.getOrElse(None, List())
+    } else {
+      val (astBefore, astAfter) = defsUpdatedOld.splitAt(1 + lastDeclPos)
+      astBefore ::: newVsOldDecls.getOrElse(None, List()) ::: astAfter
+    }
     
     val newAst = Syntax.Definition(
         Syntax.fillInPos(newDefs))

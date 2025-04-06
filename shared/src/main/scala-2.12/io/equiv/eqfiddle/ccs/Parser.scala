@@ -276,7 +276,7 @@ class Parser(val input: String) extends Parsing {
       ParseFail("Expected comma separated attribute list.", other)
   }
   
-  def nodeDeclaration(in: List[Token]): Parsed[NodeAnnotation] = {
+  def nodeAnnotation(in: List[Token]): Parsed[NodeAnnotation] = {
     node(in) flatMap { (e, in2) =>
       if (in2.headOption.exists(_.isInstanceOf[RoundBracketOpen])) {
         attributeList(in2.tail, List()) map (NodeAnnotation(e.name, _, e.position))
@@ -322,7 +322,7 @@ class Parser(val input: String) extends Parsing {
     processDeclaration(in) orElse { _ =>
       metaDeclaration(in)
     } orElse { _ =>
-      nodeDeclaration(in)
+      nodeAnnotation(in)
     }
   }
 
