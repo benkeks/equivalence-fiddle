@@ -28,7 +28,7 @@ class WeakSpectroscopy[S, A, L] (
 
   val spectrum = ObservationNotionWeak.LTBTS
 
-  override def buildSpectroscopyGame(config: SpectroscopyInterface.SpectroscopyConfig): SpectroscopyGame = {
+  override def openSpectroscopyGame(config: SpectroscopyInterface.SpectroscopyConfig): SpectroscopyGame = {
     if (config.useBranchingSpectroscopyGame) {
       new WeakSpectroscopyGameBranching(ts, config)
     } else {
@@ -46,7 +46,7 @@ class WeakSpectroscopy[S, A, L] (
   }
 
   def pruneDominated(oldFormulas: Set[HennessyMilnerLogic.Formula[A]]) = {
-    spectrum.getLeastDistinguishing(oldFormulas)
+    spectrum.selectCheapest(oldFormulas)
   }
 
   def buildHMLWitness(game: SpectroscopyGame, node: GamePosition, price: Energy): Iterable[HennessyMilnerLogic.Formula[A]]

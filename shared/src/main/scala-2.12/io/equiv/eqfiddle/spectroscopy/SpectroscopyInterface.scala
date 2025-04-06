@@ -1,28 +1,15 @@
 package io.equiv.eqfiddle.spectroscopy
 
-import io.equiv.eqfiddle.util.Relation
 import io.equiv.eqfiddle.util.LabeledRelation
 import io.equiv.eqfiddle.util.Coloring
 
-import io.equiv.eqfiddle.algo.AlgorithmLogging
-
 import io.equiv.eqfiddle.hml.HennessyMilnerLogic
-import io.equiv.eqfiddle.hml.HMLInterpreter
 import io.equiv.eqfiddle.hml.ObservationNotion
 import io.equiv.eqfiddle.hml.Spectrum
 
-import io.equiv.eqfiddle.game.SimpleGame
-import io.equiv.eqfiddle.game.AbstractGameDiscovery
-import io.equiv.eqfiddle.game.GameGraphVisualizer
-import io.equiv.eqfiddle.game.EnergyGame.Energy
-import io.equiv.eqfiddle.game.MaterializedEnergyGame
-import io.equiv.eqfiddle.game.MaterializedEnergyGame._
-
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
-import io.equiv.eqfiddle.game.EnergyGame
 
-trait SpectroscopyInterface[S, A, L, CF <: HennessyMilnerLogic.Formula[A]]
-    extends AlgorithmLogging[S]{
+trait SpectroscopyInterface[S, A, L, CF <: HennessyMilnerLogic.Formula[A]] {
 
   /** The transition system to be analyzed. */
   val ts: WeakTransitionSystem[S, A, L]

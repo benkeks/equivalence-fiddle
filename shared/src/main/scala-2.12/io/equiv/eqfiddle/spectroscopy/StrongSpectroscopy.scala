@@ -35,7 +35,7 @@ class StrongSpectroscopy[S, A, L] (
     ObservationNotionStrong(energy(0), energy(1), energy(2), energy(3), energy(4), energy(5))
   }
 
-  override def buildSpectroscopyGame(config: SpectroscopyInterface.SpectroscopyConfig): SpectroscopyGame = {
+  override def openSpectroscopyGame(config: SpectroscopyInterface.SpectroscopyConfig): SpectroscopyGame = {
     new StrongSpectroscopyGame[S, A, L](ts, config)
   }
 

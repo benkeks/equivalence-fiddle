@@ -34,6 +34,10 @@ trait GameLazyDecision[GamePosition <: SimpleGame.GamePosition, P] extends Abstr
     val oldBudgets = attackerWinningBudgets(node)
     val newBudgetsMin = newBudgets.filterNot(p => newBudgets.exists(op => energyIsLower(op, p))).toList
     if (newBudgetsMin.forall(p => oldBudgets.contains(p))) {
+      if (!attackerWinningBudgets.isDefinedAt(node)) {
+        // we should save the (presumably empty) list of budgets. (so later algorithms know that we looked for an attacker win here without success.)
+        attackerWinningBudgets(node) = newBudgetsMin
+      }
       false
     } else {
       attackerWinningBudgets(node) = newBudgetsMin
@@ -41,8 +45,10 @@ trait GameLazyDecision[GamePosition <: SimpleGame.GamePosition, P] extends Abstr
     }
   }
 
+  /** compute the current budget for a position (likely using information about successors.) */
   def computeCurrentBudget(node: GamePosition): Iterable[P]
 
+  /** Fill game graph and compute attacker wins during discovery. */
   def populateGame(
       initialPositions: Iterable[GamePosition]) = {
 

@@ -1,25 +1,17 @@
 package io.equiv.eqfiddle.spectroscopy
 
-import io.equiv.eqfiddle.util.Relation
-import io.equiv.eqfiddle.util.LabeledRelation
-import io.equiv.eqfiddle.util.Coloring
-
 import io.equiv.eqfiddle.algo.AlgorithmLogging
 
 import io.equiv.eqfiddle.hml.HennessyMilnerLogic
 import io.equiv.eqfiddle.hml.HMLInterpreter
-import io.equiv.eqfiddle.hml.ObservationNotion
 import io.equiv.eqfiddle.hml.Spectrum
 
 import io.equiv.eqfiddle.game.SimpleGame
-import io.equiv.eqfiddle.game.AbstractGameDiscovery
 import io.equiv.eqfiddle.game.GameGraphVisualizer
+import io.equiv.eqfiddle.game.EnergyGame
 import io.equiv.eqfiddle.game.EnergyGame.Energy
-import io.equiv.eqfiddle.game.MaterializedEnergyGame
-import io.equiv.eqfiddle.game.MaterializedEnergyGame._
 
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
-import io.equiv.eqfiddle.game.EnergyGame
 
 /** The trait abstractly implements the spectroscopy decision procedure for the `compute` function on the spectroscopy trait
   * The handling of specific spectra, spectroscopy games and their logics must be supplied by implementing methods. */
@@ -32,7 +24,7 @@ trait SpectroscopyFramework[S, A, L, CF <: HennessyMilnerLogic.Formula[A]]
   type GamePosition <: SimpleGame.GamePosition
 
   /** Construct a spectroscopy game object */
-  def buildSpectroscopyGame(configuration: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig()): SpectroscopyGame
+  def openSpectroscopyGame(configuration: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig()): SpectroscopyGame
   
   /** Convert between relation items on the transiton system and positions in the spectroscopy game. */
   def relationItemToGamePosition(p: S, q: S): GamePosition
@@ -42,7 +34,7 @@ trait SpectroscopyFramework[S, A, L, CF <: HennessyMilnerLogic.Formula[A]]
   def notionToEnergy(obsNotion: Notion): Energy
   def energyToNotion(e: Energy): Notion
 
-  /** Build witness formulas for the given game position and price. (Aka “strategy formulas.”) */
+  /** Build witness formulas for the given game position and price. (Aka “strategy formulas.”) Should populate `distigushingFormulas` mapping. */
   def buildHMLWitness(
     game: SpectroscopyGame,
     node: GamePosition,
@@ -65,7 +57,7 @@ trait SpectroscopyFramework[S, A, L, CF <: HennessyMilnerLogic.Formula[A]]
 
     debugLog(s"Start spectroscopy on ${ts.nodes.size} node transition system with ${comparedPairs.size} compared pairs.")
 
-    val spectroscopyGame = buildSpectroscopyGame(config)
+    val spectroscopyGame = openSpectroscopyGame(config)
 
     val init = for {
       (p, q) <- comparedPairs
@@ -78,6 +70,8 @@ trait SpectroscopyFramework[S, A, L, CF <: HennessyMilnerLogic.Formula[A]]
 
     debugLog("HML spectroscopy game size: " + spectroscopyGame.discovered.size)
 
+    // if enabled, build distinguishing formulas for the compared states. (assumes side-effect: that `distinguishingFormulas` is populated by this construction.)
+    // if there are problems, print errors / warnings.
     for {
       gn <- init
       (p, q) <- gamePositionToRelationItem(gn)
@@ -99,49 +93,44 @@ trait SpectroscopyFramework[S, A, L, CF <: HennessyMilnerLogic.Formula[A]]
         }
       }
     }
-        
-    // discovered positions with not attacker winning budgets are won by the defender and thus bisimilar
-    for {
-      gn <- spectroscopyGame.discovered
-      if (gamePositionToRelationItem(gn).isDefined) &&
-        (!spectroscopyGame.attackerWinningBudgets.isDefinedAt(gn) || spectroscopyGame.attackerWinningBudgets(gn).isEmpty)
-    } {
-      spectroscopyGame.attackerWinningBudgets(gn) = List()
-    }
 
-    val distinguishingNodeFormulas = (if (config.computeFormulas) {
+    // pick price-minimal formulas for each game position
+    val distinguishingPositionFormulas = (if (config.computeFormulas) {
        for {
         (node, pricedFormulas) <- distinguishingFormulas
           .toSet[((GamePosition, Energy), Iterable[CF])]
           .groupBy(kv => kv._1._1)
         formulas = for {
           (_, formulasForPrice) <- pricedFormulas
-          f <- spectrum.getLeastDistinguishing(formulasForPrice)
+          f <- spectrum.selectCheapest(formulasForPrice)
         } yield f
       } yield (node, formulas)
     } else Map[GamePosition, Set[CF]]()).withDefaultValue(Set[CF]())
 
+    // select the best preordes to relate the states
     val bestPreorders: Map[GamePosition,(Set[Notion],List[Spectrum.EquivalenceNotion[Notion]])] =
       spectroscopyGame.attackerWinningBudgets.toMap.mapValues { energies =>
       val fcs = energies.toSet[Energy].map(energyToNotion(_))
       (fcs, spectrum.getStrongestPreorderClassFromClass(fcs))
     }
 
+    // assemble output in spectroscopy result object.
     val spectroResults = for {
       gn <- spectroscopyGame.discovered
       (p, q) <- gamePositionToRelationItem(gn)
       (prices, preorders) <- bestPreorders.get(gn)
       distinctions = for {
         price <- prices
-        formula = distinguishingNodeFormulas(gn).headOption
-          .getOrElse(HennessyMilnerLogic.True[A].asInstanceOf[CF]) // if no formulas have been computed, take true as dummy
+        formula = distinguishingPositionFormulas(gn).headOption
+          .getOrElse(HennessyMilnerLogic.True[A].asInstanceOf[CF]) // if no formulas have been computed, take True as dummy
       } yield (formula, price, spectrum.classifyClass(price))
     } yield SpectroscopyInterface.SpectroscopyResultItem[S, A, Notion, CF](p, q, distinctions.toList, preorders)
 
+    // collect some diagnostic information (unless disabled)
     val (gamePositionNum, gameMoveNum) = if (config.saveGameSize) spectroscopyGame.gameSize() else (0, 0)
 
     val gameString = debugLog(
-      graphvizGameWithFormulas(spectroscopyGame, spectroscopyGame.attackerWinningBudgets.toMap, distinguishingNodeFormulas),
+      graphvizGameWithFormulas(spectroscopyGame, spectroscopyGame.attackerWinningBudgets.toMap, distinguishingPositionFormulas),
       asLink = "https://edotor.net/?engine=dot#"
     )
 
@@ -154,11 +143,15 @@ trait SpectroscopyFramework[S, A, L, CF <: HennessyMilnerLogic.Formula[A]]
     )
   }
 
+  /** Check if the formula is a distinguishing formula for the given positions. Print an error to debug log if not. */
   def checkDistinguishing(formula: HennessyMilnerLogic.Formula[A], p: S, q: S) = {
     val hmlInterpreter = new HMLInterpreter(ts)
     val check = hmlInterpreter.isTrueAt(formula, List(p, q))
     if (!check(p) || check(q)) {
       AlgorithmLogging.debugLog("Formula " + formula.toString() + " is no sound distinguishing formula! " + check, logLevel = 4)
+      false
+    } else {
+      true
     }
   }
 
