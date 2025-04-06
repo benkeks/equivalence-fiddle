@@ -184,11 +184,6 @@ trait SpectroscopyInterface[S, A, L, CF <: HennessyMilnerLogic.Formula[A]]
       bgn
   }
 
-  def graphvizMaterializedGame(
-    game: MaterializedEnergyGame[GamePosition, Energy],
-    attackerWin: Set[MaterializedPosition]
-  ): String
-
   def checkDistinguishing(formula: HennessyMilnerLogic.Formula[A], p: S, q: S) = {
     val hmlInterpreter = new HMLInterpreter(ts)
     val check = hmlInterpreter.isTrueAt(formula, List(p, q))
@@ -219,6 +214,32 @@ trait SpectroscopyInterface[S, A, L, CF <: HennessyMilnerLogic.Formula[A]]
     }
 
     val attackerWin = attackerWinningBudgets.filter(_._2.nonEmpty).keySet.toSet
+
+    visualizer.outputDot(attackerWin)
+  }
+
+  def graphvizMaterializedGame(
+      game: MaterializedEnergyGame[GamePosition, Energy],
+      attackerWin: Set[MaterializedPosition]
+  ) = {
+    val baseGame = game.baseGame.asInstanceOf[SpectroscopyGame]
+    val maxIntString = Int.MaxValue.toString()
+    val visualizer = new GameGraphVisualizer(game) {
+
+      def positionToID(gn: MaterializedPosition): String = gn.hashCode().toString()
+
+      def positionToString(gn: MaterializedPosition): String = gn match {
+        case MaterializedAttackerPosition(bgn, e) =>
+          gamePositionToString(bgn) + "\\n" + e.toString().replaceAllLiterally(maxIntString, "∞")
+        case MaterializedDefenderPosition(bgn, e) =>
+          gamePositionToString(bgn) + "\\n" + e.toString().replaceAllLiterally(maxIntString, "∞")
+      }
+
+      def moveToLabel(gn1: MaterializedPosition, gn2: MaterializedPosition) = {
+        baseGame.weight(materializedToBaseGamePosition(gn1), materializedToBaseGamePosition(gn2)).toString()
+      }
+
+    }
 
     visualizer.outputDot(attackerWin)
   }

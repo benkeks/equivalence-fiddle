@@ -180,7 +180,8 @@ class StrongSpectroscopy[S, A, L] (
       spectroscopyGame, init, notionEnergy, energyUpdate, if (config.useCleverInstanceBranching) preferredNodes else ((_ ,_ ,_ ) => true))
 
     val attackerWins = reachabilityGame.computeWinningRegion()
-    //if (config.saveGameSize) gameSize = reachabilityGame.gameSize()
+
+    val (gamePositionNum, gameMoveNum) = if (config.saveGameSize) spectroscopyGame.gameSize() else (0, 0)
 
     val gameString = debugLog(
       graphvizMaterializedGame(reachabilityGame, attackerWins),
@@ -204,33 +205,15 @@ class StrongSpectroscopy[S, A, L] (
     } yield {
       SpectroscopyInterface.IndividualNotionResultItem(p, q, relation.contains((p, "", q)))
     }
-    SpectroscopyInterface.IndividualNotionResult(items, relation, meta = Map("game" -> gameString))
-  }
-
-  def graphvizMaterializedGame(
-      game: MaterializedEnergyGame[GamePosition, Energy],
-      attackerWin: Set[MaterializedPosition]
-  ) = {
-    val baseGame = game.baseGame.asInstanceOf[SpectroscopyGame]
-    val maxIntString = Int.MaxValue.toString()
-    val visualizer = new GameGraphVisualizer(game) {
-
-      def positionToID(gn: MaterializedPosition): String = gn.hashCode().toString()
-
-      def positionToString(gn: MaterializedPosition): String = gn match {
-        case MaterializedAttackerPosition(bgn, e) =>
-          gamePositionToString(bgn) + "\\n" + e.toString().replaceAllLiterally(maxIntString, "∞")
-        case MaterializedDefenderPosition(bgn, e) =>
-          gamePositionToString(bgn) + "\\n" + e.toString().replaceAllLiterally(maxIntString, "∞")
-      }
-
-      def moveToLabel(gn1: MaterializedPosition, gn2: MaterializedPosition) = {
-        baseGame.weight(materializedToBaseGamePosition(gn1), materializedToBaseGamePosition(gn2)).toString()
-      }
-
-    }
-
-    visualizer.outputDot(attackerWin)
+    SpectroscopyInterface.IndividualNotionResult(
+      items,
+      relation, 
+      meta = Map(
+        "game" -> gameString,
+        "game-positions" -> gamePositionNum.toString,
+        "game-moves" -> gameMoveNum.toString
+      )
+    )
   }
 
 }

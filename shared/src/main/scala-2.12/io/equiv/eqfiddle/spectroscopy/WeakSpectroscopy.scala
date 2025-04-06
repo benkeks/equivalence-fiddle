@@ -405,34 +405,4 @@ class WeakSpectroscopy[S, A, L] (
   override def gamePositionToID(gn: GamePosition): String =
     positionToType(gn) + gn.hashCode().toString().replace('-', 'n')
 
-  def graphvizMaterializedGame(
-      game: MaterializedEnergyGame[GamePosition, Energy],
-      attackerWin: Set[MaterializedPosition]
-  ) = {
-    val baseGame = game.baseGame.asInstanceOf[SpectroscopyGame]
-    val maxIntString = Int.MaxValue.toString()
-    val visualizer = new GameGraphVisualizer(game) {
-
-      def toEnergy(gn: MaterializedPosition) = gn match {
-        case MaterializedAttackerPosition(bgn, e) =>
-          e
-        case MaterializedDefenderPosition(bgn, e) =>
-          e
-      }
-
-      def positionToID(gn: MaterializedPosition): String =
-        positionToType(materializedToBaseGamePosition(gn)) + gn.hashCode().toString().replace('-', 'n')
-
-      def positionToString(gn: MaterializedPosition): String = {
-        gamePositionToString(materializedToBaseGamePosition(gn)) + "\\n" + toEnergy(gn).toString().replaceAllLiterally(maxIntString, "∞")
-      }
-
-      def moveToLabel(gn1: MaterializedPosition, gn2: MaterializedPosition) = {
-        baseGame.weight(materializedToBaseGamePosition(gn1), materializedToBaseGamePosition(gn2)).toString()
-      }
-
-    }
-
-    visualizer.outputDot(attackerWin)
-  }
 }

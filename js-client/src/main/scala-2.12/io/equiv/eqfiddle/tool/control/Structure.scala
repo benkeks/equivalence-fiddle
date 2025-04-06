@@ -360,7 +360,7 @@ object Structure {
             new StrongSpectroscopy(structure.structure)
           } else {
             throw new Exception(
-              s"Notion $notion is not defined. Possible names would be: ${(ObservationNotionWeak.LTBTS.getSpectrumClass.keys ++ ObservationNotionWeak.LTBTS.getSpectrumClass.keys).mkString(", ")}")
+              s"Notion ‹$notion› is not defined.\n\nPossible names would be:\n ${(ObservationNotionWeak.LTBTS.getSpectrumClass.keys ++ ObservationNotionWeak.LTBTS.getSpectrumClass.keys).mkString(", ")}")
           }
 
         AlgorithmLogging.uriEncoder = scala.scalajs.js.URIUtils.encodeURI _
