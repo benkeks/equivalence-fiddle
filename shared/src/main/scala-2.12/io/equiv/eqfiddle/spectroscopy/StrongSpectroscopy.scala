@@ -180,7 +180,7 @@ class StrongSpectroscopy[S, A, L] (
       spectroscopyGame, init, notionEnergy, energyUpdate, if (config.useCleverInstanceBranching) preferredNodes else ((_ ,_ ,_ ) => true))
 
     val attackerWins = reachabilityGame.computeWinningRegion()
-    if (config.saveGameSize) gameSize = reachabilityGame.gameSize()
+    //if (config.saveGameSize) gameSize = reachabilityGame.gameSize()
 
     val gameString = debugLog(
       graphvizMaterializedGame(reachabilityGame, attackerWins),

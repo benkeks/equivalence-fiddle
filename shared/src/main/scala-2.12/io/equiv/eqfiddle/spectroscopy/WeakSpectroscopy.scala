@@ -331,7 +331,7 @@ class WeakSpectroscopy[S, A, L] (
       spectroscopyGame, init, notionEnergy, energyUpdate, preferredNodes)
 
     val attackerWins = reachabilityGame.computeWinningRegion()
-    if (config.saveGameSize) gameSize = reachabilityGame.gameSize()
+    //if (config.saveGameSize) gameSize = reachabilityGame.gameSize()
 
     val gameString = debugLog(
       graphvizMaterializedGame(reachabilityGame, attackerWins),

@@ -88,8 +88,8 @@ class VeryLargeTransitionSystems(
     val result = algo.compute(comparedPairs, config.copy(computeFormulas = false, energyCap = 3, saveGameSize = true))
     printTiming(startTime, "Spectroscopy")
 
-    output("Game positions", algo.gameSize._1.toString)
-    output("Game moves", algo.gameSize._2.toString)
+    output("Game positions", result.meta("game-positions"))
+    output("Game moves", result.meta("game-moves"))
 
     val interestingNotions = result.spectrum.notions.filter(n => outputMinimizationSizes.contains(n.name))
 

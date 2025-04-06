@@ -21,36 +21,55 @@ import io.equiv.eqfiddle.game.MaterializedEnergyGame._
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 import io.equiv.eqfiddle.game.EnergyGame
 
+/** The trait abstractly implements the spectroscopy decision procedure.
+  * The handling of specific spectra, spectroscopy games and their logics must be supplied by implementing methods. */  
 trait SpectroscopyInterface[S, A, L, CF <: HennessyMilnerLogic.Formula[A]]
     extends AlgorithmLogging[S]{
 
-  type Notion <: ObservationNotion
-  type GamePosition <: SimpleGame.GamePosition
-  type MaterializedPosition = MaterializedGamePosition[GamePosition, Energy]
-  type SpectroscopyGame <: SimpleGame[GamePosition] with AbstractGameDiscovery[GamePosition] with EnergyGame[GamePosition]
-
+  /** The transition system to be analyzed. */
   val ts: WeakTransitionSystem[S, A, L]
+
+  /** The type of equivalence notions the spectroscopy refers to */
+  type Notion <: ObservationNotion
+
+  /** The spectrum of notions we are working with. */
   val spectrum: Spectrum[Notion]
-  var gameSize: (Int, Int) = (0, 0)
 
-  def notionToEnergy(obsNotion: Notion): Energy
-  def energyToNotion(e: Energy): Notion
-
-  /** Place to memoize distinguishing formulas per position */
-  val distinguishingFormulas =
-    collection.mutable.Map[(GamePosition, Energy), Iterable[CF]]()
+  /** Types of spectroscopy game and its game positions. */
+  type SpectroscopyGame <: EnergyGame[GamePosition]
+  type GamePosition <: SimpleGame.GamePosition
 
   /** Construct a spectroscopy game object */
   def buildSpectroscopyGame(configuration: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig()): SpectroscopyGame
   
+  /** Convert between relation items on the transiton system and positions in the spectroscopy game. */
   def relationItemToGamePosition(p: S, q: S): GamePosition
   def gamePositionToRelationItem(gp: GamePosition): Option[(S, S)]
 
+  /** Convert between notions and energy vectors. */
+  def notionToEnergy(obsNotion: Notion): Energy
+  def energyToNotion(e: Energy): Notion
+
+  /** Build witness formulas for the given game position and price. (Aka “strategy formulas.”) */
   def buildHMLWitness(
     game: SpectroscopyGame,
     node: GamePosition,
     price: Energy
   ): Iterable[CF]
+
+  /** String representation of game positions for graphviz game */
+  def gamePositionToString(gn: GamePosition): String
+  /** String IDs of game positions for graphviz game */
+  def gamePositionToID(gn: GamePosition): String
+
+  /** Place to memoize distinguishing formulas per position. (This side-effect member should be used to make the formulas available in game and spectrum output.) */
+  val distinguishingFormulas =
+    collection.mutable.Map[(GamePosition, Energy), Iterable[CF]]()
+
+  /* ***** from here on, the provided methods start. ***** */
+  
+  /** Position type for derived equivalence games. */
+  type MaterializedPosition = MaterializedGamePosition[GamePosition, Energy]
 
   def compute(
     comparedPairs: Iterable[(S,S)],
@@ -134,15 +153,21 @@ trait SpectroscopyInterface[S, A, L, CF <: HennessyMilnerLogic.Formula[A]]
       } yield (formula, price, spectrum.classifyClass(price))
     } yield SpectroscopyInterface.SpectroscopyResultItem[S, A, Notion, CF](p, q, distinctions.toList, preorders)
 
-    if (config.saveGameSize) gameSize = spectroscopyGame.gameSize()
+    val (gamePositionNum, gameMoveNum) = if (config.saveGameSize) spectroscopyGame.gameSize() else (0, 0)
 
     val gameString = debugLog(
       graphvizGameWithFormulas(spectroscopyGame, spectroscopyGame.attackerWinningBudgets.toMap, distinguishingNodeFormulas),
       asLink = "https://edotor.net/?engine=dot#"
     )
 
-    SpectroscopyInterface.SpectroscopyResult[S, A, Notion, CF](spectroResults.toList, spectrum, meta = Map("game" -> gameString))
-
+    SpectroscopyInterface.SpectroscopyResult[S, A, Notion, CF](
+      spectroResults.toList, spectrum,
+      meta = Map(
+        "game" -> gameString,
+        "game-positions" -> gamePositionNum.toString,
+        "game-moves" -> gameMoveNum.toString)
+    )
+    
   }
 
 
@@ -171,9 +196,6 @@ trait SpectroscopyInterface[S, A, L, CF <: HennessyMilnerLogic.Formula[A]]
       AlgorithmLogging.debugLog("Formula " + formula.toString() + " is no sound distinguishing formula! " + check, logLevel = 4)
     }
   }
-
-  def gamePositionToString(gn: GamePosition): String
-  def gamePositionToID(gn: GamePosition): String
 
   def graphvizGameWithFormulas(
     spectroscopyGame: SpectroscopyGame,

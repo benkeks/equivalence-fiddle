@@ -308,7 +308,7 @@ object Structure {
 
         val gameString = result.meta.get("game") match {
           case Some(game) if game != "" =>
-            val (positionNum, moveNum) = algo.gameSize
+            val Some(positionNum) = result.meta.get("game-positions")
             s"""<a href="$game" target="_blank">View game (with $positionNum positions).</a>"""
           case _ => ""
         }
@@ -386,7 +386,7 @@ object Structure {
             } + {
               result.meta.get("game") match {
                 case Some(game) if game != "" =>
-                  val (positionNum, moveNum) = algo.gameSize
+                  val Some(positionNum) = result.meta.get("game-positions")
                   s"""<p><a href="$game" target="_blank">View game (with $positionNum positions).</a></p>"""
                 case _ => ""
               }
