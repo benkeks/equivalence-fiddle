@@ -6,7 +6,7 @@ import io.equiv.eqfiddle.algo.AlgorithmLogging
 
 class EnergyGameTests extends AnyFunSpec with should.Matchers  {
   
-  class TestEnergyGame() extends EnergyGame {
+  class TestEnergyGame() extends EnergyGame[SimpleGame.GamePosition] {
 
     private def add = EnergyGame.EnergyUpdate.add(_, 2)
 
@@ -16,6 +16,8 @@ class EnergyGameTests extends AnyFunSpec with should.Matchers  {
     case object G4 extends SimpleGame.DefenderPosition
     case object G5 extends SimpleGame.AttackerPosition
     case object G6 extends SimpleGame.DefenderPosition
+
+    type GamePosition = SimpleGame.GamePosition
 
     val graph: Map[(SimpleGame.GamePosition, SimpleGame.GamePosition), EnergyGame.EnergyUpdate] = Set(
       (G1, G2) -> EnergyGame.EnergyUpdate(Array(0, 0)),

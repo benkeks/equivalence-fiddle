@@ -1,6 +1,6 @@
 package io.equiv.eqfiddle.game
 
-trait EnergyGame extends SimpleGame with GameLazyDecision[EnergyGame.Energy] {
+trait EnergyGame[GamePosition <: SimpleGame.GamePosition] extends SimpleGame[GamePosition] with GameLazyDecision[GamePosition, EnergyGame.Energy] {
 
   import EnergyGame._
 
@@ -12,12 +12,12 @@ trait EnergyGame extends SimpleGame with GameLazyDecision[EnergyGame.Energy] {
 
   override def computeCurrentBudget(node: GamePosition): Iterable[Energy] = {
     node match {
-      case an: AttackerPosition =>
+      case an: SimpleGame.AttackerPosition =>
         for {
           s <- successors(node)
           sE <- attackerWinningBudgets(s)
         } yield weight(node, s).unapplyEnergyUpdate(sE)
-      case dn: DefenderPosition =>
+      case dn: SimpleGame.DefenderPosition =>
         val possibleMoves = for {
           s <- successors(node)
           w = weight(node, s)

@@ -2,8 +2,8 @@ package io.equiv.eqfiddle.game
 
 /** algorithm for the computation of winning regions based on the algorithm from Kreutzer's
  *  lecture notes for "Logic, Games, Automata" */
-trait WinningRegionComputation {
-  self: SimpleGame with GameDiscovery =>
+trait WinningRegionComputation[GamePosition <: SimpleGame.GamePosition] {
+  self: SimpleGame[GamePosition] with GameDiscovery[GamePosition] =>
   
   /** returns the winning region of the attacker as a set. 
    *  WARNING: this function is destructive on `successorNum` */
@@ -22,7 +22,7 @@ trait WinningRegionComputation {
           // if the attacker can decide in `pred` to move to `gn` or if we just
           // killed the last remaining potentially winning move for the defender in
           // `pred`, then clearly the attacker wins in `pred`.
-          if (pred.isInstanceOf[AttackerPosition] || successorNum(pred) == 0) {
+          if (pred.isInstanceOf[SimpleGame.AttackerPosition] || successorNum(pred) == 0) {
             propagateAttackerWin(pred)
           }
         }
@@ -31,7 +31,7 @@ trait WinningRegionComputation {
     
     for {
       gn <- discovered
-      if successorNum(gn) == 0 && !gn.isInstanceOf[AttackerPosition]
+      if successorNum(gn) == 0 && !gn.isInstanceOf[SimpleGame.AttackerPosition]
     } {
       propagateAttackerWin(gn)
     }

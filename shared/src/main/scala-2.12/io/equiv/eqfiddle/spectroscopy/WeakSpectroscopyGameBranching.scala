@@ -8,12 +8,12 @@ import io.equiv.eqfiddle.ts.WeakTransitionSystem
 class WeakSpectroscopyGameBranching[S, A, L](ts: WeakTransitionSystem[S, A, L], config: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig())
   extends WeakSpectroscopyGame(ts, config) {
 
+  import WeakSpectroscopyGame._
+
   // obs, branchingConj, unstableConj, stableConj, immediateConj, revivals, positiveHeight, negativeHeight, negations
   private val BranchingObsSubEnergyUpdate     = new EnergyGame.EnergyUpdate(Array(  6, 0, 0, 0, 0, 0, 0, 0, 0), energyCap = config.energyCap)
   private val BranchingConjEarlyEnergyUpdate  = new EnergyGame.EnergyUpdate(Array( -1, 0, 0, 0,-1, 0, 0, 0, 0), energyCap = config.energyCap)
   private val BranchingConjLateEnergyUpdate   = new EnergyGame.EnergyUpdate(Array( -1, 0,-1, 0, 0, 0, 0, 0, 0), energyCap = config.energyCap)
-
-  case class AttackerBranchingConjunction(p0: S, a: A, p1: S, q0: S) extends SimpleGame.AttackerPosition
 
   override def weight(gn1: GamePosition, gn2: GamePosition): EnergyGame.EnergyUpdate = gn1 match {
     case DefenderBranchingConjunction(p10, a, p11, qq0, qq0a) =>

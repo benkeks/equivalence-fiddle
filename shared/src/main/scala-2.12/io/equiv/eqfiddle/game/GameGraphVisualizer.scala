@@ -1,13 +1,13 @@
 
 package io.equiv.eqfiddle.game
 
-abstract class GameGraphVisualizer(game: SimpleGame with AbstractGameDiscovery) {
+abstract class GameGraphVisualizer[GamePosition <: SimpleGame.GamePosition](val game: SimpleGame[GamePosition] with AbstractGameDiscovery[GamePosition]) {
+  
+  def positionToID(gn: GamePosition): String
+  def positionToString(gn: GamePosition): String
+  def moveToLabel(gn1: GamePosition, gn2: GamePosition): String
 
-  def positionToID(gn: SimpleGame.GamePosition): String
-  def positionToString(gn: SimpleGame.GamePosition): String
-  def moveToLabel(gn1: SimpleGame.GamePosition, gn2: SimpleGame.GamePosition): String
-
-  def outputDot(attackerWinningRegion: Set[SimpleGame.GamePosition]): String = {
+  def outputDot(attackerWinningRegion: Set[GamePosition]): String = {
 
     val edgeOutput = for {
       pos <- game.discovered.toSeq

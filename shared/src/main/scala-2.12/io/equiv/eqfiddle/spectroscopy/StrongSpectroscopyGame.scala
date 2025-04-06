@@ -5,8 +5,17 @@ import io.equiv.eqfiddle.game.EnergyGame
 import io.equiv.eqfiddle.hml.ObservationNotionStrong
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 
-class StrongSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], config: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig() )
-  extends SimpleGame with EnergyGame {
+object StrongSpectroscopyGame {
+  trait StrongSpectroscopyGamePosition[S, A] extends SimpleGame.GamePosition
+}
+
+class StrongSpectroscopyGame[S, A, L](
+    ts: WeakTransitionSystem[S, A, L],
+    config: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig() )
+  extends SimpleGame[StrongSpectroscopyGame.StrongSpectroscopyGamePosition[S, A]]
+  with EnergyGame[StrongSpectroscopyGame.StrongSpectroscopyGamePosition[S, A]] {
+
+  import StrongSpectroscopyGame._
 
   private val NoEnergyUpdate        = new EnergyGame.EnergyUpdate(Array( 0,0,0,0,0,0), energyCap = config.energyCap)
   private val ObsEnergyUpdate       = new EnergyGame.EnergyUpdate(Array(-1,0,0,0,0,0), energyCap = config.energyCap)
@@ -17,9 +26,11 @@ class StrongSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], config:
 
   val optimizeAttackerWins: Boolean = true
 
-  case class AttackerObservation(p: S, qq: Set[S]) extends SimpleGame.AttackerPosition
-  case class AttackerConjunct(p: S, q: S) extends SimpleGame.AttackerPosition
-  case class DefenderConjunction(p: S, qqSingles: Set[S], qqRevival: Set[S]) extends SimpleGame.DefenderPosition
+  type GamePosition = StrongSpectroscopyGame.StrongSpectroscopyGamePosition[S, A]
+
+  case class AttackerObservation(p: S, qq: Set[S]) extends SimpleGame.AttackerPosition with GamePosition
+  case class AttackerConjunct(p: S, q: S) extends SimpleGame.AttackerPosition with GamePosition
+  case class DefenderConjunction(p: S, qqSingles: Set[S], qqRevival: Set[S]) extends SimpleGame.DefenderPosition with GamePosition
 
   override def weight(gn1: GamePosition, gn2: GamePosition): EnergyGame.EnergyUpdate = gn1 match {
     case AttackerObservation(p0, qq0) =>

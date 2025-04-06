@@ -5,7 +5,6 @@ import io.equiv.eqfiddle.algo.AlgorithmLogging
 import io.equiv.eqfiddle.hml.ObservationNotionStrong
 import io.equiv.eqfiddle.hml.Spectrum
 import io.equiv.eqfiddle.game.SimpleGame
-import io.equiv.eqfiddle.game.SimpleGame.GamePosition
 import io.equiv.eqfiddle.game.EnergyGame
 import io.equiv.eqfiddle.game.EnergyGame.Energy
 import io.equiv.eqfiddle.game.MaterializedEnergyGame
@@ -22,6 +21,8 @@ class StrongSpectroscopy[S, A, L] (
 
   val distinguishingFormulas =
     collection.mutable.Map[(GamePosition, Energy), Iterable[HennessyMilnerLogic.Formula[A]]]()
+
+  type GamePosition = StrongSpectroscopyGame.StrongSpectroscopyGamePosition[S, A]
 
   var gameSize = (0, 0)
 
@@ -258,30 +259,33 @@ class StrongSpectroscopy[S, A, L] (
   }
 
   def graphvizGameWithFormulas(
-      game: StrongSpectroscopyGame[S, A, L],
+      spectroGame: StrongSpectroscopyGame[S, A, L],
       attackerWinningBudgets: Map[GamePosition, Iterable[Energy]],
       formulas: Map[GamePosition, Set[HennessyMilnerLogic.Formula[A]]]
   ) = {
-    val visualizer = new GameGraphVisualizer(game) {
+    val visualizer = new GameGraphVisualizer(spectroGame) {
 
-      def positionToID(gn: GamePosition): String =
+      def positionToID(gn: spectroGame.GamePosition): String =
         gn.hashCode().toString().replace('-', 'n')
 
-      def positionToString(gn: GamePosition): String = {
+      def positionToString(gn: spectroGame.GamePosition): String = {
         val budgetString = attackerWinningBudgets.getOrElse(gn,Set()).map(_.vector.mkString("(",",",")")).mkString(" / ")
         val formulaString = formulas.getOrElse(gn,Set()).mkString("\\n").replaceAllLiterally("⟩⊤","⟩")
-        gamePositionToString(game, gn) +
+        gamePositionToString(spectroGame, gn) +
          (if (budgetString != "") s"\\n------\\n$budgetString" else "") +
          (if (formulaString != "") s"\\n------\\n$formulaString" else "")
       }
 
-      def moveToLabel(gn1: GamePosition, gn2: GamePosition) = game.weight(gn1, gn2).toString()
+      def moveToLabel(gn1: spectroGame.GamePosition, gn2: spectroGame.GamePosition) = spectroGame.weight(gn1, gn2).toString()
     }
 
     val attackerWin = attackerWinningBudgets.filter(_._2.nonEmpty).keySet.toSet
 
     visualizer.outputDot(attackerWin)
   }
+
+  import MaterializedEnergyGame._
+  type MaterializedPosition = MaterializedGamePosition[GamePosition, Energy]
 
   def checkIndividualPreorder(
       comparedPairs: Iterable[(S,S)],
@@ -325,7 +329,7 @@ class StrongSpectroscopy[S, A, L] (
       })
     }
 
-    val reachabilityGame: MaterializedEnergyGame[Energy] = new MaterializedEnergyGame[Energy](
+    val reachabilityGame: MaterializedEnergyGame[GamePosition, Energy] = new MaterializedEnergyGame[GamePosition, Energy](
       hmlGame, init, notionEnergy, energyUpdate, if (config.useCleverInstanceBranching) preferredNodes else ((_ ,_ ,_ ) => true))
 
     val attackerWins = reachabilityGame.computeWinningRegion()
@@ -340,7 +344,7 @@ class StrongSpectroscopy[S, A, L] (
       gn <- reachabilityGame.discovered.toSet
       if !attackerWins(gn)
       (p, eString, q) <- gn match {
-        case reachabilityGame.MaterializedAttackerPosition(hmlGame.AttackerObservation(p, qq), energy)
+        case MaterializedAttackerPosition(hmlGame.AttackerObservation(p, qq), energy)
             if qq.size == 1 && energy == notionEnergy =>
           Some((p, "", qq.head))
         case _ =>
@@ -356,32 +360,32 @@ class StrongSpectroscopy[S, A, L] (
     SpectroscopyInterface.IndividualNotionResult(items, relation, meta = Map("game" -> gameString))
   }
 
-  def materializedToBaseGamePosition(game: MaterializedEnergyGame[Energy], gn: GamePosition) = gn match {
-    case game.MaterializedAttackerPosition(bgn, e) =>
+  def materializedToBaseGamePosition(gn: MaterializedPosition) = gn match {
+    case MaterializedAttackerPosition(bgn, e) =>
       bgn
-    case game.MaterializedDefenderPosition(bgn, e) =>
+    case MaterializedDefenderPosition(bgn, e) =>
       bgn
   }
 
   def graphvizMaterializedGame(
-      game: MaterializedEnergyGame[Energy],
-      attackerWin: Set[GamePosition]
+      game: MaterializedEnergyGame[GamePosition, Energy],
+      attackerWin: Set[MaterializedPosition]
   ) = {
     val baseGame = game.baseGame.asInstanceOf[StrongSpectroscopyGame[S, A, L]]
     val maxIntString = Int.MaxValue.toString()
     val visualizer = new GameGraphVisualizer(game) {
 
-      def positionToID(gn: GamePosition): String = gn.hashCode().toString()
+      def positionToID(gn: MaterializedPosition): String = gn.hashCode().toString()
 
-      def positionToString(gn: GamePosition): String = gn match {
-        case game.MaterializedAttackerPosition(bgn, e) =>
+      def positionToString(gn: MaterializedPosition): String = gn match {
+        case MaterializedAttackerPosition(bgn, e) =>
           gamePositionToString(baseGame, bgn) + "\\n" + e.toString().replaceAllLiterally(maxIntString, "∞")
-        case game.MaterializedDefenderPosition(bgn, e) =>
+        case MaterializedDefenderPosition(bgn, e) =>
           gamePositionToString(baseGame, bgn) + "\\n" + e.toString().replaceAllLiterally(maxIntString, "∞")
       }
 
-      def moveToLabel(gn1: GamePosition, gn2: GamePosition) = {
-        baseGame.weight(materializedToBaseGamePosition(game, gn1), materializedToBaseGamePosition(game, gn2)).toString()
+      def moveToLabel(gn1: MaterializedPosition, gn2: MaterializedPosition) = {
+        baseGame.weight(materializedToBaseGamePosition(gn1), materializedToBaseGamePosition(gn2)).toString()
       }
 
     }

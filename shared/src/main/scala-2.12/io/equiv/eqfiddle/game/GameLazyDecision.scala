@@ -2,8 +2,8 @@ package io.equiv.eqfiddle.game
 
 import io.equiv.eqfiddle.algo.AlgorithmLogging
 
-trait GameLazyDecision[P] extends AbstractGameDiscovery {
-  self: SimpleGame =>
+trait GameLazyDecision[GamePosition <: SimpleGame.GamePosition, P] extends AbstractGameDiscovery[GamePosition] {
+  self: SimpleGame[GamePosition] =>
 
   override def predecessors(gn: GamePosition): Iterable[GamePosition] = computedPredecessors(gn)
   private val computedPredecessors = collection.mutable.Map[GamePosition, Set[GamePosition]]() withDefaultValue Set()

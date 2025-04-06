@@ -5,8 +5,39 @@ import io.equiv.eqfiddle.game.EnergyGame
 import io.equiv.eqfiddle.hml.ObservationNotionStrong
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 
-class WeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], val config: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig())
-  extends SimpleGame with EnergyGame {
+object WeakSpectroscopyGame {
+  trait WeakSpectroscopyGamePosition[S, +A] extends SimpleGame.GamePosition
+
+  case class AttackerObservation[S, A](p: S, qq: Set[S])
+    extends SimpleGame.AttackerPosition with WeakSpectroscopyGamePosition[S, A]
+  case class AttackerDelayedObservation[S, A](p: S, qq: Set[S])
+    extends SimpleGame.AttackerPosition with WeakSpectroscopyGamePosition[S, A]
+  case class AttackerConjunct[S, A](p: S, q: S)
+    extends SimpleGame.AttackerPosition with WeakSpectroscopyGamePosition[S, A]
+  case class AttackerConjunctStable[S, A](p: S, q: S)
+    extends SimpleGame.AttackerPosition with WeakSpectroscopyGamePosition[S, A]
+  case class AttackerBranchingObservation[S, A](p: S, qq: Set[S])
+    extends SimpleGame.AttackerPosition with WeakSpectroscopyGamePosition[S, A]
+  case class DefenderConjunction[S, A](p: S, qq: Set[S])
+    extends SimpleGame.DefenderPosition with WeakSpectroscopyGamePosition[S, A]
+  case class DefenderStableConjunction[S, A](p: S, qq: Set[S], qqRevival: Set[S])
+    extends SimpleGame.DefenderPosition with WeakSpectroscopyGamePosition[S, A]
+  case class DefenderBranchingConjunction[S, A](p1: S, a: A, p2: S, qq: Set[S], qqA: Set[S])
+    extends SimpleGame.DefenderPosition with WeakSpectroscopyGamePosition[S, A]
+
+  // only used in branching game
+  case class AttackerBranchingConjunction[S, A](p0: S, a: A, p1: S, q0: S)
+    extends SimpleGame.AttackerPosition with WeakSpectroscopyGamePosition[S, A]
+}
+
+class WeakSpectroscopyGame[S, A, L](
+    ts: WeakTransitionSystem[S, A, L],
+    val config: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig())
+  extends SimpleGame[WeakSpectroscopyGame.WeakSpectroscopyGamePosition[S, A]]
+  with EnergyGame[WeakSpectroscopyGame.WeakSpectroscopyGamePosition[S, A]] {
+
+  import WeakSpectroscopyGame._
+  type GamePosition = WeakSpectroscopyGamePosition[S, A]
 
   // obs, branchingConj, unstableConj, stableConj, immediateConj, revivals, positiveHeight, negativeHeight, negations
   protected val NoEnergyUpdate              = new EnergyGame.EnergyUpdate(Array( 0, 0, 0, 0, 0, 0, 0, 0, 0), energyCap = config.energyCap)
@@ -23,16 +54,6 @@ class WeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], val confi
   protected val PosClauseStableEnergyUpdate = new EnergyGame.EnergyUpdate(Array( 7, 0, 0, 0, 0, 0, 0, 0, 0), energyCap = config.energyCap)
 
   val optimizeAttackerWins: Boolean = true
-
-  case class AttackerObservation(p: S, qq: Set[S]) extends SimpleGame.AttackerPosition
-  case class AttackerDelayedObservation(p: S, qq: Set[S]) extends SimpleGame.AttackerPosition
-  case class AttackerConjunct(p: S, q: S) extends SimpleGame.AttackerPosition
-  case class AttackerConjunctStable(p: S, q: S) extends SimpleGame.AttackerPosition
-  case class AttackerBranchingObservation(p: S, qq: Set[S]) extends SimpleGame.AttackerPosition
-  case class DefenderConjunction(p: S, qq: Set[S]) extends SimpleGame.DefenderPosition
-  case class DefenderStableConjunction(p: S, qq: Set[S], qqRevival: Set[S]) extends SimpleGame.DefenderPosition
-  case class DefenderBranchingConjunction(p1: S, a: A, p2: S, qq: Set[S], qqA: Set[S]) extends SimpleGame.DefenderPosition
-
   override def weight(gn1: GamePosition, gn2: GamePosition): EnergyGame.EnergyUpdate = gn1 match {
     case AttackerObservation(p0, qq0) =>
       gn2 match {
@@ -92,12 +113,11 @@ class WeakSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], val confi
         List()
       } else {
         val conjMoves = List(DefenderConjunction(p0, qq0))
-          val qq1 = for {
-            q0 <- qq0
-            q1 <- ts.silentReachable(q0)
-          } yield q1
-          AttackerDelayedObservation(p0, qq1) :: conjMoves
-        // }
+        val qq1 = for {
+          q0 <- qq0
+          q1 <- ts.silentReachable(q0)
+        } yield q1
+        AttackerDelayedObservation(p0, qq1) :: conjMoves
       }
     case AttackerDelayedObservation(p0, qq0) =>
       if (config.useSymmetryPruning && (qq0 contains p0)) {
