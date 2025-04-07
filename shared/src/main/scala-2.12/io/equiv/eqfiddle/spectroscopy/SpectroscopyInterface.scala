@@ -1,6 +1,5 @@
 package io.equiv.eqfiddle.spectroscopy
 
-import io.equiv.eqfiddle.util.Relation
 import io.equiv.eqfiddle.util.LabeledRelation
 import io.equiv.eqfiddle.util.Coloring
 
@@ -8,25 +7,31 @@ import io.equiv.eqfiddle.hml.HennessyMilnerLogic
 import io.equiv.eqfiddle.hml.ObservationNotion
 import io.equiv.eqfiddle.hml.Spectrum
 
+import io.equiv.eqfiddle.ts.WeakTransitionSystem
+
 trait SpectroscopyInterface[S, A, L, CF <: HennessyMilnerLogic.Formula[A]] {
 
-  def spectrum: Spectrum[ObservationNotion]
+  /** The transition system to be analyzed. */
+  val ts: WeakTransitionSystem[S, A, L]
 
-  def compute(
-    comparedPairs: Iterable[(S,S)],
-    configuration: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig()
-  ) : SpectroscopyInterface.SpectroscopyResult[S, A, ObservationNotion, CF]
+  /** The type of equivalence notions the spectroscopy refers to */
+  type Notion <: ObservationNotion
 
-  def checkIndividualPreorder(
+  /** The spectrum of notions we are working with. */
+  val spectrum: Spectrum[Notion]
+
+  /** Decide all behavioral preorders of the spectrum for the compared pairs. */
+  def decideAll(
     comparedPairs: Iterable[(S,S)],
-    notion: String,
     config: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig()
-  ) : SpectroscopyInterface.IndividualNotionResult[S]
+  ) : SpectroscopyInterface.SpectroscopyResult[S, A, Notion, CF]
 
-  /**
-    * output the game size in positions and moves after the algorithm has run (if saveGameSize was selected)
-    */
-  def gameSize: (Int, Int)
+  /** Decide an individual notion preorder for the compared pairs. */
+  def checkIndividualPreorder(
+      comparedPairs: Iterable[(S,S)],
+      notion: String,
+      config: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig()
+  ) : SpectroscopyInterface.IndividualNotionResult[S]
 }
 
 object SpectroscopyInterface {
@@ -35,11 +40,11 @@ object SpectroscopyInterface {
     val useCleverSpectroscopyGame: Boolean = true,
     val useBranchingSpectroscopyGame: Boolean = true,
     val useSymmetryPruning: Boolean = true,
-    val useBisimMinimization: Boolean = false,
     val useCleverInstanceBranching: Boolean = true,
     val computeFormulas: Boolean = false,
     val saveGameSize: Boolean = true,
-    val energyCap: Int = Int.MaxValue
+    val energyCap: Int = Int.MaxValue,
+    val useBisimMinimization: Boolean = false
   )
 
   case class SpectroscopyResultItem[S, A, +OC <: ObservationNotion, +OF <: HennessyMilnerLogic.Formula[A]](
@@ -132,7 +137,7 @@ object SpectroscopyInterface {
         eq <- eqs
       } yield {
         distances.toQuotientColoring(
-          dist => !dist.exists(d => d <= eq.obsClass),
+          dist => !dist.exists(d => d <= eq.obsNotion),
           rep
         )
       }
@@ -149,7 +154,7 @@ object SpectroscopyInterface {
       val preords = foundPreorders(p, q)
       for {
         eq <- eqs
-        if preords.exists(p => eq.obsClass <= p.obsClass)
+        if preords.exists(p => eq.obsNotion <= p.obsNotion)
       } yield eq
     }
 

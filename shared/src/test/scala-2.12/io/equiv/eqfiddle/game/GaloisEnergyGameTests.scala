@@ -6,7 +6,10 @@ import io.equiv.eqfiddle.algo.AlgorithmLogging
 
 class GaloisEnergyGameTests extends AnyFunSpec with should.Matchers  {
   
-  class EspressoEnergyGame() extends EnergyGame {
+  class EspressoEnergyGame() extends EnergyGame[SimpleGame.GamePosition] {
+    type GamePosition = SimpleGame.GamePosition
+    
+    override def dimensionality: Int = 4
 
     // cups, time, shots, energization
     private def add = EnergyGame.EnergyUpdate.add(_, 4)
@@ -70,8 +73,7 @@ class GaloisEnergyGameTests extends AnyFunSpec with should.Matchers  {
     case _ => Set.empty
   }
   game.populateGame(
-    List(game.Office),
-    instantAttackerWin(_))
+    List(game.Office))
 
   describe("The Espresso Energy Game") {
     it("should be winnable for the attacker at the office") {

@@ -70,7 +70,7 @@ class LTBTSEquivalenceChecks(
         s"""|    ${notion.name}: {
             |      result:    ${result.items.head.isMaintained},
             |      time_us:   ${checkTime / 1000},
-            |      game_size: ${algo.gameSize._1 + algo.gameSize._2}
+            |      game_size: ${result.meta("game-positions").toInt + result.meta("game-moves").toInt}
             |    },""".stripMargin
         )
       }

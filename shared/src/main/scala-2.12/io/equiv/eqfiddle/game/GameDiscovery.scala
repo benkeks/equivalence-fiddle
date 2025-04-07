@@ -1,7 +1,7 @@
 package io.equiv.eqfiddle.game
 
-trait AbstractGameDiscovery {
-  self: SimpleGame =>
+trait AbstractGameDiscovery[GamePosition <: SimpleGame.GamePosition] {
+  self: SimpleGame[GamePosition] =>
 
   /** part of the game that can be reached from the initial nodes starting in the `initialPositions`. (warning: mutable!) */
   val discovered = collection.mutable.Set[GamePosition]()
@@ -13,9 +13,9 @@ trait AbstractGameDiscovery {
  * in terms of some given nodes and the `successors`-function. it also adds a map for the
  * number of successors for discovered nodes `successorNum`.
  */
-trait GameDiscovery extends AbstractGameDiscovery {
-  self: SimpleGame =>
-  
+trait GameDiscovery[GamePosition <: SimpleGame.GamePosition] extends AbstractGameDiscovery[GamePosition] {
+  self: SimpleGame[GamePosition] =>
+
   /** number of successor states of discovered states (warning: mutable!) */
   val successorNum = collection.mutable.Map[GamePosition, Int]() withDefaultValue 0
   

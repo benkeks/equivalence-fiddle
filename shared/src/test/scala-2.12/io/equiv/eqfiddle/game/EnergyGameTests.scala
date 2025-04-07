@@ -6,7 +6,9 @@ import io.equiv.eqfiddle.algo.AlgorithmLogging
 
 class EnergyGameTests extends AnyFunSpec with should.Matchers  {
   
-  class TestEnergyGame() extends EnergyGame {
+  class TestEnergyGame() extends EnergyGame[SimpleGame.GamePosition] {
+
+    override def dimensionality: Int = 2
 
     private def add = EnergyGame.EnergyUpdate.add(_, 2)
 
@@ -16,6 +18,8 @@ class EnergyGameTests extends AnyFunSpec with should.Matchers  {
     case object G4 extends SimpleGame.DefenderPosition
     case object G5 extends SimpleGame.AttackerPosition
     case object G6 extends SimpleGame.DefenderPosition
+
+    type GamePosition = SimpleGame.GamePosition
 
     val graph: Map[(SimpleGame.GamePosition, SimpleGame.GamePosition), EnergyGame.EnergyUpdate] = Set(
       (G1, G2) -> EnergyGame.EnergyUpdate(Array(0, 0)),
@@ -40,13 +44,7 @@ class EnergyGameTests extends AnyFunSpec with should.Matchers  {
 
   val game = new TestEnergyGame()
 
-  def instantAttackerWin(gn: SimpleGame.GamePosition) = gn match {
-    case game.G6 => Set(EnergyGame.Energy.zeroEnergy(2))
-    case _ => Set.empty
-  }
-  game.populateGame(
-    List(game.G1),
-    instantAttackerWin(_))
+  game.populateGame(List(game.G1))
 
   describe("The Example Energy Game") {
     it("should be winnable for the attacker at G2") {

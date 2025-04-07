@@ -71,7 +71,7 @@ object EquivalenceSpectroscopeAPI {
   def performSpectroscopy(lts: WeakTS, p1: String, p2: String) = {
     AlgorithmLogging.debugLogActive = false
     val algo = new StrongSpectroscopy(lts)
-    val result = algo.compute(List((p1, p2)))
+    val result = algo.decideAll(List((p1, p2)))
 
     for {
       res <- result.relationItems.toJSArray
@@ -81,8 +81,8 @@ object EquivalenceSpectroscopeAPI {
   @JSExportTopLevel("LTBTS")
   def LTBTS() = {
     val classes = for {
-      Spectrum.EquivalenceNotion(name, obsClass) <- ObservationNotionStrong.LTBTS.notions
-    } yield (name, obsClass.toTuple.productIterator.toIterable.toJSArray)
+      Spectrum.EquivalenceNotion(name, obsNotion) <- ObservationNotionStrong.LTBTS.notions
+    } yield (name, obsNotion.toTuple.productIterator.toIterable.toJSArray)
     classes.toMap.toJSDictionary
   }
 }

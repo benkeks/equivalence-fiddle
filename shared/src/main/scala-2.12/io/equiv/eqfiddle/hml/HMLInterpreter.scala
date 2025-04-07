@@ -9,11 +9,14 @@ import io.equiv.eqfiddle.game.GameDiscovery
 class HMLInterpreter[S, A, L] (
     val ts: WeakTransitionSystem[S, A, L]) {
   
-  case class HMLAttack(s: S, formula: Formula[A]) extends SimpleGame.AttackerPosition
-  case class HMLDefense(s: S, formula: Formula[A]) extends SimpleGame.DefenderPosition
+  trait HMLGamePosition[S, A] extends SimpleGame.GamePosition
+  case class HMLAttack(s: S, formula: Formula[A]) extends SimpleGame.AttackerPosition with HMLGamePosition[S, A]
+  case class HMLDefense(s: S, formula: Formula[A]) extends SimpleGame.DefenderPosition with HMLGamePosition[S, A]
+
+  type GamePosition = HMLGamePosition[S, A]
 
   class HMLFormulaGame(formula: Formula[A], states: Iterable[S])
-    extends SimpleGame with GameDiscovery with WinningRegionComputation {
+    extends SimpleGame[GamePosition] with GameDiscovery[GamePosition] with WinningRegionComputation[GamePosition] {
 
     def makeNode(s: S, formula: Formula[A]) = formula match {
       case Observe(_, _) | ObserveInternal(_, _) | Negate(And(_)) | Pass(_) =>

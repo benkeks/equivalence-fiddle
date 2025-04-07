@@ -85,11 +85,11 @@ class VeryLargeTransitionSystems(
 
     val algo = algorithm(system)
 
-    val result = algo.compute(comparedPairs, config.copy(computeFormulas = false, energyCap = 3, saveGameSize = true))
+    val result = algo.decideAll(comparedPairs, config.copy(computeFormulas = false, energyCap = 3, saveGameSize = true))
     printTiming(startTime, "Spectroscopy")
 
-    output("Game positions", algo.gameSize._1.toString)
-    output("Game moves", algo.gameSize._2.toString)
+    output("Game positions", result.meta("game-positions"))
+    output("Game moves", result.meta("game-moves"))
 
     val interestingNotions = result.spectrum.notions.filter(n => outputMinimizationSizes.contains(n.name))
 
@@ -99,7 +99,7 @@ class VeryLargeTransitionSystems(
       val quotientSystem = new BuildQuotientSystem(system, quotient).build()
       if (littleBrotherElimination) {
         val minimizedSystem = new RemoveLittleBrothers(quotientSystem, { (p: Int, q: Int) =>
-          result.foundPreorders(p, q).exists(eq => eq.obsClass >= notion.obsClass)
+          result.foundPreorders(p, q).exists(eq => eq.obsNotion >= notion.obsNotion)
         }).build()
         output(notion.name, minimizedSystem.nodes.size.toString)
       } else {

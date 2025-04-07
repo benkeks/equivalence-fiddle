@@ -97,14 +97,14 @@ object ObservationNotionStrong {
 
   val LTBTS = Spectrum.fromTuples(BaseLTBTS, getFormulaRootClass)
 
-  def formulaObsClass(f: HennessyMilnerLogic.Formula[_]): ObservationNotionStrong = f match {
+  def formulaobsNotion(f: HennessyMilnerLogic.Formula[_]): ObservationNotionStrong = f match {
     case HennessyMilnerLogic.And(subterms) =>
       if (subterms.isEmpty) {
         ObservationNotionStrong()
       } else {
         val (positiveSubterms, negativeSubterms) = subterms.toList.partition(_.isPositive)
-        val positiveClasses = positiveSubterms.map(formulaObsClass(_))
-        val negativeClasses = negativeSubterms.map(formulaObsClass(_))
+        val positiveClasses = positiveSubterms.map(formulaobsNotion(_))
+        val negativeClasses = negativeSubterms.map(formulaobsNotion(_))
         val revivalClass = if (positiveClasses.nonEmpty) Some(positiveClasses.maxBy(_.observationHeight)) else None
         val otherPositiveClasses = positiveClasses diff revivalClass.toList
         val allClasses = positiveClasses ++ negativeClasses
@@ -119,24 +119,24 @@ object ObservationNotionStrong {
         )
       }
     case HennessyMilnerLogic.Negate(andThen) =>
-      val andThenClass = formulaObsClass(andThen)
+      val andThenClass = formulaobsNotion(andThen)
       ObservationNotionStrong(
         negationLevels = andThenClass.negationLevels + 1
       ) lub andThenClass
     case HennessyMilnerLogic.Observe(action, andThen) =>
-      val andThenClass = formulaObsClass(andThen)
+      val andThenClass = formulaobsNotion(andThen)
       ObservationNotionStrong(
         observationHeight = andThenClass.observationHeight + 1
       ) lub andThenClass
     case HennessyMilnerLogic.Pass(andThen) =>
-      formulaObsClass(andThen)
+      formulaobsNotion(andThen)
   }
 
   def getFormulaRootClass(f: HennessyMilnerLogic.Formula[_]) = {
     if (f.isPositive) {
-      formulaObsClass(f)
+      formulaobsNotion(f)
     } else {
-      formulaObsClass(HennessyMilnerLogic.And(Set(f)))
+      formulaobsNotion(HennessyMilnerLogic.And(Set(f)))
     }
   }
 

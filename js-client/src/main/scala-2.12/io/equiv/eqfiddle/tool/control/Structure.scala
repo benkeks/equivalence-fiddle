@@ -303,12 +303,12 @@ object Structure {
         }
         AlgorithmLogging.uriEncoder = scala.scalajs.js.URIUtils.encodeURI _
 
-        val result = algo.compute(List((n1, n2)), SpectroscopyInterface.SpectroscopyConfig(computeFormulas = true))
+        val result = algo.decideAll(List((n1, n2)), SpectroscopyInterface.SpectroscopyConfig(computeFormulas = true))
         AlgorithmLogging.debugLog("Spectroscopy took: " + (Date.now - begin) + "ms.", logLevel = 7)
 
         val gameString = result.meta.get("game") match {
           case Some(game) if game != "" =>
-            val (positionNum, moveNum) = algo.gameSize
+            val Some(positionNum) = result.meta.get("game-positions")
             s"""<a href="$game" target="_blank">View game (with $positionNum positions).</a>"""
           case _ => ""
         }
@@ -360,7 +360,9 @@ object Structure {
             new StrongSpectroscopy(structure.structure)
           } else {
             throw new Exception(
-              s"Notion $notion is not defined. Possible names would be: ${(ObservationNotionWeak.LTBTS.getSpectrumClass.keys ++ ObservationNotionWeak.LTBTS.getSpectrumClass.keys).mkString(", ")}")
+              s"Notion ‹$notion› is not defined.\n\nPossible names would be:\n ${(
+                ObservationNotionStrong.LTBTS.getSpectrumClass.keys ++
+                ObservationNotionWeak.LTBTS.getSpectrumClass.keys).mkString(", ")}")
           }
 
         AlgorithmLogging.uriEncoder = scala.scalajs.js.URIUtils.encodeURI _
@@ -386,7 +388,7 @@ object Structure {
             } + {
               result.meta.get("game") match {
                 case Some(game) if game != "" =>
-                  val (positionNum, moveNum) = algo.gameSize
+                  val Some(positionNum) = result.meta.get("game-positions")
                   s"""<p><a href="$game" target="_blank">View game (with $positionNum positions).</a></p>"""
                 case _ => ""
               }
@@ -427,7 +429,7 @@ object Structure {
         n2j <- (n1i + 1) until states.length
       } yield (states(n1i), states(n2j))
 
-      val result = algo.compute(comparedPairs, SpectroscopyInterface.SpectroscopyConfig(computeFormulas = false, energyCap = 3))
+      val result = algo.decideAll(comparedPairs, SpectroscopyInterface.SpectroscopyConfig(computeFormulas = false, energyCap = 3))
       AlgorithmLogging.debugLog("Minimization Spectroscopy took: " + (Date.now - begin) + "ms.", logLevel = 7)
 
       val distRel = result.toDistancesRelation()
@@ -435,15 +437,15 @@ object Structure {
 
       val eqLevels =
         distRel.labels.map(result.spectrum.getStrongestPreorderClassFromClass(_))
-        .flatten.toSet[Spectrum.EquivalenceNotion[ObservationNotionStrong]].toList.sortBy(_.obsClass.toTuple).reverse
+        .flatten.toSet[Spectrum.EquivalenceNotion[ObservationNotionStrong]].toList.sortBy(_.obsNotion.toTuple).reverse
 
       val replay = for {
-        Spectrum.EquivalenceNotion(name, obsClass) <- eqLevels
+        Spectrum.EquivalenceNotion(name, obsNotion) <- eqLevels
         resultRelation = for {
           (p, d, q) <- lubDists
-          if !d.exists(_ <= obsClass)
+          if !d.exists(_ <= obsNotion)
         } yield (p, "eq", q)
-        msg = obsClass.toTuple.toString().replace(Int.MaxValue.toString(), "∞") + " " + name
+        msg = obsNotion.toTuple.toString().replace(Int.MaxValue.toString(), "∞") + " " + name
       } yield () => AlgorithmLogging.LogRelation(new LabeledRelation(resultRelation), msg)
 
       structure.setReplay(replay.toList)
@@ -470,7 +472,7 @@ object Structure {
           n2 <- structure.structure.nodes
         } yield (node, n2)
 
-        val result = algo.compute(comparedPairs, SpectroscopyInterface.SpectroscopyConfig(computeFormulas = false, energyCap = 3))
+        val result = algo.decideAll(comparedPairs, SpectroscopyInterface.SpectroscopyConfig(computeFormulas = false, energyCap = 3))
         AlgorithmLogging.debugLog("Characterization Spectroscopy took: " + (Date.now - begin) + "ms.", logLevel = 7)
 
         for {

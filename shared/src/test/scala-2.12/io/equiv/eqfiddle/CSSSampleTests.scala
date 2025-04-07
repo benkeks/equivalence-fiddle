@@ -37,8 +37,6 @@ trait CSSSampleTests[OC <: ObservationNotion, CF <: HennessyMilnerLogic.Formula[
       title: String,
       spectroscopyConfig: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig()) = {
 
-    AlgorithmLogging.debugLogActive = false
-
     val samples = sampleNames.map {
       case (n1, n2, preords, notPreords) =>
         (n1, n2, toSpectrumClassSet(preords), toSpectrumClassSet(notPreords))
@@ -54,7 +52,7 @@ trait CSSSampleTests[OC <: ObservationNotion, CF <: HennessyMilnerLogic.Formula[
           val preordsStr = preords.map(_.name)
           val notPreordsStr = notPreords.map(_.name).intersect(algo.spectrum.notionNames)
 
-          val result = algo.compute(List((n1, n2)), spectroscopyConfig)
+          val result = algo.decideAll(List((n1, n2)), spectroscopyConfig)
 
           val foundDistinctions = result.foundDistinctions(n1, n2).map(
             d => d.name match { case "2bisimulation" => "bisimulation"; case "2trace" => "trace"; case n => n }

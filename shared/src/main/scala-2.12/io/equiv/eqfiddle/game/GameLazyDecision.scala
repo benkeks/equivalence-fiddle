@@ -2,8 +2,8 @@ package io.equiv.eqfiddle.game
 
 import io.equiv.eqfiddle.algo.AlgorithmLogging
 
-trait GameLazyDecision[P] extends AbstractGameDiscovery {
-  self: SimpleGame =>
+trait GameLazyDecision[GamePosition <: SimpleGame.GamePosition, P] extends AbstractGameDiscovery[GamePosition] {
+  self: SimpleGame[GamePosition] =>
 
   override def predecessors(gn: GamePosition): Iterable[GamePosition] = computedPredecessors(gn)
   private val computedPredecessors = collection.mutable.Map[GamePosition, Set[GamePosition]]() withDefaultValue Set()
@@ -34,6 +34,10 @@ trait GameLazyDecision[P] extends AbstractGameDiscovery {
     val oldBudgets = attackerWinningBudgets(node)
     val newBudgetsMin = newBudgets.filterNot(p => newBudgets.exists(op => energyIsLower(op, p))).toList
     if (newBudgetsMin.forall(p => oldBudgets.contains(p))) {
+      if (!attackerWinningBudgets.isDefinedAt(node)) {
+        // we should save the (presumably empty) list of budgets. (so later algorithms know that we looked for an attacker win here without success.)
+        attackerWinningBudgets(node) = newBudgetsMin
+      }
       false
     } else {
       attackerWinningBudgets(node) = newBudgetsMin
@@ -41,11 +45,12 @@ trait GameLazyDecision[P] extends AbstractGameDiscovery {
     }
   }
 
+  /** compute the current budget for a position (likely using information about successors.) */
   def computeCurrentBudget(node: GamePosition): Iterable[P]
 
+  /** Fill game graph and compute attacker wins during discovery. */
   def populateGame(
-      initialPositions: Iterable[GamePosition],
-      instantAttackerWin: GamePosition => Iterable[P]) = {
+      initialPositions: Iterable[GamePosition]) = {
 
     val todo = collection.mutable.Queue[GamePosition]()
     val visited = collection.mutable.Set[GamePosition]()
@@ -55,32 +60,24 @@ trait GameLazyDecision[P] extends AbstractGameDiscovery {
     while (todo.nonEmpty) {
       if (printToDoLength) AlgorithmLogging.debugLog(todo.size.toString())
       val currPos = todo.dequeue()
-      val instaWin = instantAttackerWin(currPos)
-      if (instaWin.nonEmpty) {
-        if (energyUpdate(currPos, instaWin)) {
-          // propagate a new win
-          predecessors(currPos).foreach(_ +=: todo)
-        }
-      } else {
-        if (!(visited contains currPos)) {
-          visited += currPos
-          val succs = computeSuccessors(currPos)
-          computedSuccessors(currPos) = succs.toSet
-          for {
-            gn <- succs
-          } {
-            computedPredecessors(gn) += currPos
-            if (!(discovered contains gn)) {
-              discovered += gn
-              todo += gn
-            }
+      if (!(visited contains currPos)) {
+        visited += currPos
+        val succs = computeSuccessors(currPos)
+        computedSuccessors(currPos) = succs.toSet
+        for {
+          gn <- succs
+        } {
+          computedPredecessors(gn) += currPos
+          if (!(discovered contains gn)) {
+            discovered += gn
+            todo += gn
           }
         }
-        val updatedBudget = computeCurrentBudget(currPos)
-        if (energyUpdate(currPos, updatedBudget) ) {
-          // propagate a new win
-          predecessors(currPos).foreach(_ +=: todo)
-        }
+      }
+      val updatedBudget = computeCurrentBudget(currPos)
+      if (energyUpdate(currPos, updatedBudget) ) {
+        // propagate a new win
+        predecessors(currPos).foreach(_ +=: todo)
       }
     }
   }
