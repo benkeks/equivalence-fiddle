@@ -149,6 +149,13 @@ class Interpreter[S, A, L](
               ts, stabilityRespecting = true
             ).computePartition()
             ts = new BuildQuotientSystem[S, A, L](ts, bisimColoring, protectedNodes = mainConcreteNodes, tauCyclesOn = Some(divergenceInfo)).build()
+          case _ =>
+            val problematicMeta = ccsDef.defs.filter {
+              case Syntax.MetaDeclaration("preprocessing", attribs, _) => attribs.contains(method)
+              case _ => false
+            }
+            return Problem(s"Unknown preprocessing method: ‹$method›.\n\n" +
+              s"Supported: ‹weakness_saturated›, ‹bisim_minimized›, ‹srbb_minimized›", problematicMeta)
         }
       }
       ts
