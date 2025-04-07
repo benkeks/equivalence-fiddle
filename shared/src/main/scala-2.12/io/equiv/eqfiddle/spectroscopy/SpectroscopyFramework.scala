@@ -123,11 +123,18 @@ trait SpectroscopyFramework[S, A, L, CF <: HennessyMilnerLogic.Formula[A]]
       gn <- spectroscopyGame.discovered
       (p, q) <- gamePositionToRelationItem(gn)
       (prices, preorders) <- bestPreorders.get(gn)
-      distinctions = for {
-        price <- prices
-        formula = distinguishingPositionFormulas(gn).headOption
-          .getOrElse(HennessyMilnerLogic.True[A].asInstanceOf[CF]) // if no formulas have been computed, take True as dummy
-      } yield (formula, price, spectrum.classifyNotion(price))
+      distinctions = if (!config.computeFormulas) {
+        for {
+          price <- prices
+          formula = HennessyMilnerLogic.True[A].asInstanceOf[CF] // if no formulas have been computed, take True as dummy
+        } yield (formula, price, spectrum.classifyNotion(price))
+      } else {
+        val distinctionFormulas = distinguishingPositionFormulas(gn)
+        for {
+          f <- distinctionFormulas.toList
+          (fPrice, eqs) = spectrum.classifyFormula(f)
+        } yield (f, fPrice, eqs)
+      }
     } yield SpectroscopyInterface.SpectroscopyResultItem[S, A, Notion, CF](p, q, distinctions.toList, preorders)
 
     // collect some diagnostic information (unless disabled)
