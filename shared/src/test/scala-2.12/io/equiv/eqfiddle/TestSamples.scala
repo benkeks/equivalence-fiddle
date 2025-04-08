@@ -11,6 +11,8 @@ import io.equiv.eqfiddle.ccs.Parser
 
 object TestSamples {
   
+  val divergenceActionLabel = "δ"
+
   def arrowLabeling(o: Option[Syntax.Label]) = {
     Interpreting.fromOption(o.map(_.name) orElse(Some("")))
   }
@@ -24,7 +26,7 @@ object TestSamples {
     Example(slug, name, src) <- CCSSamples.namedSamples
     parser: Parser = new Parser(src)
     parser.ParseSuccess(esDef, _) = parser.parse
-    interpreter = new Interpreter(esDef, NodeID(_), arrowLabeling, nodeLabeling, actionStrToInput, actionStrIsOutput)
+    interpreter = new Interpreter(esDef, NodeID(_), arrowLabeling, nodeLabeling, actionStrToInput, actionStrIsOutput, divergenceMarker = Some(divergenceActionLabel))
     Interpreting.Success(is) = interpreter.result()
   } yield (slug, is.asInstanceOf[WeakTransitionSystem[NodeID, String, String]])
   
