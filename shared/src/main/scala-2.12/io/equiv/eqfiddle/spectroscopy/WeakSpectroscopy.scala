@@ -91,6 +91,7 @@ class WeakSpectroscopy[S, A, L] (
             case AttackerObservation(p1, qq1) =>
               val possibleRestoredActions = for {
                 (a, pp1) <- ts.post(p0)
+                if !ts.silentActions(a)
                 if pp1 contains p1
                 if qq1 == ts.post(qq0,a)
               } yield a
