@@ -47,7 +47,7 @@ class Structure(val main: Control) extends ModelComponent {
     case Source.SourceChange(source, ast) =>
       val beginInterpret = Date.now
       val interpretationResult =
-        new Interpreter(ast, NodeID(_), Structure.arrowAnnotator, Structure.nodeAnnotator, Structure.actionToInput, Structure.actionIsOutput)
+        new Interpreter(ast, NodeID(_), Structure.arrowAnnotator, Structure.nodeAnnotator, Structure.actionToInput, Structure.actionIsOutput, divergenceMarker = Some(Structure.divergenceActionLabel))
         .result(Structure.transitionSystemConstructor(_, _))
 
       interpretationResult match {
@@ -157,12 +157,10 @@ object Structure {
   }
 
   case class ActionLabel(
-      val act: Symbol,
-      val x: Option[Double] = None,
-      val y: Option[Double] = None) {
+      val act: Symbol) {
 
     def this(name: String) = {
-      this(Symbol(name), None, None)
+      this(Symbol(name))
     }
 
     val hash = act.hashCode()
@@ -179,12 +177,6 @@ object Structure {
     }
 
     override def toString() = toActString
-
-    def toStringPairList = {
-      act.name ++
-      x.toList.map(v => ("x", v.round.toString)) ++
-      y.toList.map(v => ("y", v.round.toString))
-    }
   }
 
   case class NodeLabel(
@@ -211,11 +203,11 @@ object Structure {
 
   val emptyLabel = NodeLabel(Set())
 
-  val silentLabel = NodeLabel(Set('τ))
-
   val emptyActionLabel = new ActionLabel("")
 
-  val silentActionLabel = ActionLabel('τ)
+  val silentActionLabel = ActionLabel(Symbol("τ"))
+
+  val divergenceActionLabel = ActionLabel(Symbol("δ"))
 
   def nodeAnnotator(nodeDecl: Option[Syntax.NodeAnnotation]): Interpreting.Result[NodeLabel] = nodeDecl match {
     case Some(nD @ Syntax.NodeAnnotation(name, attribs, pos)) =>
@@ -240,9 +232,7 @@ object Structure {
     case Some(aL @ Syntax.Label(name, pos)) =>
       if (name.forall(actionChars)) {
         try {
-          val l = ActionLabel(
-            act = Symbol(if (name == "tau") "τ" else name)
-          )
+          val l = if (name == "tau" || name == "τ") silentActionLabel else ActionLabel(Symbol(name))
           Interpreting.Success(l)
         } catch {
           case e: Exception => Interpreting.Problem(e.toString(), List(aL))
@@ -256,7 +246,7 @@ object Structure {
 
   def actionIsOutput(a: ActionLabel): Boolean = actionStrIsOutput(a.toActString)
   def actionToInput(a: ActionLabel): ActionLabel =
-    if (actionIsOutput(a)) ActionLabel(Symbol(actionStrToInput(a.toActString)), a.x, a.y) else a
+    if (actionIsOutput(a)) ActionLabel(Symbol(actionStrToInput(a.toActString))) else a
 
   def actionStrIsOutput(a: String) = a.endsWith("!")
   def actionStrToInput(a: String): String = if (actionStrIsOutput(a)) actionStrToInput(a.dropRight(1)) else a
@@ -267,9 +257,9 @@ object Structure {
       oldTs: Option[Structure.TSStructure] = None)
     : (Set[NodeID], WeakTransitionSystem[NodeID,ActionLabel,NodeLabel]) = {
 
-    val silentActions = rel.labels filter (_.act == 'τ)
+    val silentActions = Set(silentActionLabel)
     val mainNodes = (labels.collect { case (id, label) if label.act.contains('main) => id }).toSet
-    (mainNodes, new WeakTransitionSystem(rel, labels, silentActions.toSet))
+    (mainNodes, new WeakTransitionSystem(rel, labels, silentActions))
   }
 
   case class StructureCallOperation(slug: String, resetReplay: Boolean = true) extends StructureAction {

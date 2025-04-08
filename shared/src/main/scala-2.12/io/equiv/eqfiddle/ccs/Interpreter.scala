@@ -24,7 +24,8 @@ class Interpreter[S, A, L](
     nodeLabeling: Option[Syntax.NodeAnnotation] => Interpreting.Result[L],
     toInput: A => A,
     isOutput: A => Boolean,
-    maxStates: Int = 5000
+    maxStates: Int = 5000,
+    divergenceMarker: Option[A] = None
   ) {
   
   val silentActions = Set(arrowLabeling(Some(Syntax.Label("τ"))).get, arrowLabeling(Some(Syntax.Label("tau"))).get)
@@ -146,6 +147,46 @@ class Interpreter[S, A, L](
             ts = new BuildQuotientSystem[S, A, L](ts, bisimColoring, mainConcreteNodes).build()
           case "tauloop_compressed" =>
             ts = new TauLoopCompression[S, A, L](ts, protectedNodes = mainConcreteNodes).compute()
+          case "tauloop_compressed_marked" =>
+            val deadlock = 
+              ts.nodes.find(s => ts.post(s).isEmpty)
+            (divergenceMarker, deadlock) match {
+              case (Some(diverges), Some(deadState)) =>
+                ts = new TauLoopCompression[S, A, L](ts, protectedNodes = mainConcreteNodes).compute()
+                val divergenceMarkedTransitions = for {
+                  s <- ts.nodes
+                  if ts.silentSteps(s, s)
+                } yield {
+                  (s, diverges, deadState)
+                }
+                ts = new WeakTransitionSystem[S, A, L](
+                  new LabeledRelation(ts.step.tupleSet ++ divergenceMarkedTransitions),
+                  ts.nodeLabeling,
+                  ts.silentActions
+                )
+              case (_ , None) =>
+                return Problem("Transition system must have a deadlock state to mark divergence.", ccsDef.defs.headOption.toList)
+              case _ =>
+                throw new Exception("Divergence marker not set, but divergence marking requested!")
+            }
+          case "divergence_marked" =>
+            divergenceMarker match {
+              case Some(diverges) => 
+                val divergenceInfo = new DivergenceFinder[S, A, L](ts).compute()
+                val divergenceMarkedTransitions = for {
+                  s <- ts.nodes
+                  if divergenceInfo(s)
+                } yield {
+                  (s, diverges, s)
+                }
+                ts = new WeakTransitionSystem[S, A, L](
+                  new LabeledRelation(ts.step.tupleSet ++ divergenceMarkedTransitions),
+                  ts.nodeLabeling,
+                  ts.silentActions
+                )
+              case None =>
+                throw new Exception("Divergence marker not set, but divergence marking requested!")
+            }
           case "srbb_minimized" =>
             val divergenceInfo = new DivergenceFinder[S, A, L](ts).compute()
             val bisimColoring = new BranchingBisimilarity[S, A, L](
@@ -158,7 +199,7 @@ class Interpreter[S, A, L](
               case _ => false
             }
             return Problem(s"Unknown preprocessing method: ‹$method›.\n\n" +
-              s"Supported: ‹weakness_saturated›, ‹bisim_minimized›, ‹srbb_minimized›", problematicMeta)
+              s"Supported: ‹weakness_saturated›, ‹tauloop_compressed›, ‹tauloop_compressed_marked›, ‹divergence_marked›, ‹bisim_minimized›, ‹srbb_minimized›", problematicMeta)
         }
       }
       ts
