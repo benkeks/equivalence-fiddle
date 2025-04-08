@@ -546,6 +546,24 @@ P58 = a.(tau.b + b + tau)
        |@compareSilent A1, A2
        |""".stripMargin
 
+  val divergesWhile =
+    """|A = a.(tau.C + b)
+       |B = a.BB
+       |BB = (tau.BB + tau.C + b)
+       |C = (tau.C + c)
+       |
+       |@preprocessing tauloop_compressed_marked
+       |
+       |@comment "B may diverge-while b, whereas A does not have this divergence difference"
+       |
+       |@compareSilent B, A
+       |
+       |
+       |A(x=337, y=157)
+       |B(x=679, y=118)
+       |"0"(x=627, y=566)
+       |""".stripMargin
+
   val stableUnstableAbstraction =
     """|@comment "Pte/Ptl resemble Pe/Pl with all occurrences of idle renamed to tau"
        |
@@ -600,8 +618,8 @@ P58 = a.(tau.b + b + tau)
     Example("strong-weak-sims",
       "Eta, Branching, Delay Bisims",
       strongWeakSims),
-    Example("weak-edge-cases-david",
-      "Weak Edge Cases by David",
+    Example("diverges-while",
+      "Diverges-while case for eta and branching",
       davidsEdgeCases),
     Example("stable-unstable-abstraction",
       "Stable vs. unstable abstraction",
