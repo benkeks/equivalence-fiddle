@@ -95,16 +95,16 @@ object ObservationNotionStrong {
   )
 
 
-  val LTBTS = Spectrum.fromTuples(BaseLTBTS, getFormulaRootClass)
+  val LTBTS = Spectrum.fromTuples(BaseLTBTS, getFormulaRootNotion)
 
-  def formulaobsNotion(f: HennessyMilnerLogic.Formula[_]): ObservationNotionStrong = f match {
+  def formulaObsNotion(f: HennessyMilnerLogic.Formula[_]): ObservationNotionStrong = f match {
     case HennessyMilnerLogic.And(subterms) =>
       if (subterms.isEmpty) {
         ObservationNotionStrong()
       } else {
         val (positiveSubterms, negativeSubterms) = subterms.toList.partition(_.isPositive)
-        val positiveClasses = positiveSubterms.map(formulaobsNotion(_))
-        val negativeClasses = negativeSubterms.map(formulaobsNotion(_))
+        val positiveClasses = positiveSubterms.map(formulaObsNotion(_))
+        val negativeClasses = negativeSubterms.map(formulaObsNotion(_))
         val revivalClass = if (positiveClasses.nonEmpty) Some(positiveClasses.maxBy(_.observationHeight)) else None
         val otherPositiveClasses = positiveClasses diff revivalClass.toList
         val allClasses = positiveClasses ++ negativeClasses
@@ -119,24 +119,24 @@ object ObservationNotionStrong {
         )
       }
     case HennessyMilnerLogic.Negate(andThen) =>
-      val andThenClass = formulaobsNotion(andThen)
+      val andThenClass = formulaObsNotion(andThen)
       ObservationNotionStrong(
         negationLevels = andThenClass.negationLevels + 1
       ) lub andThenClass
     case HennessyMilnerLogic.Observe(action, andThen) =>
-      val andThenClass = formulaobsNotion(andThen)
+      val andThenClass = formulaObsNotion(andThen)
       ObservationNotionStrong(
         observationHeight = andThenClass.observationHeight + 1
       ) lub andThenClass
     case HennessyMilnerLogic.Pass(andThen) =>
-      formulaobsNotion(andThen)
+      formulaObsNotion(andThen)
   }
 
-  def getFormulaRootClass(f: HennessyMilnerLogic.Formula[_]) = {
+  def getFormulaRootNotion(f: HennessyMilnerLogic.Formula[_]) = {
     if (f.isPositive) {
-      formulaobsNotion(f)
+      formulaObsNotion(f)
     } else {
-      formulaobsNotion(HennessyMilnerLogic.And(Set(f)))
+      formulaObsNotion(HennessyMilnerLogic.And(Set(f)))
     }
   }
 

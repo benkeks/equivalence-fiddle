@@ -147,9 +147,9 @@ object ObservationNotionWeak {
     case _ => false
   }
 
-  val LTBTS = Spectrum.fromTuples(BaseLTBTS, getFormulaRootClass)
+  val LTBTS = Spectrum.fromTuples(BaseLTBTS, getFormulaRootNotion)
 
-  def formulaobsNotion(f: HennessyMilnerLogic.Formula[_]): ObservationNotionWeak = f match {
+  def formulaObsNotion(f: HennessyMilnerLogic.Formula[_]): ObservationNotionWeak = f match {
     case HennessyMilnerLogic.And(subterms) =>
       if (subterms.isEmpty) {
         ObservationNotionWeak()
@@ -158,8 +158,8 @@ object ObservationNotionWeak {
       } else {
         val (positiveSubterms, negativeSubterms) = subterms.toList.partition(_.isPositive)
         val (stabilityChecks, properNegatives) = negativeSubterms.partition(isStabilityCheck(_))
-        val positiveClasses = positiveSubterms.map(formulaobsNotion(_))
-        val negativeClasses = properNegatives.map(formulaobsNotion(_)) ++ stabilityChecks.map(_ => ObservationNotionWeak(0,0,0,0,0,0,0,0,1))
+        val positiveClasses = positiveSubterms.map(formulaObsNotion(_))
+        val negativeClasses = properNegatives.map(formulaObsNotion(_)) ++ stabilityChecks.map(_ => ObservationNotionWeak(0,0,0,0,0,0,0,0,1))
         val allClasses = positiveClasses ++ negativeClasses
         val positiveHeights = positiveClasses.map(_.observationHeight)
         val positiveMaxHeight = if (positiveHeights.isEmpty) 0 else positiveHeights.max
@@ -203,22 +203,22 @@ object ObservationNotionWeak {
         //}
       }
     case HennessyMilnerLogic.Negate(andThen) =>
-      val andThenClass = formulaobsNotion(andThen)
+      val andThenClass = formulaObsNotion(andThen)
       ObservationNotionWeak(
         negationLevels = andThenClass.negationLevels + 1
       ) lub andThenClass
     case HennessyMilnerLogic.Observe(action, andThen) =>
-      val andThenClass = formulaobsNotion(andThen)
+      val andThenClass = formulaObsNotion(andThen)
       ObservationNotionWeak(
         observationHeight = andThenClass.observationHeight + 1
       ) lub andThenClass
     case HennessyMilnerLogic.ObserveInternal(andThen, opt) =>
-      val andThenClass = formulaobsNotion(andThen)
+      val andThenClass = formulaObsNotion(andThen)
       ObservationNotionWeak(
         observationHeight = andThenClass.observationHeight + 1
       ) lub andThenClass
     case HennessyMilnerLogic.Pass(andThen) =>
-      val andThenClass = formulaobsNotion(andThen)
+      val andThenClass = formulaObsNotion(andThen)
       if (andThen.isInstanceOf[HennessyMilnerLogic.And[_]]) {
         ObservationNotionWeak(
           observationHeight = andThenClass.observationHeight,
@@ -237,11 +237,11 @@ object ObservationNotionWeak {
       }
   }
 
-  def getFormulaRootClass(f: HennessyMilnerLogic.Formula[_]) = {
+  def getFormulaRootNotion(f: HennessyMilnerLogic.Formula[_]) = {
     if (f.isPositive) {
-      formulaobsNotion(f)
+      formulaObsNotion(f)
     } else {
-      formulaobsNotion(HennessyMilnerLogic.And(Set(f)))
+      formulaObsNotion(HennessyMilnerLogic.And(Set(f)))
     }
   }
 
