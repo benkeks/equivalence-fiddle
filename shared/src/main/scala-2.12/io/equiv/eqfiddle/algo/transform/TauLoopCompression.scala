@@ -16,12 +16,13 @@ import io.equiv.eqfiddle.util.Coloring
  *  
  *  */
 class TauLoopCompression[S, A, L] (
-    ts: WeakTransitionSystem[S, A, L]
+    ts: WeakTransitionSystem[S, A, L],
+    protectedNodes: Set[S] = Set[S]()
   ) {
   
   def compute() = {
     val coloring = computeColoring()
-    new BuildQuotientSystem(ts, coloring).build()
+    new BuildQuotientSystem(ts, coloring, protectedNodes = protectedNodes).build()
   }
   
   def computeColoring() = {

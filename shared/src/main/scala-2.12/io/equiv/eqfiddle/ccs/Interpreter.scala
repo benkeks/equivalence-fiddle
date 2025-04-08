@@ -14,6 +14,7 @@ import io.equiv.eqfiddle.algo.sigref.Bisimilarity
 import io.equiv.eqfiddle.algo.sigref.BranchingBisimilarity
 import io.equiv.eqfiddle.algo.transform.BuildQuotientSystem
 import io.equiv.eqfiddle.algo.transform.DivergenceFinder
+import io.equiv.eqfiddle.algo.transform.TauLoopCompression
 
 /** Transforms a CCS term into a transition system */
 class Interpreter[S, A, L](
@@ -143,6 +144,8 @@ class Interpreter[S, A, L](
           case "bisim_minimized" =>
             val bisimColoring = new Bisimilarity[S, A, L](ts).computePartition()
             ts = new BuildQuotientSystem[S, A, L](ts, bisimColoring, mainConcreteNodes).build()
+          case "tauloop_compressed" =>
+            ts = new TauLoopCompression[S, A, L](ts, protectedNodes = mainConcreteNodes).compute()
           case "srbb_minimized" =>
             val divergenceInfo = new DivergenceFinder[S, A, L](ts).compute()
             val bisimColoring = new BranchingBisimilarity[S, A, L](
