@@ -7,17 +7,17 @@ import io.equiv.eqfiddle.ccs.Syntax
 import io.equiv.eqfiddle.util.Interpreting
 import io.equiv.eqfiddle.tool.model.NodeID
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
-import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
+import io.equiv.eqfiddle.spectroscopy.Spectroscopy
 import io.equiv.eqfiddle.spectroscopy.StrongSpectroscopy
-import io.equiv.eqfiddle.hml.HennessyMilnerLogic
+import io.equiv.eqfiddle.hml.HML
 
 
 /**
  * Creates the distinguishing formulas that are used in the paper / the classic LTBTS to illustrate the output of the algorithm.
  */
 class LTBTSDistinctions(
-  algorithm: (WeakTransitionSystem[NodeID,String,String]) => SpectroscopyInterface[NodeID,String,String,HennessyMilnerLogic.Formula[String]],
-  config: SpectroscopyInterface.SpectroscopyConfig
+  algorithm: (WeakTransitionSystem[NodeID,String,String]) => Spectroscopy[NodeID,String,String,HML.Formula[String]],
+  config: Spectroscopy.Config
 ) {
 
   val examplePairs = List(
@@ -60,7 +60,7 @@ class LTBTSDistinctions(
 
       val result = {
         val algo = algorithm(ltbtsSystem)
-        algo.decideAll(List((n1, n2)), SpectroscopyInterface.SpectroscopyConfig(computeFormulas = true))
+        algo.decideAll(List((n1, n2)), Spectroscopy.Config(computeFormulas = true))
       }
 
       for {

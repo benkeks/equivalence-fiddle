@@ -1,11 +1,11 @@
 package io.equiv.eqfiddle
 
 import io.equiv.eqfiddle.spectroscopy.StrongSpectroscopy
-import io.equiv.eqfiddle.hml.ObservationNotionStrong
-import io.equiv.eqfiddle.hml.HennessyMilnerLogic
+import io.equiv.eqfiddle.hml.StrongObservationNotion
+import io.equiv.eqfiddle.hml.HML
 
-class EdgeCaseTests extends CSSSampleTests[ObservationNotionStrong, HennessyMilnerLogic.Formula[String]] {
-  override val spectrum = ObservationNotionStrong.LTBTS
+class EdgeCaseTests extends CSSSampleTests[StrongObservationNotion, HML.Formula[String]] {
+  override val spectrum = StrongObservationNotion.LTBTS
   
   val reviewSystem = TestSamples.samples.find(_._1 == "review-counterexamples").get._2
 

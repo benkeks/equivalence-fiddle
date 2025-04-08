@@ -4,28 +4,28 @@ import io.equiv.eqfiddle.ccs.Syntax
 import io.equiv.eqfiddle.util.Interpreting
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 import io.equiv.eqfiddle.ts.CSVTSLoader
-import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
+import io.equiv.eqfiddle.spectroscopy.Spectroscopy
 import io.equiv.eqfiddle.algo.transform.BuildQuotientSystem
 import io.equiv.eqfiddle.algo.sigref.Bisimilarity
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent._
 import scala.concurrent.duration._
-import io.equiv.eqfiddle.hml.HennessyMilnerLogic
+import io.equiv.eqfiddle.hml.HML
 
 class Sizemark(
-  algorithm: (WeakTransitionSystem[Int,Symbol,Unit]) => SpectroscopyInterface[Int,Symbol,Unit,HennessyMilnerLogic.Formula[Symbol]]
+  algorithm: (WeakTransitionSystem[Int,Symbol,Unit]) => Spectroscopy[Int,Symbol,Unit,HML.Formula[Symbol]]
 ) {
 
   val configs = Seq(
-    SpectroscopyInterface.SpectroscopyConfig(useBisimMinimization = false, useSymmetryPruning = false, useCleverSpectroscopyGame = false, energyCap = 1),
-    SpectroscopyInterface.SpectroscopyConfig(useBisimMinimization = false, useSymmetryPruning = true, useCleverSpectroscopyGame = false, energyCap = 1),
-    SpectroscopyInterface.SpectroscopyConfig(useBisimMinimization = true, useSymmetryPruning = false, useCleverSpectroscopyGame = false, energyCap = 1),
-    SpectroscopyInterface.SpectroscopyConfig(useBisimMinimization = true, useSymmetryPruning = true, useCleverSpectroscopyGame = false, energyCap = 1),
-    SpectroscopyInterface.SpectroscopyConfig(useBisimMinimization = false, useSymmetryPruning = false, useCleverSpectroscopyGame = true, energyCap = 1),
-    SpectroscopyInterface.SpectroscopyConfig(useBisimMinimization = false, useSymmetryPruning = true, useCleverSpectroscopyGame = true, energyCap = 1),
-    SpectroscopyInterface.SpectroscopyConfig(useBisimMinimization = true, useSymmetryPruning = false, useCleverSpectroscopyGame = true, energyCap = 1),
-    SpectroscopyInterface.SpectroscopyConfig(useBisimMinimization = true, useSymmetryPruning = true, useCleverSpectroscopyGame = true, energyCap = 1),
+    Spectroscopy.Config(useBisimMinimization = false, useSymmetryPruning = false, useCleverSpectroscopyGame = false, energyCap = 1),
+    Spectroscopy.Config(useBisimMinimization = false, useSymmetryPruning = true, useCleverSpectroscopyGame = false, energyCap = 1),
+    Spectroscopy.Config(useBisimMinimization = true, useSymmetryPruning = false, useCleverSpectroscopyGame = false, energyCap = 1),
+    Spectroscopy.Config(useBisimMinimization = true, useSymmetryPruning = true, useCleverSpectroscopyGame = false, energyCap = 1),
+    Spectroscopy.Config(useBisimMinimization = false, useSymmetryPruning = false, useCleverSpectroscopyGame = true, energyCap = 1),
+    Spectroscopy.Config(useBisimMinimization = false, useSymmetryPruning = true, useCleverSpectroscopyGame = true, energyCap = 1),
+    Spectroscopy.Config(useBisimMinimization = true, useSymmetryPruning = false, useCleverSpectroscopyGame = true, energyCap = 1),
+    Spectroscopy.Config(useBisimMinimization = true, useSymmetryPruning = true, useCleverSpectroscopyGame = true, energyCap = 1),
   )
 
   val samples = Seq(    
@@ -42,7 +42,7 @@ class Sizemark(
     Interpreting.fromOption(o.map(_.name) orElse(Some("")))
   }
 
-  def listGameSizes(fileName: String, config: SpectroscopyInterface.SpectroscopyConfig) = {
+  def listGameSizes(fileName: String, config: Spectroscopy.Config) = {
 
     print(fileName)
     val Some(loadedSystem) = new CSVTSLoader(fileName).result()

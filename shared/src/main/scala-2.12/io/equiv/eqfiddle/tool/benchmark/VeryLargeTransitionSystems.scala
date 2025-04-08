@@ -8,7 +8,7 @@ import io.equiv.eqfiddle.util.Interpreting
 import io.equiv.eqfiddle.tool.model.NodeID
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 import io.equiv.eqfiddle.ts.CSVTSLoader
-import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
+import io.equiv.eqfiddle.spectroscopy.Spectroscopy
 import io.equiv.eqfiddle.spectroscopy.StrongSpectroscopy
 import io.equiv.eqfiddle.algo.transform.BuildQuotientSystem
 import io.equiv.eqfiddle.algo.sigref.Bisimilarity
@@ -18,11 +18,11 @@ import scala.util.Random
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent._
 import scala.concurrent.duration._
-import io.equiv.eqfiddle.hml.HennessyMilnerLogic
+import io.equiv.eqfiddle.hml.HML
 
 class VeryLargeTransitionSystems(
-  algorithm: (WeakTransitionSystem[Int,Symbol,Unit]) => SpectroscopyInterface[Int,Symbol,Unit,HennessyMilnerLogic.Formula[Symbol]],
-  config: SpectroscopyInterface.SpectroscopyConfig
+  algorithm: (WeakTransitionSystem[Int,Symbol,Unit]) => Spectroscopy[Int,Symbol,Unit,HML.Formula[Symbol]],
+  config: Spectroscopy.Config
 ) {
 
   val vltsSamplesMedium = Seq(    

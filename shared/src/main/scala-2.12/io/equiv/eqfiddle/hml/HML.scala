@@ -1,6 +1,6 @@
 package io.equiv.eqfiddle.hml
 
-object HennessyMilnerLogic {
+object HML {
 
   val OutputSugaredWeakFormulas = false
 

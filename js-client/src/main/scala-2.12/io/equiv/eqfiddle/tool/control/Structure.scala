@@ -18,10 +18,10 @@ import io.equiv.eqfiddle.util.Relation
 import io.equiv.eqfiddle.util.LabeledRelation
 import io.equiv.eqfiddle.algo.AlgorithmLogging
 import io.equiv.eqfiddle.spectroscopy.{StrongSpectroscopy, WeakSpectroscopy}
-import io.equiv.eqfiddle.hml.ObservationNotionStrong
-import io.equiv.eqfiddle.hml.ObservationNotionWeak
+import io.equiv.eqfiddle.hml.StrongObservationNotion
+import io.equiv.eqfiddle.hml.WeakObservationNotion
 import io.equiv.eqfiddle.hml.Spectrum
-import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
+import io.equiv.eqfiddle.spectroscopy.Spectroscopy
 import io.equiv.eqfiddle.hml.ObservationNotion
 
 class Structure(val main: Control) extends ModelComponent {
@@ -293,7 +293,7 @@ object Structure {
         }
         AlgorithmLogging.uriEncoder = scala.scalajs.js.URIUtils.encodeURI _
 
-        val result = algo.decideAll(List((n1, n2)), SpectroscopyInterface.SpectroscopyConfig(computeFormulas = true))
+        val result = algo.decideAll(List((n1, n2)), Spectroscopy.Config(computeFormulas = true))
         AlgorithmLogging.debugLog("Spectroscopy took: " + (Date.now - begin) + "ms.", logLevel = 7)
 
         val gameString = result.meta.get("game") match {
@@ -344,15 +344,15 @@ object Structure {
         val begin = Date.now
 
         val algo = 
-          if (ObservationNotionWeak.LTBTS.getSpectrumClass.isDefinedAt(notion)) {
+          if (WeakObservationNotion.LTBTS.getSpectrumClass.isDefinedAt(notion)) {
             new WeakSpectroscopy(structure.structure)
-          } else if (ObservationNotionStrong.LTBTS.getSpectrumClass.isDefinedAt(notion)) {
+          } else if (StrongObservationNotion.LTBTS.getSpectrumClass.isDefinedAt(notion)) {
             new StrongSpectroscopy(structure.structure)
           } else {
             throw new Exception(
               s"Notion ‹$notion› is not defined.\n\nPossible names would be:\n ${(
-                ObservationNotionStrong.LTBTS.getSpectrumClass.keys ++
-                ObservationNotionWeak.LTBTS.getSpectrumClass.keys).mkString(", ")}")
+                StrongObservationNotion.LTBTS.getSpectrumClass.keys ++
+                WeakObservationNotion.LTBTS.getSpectrumClass.keys).mkString(", ")}")
           }
 
         AlgorithmLogging.uriEncoder = scala.scalajs.js.URIUtils.encodeURI _
@@ -419,7 +419,7 @@ object Structure {
         n2j <- (n1i + 1) until states.length
       } yield (states(n1i), states(n2j))
 
-      val result = algo.decideAll(comparedPairs, SpectroscopyInterface.SpectroscopyConfig(computeFormulas = false, energyCap = 3))
+      val result = algo.decideAll(comparedPairs, Spectroscopy.Config(computeFormulas = false, energyCap = 3))
       AlgorithmLogging.debugLog("Minimization Spectroscopy took: " + (Date.now - begin) + "ms.", logLevel = 7)
 
       val distRel = result.toDistancesRelation()
@@ -427,7 +427,7 @@ object Structure {
 
       val eqLevels =
         distRel.labels.map(result.spectrum.getStrongestPreorderClassFromClass(_))
-        .flatten.toSet[Spectrum.EquivalenceNotion[ObservationNotionStrong]].toList.sortBy(_.obsNotion.toTuple).reverse
+        .flatten.toSet[Spectrum.EquivalenceNotion[StrongObservationNotion]].toList.sortBy(_.obsNotion.toTuple).reverse
 
       val replay = for {
         Spectrum.EquivalenceNotion(name, obsNotion) <- eqLevels
@@ -462,12 +462,12 @@ object Structure {
           n2 <- structure.structure.nodes
         } yield (node, n2)
 
-        val result = algo.decideAll(comparedPairs, SpectroscopyInterface.SpectroscopyConfig(computeFormulas = false, energyCap = 3))
+        val result = algo.decideAll(comparedPairs, Spectroscopy.Config(computeFormulas = false, energyCap = 3))
         AlgorithmLogging.debugLog("Characterization Spectroscopy took: " + (Date.now - begin) + "ms.", logLevel = 7)
 
         for {
           res <- result.relationItems//.find(r => r.left == n1 && r.right == n2)
-          SpectroscopyInterface.SpectroscopyResultItem(_, _, distinctions, preorderings) = res
+          Spectroscopy.ResultItem(_, _, distinctions, preorderings) = res
         } {
           val dists = distinctions.map(d => d._1.toString() + d._3.map(_.name).mkString(" (", ",", ")")).mkString("<br>")
           val preords = preorderings.map(_.name).mkString("<br>")

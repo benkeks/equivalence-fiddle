@@ -2,7 +2,7 @@ package io.equiv.eqfiddle.spectroscopy
 
 import io.equiv.eqfiddle.game.SimpleGame
 import io.equiv.eqfiddle.game.EnergyGame
-import io.equiv.eqfiddle.hml.ObservationNotionStrong
+import io.equiv.eqfiddle.hml.StrongObservationNotion
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 
 object WeakSpectroscopyGame {
@@ -32,7 +32,7 @@ object WeakSpectroscopyGame {
 
 class WeakSpectroscopyGame[S, A, L](
     ts: WeakTransitionSystem[S, A, L],
-    val config: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig())
+    val config: Spectroscopy.Config = Spectroscopy.Config())
   extends SimpleGame[WeakSpectroscopyGame.WeakSpectroscopyGamePosition[S, A]]
   with EnergyGame[WeakSpectroscopyGame.WeakSpectroscopyGamePosition[S, A]] {
 

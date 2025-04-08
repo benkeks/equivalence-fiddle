@@ -1,27 +1,27 @@
 package io.equiv.eqfiddle
 
 import io.equiv.eqfiddle.spectroscopy.WeakSpectroscopy
-import io.equiv.eqfiddle.hml.ObservationNotionWeak
-import io.equiv.eqfiddle.hml.HennessyMilnerLogic
-import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
+import io.equiv.eqfiddle.hml.WeakObservationNotion
+import io.equiv.eqfiddle.hml.HML
+import io.equiv.eqfiddle.spectroscopy.Spectroscopy
 
-class LTBTS2Tests extends CSSSampleTests[ObservationNotionWeak, HennessyMilnerLogic.Formula[String]] {
+class LTBTS2Tests extends CSSSampleTests[WeakObservationNotion, HML.Formula[String]] {
 
-  override val spectrum = ObservationNotionWeak.LTBTS
+  override val spectrum = WeakObservationNotion.LTBTS
 
   val ltbtsSystem = TestSamples.samples.find(_._1 == "ltbts2").get._2
 
   val configs = Seq(
-    "unoptimized" -> SpectroscopyInterface.SpectroscopyConfig(useSymmetryPruning = false, useBranchingSpectroscopyGame = false, useCleverSpectroscopyGame = false, energyCap = 3),
-    "unoptimized-formulas" -> SpectroscopyInterface.SpectroscopyConfig(useSymmetryPruning = false, useBranchingSpectroscopyGame = false, useCleverSpectroscopyGame = false, computeFormulas = true),
-    "branching-formulas" -> SpectroscopyInterface.SpectroscopyConfig(useSymmetryPruning = false, useBranchingSpectroscopyGame = true, useCleverSpectroscopyGame = false, computeFormulas = true),
-    "symmetry-pruned" -> SpectroscopyInterface.SpectroscopyConfig(useSymmetryPruning = true, useBranchingSpectroscopyGame = false, useCleverSpectroscopyGame = false, energyCap = 3),
-    "clever-spectro" -> SpectroscopyInterface.SpectroscopyConfig(useSymmetryPruning = false, useBranchingSpectroscopyGame = false, useCleverSpectroscopyGame = true, energyCap = 3),
-    "symmetry-pruned-clever" -> SpectroscopyInterface.SpectroscopyConfig(useSymmetryPruning = true, useBranchingSpectroscopyGame = false, useCleverSpectroscopyGame = true, energyCap = 3),
-    "branching" -> SpectroscopyInterface.SpectroscopyConfig(useSymmetryPruning = false, useCleverSpectroscopyGame = false, energyCap = 3),
-    "symmetry-pruned-branching" -> SpectroscopyInterface.SpectroscopyConfig(useSymmetryPruning = true, useCleverSpectroscopyGame = false, energyCap = 3),
-    "clever-spectro-branching" -> SpectroscopyInterface.SpectroscopyConfig(useSymmetryPruning = false, useCleverSpectroscopyGame = true, energyCap = 3),
-    "symmetry-pruned-clever-branching" -> SpectroscopyInterface.SpectroscopyConfig(useSymmetryPruning = true, useCleverSpectroscopyGame = true, energyCap = 3),
+    "unoptimized" -> Spectroscopy.Config(useSymmetryPruning = false, useBranchingSpectroscopyGame = false, useCleverSpectroscopyGame = false, energyCap = 3),
+    "unoptimized-formulas" -> Spectroscopy.Config(useSymmetryPruning = false, useBranchingSpectroscopyGame = false, useCleverSpectroscopyGame = false, computeFormulas = true),
+    "branching-formulas" -> Spectroscopy.Config(useSymmetryPruning = false, useBranchingSpectroscopyGame = true, useCleverSpectroscopyGame = false, computeFormulas = true),
+    "symmetry-pruned" -> Spectroscopy.Config(useSymmetryPruning = true, useBranchingSpectroscopyGame = false, useCleverSpectroscopyGame = false, energyCap = 3),
+    "clever-spectro" -> Spectroscopy.Config(useSymmetryPruning = false, useBranchingSpectroscopyGame = false, useCleverSpectroscopyGame = true, energyCap = 3),
+    "symmetry-pruned-clever" -> Spectroscopy.Config(useSymmetryPruning = true, useBranchingSpectroscopyGame = false, useCleverSpectroscopyGame = true, energyCap = 3),
+    "branching" -> Spectroscopy.Config(useSymmetryPruning = false, useCleverSpectroscopyGame = false, energyCap = 3),
+    "symmetry-pruned-branching" -> Spectroscopy.Config(useSymmetryPruning = true, useCleverSpectroscopyGame = false, energyCap = 3),
+    "clever-spectro-branching" -> Spectroscopy.Config(useSymmetryPruning = false, useCleverSpectroscopyGame = true, energyCap = 3),
+    "symmetry-pruned-clever-branching" -> Spectroscopy.Config(useSymmetryPruning = true, useCleverSpectroscopyGame = true, energyCap = 3),
   )
   
   val sampleNames: List[(String, String, List[String], List[String])] = List(

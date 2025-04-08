@@ -2,35 +2,35 @@ package io.equiv.eqfiddle.spectroscopy
 
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 import io.equiv.eqfiddle.algo.AlgorithmLogging
-import io.equiv.eqfiddle.hml.ObservationNotionStrong
+import io.equiv.eqfiddle.hml.StrongObservationNotion
 import io.equiv.eqfiddle.hml.Spectrum
 import io.equiv.eqfiddle.game.SimpleGame
 import io.equiv.eqfiddle.game.EnergyGame
 import io.equiv.eqfiddle.game.EnergyGame.Energy
-import io.equiv.eqfiddle.hml.HennessyMilnerLogic
-import io.equiv.eqfiddle.hml.HMLInterpreter
+import io.equiv.eqfiddle.hml.HML
+import io.equiv.eqfiddle.hml.Interpreter
 import io.equiv.eqfiddle.game.GameGraphVisualizer
-import io.equiv.eqfiddle.hml.ObservationNotionWeak
+import io.equiv.eqfiddle.hml.WeakObservationNotion
 import io.equiv.eqfiddle.util.FixedPoint
 import io.equiv.eqfiddle.game.MaterializedEnergyGame
 
 class WeakSpectroscopy[S, A, L] (
     override val ts: WeakTransitionSystem[S, A, L])
-  extends SpectroscopyInterface[S, A, L, HennessyMilnerLogic.Formula[A]]
-  with SpectroscopyFramework[S, A, L, HennessyMilnerLogic.Formula[A]] 
-  with SpectroscopyEquivalenceChecking[S, A, L, HennessyMilnerLogic.Formula[A]] {
+  extends Spectroscopy[S, A, L, HML.Formula[A]]
+  with SpectroscopyFramework[S, A, L, HML.Formula[A]] 
+  with EquivalenceChecking[S, A, L, HML.Formula[A]] {
 
   import WeakSpectroscopyGame._
 
-  type Notion = ObservationNotionWeak
+  type Notion = WeakObservationNotion
   type GamePosition = WeakSpectroscopyGamePosition[S, A]
   type SpectroscopyGame = WeakSpectroscopyGame[S, A, L]
 
-  val spectrum = ObservationNotionWeak.LTBTS
+  val spectrum = WeakObservationNotion.LTBTS
 
-  override def openSpectroscopyGame(config: SpectroscopyInterface.SpectroscopyConfig): SpectroscopyGame = {
+  override def openSpectroscopyGame(config: Spectroscopy.Config): SpectroscopyGame = {
     if (config.useBranchingSpectroscopyGame) {
-      new WeakSpectroscopyGameBranching(ts, config)
+      new WeakBranchingSpectroscopyGame(ts, config)
     } else {
       new WeakSpectroscopyGame(ts, config)
     }
@@ -45,11 +45,11 @@ class WeakSpectroscopy[S, A, L] (
     case _ => None
   }
 
-  def pruneDominated(oldFormulas: Set[HennessyMilnerLogic.Formula[A]]) = {
+  def pruneDominated(oldFormulas: Set[HML.Formula[A]]) = {
     spectrum.selectCheapest(oldFormulas)
   }
 
-  def buildHMLWitness(game: SpectroscopyGame, node: GamePosition, price: Energy): Iterable[HennessyMilnerLogic.Formula[A]]
+  def buildHMLWitness(game: SpectroscopyGame, node: GamePosition, price: Energy): Iterable[HML.Formula[A]]
     = distinguishingFormulas.getOrElseUpdate((node, price), {
     node match {
       case AttackerObservation(p0, qq0) =>
@@ -63,7 +63,7 @@ class WeakSpectroscopy[S, A, L] (
             case AttackerDelayedObservation(p1, qq1) =>
               for {
                 postForm <- buildHMLWitness(game, s, newBudget)
-              } yield HennessyMilnerLogic.Pass(postForm)
+              } yield HML.Pass(postForm)
             case DefenderConjunction(p1, qq1) =>
               buildHMLWitness(game, s, newBudget)
             case _ => Set()
@@ -98,7 +98,7 @@ class WeakSpectroscopy[S, A, L] (
               for {
                 a <- possibleRestoredActions.headOption.toList // just take first option
                 postForm <- buildHMLWitness(game, s, newBudget)
-              } yield HennessyMilnerLogic.Observe(a, postForm)
+              } yield HML.Observe(a, postForm)
             case DefenderConjunction(p1, qq1) =>
               buildHMLWitness(game, s, newBudget)
             case DefenderStableConjunction(p1, qq1, qq1revivals) =>
@@ -116,7 +116,7 @@ class WeakSpectroscopy[S, A, L] (
           newBudget = update.applyEnergyUpdate(price)
           if game.isAttackerWinningEnergy(s, newBudget)
           f <- buildHMLWitness(game, s, newBudget)
-        } yield if (s.isInstanceOf[AttackerDelayedObservation[S, A]]) HennessyMilnerLogic.Pass(f) else f
+        } yield if (s.isInstanceOf[AttackerDelayedObservation[S, A]]) HML.Pass(f) else f
       case _ : AttackerConjunct[S, A] | _ : AttackerConjunctStable[S, A] =>
         val (p0, q0) = node match {
           case AttackerConjunct(p0, q0) => (p0, q0)
@@ -133,11 +133,11 @@ class WeakSpectroscopy[S, A, L] (
               if (p0 == p1) {
                 for {
                   postForm <- buildHMLWitness(game, s, newBudget)
-                } yield HennessyMilnerLogic.Pass(postForm)
+                } yield HML.Pass(postForm)
               } else {
                 for {
                   postForm <- buildHMLWitness(game, s, newBudget)
-                } yield HennessyMilnerLogic.Negate(HennessyMilnerLogic.Pass(postForm))
+                } yield HML.Negate(HML.Pass(postForm))
               }
             }
           }
@@ -153,9 +153,9 @@ class WeakSpectroscopy[S, A, L] (
         } yield {
           s match {
             case AttackerBranchingObservation(_, _) if ts.silentActions(a) =>
-              HennessyMilnerLogic.ObserveInternal(subformula, opt = true)
+              HML.ObserveInternal(subformula, opt = true)
             case AttackerBranchingObservation(_, _) =>
-              HennessyMilnerLogic.Observe(a, subformula)
+              HML.Observe(a, subformula)
             case _ =>
               subformula
           }
@@ -171,18 +171,18 @@ class WeakSpectroscopy[S, A, L] (
           Seq()
         }) ++ Seq(aBranches)
         val productMoves =
-          possibleMoves.foldLeft(Seq(Seq[HennessyMilnerLogic.Formula[A]]()))(
+          possibleMoves.foldLeft(Seq(Seq[HML.Formula[A]]()))(
             (b, a) => b.flatMap(i => a.map(j => i ++ Seq(j))))
         val conjs = productMoves.map { mv =>
           val moves = mv.toSet
-          HennessyMilnerLogic.And(moves).asInstanceOf[HennessyMilnerLogic.Formula[A]]
+          HML.And(moves).asInstanceOf[HML.Formula[A]]
         }
         pruneDominated(conjs.toSet)
       case DefenderBranchingConjunction(p0, a, p1, qq0, qq0a) if game.config.useBranchingSpectroscopyGame =>
         // note: qq0a is always empty for branching-style game
         
         // at first we collect optional distinguishing formulas for each q in qq0 as in usual conjunctions
-        val possibleMoves: Iterable[Iterable[HennessyMilnerLogic.Formula[A]]] = for {
+        val possibleMoves: Iterable[Iterable[HML.Formula[A]]] = for {
           s1 <- game.successors(node)
           update1 = game.weight(node, s1)
           newBudget1 = update1.applyEnergyUpdate(price)
@@ -195,9 +195,9 @@ class WeakSpectroscopy[S, A, L] (
           } yield {
             s2 match {
               case AttackerBranchingObservation(_, _) if ts.silentActions(a) =>
-                HennessyMilnerLogic.ObserveInternal(subformula, opt = true)
+                HML.ObserveInternal(subformula, opt = true)
               case AttackerBranchingObservation(_, _) =>
-                HennessyMilnerLogic.Observe(a, subformula)
+                HML.Observe(a, subformula)
               case _ =>
               subformula
             }
@@ -205,8 +205,8 @@ class WeakSpectroscopy[S, A, L] (
         } else {
           Seq()
         })
-        val productMoves: Seq[Seq[HennessyMilnerLogic.Formula[A]]] =
-          possibleMoves.foldLeft(Seq(Seq[HennessyMilnerLogic.Formula[A]]()))(
+        val productMoves: Seq[Seq[HML.Formula[A]]] =
+          possibleMoves.foldLeft(Seq(Seq[HML.Formula[A]]()))(
             (b, a) => b.flatMap(i => a.map(j => i ++ Seq(j))))
 
         // we now remix the formulas such that the different branching conjuncts are merged. (their continuations are combined by a conjunction under the observation)
@@ -215,34 +215,34 @@ class WeakSpectroscopy[S, A, L] (
         } yield {
           // note that only the branching conjuncts can lead to observes not guarded by ⟨ϵ⟩
           val (obsParts, conjParts) =
-            prod.partition(part => part.isInstanceOf[HennessyMilnerLogic.ObserveInternal[A]] ||  part.isInstanceOf[HennessyMilnerLogic.Observe[A]])
+            prod.partition(part => part.isInstanceOf[HML.ObserveInternal[A]] ||  part.isInstanceOf[HML.Observe[A]])
           // collect and flatten continuations
           val obsContinuations = (for (obs <- obsParts) yield {
             obs match {
-              case HennessyMilnerLogic.ObserveInternal(HennessyMilnerLogic.And(subterms), opt) => subterms
-              case HennessyMilnerLogic.ObserveInternal(andThen, opt) => List(andThen)
-              case HennessyMilnerLogic.Observe(action, HennessyMilnerLogic.And(subterms)) => subterms
-              case HennessyMilnerLogic.Observe(action, andThen) => List(andThen)
+              case HML.ObserveInternal(HML.And(subterms), opt) => subterms
+              case HML.ObserveInternal(andThen, opt) => List(andThen)
+              case HML.Observe(action, HML.And(subterms)) => subterms
+              case HML.Observe(action, andThen) => List(andThen)
             }
           }).flatten
           val branchingContinuation = if (obsContinuations.forall(
-            c => c.isInstanceOf[HennessyMilnerLogic.Pass[A]] || HennessyMilnerLogic.isTrueLiteral(c)
+            c => c.isInstanceOf[HML.Pass[A]] || HML.isTrueLiteral(c)
           )) {
-            HennessyMilnerLogic.Pass(HennessyMilnerLogic.And(obsContinuations.toSet))
+            HML.Pass(HML.And(obsContinuations.toSet))
           } else {
-            HennessyMilnerLogic.And(obsContinuations.toSet)
+            HML.And(obsContinuations.toSet)
           }
           // reconstruct conjunction with merged continuations
           (if (ts.silentActions(a)) {
-            HennessyMilnerLogic.ObserveInternal(branchingContinuation, opt = true)
+            HML.ObserveInternal(branchingContinuation, opt = true)
           } else {
-            HennessyMilnerLogic.Observe(a, branchingContinuation)
+            HML.Observe(a, branchingContinuation)
           }) +: conjParts
         }
         
         val conjs = flattenedProducts.map { mv =>
           val moves = mv.toSet
-          HennessyMilnerLogic.And(moves).asInstanceOf[HennessyMilnerLogic.Formula[A]]
+          HML.And(moves).asInstanceOf[HML.Formula[A]]
         }
         pruneDominated(conjs.toSet)
       case DefenderConjunction(_, _) | DefenderStableConjunction(_, _, _) =>
@@ -261,22 +261,22 @@ class WeakSpectroscopy[S, A, L] (
           Set()
         }
         val productMoves =
-          possibleMoves.foldLeft(Seq(Seq[HennessyMilnerLogic.Formula[A]]()))(
+          possibleMoves.foldLeft(Seq(Seq[HML.Formula[A]]()))(
             (b, a) => b.flatMap(i => a.map(j => i ++ Seq(j))))
         val conjs = productMoves.map { mv =>
           val moves = if (node.isInstanceOf[DefenderStableConjunction[S, A]]) {
-            (mv :+ HennessyMilnerLogic.Negate(HennessyMilnerLogic.ObserveInternal(HennessyMilnerLogic.True))).toSet
+            (mv :+ HML.Negate(HML.ObserveInternal(HML.True))).toSet
           } else {
             mv.toSet
           }
-          HennessyMilnerLogic.And(moves).asInstanceOf[HennessyMilnerLogic.Formula[A]]
+          HML.And(moves).asInstanceOf[HML.Formula[A]]
         }
         pruneDominated(conjs.toSet)
     }
   })
 
   override def energyToNotion(e: Energy): Notion = {
-    ObservationNotionWeak(e(0), e(1), e(2), e(3), e(4), e(5), e(6), e(7), e(8))
+    WeakObservationNotion(e(0), e(1), e(2), e(3), e(4), e(5), e(6), e(7), e(8))
   }
 
   override def notionToEnergy(obsNotion: Notion): Energy = {
@@ -284,7 +284,7 @@ class WeakSpectroscopy[S, A, L] (
     Energy(Array(c._1, c._2, c._3, c._4, c._5, c._6, c._7, c._8, c._9))
   }
   
-  override def preferredPositions(config: SpectroscopyInterface.SpectroscopyConfig)(currentBaseNode: GamePosition, currentEnergy: Energy, baseSuccessor: GamePosition) = currentBaseNode match {
+  override def preferredPositions(config: Spectroscopy.Config)(currentBaseNode: GamePosition, currentEnergy: Energy, baseSuccessor: GamePosition) = currentBaseNode match {
     case AttackerObservation(p, qq) if currentEnergy(4) >= Int.MaxValue && qq.size > 1 =>
       // if we have infinitely many immediate conjunctions, use them to chop down blowup on right-hand side
       baseSuccessor.isInstanceOf[DefenderConjunction[S, A]]

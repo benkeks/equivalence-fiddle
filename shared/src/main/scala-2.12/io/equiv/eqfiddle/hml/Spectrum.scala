@@ -3,14 +3,14 @@ package io.equiv.eqfiddle.hml
 object Spectrum {
   case class EquivalenceNotion[+OC <: ObservationNotion](name: String, obsNotion: OC)
 
-  def fromTuples[OC <: ObservationNotion](pairs: List[(String, OC)], classifier: HennessyMilnerLogic.Formula[_] => OC) = {
+  def fromTuples[OC <: ObservationNotion](pairs: List[(String, OC)], classifier: HML.Formula[_] => OC) = {
     new Spectrum(pairs.map(p => EquivalenceNotion(p._1, p._2)), classifier)
   }
 }
 
 case class Spectrum[+OC <: ObservationNotion](
     notions: List[Spectrum.EquivalenceNotion[OC]],
-    classifier: HennessyMilnerLogic.Formula[_] => OC) {
+    classifier: HML.Formula[_] => OC) {
   import Spectrum._
 
   /** given a group of least distinguishing observation classes, tell what weaker ObservationNotiones would be the strongest fit to preorder the distinguished states */
@@ -31,7 +31,7 @@ case class Spectrum[+OC <: ObservationNotion](
   val notionNames = getSpectrumClass.keySet
 
   /** names the coarsest notion of equivalence where this formula is part of the distinguishing formulas */
-  def classifyFormula[CF <: HennessyMilnerLogic.Formula[_]](f: CF): (OC, List[EquivalenceNotion[OC]]) = {
+  def classifyFormula[CF <: HML.Formula[_]](f: CF): (OC, List[EquivalenceNotion[OC]]) = {
     val balancedClass = classifier(f)
     (balancedClass, classifyNotion(balancedClass))
   }
@@ -52,12 +52,12 @@ case class Spectrum[+OC <: ObservationNotion](
     leastClassifications
   }
 
-  def classifyNicely(f: HennessyMilnerLogic.Formula[_]) = {
+  def classifyNicely(f: HML.Formula[_]) = {
     val (_, classifications) = classifyFormula(f)
     classifications.map(_.name).mkString(",")
   }
 
-  def selectCheapest[CF <: HennessyMilnerLogic.Formula[_]](formulas: Iterable[CF]): Iterable[CF] = {
+  def selectCheapest[CF <: HML.Formula[_]](formulas: Iterable[CF]): Iterable[CF] = {
     val classifications = formulas.map(f => (f, classifyFormula(f)))
     val allClassBounds = classifications.flatMap(_._2._2.map(_.obsNotion))
 

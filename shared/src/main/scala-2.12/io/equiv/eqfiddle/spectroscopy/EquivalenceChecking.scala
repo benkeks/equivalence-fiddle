@@ -1,6 +1,6 @@
 package io.equiv.eqfiddle.spectroscopy
 
-import io.equiv.eqfiddle.hml.HennessyMilnerLogic
+import io.equiv.eqfiddle.hml.HML
 
 import io.equiv.eqfiddle.game.SimpleGame
 import io.equiv.eqfiddle.game.GameGraphVisualizer
@@ -9,12 +9,12 @@ import io.equiv.eqfiddle.game.MaterializedEnergyGame
 import io.equiv.eqfiddle.game.MaterializedEnergyGame._
 
 /** This trait adds checking for individual equivalences to the spectroscopy approach */
-trait SpectroscopyEquivalenceChecking[S, A, L, CF <: HennessyMilnerLogic.Formula[A]]
+trait EquivalenceChecking[S, A, L, CF <: HML.Formula[A]]
   extends SpectroscopyFramework[S, A, L, CF] {
-  self: SpectroscopyInterface[S, A, L, CF] =>
+  self: Spectroscopy[S, A, L, CF] =>
 
   /* whether to consider the baseSuccessor as a relevant move for the attacker in derived equivalence games */
-  def preferredPositions(config: SpectroscopyInterface.SpectroscopyConfig)(currentBaseNode: GamePosition, currentEnergy: Energy, baseSuccessor: GamePosition): Boolean
+  def preferredPositions(config: Spectroscopy.Config)(currentBaseNode: GamePosition, currentEnergy: Energy, baseSuccessor: GamePosition): Boolean
 
   /** Position type for derived equivalence games. */
   type MaterializedPosition = MaterializedGamePosition[GamePosition, Energy]
@@ -22,8 +22,8 @@ trait SpectroscopyEquivalenceChecking[S, A, L, CF <: HennessyMilnerLogic.Formula
   def checkIndividualPreorder(
       comparedPairs: Iterable[(S,S)],
       notion: String,
-      config: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig()
-  ) : SpectroscopyInterface.IndividualNotionResult[S] = {
+      config: Spectroscopy.Config = Spectroscopy.Config()
+  ) : Spectroscopy.IndividualNotionResult[S] = {
     val spectroscopyGame = openSpectroscopyGame(config)
     val init = for {
       (p, q) <- comparedPairs
@@ -67,9 +67,9 @@ trait SpectroscopyEquivalenceChecking[S, A, L, CF <: HennessyMilnerLogic.Formula
     val items = for {
       (p, q) <- comparedPairs
     } yield {
-      SpectroscopyInterface.IndividualNotionResultItem(p, q, relation.contains((p, "", q)))
+      Spectroscopy.IndividualNotionResultItem(p, q, relation.contains((p, "", q)))
     }
-    SpectroscopyInterface.IndividualNotionResult(
+    Spectroscopy.IndividualNotionResult(
       items,
       relation, 
       meta = Map(

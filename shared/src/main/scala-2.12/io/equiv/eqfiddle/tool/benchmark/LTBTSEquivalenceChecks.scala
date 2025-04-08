@@ -4,19 +4,19 @@ import io.equiv.eqfiddle.ccs.CCSSamples
 import io.equiv.eqfiddle.ccs.Parser
 import io.equiv.eqfiddle.ccs.Interpreter
 import io.equiv.eqfiddle.ccs.Syntax
-import io.equiv.eqfiddle.hml.HennessyMilnerLogic
+import io.equiv.eqfiddle.hml.HML
 import io.equiv.eqfiddle.util.Interpreting
 import io.equiv.eqfiddle.tool.model.NodeID
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
-import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
+import io.equiv.eqfiddle.spectroscopy.Spectroscopy
 import io.equiv.eqfiddle.spectroscopy.StrongSpectroscopy
 
 /**
  * Checks each individual equivalence for each individual eq example of the strong spectrum.
  */
 class LTBTSEquivalenceChecks(
-  algorithm: (WeakTransitionSystem[NodeID,String,String]) => SpectroscopyInterface[NodeID,String,String,HennessyMilnerLogic.Formula[String]],
-  config: SpectroscopyInterface.SpectroscopyConfig
+  algorithm: (WeakTransitionSystem[NodeID,String,String]) => Spectroscopy[NodeID,String,String,HML.Formula[String]],
+  config: Spectroscopy.Config
 ) {
 
   val examplePairs = List(

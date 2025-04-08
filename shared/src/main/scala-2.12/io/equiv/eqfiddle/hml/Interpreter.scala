@@ -1,12 +1,12 @@
 package io.equiv.eqfiddle.hml
 
-import io.equiv.eqfiddle.hml.HennessyMilnerLogic._
+import io.equiv.eqfiddle.hml.HML._
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 import io.equiv.eqfiddle.game.SimpleGame
 import io.equiv.eqfiddle.game.WinningRegionComputation
 import io.equiv.eqfiddle.game.GameDiscovery
 
-class HMLInterpreter[S, A, L] (
+class Interpreter[S, A, L] (
     val ts: WeakTransitionSystem[S, A, L]) {
   
   trait HMLGamePosition[S, A] extends SimpleGame.GamePosition

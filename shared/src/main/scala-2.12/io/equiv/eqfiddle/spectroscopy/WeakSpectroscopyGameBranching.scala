@@ -2,10 +2,10 @@ package io.equiv.eqfiddle.spectroscopy
 
 import io.equiv.eqfiddle.game.SimpleGame
 import io.equiv.eqfiddle.game.EnergyGame
-import io.equiv.eqfiddle.hml.ObservationNotionStrong
+import io.equiv.eqfiddle.hml.StrongObservationNotion
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 
-class WeakSpectroscopyGameBranching[S, A, L](ts: WeakTransitionSystem[S, A, L], config: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig())
+class WeakBranchingSpectroscopyGame[S, A, L](ts: WeakTransitionSystem[S, A, L], config: Spectroscopy.Config = Spectroscopy.Config())
   extends WeakSpectroscopyGame(ts, config) {
 
   import WeakSpectroscopyGame._

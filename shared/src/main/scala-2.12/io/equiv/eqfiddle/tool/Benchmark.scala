@@ -8,10 +8,10 @@ import io.equiv.eqfiddle.tool.benchmark.VeryLargeTransitionSystems
 import io.equiv.eqfiddle.tool.model.NodeID
 
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
-import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
+import io.equiv.eqfiddle.spectroscopy.Spectroscopy
 import io.equiv.eqfiddle.spectroscopy.StrongSpectroscopy
 import io.equiv.eqfiddle.spectroscopy.WeakSpectroscopy
-import io.equiv.eqfiddle.hml.HennessyMilnerLogic
+import io.equiv.eqfiddle.hml.HML
 import io.equiv.eqfiddle.tool.benchmark.Sizemark
 
 object Benchmark extends App {
@@ -45,18 +45,18 @@ object Benchmark extends App {
       |Source:    https://github.com/benkeks/equivalence-fiddle
       |""".stripMargin
 
-  val baseConfig = SpectroscopyInterface.SpectroscopyConfig(
+  val baseConfig = Spectroscopy.Config(
     useCleverSpectroscopyGame = !(args.contains("--unclever-spectroscopy")),
     useSymmetryPruning = true
   )
 
-  val algoVLTS: (WeakTransitionSystem[Int,Symbol,Unit]) => SpectroscopyInterface[Int,Symbol,Unit,HennessyMilnerLogic.Formula[Symbol]] =
+  val algoVLTS: (WeakTransitionSystem[Int,Symbol,Unit]) => Spectroscopy[Int,Symbol,Unit,HML.Formula[Symbol]] =
     if (args.contains("--strong-game")) {
       new StrongSpectroscopy(_)
     } else {
       new WeakSpectroscopy(_)
   }
-  val algoCCS: (WeakTransitionSystem[NodeID,String,String]) => SpectroscopyInterface[NodeID,String,String,HennessyMilnerLogic.Formula[String]] =
+  val algoCCS: (WeakTransitionSystem[NodeID,String,String]) => Spectroscopy[NodeID,String,String,HML.Formula[String]] =
     if (args.contains("--strong-game")) {
       new StrongSpectroscopy(_)
     } else {

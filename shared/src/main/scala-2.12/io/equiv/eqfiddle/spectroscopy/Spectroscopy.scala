@@ -3,13 +3,13 @@ package io.equiv.eqfiddle.spectroscopy
 import io.equiv.eqfiddle.util.LabeledRelation
 import io.equiv.eqfiddle.util.Coloring
 
-import io.equiv.eqfiddle.hml.HennessyMilnerLogic
+import io.equiv.eqfiddle.hml.HML
 import io.equiv.eqfiddle.hml.ObservationNotion
 import io.equiv.eqfiddle.hml.Spectrum
 
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 
-trait SpectroscopyInterface[S, A, L, CF <: HennessyMilnerLogic.Formula[A]] {
+trait Spectroscopy[S, A, L, CF <: HML.Formula[A]] {
 
   /** The transition system to be analyzed. */
   val ts: WeakTransitionSystem[S, A, L]
@@ -23,20 +23,20 @@ trait SpectroscopyInterface[S, A, L, CF <: HennessyMilnerLogic.Formula[A]] {
   /** Decide all behavioral preorders of the spectrum for the compared pairs. */
   def decideAll(
     comparedPairs: Iterable[(S,S)],
-    config: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig()
-  ) : SpectroscopyInterface.SpectroscopyResult[S, A, Notion, CF]
+    config: Spectroscopy.Config = Spectroscopy.Config()
+  ) : Spectroscopy.Result[S, A, Notion, CF]
 
   /** Decide an individual notion preorder for the compared pairs. */
   def checkIndividualPreorder(
       comparedPairs: Iterable[(S,S)],
       notion: String,
-      config: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig()
-  ) : SpectroscopyInterface.IndividualNotionResult[S]
+      config: Spectroscopy.Config = Spectroscopy.Config()
+  ) : Spectroscopy.IndividualNotionResult[S]
 }
 
-object SpectroscopyInterface {
+object Spectroscopy {
 
-  case class SpectroscopyConfig(
+  case class Config(
     val useCleverSpectroscopyGame: Boolean = true,
     val useBranchingSpectroscopyGame: Boolean = true,
     val useSymmetryPruning: Boolean = true,
@@ -47,7 +47,7 @@ object SpectroscopyInterface {
     val useBisimMinimization: Boolean = false
   )
 
-  case class SpectroscopyResultItem[S, A, +OC <: ObservationNotion, +OF <: HennessyMilnerLogic.Formula[A]](
+  case class ResultItem[S, A, +OC <: ObservationNotion, +OF <: HML.Formula[A]](
     left: S,
     right: S,
     distinctions: List[(OF, OC, List[Spectrum.EquivalenceNotion[OC]])],
@@ -70,8 +70,8 @@ object SpectroscopyInterface {
     }
   }
 
-  case class SpectroscopyResult[S, A, +OC <: ObservationNotion, +OF <:HennessyMilnerLogic.Formula[A]](
-      val relationItems: List[SpectroscopyResultItem[S, A, OC, OF]],
+  case class Result[S, A, +OC <: ObservationNotion, +OF <:HML.Formula[A]](
+      val relationItems: List[ResultItem[S, A, OC, OF]],
       val spectrum: Spectrum[OC],
       val meta: Map[String, String] = Map()) {
 
@@ -84,7 +84,7 @@ object SpectroscopyInterface {
 
     def toDistinctionRelation() = {
       val relTuples = for {
-        SpectroscopyResultItem(l, r, dists, preords) <- relationItems
+        ResultItem(l, r, dists, preords) <- relationItems
         dis <- dists
         inEqs = dis._3.map(_.name).mkString(" (", ",", ")")
       } yield (l, dis._1.toString() + inEqs, r)
@@ -93,7 +93,7 @@ object SpectroscopyInterface {
 
     def toPreorderingRelation() = {
       val relTuples = for {
-        SpectroscopyResultItem(l, r, dists, preords) <- relationItems
+        ResultItem(l, r, dists, preords) <- relationItems
         pre <- preords
       } yield (l, pre.name.toString(), r)
       new LabeledRelation(relTuples.toSet)
@@ -102,7 +102,7 @@ object SpectroscopyInterface {
     def toEquivalencesRelation() = {
       val undirectedTuples = {
         for {
-          SpectroscopyResultItem(l, r, _, _) <- relationItems
+          ResultItem(l, r, _, _) <- relationItems
           if l != r
         } yield Set(l, r)
       }.toSet

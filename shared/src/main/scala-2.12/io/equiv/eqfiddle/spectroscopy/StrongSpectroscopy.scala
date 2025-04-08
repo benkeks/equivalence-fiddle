@@ -2,40 +2,40 @@ package io.equiv.eqfiddle.spectroscopy
 
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 import io.equiv.eqfiddle.algo.AlgorithmLogging
-import io.equiv.eqfiddle.hml.ObservationNotionStrong
+import io.equiv.eqfiddle.hml.StrongObservationNotion
 import io.equiv.eqfiddle.hml.Spectrum
 import io.equiv.eqfiddle.game.SimpleGame
 import io.equiv.eqfiddle.game.EnergyGame
 import io.equiv.eqfiddle.game.EnergyGame.Energy
 import io.equiv.eqfiddle.game.MaterializedEnergyGame
-import io.equiv.eqfiddle.hml.HennessyMilnerLogic
-import io.equiv.eqfiddle.hml.HMLInterpreter
+import io.equiv.eqfiddle.hml.HML
+import io.equiv.eqfiddle.hml.Interpreter
 import io.equiv.eqfiddle.game.GameGraphVisualizer
 
 
 class StrongSpectroscopy[S, A, L] (
     override val ts: WeakTransitionSystem[S, A, L])
-  extends SpectroscopyInterface[S, A, L, HennessyMilnerLogic.Formula[A]]
-  with SpectroscopyFramework[S, A, L, HennessyMilnerLogic.Formula[A]] 
-  with SpectroscopyEquivalenceChecking[S, A, L, HennessyMilnerLogic.Formula[A]] {
+  extends Spectroscopy[S, A, L, HML.Formula[A]]
+  with SpectroscopyFramework[S, A, L, HML.Formula[A]] 
+  with EquivalenceChecking[S, A, L, HML.Formula[A]] {
 
   import StrongSpectroscopyGame._
 
-  type Notion = ObservationNotionStrong
+  type Notion = StrongObservationNotion
   type SpectroscopyGame = StrongSpectroscopyGame[S, A, L]
   type GamePosition = StrongSpectroscopyGamePosition[S]
 
-  val spectrum = ObservationNotionStrong.LTBTS
+  val spectrum = StrongObservationNotion.LTBTS
 
   override def notionToEnergy(obsNotion: Notion): Energy = {
     val c = obsNotion.toTuple
     Energy(Array(c._1, c._2, c._3, c._4, c._5, c._6))
   }
   override def energyToNotion(energy: Energy): Notion = {
-    ObservationNotionStrong(energy(0), energy(1), energy(2), energy(3), energy(4), energy(5))
+    StrongObservationNotion(energy(0), energy(1), energy(2), energy(3), energy(4), energy(5))
   }
 
-  override def openSpectroscopyGame(config: SpectroscopyInterface.SpectroscopyConfig): SpectroscopyGame = {
+  override def openSpectroscopyGame(config: Spectroscopy.Config): SpectroscopyGame = {
     new StrongSpectroscopyGame[S, A, L](ts, config)
   }
 
@@ -48,11 +48,11 @@ class StrongSpectroscopy[S, A, L] (
     case _ => None
   }
 
-  def buildHMLWitness(game: SpectroscopyGame, node: GamePosition, price: Energy): Iterable[HennessyMilnerLogic.Formula[A]]
+  def buildHMLWitness(game: SpectroscopyGame, node: GamePosition, price: Energy): Iterable[HML.Formula[A]]
     = distinguishingFormulas.getOrElseUpdate((node, price), {
     node match {
       case AttackerObservation(p0, qq0) if qq0.isEmpty =>
-        Set(HennessyMilnerLogic.True)
+        Set(HML.True)
       case AttackerObservation(p0, qq0) =>
         val successorFormulas =
           for {
@@ -70,7 +70,7 @@ class StrongSpectroscopy[S, A, L] (
               for {
                 a <- possibleRestoredActions.headOption.toList // just take first option
                 postForm <- buildHMLWitness(game, s, newBudget)
-              } yield HennessyMilnerLogic.Observe(a, postForm)
+              } yield HML.Observe(a, postForm)
             case DefenderConjunction(_, _, _) =>
               buildHMLWitness(game, s, newBudget)
             case _ => Set()
@@ -90,7 +90,7 @@ class StrongSpectroscopy[S, A, L] (
               } else {
                 for {
                   postForm <- buildHMLWitness(game, s, newBudget)
-                } yield HennessyMilnerLogic.Negate(postForm)
+                } yield HML.Negate(postForm)
               }
             }
           }
@@ -106,11 +106,11 @@ class StrongSpectroscopy[S, A, L] (
           Set()
         }
         val productMoves =
-          possibleMoves.foldLeft(Seq(Seq[HennessyMilnerLogic.Formula[A]]()))(
+          possibleMoves.foldLeft(Seq(Seq[HML.Formula[A]]()))(
             (b, a) => b.flatMap(i => a.map(j => i ++ Seq(j))))
         productMoves.map { mv =>
           val moves = mv.toSet
-          HennessyMilnerLogic.And(moves).asInstanceOf[HennessyMilnerLogic.Formula[A]]
+          HML.And(moves).asInstanceOf[HML.Formula[A]]
         }
     }
   })
@@ -136,7 +136,7 @@ class StrongSpectroscopy[S, A, L] (
     gn.hashCode().toString().replace('-', 'n')
 
   // whether to consider the baseSuccessor as a relevant node for the attacker
-  def preferredPositions(config: SpectroscopyInterface.SpectroscopyConfig)(currentBaseNode: GamePosition, currentEnergy: Energy, baseSuccessor: GamePosition): Boolean = {
+  def preferredPositions(config: Spectroscopy.Config)(currentBaseNode: GamePosition, currentEnergy: Energy, baseSuccessor: GamePosition): Boolean = {
     (currentBaseNode match {
       case AttackerObservation(p, qq) if currentEnergy(1) >= Int.MaxValue && currentEnergy(2) >= Int.MaxValue && currentEnergy(3) >= Int.MaxValue && qq.size > 1 =>
         // if we have infinitely many conjunctions of unbounded positive depth, use them to chop down blowup on right-hand side

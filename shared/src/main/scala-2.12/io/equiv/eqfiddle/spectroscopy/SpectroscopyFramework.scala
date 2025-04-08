@@ -2,8 +2,8 @@ package io.equiv.eqfiddle.spectroscopy
 
 import io.equiv.eqfiddle.algo.AlgorithmLogging
 
-import io.equiv.eqfiddle.hml.HennessyMilnerLogic
-import io.equiv.eqfiddle.hml.HMLInterpreter
+import io.equiv.eqfiddle.hml.HML
+import io.equiv.eqfiddle.hml.Interpreter
 import io.equiv.eqfiddle.hml.Spectrum
 
 import io.equiv.eqfiddle.game.SimpleGame
@@ -15,16 +15,16 @@ import io.equiv.eqfiddle.ts.WeakTransitionSystem
 
 /** The trait abstractly implements the spectroscopy decision procedure for the `compute` function on the spectroscopy trait
   * The handling of specific spectra, spectroscopy games and their logics must be supplied by implementing methods. */
-trait SpectroscopyFramework[S, A, L, CF <: HennessyMilnerLogic.Formula[A]]
+trait SpectroscopyFramework[S, A, L, CF <: HML.Formula[A]]
     extends AlgorithmLogging[S] {
-  self: SpectroscopyInterface[S, A, L, CF] =>
+  self: Spectroscopy[S, A, L, CF] =>
 
   /** Types of spectroscopy game and its game positions. */
   type SpectroscopyGame <: EnergyGame[GamePosition]
   type GamePosition <: SimpleGame.GamePosition
 
   /** Construct a spectroscopy game object */
-  def openSpectroscopyGame(configuration: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig()): SpectroscopyGame
+  def openSpectroscopyGame(configuration: Spectroscopy.Config = Spectroscopy.Config()): SpectroscopyGame
   
   /** Convert between relation items on the transiton system and positions in the spectroscopy game. */
   def relationItemToGamePosition(p: S, q: S): GamePosition
@@ -52,8 +52,8 @@ trait SpectroscopyFramework[S, A, L, CF <: HennessyMilnerLogic.Formula[A]]
 
   def decideAll(
     comparedPairs: Iterable[(S,S)],
-    config: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig()
-  ) : SpectroscopyInterface.SpectroscopyResult[S, A, Notion, CF] = {
+    config: Spectroscopy.Config = Spectroscopy.Config()
+  ) : Spectroscopy.Result[S, A, Notion, CF] = {
 
     debugLog(s"Start spectroscopy on ${ts.nodes.size} node transition system with ${comparedPairs.size} compared pairs.")
 
@@ -126,7 +126,7 @@ trait SpectroscopyFramework[S, A, L, CF <: HennessyMilnerLogic.Formula[A]]
       distinctions = if (!config.computeFormulas) {
         for {
           price <- prices
-          formula = HennessyMilnerLogic.True[A].asInstanceOf[CF] // if no formulas have been computed, take True as dummy
+          formula = HML.True[A].asInstanceOf[CF] // if no formulas have been computed, take True as dummy
         } yield (formula, price, spectrum.classifyNotion(price))
       } else {
         val distinctionFormulas = distinguishingPositionFormulas(gn)
@@ -135,7 +135,7 @@ trait SpectroscopyFramework[S, A, L, CF <: HennessyMilnerLogic.Formula[A]]
           (fPrice, eqs) = spectrum.classifyFormula(f)
         } yield (f, fPrice, eqs)
       }
-    } yield SpectroscopyInterface.SpectroscopyResultItem[S, A, Notion, CF](p, q, distinctions.toList, preorders)
+    } yield Spectroscopy.ResultItem[S, A, Notion, CF](p, q, distinctions.toList, preorders)
 
     // collect some diagnostic information (unless disabled)
     val (gamePositionNum, gameMoveNum) = if (config.saveGameSize) spectroscopyGame.gameSize() else (0, 0)
@@ -145,7 +145,7 @@ trait SpectroscopyFramework[S, A, L, CF <: HennessyMilnerLogic.Formula[A]]
       asLink = "https://edotor.net/?engine=dot#"
     )
 
-    SpectroscopyInterface.SpectroscopyResult[S, A, Notion, CF](
+    Spectroscopy.Result[S, A, Notion, CF](
       spectroResults.toList, spectrum,
       meta = Map(
         "game" -> gameString,
@@ -155,9 +155,9 @@ trait SpectroscopyFramework[S, A, L, CF <: HennessyMilnerLogic.Formula[A]]
   }
 
   /** Check if the formula is a distinguishing formula for the given positions. Print an error to debug log if not. */
-  def checkDistinguishing(formula: HennessyMilnerLogic.Formula[A], p: S, q: S) = {
-    val hmlInterpreter = new HMLInterpreter(ts)
-    val check = hmlInterpreter.isTrueAt(formula, List(p, q))
+  def checkDistinguishing(formula: HML.Formula[A], p: S, q: S) = {
+    val Interpreter = new Interpreter(ts)
+    val check = Interpreter.isTrueAt(formula, List(p, q))
     if (!check(p) || check(q)) {
       AlgorithmLogging.debugLog("ERROR: Formula " + formula.toString() + " is no sound distinguishing formula! " + check, logLevel = 4)
       false

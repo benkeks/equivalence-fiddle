@@ -11,10 +11,10 @@ import io.equiv.eqfiddle.hml.ObservationNotion
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 import io.equiv.eqfiddle.algo.AlgorithmLogging
 import io.equiv.eqfiddle.hml.Spectrum
-import io.equiv.eqfiddle.hml.HennessyMilnerLogic
-import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
+import io.equiv.eqfiddle.hml.HML
+import io.equiv.eqfiddle.spectroscopy.Spectroscopy
 
-trait CSSSampleTests[OC <: ObservationNotion, CF <: HennessyMilnerLogic.Formula[String]] extends AnyFunSpec with should.Matchers  {
+trait CSSSampleTests[OC <: ObservationNotion, CF <: HML.Formula[String]] extends AnyFunSpec with should.Matchers  {
   def spectrum: Spectrum[OC]
 
   private def toSpectrumClassSet(names: Iterable[String]) = (for {
@@ -33,9 +33,9 @@ trait CSSSampleTests[OC <: ObservationNotion, CF <: HennessyMilnerLogic.Formula[
   def runTest(
       sampleSystem: WeakTransitionSystem[NodeID,String,String],
       sampleNames: List[(String, String, List[String], List[String])],
-      spectroscopyAlgo: (WeakTransitionSystem[NodeID,String,String]) => SpectroscopyInterface[NodeID,String,String,CF],
+      spectroscopyAlgo: (WeakTransitionSystem[NodeID,String,String]) => Spectroscopy[NodeID,String,String,CF],
       title: String,
-      spectroscopyConfig: SpectroscopyInterface.SpectroscopyConfig = SpectroscopyInterface.SpectroscopyConfig()) = {
+      Config: Spectroscopy.Config = Spectroscopy.Config()) = {
 
     val samples = sampleNames.map {
       case (n1, n2, preords, notPreords) =>
@@ -52,7 +52,7 @@ trait CSSSampleTests[OC <: ObservationNotion, CF <: HennessyMilnerLogic.Formula[
           val preordsStr = preords.map(_.name)
           val notPreordsStr = notPreords.map(_.name).intersect(algo.spectrum.notionNames)
 
-          val result = algo.decideAll(List((n1, n2)), spectroscopyConfig)
+          val result = algo.decideAll(List((n1, n2)), Config)
 
           val foundDistinctions = result.foundDistinctions(n1, n2).map(
             d => d.name match { case "2bisimulation" => "bisimulation"; case "2trace" => "trace"; case n => n }

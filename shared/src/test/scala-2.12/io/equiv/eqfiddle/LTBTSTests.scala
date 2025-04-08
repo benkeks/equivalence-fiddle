@@ -1,21 +1,21 @@
 package io.equiv.eqfiddle
 
 import io.equiv.eqfiddle.spectroscopy.StrongSpectroscopy
-import io.equiv.eqfiddle.hml.ObservationNotionStrong
-import io.equiv.eqfiddle.hml.HennessyMilnerLogic
-import io.equiv.eqfiddle.spectroscopy.SpectroscopyInterface
+import io.equiv.eqfiddle.hml.StrongObservationNotion
+import io.equiv.eqfiddle.hml.HML
+import io.equiv.eqfiddle.spectroscopy.Spectroscopy
 
 
-class LTBTSTests extends CSSSampleTests[ObservationNotionStrong, HennessyMilnerLogic.Formula[String]] {
+class LTBTSTests extends CSSSampleTests[StrongObservationNotion, HML.Formula[String]] {
 
-  override val spectrum = ObservationNotionStrong.LTBTS
+  override val spectrum = StrongObservationNotion.LTBTS
 
   val configs = Seq(
-    "unoptimized" -> SpectroscopyInterface.SpectroscopyConfig(useSymmetryPruning = false, useCleverSpectroscopyGame = false, energyCap = 3),
-    "unoptimized-formulas" -> SpectroscopyInterface.SpectroscopyConfig(useSymmetryPruning = false, useCleverSpectroscopyGame = false, computeFormulas = true),
-    "symmetry-pruned" -> SpectroscopyInterface.SpectroscopyConfig(useSymmetryPruning = true, useCleverSpectroscopyGame = false, energyCap = 3),
-    "clever-spectro" -> SpectroscopyInterface.SpectroscopyConfig(useSymmetryPruning = false, useCleverSpectroscopyGame = true, energyCap = 3),
-    "symmetry-pruned-clever" -> SpectroscopyInterface.SpectroscopyConfig(useSymmetryPruning = true, useCleverSpectroscopyGame = true, energyCap = 3),
+    "unoptimized" -> Spectroscopy.Config(useSymmetryPruning = false, useCleverSpectroscopyGame = false, energyCap = 3),
+    "unoptimized-formulas" -> Spectroscopy.Config(useSymmetryPruning = false, useCleverSpectroscopyGame = false, computeFormulas = true),
+    "symmetry-pruned" -> Spectroscopy.Config(useSymmetryPruning = true, useCleverSpectroscopyGame = false, energyCap = 3),
+    "clever-spectro" -> Spectroscopy.Config(useSymmetryPruning = false, useCleverSpectroscopyGame = true, energyCap = 3),
+    "symmetry-pruned-clever" -> Spectroscopy.Config(useSymmetryPruning = true, useCleverSpectroscopyGame = true, energyCap = 3),
   )
 
   val ltbtsSystem = TestSamples.samples.find(_._1 == "ltbts1").get._2
