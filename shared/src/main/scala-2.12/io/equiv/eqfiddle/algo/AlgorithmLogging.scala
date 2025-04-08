@@ -47,7 +47,10 @@ object AlgorithmLogging {
   
   var maxLogLength = 100
   
-  var debugLogActive = true
+  var debugLogActive: Boolean = true
+
+  /* crash on debug messages with loglevel <= 4 */
+  var strictMode: Boolean = true
 
   var uriEncoder = (s: String) => s
 
@@ -57,12 +60,17 @@ object AlgorithmLogging {
     if (AlgorithmLogging.debugLogActive) {
       val outMsg = if (asLink == "") msg else uriEncoder(asLink + msg)
       if (logLevel <= globalLogLevel) {
-        if (logLevel <= 4)
-          Console.err.println(Console.RED + outMsg)
-        else if (logLevel <= 6)
+        if (logLevel <= 4) {
+          if (strictMode) {
+            throw new Exception(outMsg)
+          } else {
+            Console.err.println(Console.RED + outMsg)
+          }
+        } else if (logLevel <= 6) {
           Console.out.println(Console.YELLOW + outMsg)
-        else
+        } else {
           Console.out.println(outMsg)
+        }
       }
       outMsg
     } else {
