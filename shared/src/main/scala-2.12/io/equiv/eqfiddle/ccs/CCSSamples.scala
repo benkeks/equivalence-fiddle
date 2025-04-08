@@ -620,7 +620,7 @@ P58 = a.(tau.b + b + tau)
       strongWeakSims),
     Example("diverges-while",
       "Diverges-while case for eta and branching",
-      davidsEdgeCases),
+      divergesWhile),
     Example("stable-unstable-abstraction",
       "Stable vs. unstable abstraction",
       stableUnstableAbstraction),
