@@ -111,7 +111,7 @@ trait SpectroscopyFramework[S, A, L, CF <: HML.Formula[A]]
       } yield (node, formulas)
     } else Map[GamePosition, Set[CF]]()).withDefaultValue(Set[CF]())
 
-    // select the best preordes to relate the states
+    // select the best preorders to relate the states
     val bestPreorders: Map[GamePosition,(Set[Notion],List[Spectrum.EquivalenceNotion[Notion]])] =
       spectroscopyGame.attackerWinningBudgets.toMap.mapValues { energies =>
       val fcs = energies.toSet[Energy].map(energyToNotion(_))

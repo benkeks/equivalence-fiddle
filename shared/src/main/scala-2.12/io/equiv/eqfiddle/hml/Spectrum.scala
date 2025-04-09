@@ -13,7 +13,7 @@ case class Spectrum[+OC <: ObservationNotion](
     classifier: HML.Formula[_] => OC) {
   import Spectrum._
 
-  /** given a group of least distinguishing observation classes, tell what weaker ObservationNotiones would be the strongest fit to preorder the distinguished states */
+  /** given a group of least distinguishing observation classes, tell what weaker ObservationNotions would be the strongest fit to preorder the distinguished states */
   def getStrongestPreorderClass(leastClassifications: Iterable[EquivalenceNotion[ObservationNotion]]): List[EquivalenceNotion[OC]] = {
     getStrongestPreorderClassFromClass(leastClassifications.map(_.obsNotion))
   }
