@@ -1,6 +1,5 @@
 package io.equiv.eqfiddle.ccs
 
-import io.equiv.eqfiddle.hml.Example
 
 object CCSSamples {
   val ltbts1 = """

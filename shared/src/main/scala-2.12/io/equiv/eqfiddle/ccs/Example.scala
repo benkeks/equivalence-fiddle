@@ -1,3 +1,3 @@
-package io.equiv.eqfiddle.hml
+package io.equiv.eqfiddle.ccs
 
 case class Example(slug: String, name: String, code: String)
