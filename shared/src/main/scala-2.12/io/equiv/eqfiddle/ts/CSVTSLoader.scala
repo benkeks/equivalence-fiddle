@@ -10,7 +10,7 @@ class CSVTSLoader(
     tsFileName: String
   ) {
   
-  val silentActions = Set(Symbol("tau"))
+  val silentActions = Set(Symbol("tau"), Symbol("i"))
   
   def result(): Option[WeakTransitionSystem[Int, Symbol, Unit]] = {
 

@@ -12,6 +12,7 @@ import io.equiv.eqfiddle.spectroscopy.Spectroscopy
 import io.equiv.eqfiddle.spectroscopy.StrongSpectroscopy
 import io.equiv.eqfiddle.algo.transform.BuildQuotientSystem
 import io.equiv.eqfiddle.algo.sigref.Bisimilarity
+import io.equiv.eqfiddle.algo.sigref.BranchingBisimilarity
 import io.equiv.eqfiddle.algo.transform.RemoveLittleBrothers
 
 import scala.util.Random
@@ -22,7 +23,8 @@ import io.equiv.eqfiddle.hml.HML
 
 class VeryLargeTransitionSystems(
   algorithm: (WeakTransitionSystem[Int,Symbol,Unit]) => Spectroscopy[Int,Symbol,Unit,HML.Formula[Symbol]],
-  config: Spectroscopy.Config
+  config: Spectroscopy.Config,
+  branchingBisim: Boolean = true
 ) {
 
   val vltsSamplesMedium = Seq(    
@@ -36,11 +38,12 @@ class VeryLargeTransitionSystems(
     "shared/src/test/assets/vlts/vasy_10_56.csv",
     "shared/src/test/assets/vlts/vasy_18_73.csv",
     "shared/src/test/assets/vlts/vasy_25_25.csv",
-    "shared/src/test/assets/other/peterson_mutex_weak.csv",
+    // "shared/src/test/assets/other/peterson_mutex_weak.csv",
+    "shared/src/test/assets/other/peterson_mutex.csv",
   )
 
   val easyExamples = List(10,0,1,2,4,5,6,9)
-  val hardExamples = List(3,7,8)
+  val hardExamples = List(3,7) // excluded 8 = vasy_18_73, which never worked
 
   val tableOutput = true
   val littleBrotherElimination = false
@@ -64,7 +67,11 @@ class VeryLargeTransitionSystems(
     output("Transitions", loadedSystem.step.size.toString)
 
     val minStartTime = System.nanoTime()
-    val strongBisim = new Bisimilarity(loadedSystem).computePartition()
+    val strongBisim = if (branchingBisim) {
+      new BranchingBisimilarity(loadedSystem).computePartition()
+    } else {
+      new Bisimilarity(loadedSystem).computePartition()
+    }
     val system = new BuildQuotientSystem(loadedSystem, strongBisim).build()
     printTiming(minStartTime, "Bisim minimization")
 
@@ -125,8 +132,8 @@ class VeryLargeTransitionSystems(
   def run(
       includeHardExamples: Boolean = false,
       shuffleExamples: Boolean = false,
-      outputMinimizationSizes: List[String] = List("enabledness", "traces", "simulation"),
-      timeoutTime: Long = 1000
+      outputMinimizationSizes: List[String] = List("enabledness", "trace", "simulation"),
+      timeoutTime: Long = 1000,
     ): Unit = {
     if (tableOutput) {
       println(("System, States, Transitions, Bisim pre-minimization time, Bisim pre-minimized size, Initial pairs, Spectroscopy time, Game positions, Game moves" +: outputMinimizationSizes).mkString(", "))
@@ -134,13 +141,21 @@ class VeryLargeTransitionSystems(
     val exampleNumbers = if (includeHardExamples) easyExamples ++ hardExamples else easyExamples
     val orderedExamples = if (shuffleExamples) Random.shuffle(exampleNumbers) else exampleNumbers
     for (i <-orderedExamples) {
+      val cancelPromise = Promise[Unit]
+      val run = Future firstCompletedOf Seq(
+        Future[Unit](listMinimizations(vltsSamplesMedium(i), outputMinimizationSizes)),
+        cancelPromise.future
+      )
       try {
         Await.result(
-          Future(listMinimizations(vltsSamplesMedium(i), outputMinimizationSizes)),
+          run,
           timeoutTime milliseconds
         )
+        run
       } catch {
-        case e: TimeoutException => println(s" [TIMEOUT after $timeoutTime ms]")
+        case e: TimeoutException =>
+          println(s" [TIMEOUT after $timeoutTime ms]")
+          cancelPromise.success(())
       }
     }
   }

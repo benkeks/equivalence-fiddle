@@ -28,7 +28,7 @@ class SpectrumView[+OC <: ObservationNotion](
       (-30,-12), // branch
       (-35,-12), // unstable conj
       (115,-22), // stable conj
-      (-15,-8),
+      (-5,-18),
       (-30,-10),
       (-35,-10),
       (25,-30),

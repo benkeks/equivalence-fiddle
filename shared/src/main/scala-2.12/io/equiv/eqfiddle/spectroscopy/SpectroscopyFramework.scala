@@ -140,10 +140,14 @@ trait SpectroscopyFramework[S, A, L, CF <: HML.Formula[A]]
     // collect some diagnostic information (unless disabled)
     val (gamePositionNum, gameMoveNum) = if (config.saveGameSize) spectroscopyGame.gameSize() else (0, 0)
 
-    val gameString = debugLog(
-      graphvizGameWithFormulas(spectroscopyGame, spectroscopyGame.attackerWinningBudgets.toMap, distinguishingPositionFormulas),
-      asLink = "https://edotor.net/?engine=dot#"
-    )
+    val gameString = if (config.saveGameSize) {
+      debugLog(
+        graphvizGameWithFormulas(spectroscopyGame, spectroscopyGame.attackerWinningBudgets.toMap, distinguishingPositionFormulas),
+        asLink = "https://edotor.net/?engine=dot#"
+      )
+    } else {
+      ""
+    }
 
     Spectroscopy.Result[S, A, Notion, CF](
       spectroResults.toList, spectrum,

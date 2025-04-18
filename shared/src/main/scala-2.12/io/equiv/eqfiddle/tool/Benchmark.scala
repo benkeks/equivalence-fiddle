@@ -82,19 +82,33 @@ object Benchmark extends App {
       val includeHardExamples = args.contains("--include-hard")
       val shuffleExamples = args.contains("--shuffle")
       val reducedSizes = args.contains("--reduced-sizes")
+      val branchingBisim = !args.contains("--strong-game")
 
       if (reducedSizes) {
-        new VeryLargeTransitionSystems(algoVLTS, baseConfig).run(
+        val outputNotions = if (args.contains("--strong-game"))
+          List(
+            "enabledness",
+            "trace",
+            "simulation",
+          )
+        else
+          List(
+            "weak-enabledness",
+            "weak-trace",
+            "weak-simulation",
+          )
+        new VeryLargeTransitionSystems(algoVLTS, baseConfig, branchingBisim = branchingBisim).run(
           includeHardExamples = includeHardExamples,
           shuffleExamples = shuffleExamples,
-          timeoutTime = timeout
+          timeoutTime = timeout,
+          outputMinimizationSizes = outputNotions,
         )
       } else {
-        new VeryLargeTransitionSystems(algoVLTS, baseConfig).run(
+        new VeryLargeTransitionSystems(algoVLTS, baseConfig, branchingBisim = branchingBisim).run(
           includeHardExamples = includeHardExamples,
           shuffleExamples = shuffleExamples,
           outputMinimizationSizes = List(),
-          timeoutTime = timeout
+          timeoutTime = timeout,
         )
       }
     case Some("sizemark") =>
