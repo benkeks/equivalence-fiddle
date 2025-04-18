@@ -13,6 +13,13 @@ case class Spectrum[+OC <: ObservationNotion](
     classifier: HML.Formula[_] => OC) {
   import Spectrum._
 
+  def getDimensionality() = {
+    if (notions.isEmpty)
+      0
+    else
+      notions.head.obsNotion.toTuple.productArity
+  }
+
   /** given a group of least distinguishing observation classes, tell what weaker ObservationNotions would be the strongest fit to preorder the distinguished states */
   def getStrongestPreorderClass(leastClassifications: Iterable[EquivalenceNotion[ObservationNotion]]): List[EquivalenceNotion[OC]] = {
     getStrongestPreorderClassFromClass(leastClassifications.map(_.obsNotion))

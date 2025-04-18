@@ -266,7 +266,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
           comment
         case AlgorithmLogging.LogRichRelation(_, comment) =>
           comment
-        case AlgorithmLogging.LogSpectrum(_, _, _, _, _, comment) =>
+        case AlgorithmLogging.LogSpectrum(_, _, _, _, _, _, comment) =>
           comment
         case _ =>
           ""

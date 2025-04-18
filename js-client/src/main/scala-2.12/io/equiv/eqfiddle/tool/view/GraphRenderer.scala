@@ -250,9 +250,9 @@ class GraphRenderer(val main: Control)
       setStructure()
     case Structure.StructureCommentChange(comment) =>
       setComment(comment)
-    case Structure.StructureSpectrumChange(spectrum, preords, equations, distCoordsLR, distCoordsRL, comment) =>
+    case Structure.StructureSpectrumChange(spectrum, preords, postords, equations, distCoordsLR, distCoordsRL, comment) =>
       setComment(comment + """<div id="es-spectrum-view"></div>""")
-      val spectrumView = new SpectrumView(spectrum, preords, equations, distCoordsLR, distCoordsRL, "#es-spectrum-view")
+      val spectrumView = new SpectrumView(spectrum, preords, postords, equations, distCoordsLR, distCoordsRL, "#es-spectrum-view")
     case _ =>
       
   }
