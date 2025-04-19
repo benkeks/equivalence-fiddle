@@ -21,8 +21,11 @@ class CSVTSLoader(
       val secondComma = line.indexWhere(_ == ',', firstComma + 1)
       val start = line.slice(0, firstComma).trim
       val end = line.slice(firstComma + 1, secondComma).trim
-      val label = line.slice(secondComma + 1, line.size).trim
-
+      var label = line.slice(secondComma + 1, line.size).trim
+      if (label.startsWith("\"")) {
+        // remove enclosing quotes
+        label = label.substring(1, label.length - 1)
+      }
       relationTuples += (( start.toInt, Symbol(label), end.toInt ))
     }
     bufferedSource.close

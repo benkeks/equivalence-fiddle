@@ -43,7 +43,7 @@ class VeryLargeTransitionSystems(
   )
 
   val easyExamples = List(10,0,1,2,4,5,6,9)
-  val hardExamples = List(3,7) // excluded 8 = vasy_18_73, which never worked
+  val hardExamples = List(3,7,8) // might want to excluded 8 = vasy_18_73, which never works
 
   val tableOutput = true
   val littleBrotherElimination = false
@@ -79,7 +79,10 @@ class VeryLargeTransitionSystems(
     val startTime = System.nanoTime()
 
     val states = system.nodes.toList
-    val stateGroups = states.groupBy(system.enabled(_))
+    val stateGroups = if (branchingBisim)
+      states.groupBy(system.weakEnabled2(_))
+    else
+      states.groupBy(system.enabled(_))
 
     val comparedPairs = {
       for {
@@ -154,7 +157,7 @@ class VeryLargeTransitionSystems(
         run
       } catch {
         case e: TimeoutException =>
-          println(s" [TIMEOUT after $timeoutTime ms]")
+          println(s", [TIMEOUT after $timeoutTime ms]")
           cancelPromise.success(())
       }
     }
