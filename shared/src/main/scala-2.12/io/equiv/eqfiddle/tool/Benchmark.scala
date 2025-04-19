@@ -47,6 +47,7 @@ object Benchmark extends App {
 
   val baseConfig = Spectroscopy.Config(
     useCleverSpectroscopyGame = !(args.contains("--unclever-spectroscopy")),
+    useBranchingSpectroscopyGame = !(args.contains("--exponential-branching-conj")),
     useSymmetryPruning = true
   )
 
