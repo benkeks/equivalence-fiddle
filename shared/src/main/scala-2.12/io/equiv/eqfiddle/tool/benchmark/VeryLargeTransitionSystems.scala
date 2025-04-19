@@ -68,7 +68,7 @@ class VeryLargeTransitionSystems(
 
     val minStartTime = System.nanoTime()
     val strongBisim = if (branchingBisim) {
-      new BranchingBisimilarity(loadedSystem).computePartition()
+      new BranchingBisimilarity(loadedSystem, stabilityRespecting = true).computePartition()
     } else {
       new Bisimilarity(loadedSystem).computePartition()
     }
@@ -157,7 +157,10 @@ class VeryLargeTransitionSystems(
         run
       } catch {
         case e: TimeoutException =>
-          println(s", [TIMEOUT after $timeoutTime ms]")
+          if (tableOutput)
+            println(", nan")
+          else
+            println(s", [TIMEOUT after $timeoutTime ms]")
           cancelPromise.success(())
       }
     }

@@ -96,6 +96,7 @@ object Benchmark extends App {
             "weak-enabledness",
             "weak-trace",
             "weak-simulation",
+            "sr-branching-bisimulation",
           )
         new VeryLargeTransitionSystems(algoVLTS, baseConfig, branchingBisim = branchingBisim).run(
           includeHardExamples = includeHardExamples,

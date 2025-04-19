@@ -30,16 +30,14 @@ class BranchingBisimilarity[S, A, L] (
       if (!ts.silentActions(a) || partition(s) != partition(s2))
     } yield (actionColors(a), partition(s2))
 
-    if (stabilityRespecting && ts.isStable(s)) {
-      stepSigs + ((stabilizationColor, partition(s)))
-    } else {
+    if (!stabilityRespecting) {
       stepSigs
-    /*} else {
+    } else {
       stepSigs ++ (for {
         s1 <- ts.silentReachable(s)
         if partition(s) == partition(s1) && ts.isStable(s1)
       } yield (stabilizationColor, partition(s1))
-      )*/
+      )
     }
   }
 }
