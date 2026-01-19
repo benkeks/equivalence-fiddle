@@ -4,10 +4,36 @@ import io.equiv.eqfiddle.spectroscopy.WeakSpectroscopy
 import io.equiv.eqfiddle.hml.WeakObservationNotion
 import io.equiv.eqfiddle.hml.HML
 import io.equiv.eqfiddle.spectroscopy.Spectroscopy
+import io.equiv.eqfiddle.ts.WeakTransitionSystem
+import io.equiv.eqfiddle.tool.model.NodeID
 
 class LTBTS2Tests extends CSSSampleTests[WeakObservationNotion, HML.Formula[String]] {
 
   override val spectrum = WeakObservationNotion.LTBTS
+
+  def checkWeakSimulationClosure(
+      ts: WeakTransitionSystem[NodeID,String,String],
+      relation: Set[(NodeID, String, NodeID)]
+  ): Option[String] = {
+    val offending = for {
+      (p, _, q) <- relation
+      (a, p1s) <- ts.post(p)
+      q1s = ts.weakPost(q, a)
+      p1 <- p1s
+      if !relation.exists { case (pp, _, qq) => pp == p1 && q1s.contains(qq) }
+    } yield s"relation is no weak simulation; offending transition: ($p, $q) -$a-> ($p1, *)"
+
+    offending.headOption
+  }
+
+  override protected def notionChecks: Map[String, NotionCheck] = Map(
+    "weak-bisimulation" -> checkWeakSimulationClosure,
+    "branching-bisimulation" -> checkWeakSimulationClosure,
+    "weak-simulation" -> checkWeakSimulationClosure,
+    "eta-simulation" -> checkWeakSimulationClosure,
+    "weak-ready-simulation" -> checkWeakSimulationClosure,
+    "2-nested-weak-simulation" -> checkWeakSimulationClosure,
+  )
 
   val ltbtsSystem = TestSamples.samples.find(_._1 == "ltbts2").get._2
 

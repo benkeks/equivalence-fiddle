@@ -4,7 +4,8 @@ import io.equiv.eqfiddle.spectroscopy.StrongSpectroscopy
 import io.equiv.eqfiddle.hml.StrongObservationNotion
 import io.equiv.eqfiddle.hml.HML
 import io.equiv.eqfiddle.spectroscopy.Spectroscopy
-
+import io.equiv.eqfiddle.ts.WeakTransitionSystem
+import io.equiv.eqfiddle.tool.model.NodeID
 
 class LTBTSTests extends CSSSampleTests[StrongObservationNotion, HML.Formula[String]] {
 
@@ -41,6 +42,29 @@ class LTBTSTests extends CSSSampleTests[StrongObservationNotion, HML.Formula[Str
     ("R42", "L42", List("2-nested-simulation"), List("bisimulation")),
     ("L50", "R50", List("ready-simulation"), List("impossible-future")),
     ("R50", "L50", List("ready-trace", "impossible-future"), List("possible-future", "simulation"))
+  )
+
+
+  def checkSimulationClosure(
+      ts: WeakTransitionSystem[NodeID,String,String],
+      relation: Set[(NodeID, String, NodeID)]
+  ): Option[String] = {
+    val offending = for {
+      (p, _, q) <- relation
+      (a, p1s) <- ts.post(p)
+      q1s = ts.post(q, a)
+      p1 <- p1s
+      if !relation.exists { case (pp, _, qq) => pp == p1 && q1s.contains(qq) }
+    } yield s"relation is no simulation; offending transition: ($p, $q) -$a-> ($p1, *)"
+
+    offending.headOption
+  }
+
+  override protected def notionChecks: Map[String, NotionCheck] = Map[String, NotionCheck](
+    "simulation" -> checkSimulationClosure,
+    "ready-simulation" -> checkSimulationClosure,
+    "2-nested-simulation" -> checkSimulationClosure,
+    "bisimulation" -> checkSimulationClosure,
   )
 
   for ((cfgName, cfg) <- configs) {

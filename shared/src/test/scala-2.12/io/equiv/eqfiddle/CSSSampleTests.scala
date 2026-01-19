@@ -14,8 +14,19 @@ import io.equiv.eqfiddle.hml.Spectrum
 import io.equiv.eqfiddle.hml.HML
 import io.equiv.eqfiddle.spectroscopy.Spectroscopy
 
-trait CSSSampleTests[OC <: ObservationNotion, CF <: HML.Formula[String]] extends AnyFunSpec with should.Matchers  {
+trait CSSSampleTests[OC <: ObservationNotion, CF <: HML.Formula[String]]
+    extends AnyFunSpec with should.Matchers  {
+  /** The spectrum under test */
   def spectrum: Spectrum[OC]
+
+  /** Type for a check function that validates a preorder relation for a notion.
+    * Takes the notion name and the relation (set of (from, label, to) tuples) and returns
+    * an optional error message. None means the check passed, Some(message) means it failed.
+    */
+  type NotionCheck = (WeakTransitionSystem[NodeID,String,String], Set[(NodeID, String, NodeID)]) => Option[String]
+
+  /** Map of checks to run per notion. Override in subclasses to provide custom checks. */
+  protected def notionChecks: Map[String, NotionCheck] = Map()
 
   private def toSpectrumClassSet(names: Iterable[String]) = (for {
     n <- names
@@ -35,7 +46,7 @@ trait CSSSampleTests[OC <: ObservationNotion, CF <: HML.Formula[String]] extends
       sampleNames: List[(String, String, List[String], List[String])],
       spectroscopyAlgo: (WeakTransitionSystem[NodeID,String,String]) => Spectroscopy[NodeID,String,String,CF],
       title: String,
-      Config: Spectroscopy.Config = Spectroscopy.Config()) = {
+      config: Spectroscopy.Config = Spectroscopy.Config()) = {
 
     val samples = sampleNames.map {
       case (n1, n2, preords, notPreords) =>
@@ -52,11 +63,26 @@ trait CSSSampleTests[OC <: ObservationNotion, CF <: HML.Formula[String]] extends
           val preordsStr = preords.map(_.name)
           val notPreordsStr = notPreords.map(_.name).intersect(algo.spectrum.notionNames)
 
-          val result = algo.decideAll(List((n1, n2)), Config)
+          val result = algo.decideAll(List((n1, n2)), config)
 
           def maintainsPreorder(notionName: String): Boolean = {
-            val preorderResult = algo.checkIndividualPreorder(List((n1, n2)), notionName, Config)
-            preorderResult.items.exists(item => item.left == n1 && item.right == n2 && item.isMaintained)
+            val preorderResult = algo.checkIndividualPreorder(
+              List((n1, n2)),
+              notionName,
+              config.copy(computeMaxRelation = true) // this is needed to get a full witness relation for simulation-like notions
+                // (otherwise some tuples that do not matter for the game might be missing.)
+            )
+            val isMaintained = preorderResult.items.exists(item => item.left == n1 && item.right == n2 && item.isMaintained)
+            if (isMaintained) {
+              for {
+                check <- notionChecks.get(notionName)
+                errorMsg <- check(sampleSystem, preorderResult.relation)
+              } {
+                fail(s"Notion check failed for $notionName: $errorMsg")
+              }
+            }
+            
+            isMaintained
           }
 
           val foundDistinctions = result.foundDistinctions(n1, n2).map(

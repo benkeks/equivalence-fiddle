@@ -53,11 +53,9 @@ class WeakTransitionSystem[S, A, L](
     visited.toSet
   }
 
-  //val silentReachable = (silentSteps.transitiveClosureFast.reflexiveClosureOn(nodes)) rep
-
   def silentReachable(s: S): Set[S] = silentReachableCached(s)
 
-  val silentReachableInverse = Map[S, Set[S]]()//new Relation(silentReachable).inverse.rep
+  val silentReachableInverse = Map[S, Set[S]]()
 
   def tauMaximalNode(s: S) = {
     step.rep(s) exists { case (a, ss) =>

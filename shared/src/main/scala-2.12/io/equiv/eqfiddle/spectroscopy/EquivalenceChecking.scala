@@ -25,10 +25,18 @@ trait EquivalenceChecking[S, A, L, CF <: HML.Formula[A]]
       config: Spectroscopy.Config = Spectroscopy.Config()
   ) : Spectroscopy.IndividualNotionResult[S] = {
     val spectroscopyGame = openSpectroscopyGame(config)
-    val init = for {
-      (p, q) <- comparedPairs
-      start <- List(relationItemToGamePosition(p, q), relationItemToGamePosition(q, p))
-    } yield start
+    val init = if (config.computeMaxRelation) {
+      val reachableNodes = ts.step.getReachablePart(comparedPairs.flatMap { case (p, q) => List(p, q) })
+      for {
+        p <- reachableNodes
+        q <- reachableNodes
+      } yield relationItemToGamePosition(p, q)
+    } else {
+      for {
+        (p, q) <- comparedPairs
+        start <- List(relationItemToGamePosition(p, q), relationItemToGamePosition(q, p))
+      } yield start
+    }
 
     val notionEnergy = notionToEnergy(spectrum.getSpectrumClass(notion).obsNotion)
 
@@ -66,14 +74,16 @@ trait EquivalenceChecking[S, A, L, CF <: HML.Formula[A]]
       }
     } yield (p, eString,  q)
 
+    val reflexiveRelation: Set[(S, String, S)] = relation ++ ts.nodes.map(s => (s, "", s))
+
     val items = for {
       (p, q) <- comparedPairs
     } yield {
-      Spectroscopy.IndividualNotionResultItem(p, q, relation.contains((p, "", q)))
+      Spectroscopy.IndividualNotionResultItem(p, q, reflexiveRelation.contains((p, "", q)))
     }
     Spectroscopy.IndividualNotionResult(
       items,
-      relation, 
+      reflexiveRelation, 
       meta = Map(
         "game" -> gameString,
         "game-positions" -> gamePositionNum.toString,

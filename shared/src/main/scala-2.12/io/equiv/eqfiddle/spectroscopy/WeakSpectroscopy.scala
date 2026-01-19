@@ -41,8 +41,8 @@ class WeakSpectroscopy[S, A, L] (
   override def gamePositionToRelationItem(gp: GamePosition): Option[(S, S)] = gp match {
     case AttackerObservation(p, qq) if qq.size == 1 =>
       Some((p, qq.head))
-    //case AttackerDelayedObservation(p, qq) if qq.size == 1 =>
-    //  Some((p, qq.head))
+    case AttackerDelayedObservation(p, qq) if qq.size == 1 =>
+      Some((p, qq.head))
     case _ => None
   }
 

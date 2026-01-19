@@ -63,6 +63,7 @@ class LabeledRelation[E, L](val rep: Map[E, Map[L, Set[E]]]) {
   lazy val lhs = rep.keySet
   lazy val labels = rep.values.flatMap(_.keySet)
   lazy val rhs = rep.values.flatMap(_.values).flatten.toSet
+  lazy val nodes = lhs ++ rhs
 
   def merge(other: LabeledRelation[E, L]) =
     new LabeledRelation(tupleSet ++ other.tupleSet)
@@ -96,21 +97,6 @@ class LabeledRelation[E, L](val rep: Map[E, Map[L, Set[E]]]) {
     rep.get(e).flatMap(_.headOption.flatMap{ case (l, ee2) => ee2.headOption.map(e :: peekPath(_)) }).getOrElse(List())
   }
 
-/*  def removeKeys(toRemove: Set[E]) = {
-    new Relation(tupleSet.filterNot {
-      case  (l, r) => (toRemove contains l) || (toRemove contains r)
-    })
-  }*/
-  /*
-  def transitiveClosure = {
-    val comp = FixedPoint[Map[E,Set[E]]](
-        {rel => rel.mapValues{
-          r => r ++ r.flatMap(rel.getOrElse(_, Set()))}},
-        {case (a,b) => a == b})
-    
-    new Relation(comp(rep))
-  }*/
-  
   def isTransitive = rep.forall {
     case (e1,lee2) => lee2 forall {
       case (l, ee2) =>
@@ -174,7 +160,7 @@ class LabeledRelation[E, L](val rep: Map[E, Map[L, Set[E]]]) {
   }
 
   def toGraphString() = {
-    val list = (lhs ++ rhs).toIndexedSeq
+    val list = nodes.toIndexedSeq
     val idFor = list.indices.map(i => (list(i), i)).toMap
     tupleSet.map { case (e1, l, e2) =>
       val label = l.toString()
@@ -183,7 +169,7 @@ class LabeledRelation[E, L](val rep: Map[E, Map[L, Set[E]]]) {
   }
   
   def toCsvString() = {
-    val list = (lhs ++ rhs).toIndexedSeq
+    val list = nodes.toIndexedSeq
     val idFor = list.indices.map(i => (list(i), i)).toMap
     tupleSet.map { case (e1, l, e2) =>
       val label = l.toString()

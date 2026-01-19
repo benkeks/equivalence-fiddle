@@ -44,7 +44,8 @@ object Spectroscopy {
     val computeFormulas: Boolean = false,
     val saveGameSize: Boolean = true,
     val energyCap: Int = Int.MaxValue,
-    val useBisimMinimization: Boolean = false
+    val useBisimMinimization: Boolean = false,
+    val computeMaxRelation: Boolean = false
   )
 
   case class ResultItem[S, A, +OC <: ObservationNotion, +OF <: HML.Formula[A]](
