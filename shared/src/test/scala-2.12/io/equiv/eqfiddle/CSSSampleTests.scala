@@ -54,6 +54,11 @@ trait CSSSampleTests[OC <: ObservationNotion, CF <: HML.Formula[String]] extends
 
           val result = algo.decideAll(List((n1, n2)), Config)
 
+          def maintainsPreorder(notionName: String): Boolean = {
+            val preorderResult = algo.checkIndividualPreorder(List((n1, n2)), notionName, Config)
+            preorderResult.items.exists(item => item.left == n1 && item.right == n2 && item.isMaintained)
+          }
+
           val foundDistinctions = result.foundDistinctions(n1, n2).map(
             d => d.name match { case "2bisimulation" => "bisimulation"; case "2trace" => "trace"; case n => n }
           ).toSet
@@ -68,6 +73,25 @@ trait CSSSampleTests[OC <: ObservationNotion, CF <: HML.Formula[String]] extends
             }
             (foundPreorders diff preordsStr) should be (empty)
             (preordsStr diff foundPreorders) should be (empty)
+          }
+
+          it ("checkIndividualPreorder should accept " + preordsStr.mkString(",")) {
+            if (!(preordsStr subsetOf algo.spectrum.notionNames)) {
+              cancel(s"$preordsStr do not apply for $title spectrum")
+            }
+            forAll(preordsStr) { notionName =>
+              withClue(s"$notionName should be maintained: ") {
+                maintainsPreorder(notionName) shouldBe true
+              }
+            }
+          }
+
+          it ("checkIndividualPreorder should reject " + notPreordsStr.mkString(",")) {
+            forAll(notPreordsStr) { notionName =>
+              withClue(s"$notionName should not be maintained: ") {
+                maintainsPreorder(notionName) shouldBe false
+              }
+            }
           }
         }
       }

@@ -7,7 +7,6 @@ import io.equiv.eqfiddle.hml.Spectrum
 import io.equiv.eqfiddle.game.SimpleGame
 import io.equiv.eqfiddle.game.EnergyGame
 import io.equiv.eqfiddle.game.EnergyGame.Energy
-import io.equiv.eqfiddle.game.MaterializedEnergyGame
 import io.equiv.eqfiddle.hml.HML
 import io.equiv.eqfiddle.hml.Interpreter
 import io.equiv.eqfiddle.game.GameGraphVisualizer

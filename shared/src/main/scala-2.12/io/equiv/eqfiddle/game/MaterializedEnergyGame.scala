@@ -14,6 +14,7 @@ class MaterializedEnergyGame[G <: SimpleGame.GamePosition, P](
     initialBaseNodes: Iterable[G],
     initialEnergy: P,
     energyUpdate: (G, G, P) => Option[P],
+    energyNonNegative: P => Boolean,
     preferredPositions: (G, P, G) => Boolean)
   extends SimpleGame[MaterializedEnergyGame.MaterializedGamePosition[G, P]]
   with GameDiscovery[MaterializedEnergyGame.MaterializedGamePosition[G, P]]
@@ -24,7 +25,7 @@ class MaterializedEnergyGame[G <: SimpleGame.GamePosition, P](
   type GamePosition = MaterializedGamePosition[G, P]
 
   def materialize(baseNode: G, energy: P) = {
-    if (baseNode.isInstanceOf[AttackerPosition]) {
+    if (baseNode.isInstanceOf[AttackerPosition] || !energyNonNegative(energy)) {
       MaterializedAttackerPosition(baseNode, energy)
     } else {
       MaterializedDefenderPosition(baseNode, energy)

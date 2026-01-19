@@ -41,8 +41,10 @@ trait EquivalenceChecking[S, A, L, CF <: HML.Formula[A]]
         None
     }
 
-    val reachabilityGame: MaterializedEnergyGame[GamePosition, Energy] = new MaterializedEnergyGame[GamePosition, Energy](
-      spectroscopyGame, init, notionEnergy, energyUpdate, if (config.useCleverInstanceBranching) preferredPositions(config) else ((_ ,_ ,_ ) => true))
+    val reachabilityGame: MaterializedEnergyGame[GamePosition, Energy] = 
+      new MaterializedEnergyGame[GamePosition, Energy](
+        spectroscopyGame, init, notionEnergy, energyUpdate, _.isNonNegative(),
+        if (config.useCleverInstanceBranching) preferredPositions(config) else ((_ ,_ ,_ ) => true))
 
     val attackerWins = reachabilityGame.computeWinningRegion()
 

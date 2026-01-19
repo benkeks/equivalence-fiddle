@@ -12,7 +12,6 @@ import io.equiv.eqfiddle.hml.Interpreter
 import io.equiv.eqfiddle.game.GameGraphVisualizer
 import io.equiv.eqfiddle.hml.WeakObservationNotion
 import io.equiv.eqfiddle.util.FixedPoint
-import io.equiv.eqfiddle.game.MaterializedEnergyGame
 
 class WeakSpectroscopy[S, A, L] (
     override val ts: WeakTransitionSystem[S, A, L])
@@ -42,6 +41,8 @@ class WeakSpectroscopy[S, A, L] (
   override def gamePositionToRelationItem(gp: GamePosition): Option[(S, S)] = gp match {
     case AttackerObservation(p, qq) if qq.size == 1 =>
       Some((p, qq.head))
+    //case AttackerDelayedObservation(p, qq) if qq.size == 1 =>
+    //  Some((p, qq.head))
     case _ => None
   }
 
