@@ -187,9 +187,15 @@ trait GraphEditing extends ViewComponent {
   def onSelectionBrush(et: Any, id: Double) {
     val ext = brush.extent().asInstanceOf[js.Array[js.Array[Double]]]
     nodes.foreach { node: GraphNode =>
-      node.selected = ((node.x.get >= ext(0)(0) && node.x.get <= ext(1)(0) &&
-                        node.y.get >= ext(0)(1) && node.y.get <= ext(1)(1))
-                    ^  (node.previouslySelected && selectionExtensionActive))
+      val inRect =
+        node.x.get >= ext(0)(0) && node.x.get <= ext(1)(0) &&
+        node.y.get >= ext(0)(1) && node.y.get <= ext(1)(1) &&
+        dummyNode != node
+      node.selected = 
+        if (selectionExtensionActive)
+          inRect ^ node.previouslySelected
+        else
+          inRect
       node.selected
     }
     onSelectionChange()

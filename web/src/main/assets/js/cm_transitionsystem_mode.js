@@ -42,11 +42,6 @@ CodeMirror.defineMode("dces", function () {
         state.lhs = false;
         state.inParams--;
         return 'bracket';
-      /*} else if (stream.peek() === '(' && stream.skipTo(')')) {
-        stream.next();//skip closing )
-        // array of objects has an extra open & close []
-        if (stream.peek() === ')') stream.next();
-        return "bracket"; */
       } else if (stream.eatSpace()) {
         return null;
       } else if (state.inParams && state.lhs && stream.eatWhile(function (c) { return c != '=' && c != ' ' && c != ')'; })) {
@@ -59,8 +54,7 @@ CodeMirror.defineMode("dces", function () {
     	return 'tag';
       } else if (!state.lhs && (stream.match('-->') || stream.match('->') || stream.match('|-'))) {
         return 'atom-stepto';
-      } else if (!state.lhs && stream.peek() === '(') {
-      	state.lhs = true;
+      } else if (stream.peek() === '(') {
         state.inParams++;
         stream.next();
         return 'bracket';

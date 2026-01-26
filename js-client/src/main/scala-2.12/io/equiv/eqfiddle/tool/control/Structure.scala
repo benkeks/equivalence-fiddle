@@ -316,7 +316,6 @@ object Structure {
         val replay = List(
           () => AlgorithmLogging.LogRelation(result.toPreorderingRelation(), s"Preordered by:<div class='preorderings'>${preords.mkString("<br>")}</div>"),
           () => AlgorithmLogging.LogRelation(result.toDistinctionRelation(), s"Left-right-distinguished by:<div class='distinctions'>$leftRightDists</div>"),
-          //() => AlgorithmLogging.LogRelation(result.toDistinctionRelation(), s"Right-left-distinguished by:<div class='distinctions'>$rightLeftDists</div>"),
           () => AlgorithmLogging.LogRelation(result.toEquivalencesRelation(), s"Equated by:<div class='equations'>${equations.mkString("<br>")}</div>"),
           () => AlgorithmLogging.LogSpectrum[NodeID, ObservationNotion](result.spectrum, preords, postords, equations, distCoordsLR, distCoordsRL, s"Show spectrum. $gameString")
         )
@@ -470,7 +469,7 @@ object Structure {
         AlgorithmLogging.debugLog("Characterization Spectroscopy took: " + (Date.now - begin) + "ms.", logLevel = 7)
 
         for {
-          res <- result.relationItems//.find(r => r.left == n1 && r.right == n2)
+          res <- result.relationItems
           Spectroscopy.ResultItem(_, _, distinctions, preorderings) = res
         } {
           val dists = distinctions.map(d => d._1.toString() + d._3.map(_.name).mkString(" (", ",", ")")).mkString("<br>")
