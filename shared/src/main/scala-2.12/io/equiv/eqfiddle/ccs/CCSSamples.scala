@@ -114,7 +114,9 @@ R50 = a.(b.d.0 + c.e.0 + c.f.0 + b.g.0)
 """
 
  val simTraceStandardSample =
-  """|PA = fork.a
+  """|@comment "Standard example of non-determinism and trace/sim eq"
+     |
+     |PA = fork.a
      |PB = fork.b
      |
      |P = (fork!0 | PA | PB) \ {fork}
@@ -125,6 +127,8 @@ R50 = a.(b.d.0 + c.e.0 + c.f.0 + b.g.0)
      |
      |@compare Q,P
      |@compareSilent  Q,P
+     |
+     |@hint "Click on the arrows in the gutter to compare processes!"
      |""".stripMargin
 
   val notFailureOrSim = """
@@ -634,6 +638,6 @@ P58 = a.(tau.b + b + tau)
     namedSamples.find(_.slug == slug)
   }
 
-  val default = stableUnstableAbstraction
+  val default = simTraceStandardSample
 
 }
