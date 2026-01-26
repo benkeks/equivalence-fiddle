@@ -352,6 +352,13 @@ Spec(x=-289, y=-26, main)
 
   val petersonMutexSilent =
     """|
+       |@comment "Mutual exclusion property expressed in CCS"
+       |
+       |Mx(main, x=320, y=50)
+       |Mx = ecA.lcA.Mx + ecB.lcB.Mx
+       |
+       |@comment "Shared variables of Peterson's mutex"
+       |
        |ReadyAf = readyAf!ReadyAf + setReadyAf.ReadyAf + setReadyAt.ReadyAt
        |ReadyAt = readyAt!ReadyAt + setReadyAf.ReadyAf + setReadyAt.ReadyAt
        |
@@ -361,72 +368,64 @@ Spec(x=-289, y=-26, main)
        |TurnA = turnA!TurnA + setTurnA.TurnA + setTurnB.TurnB
        |TurnB = turnB!TurnB + setTurnA.TurnA + setTurnB.TurnB
        |
-       |A1 = setReadyAt!setTurnB!A11
-       |A11 = readyBf.A12 + turnA.A12
-       |A12 = ecA.lcA.setReadyAf!A1
+       |@comment "Processes A and B of Peterson's mutex"
        |
-       |B1 = setReadyBt!setTurnA!B11
-       |B11 = readyAf.B12 + turnB.B12
-       |B12 = ecB.lcB.setReadyBf!B1
+       |A1 = setReadyAt!setTurnB!A2
+       |A2 = readyBf.A3 + turnA.A3
+       |A3 = ecA.lcA.setReadyAf!A1
        |
-       |Peterson = (A1 | B1 | TurnA | ReadyAf | ReadyBf)
-       |    \ {readyAf, readyAt, setReadyAf, setReadyAt, readyBf, readyBt, setReadyBf,
-       |       setReadyBt, turnA, turnB, setTurnA, setTurnB}
+       |B1 = setReadyBt!setTurnA!B2
+       |B2 = readyAf.B3 + turnB.B3
+       |B3 = ecB.lcB.setReadyBf!B1
        |
-       |MxSpec1 = ecA.lcA.MxSpec1 + ecB.lcB.MxSpec1
-       |MxSpec2 = tau.ecA.lcA.MxSpec2 + tau.ecB.lcB.MxSpec2
+       |@comment "Peterson's mutex protocoll"
        |
-       |@compareSilent Peterson, MxSpec1
-       |@compareSilent Peterson, MxSpec2
-       |
-       |@snip "---------- below here, there's only layout information! ----------"
-       |
-       |Peterson(x=886, y=335, main)
-       |MxSpec1(main, x=122, y=225)
-       |MxSpec2(main, x=390, y=520)
+       |Pe(main, x=575, y=50)
+       |Pe = (A1 | B1 | TurnA | ReadyAf | ReadyBf)
+       |    \ {readyAf, readyAt, setReadyAf, setReadyAt, readyBf, readyBt,
+       |       setReadyBf, setReadyBt, turnA, turnB, setTurnA, setTurnB}
        |
        |@preprocessing srbb_minimized
        |
-       |"(A1 | setTurnA!B11 | TurnA | ReadyAf | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=877, y=228)
-       |"(setTurnB!A11 | B1 | TurnA | ReadyAt | ReadyBf) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=681, y=398)
-       |"(setTurnB!A11 | setTurnA!B11 | TurnA | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=871, y=415)
-       |"(A1 | B11 | TurnA | ReadyAf | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=1199, y=767)
-       |"(A1 | B12 | TurnA | ReadyAf | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=1452, y=961)
-       |"(setTurnB!A11 | B12 | TurnA | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=1310, y=1053)
-       |"(A11 | B1 | TurnB | ReadyAt | ReadyBf) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=687, y=578)
-       |"(A12 | B1 | TurnB | ReadyAt | ReadyBf) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=564, y=967)
-       |"(lcA.setReadyAf!A1 | B1 | TurnB | ReadyAt | ReadyBf) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=441, y=1231)
-       |"(lcA.setReadyAf!A1 | setTurnA!B11 | TurnB | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=548, y=1297)
-       |"(setTurnB!A11 | B1 | TurnB | ReadyAt | ReadyBf) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=756, y=546)
-       |"(A11 | B12 | TurnB | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=1186, y=1075)
-       |"(setTurnB!A11 | lcB.setReadyBf!B1 | TurnA | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=1473, y=1257)
-       |"(A1 | lcB.setReadyBf!B1 | TurnA | ReadyAf | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=1664, y=1102)
-       |"(A11 | lcB.setReadyBf!B1 | TurnB | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=1235, y=1348)
-       |"(A11 | setTurnA!B11 | TurnB | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=790, y=1112)
-       |"(A11 | B11 | TurnB | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=948, y=644)
-       |"(setTurnB!A11 | B11 | TurnA | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=1033, y=427)
-       |"(A11 | B11 | TurnA | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=993, y=1110)
-       |"(setTurnB!A11 | setTurnA!B11 | TurnB | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=910, y=771)
-       |"(A12 | setTurnA!B11 | TurnB | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=671, y=1078)
-       |"(A12 | B11 | TurnA | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=1005, y=1170)
-       |"(lcA.setReadyAf!A1 | B11 | TurnA | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=785, y=1350)
-       |"(setReadyAf!A1 | B1 | TurnB | ReadyAt | ReadyBf) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=701, y=1061)
-       |"(A1 | B1 | TurnB | ReadyAf | ReadyBf) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=806, y=794)
-       |"(setReadyAf!A1 | setTurnA!B11 | TurnB | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=869, y=1064)
-       |"(A1 | setTurnA!B11 | TurnB | ReadyAf | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=1016, y=535)
-       |"(A1 | B1 | TurnA | ReadyAf | ReadyBf) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=666, y=296)
-       |"(A1 | setReadyBf!B1 | TurnA | ReadyAf | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=1542, y=816)
-       |"(setTurnB!A11 | setReadyBf!B1 | TurnA | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=1477, y=477)
-       |"(A11 | setReadyBf!B1 | TurnB | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=644, y=761)
-       |"(setReadyAf!A1 | B11 | TurnA | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=1025, y=1064)
+       |@comment "Impementation and specification are weakly trace-equivalent but not weakly bisimilar"
        |
-       |"lcA.MxSpec1"(x=181, y=529)
-       |"lcB.MxSpec1"(x=433, y=290)
-       |"ecB.lcB.MxSpec2"(x=535, y=569)
-       |"lcB.MxSpec2"(x=595, y=662)
-       |"lcA.MxSpec2"(x=320, y=754)
-       |"ecA.lcA.MxSpec2"(x=328, y=619)
-       |""".stripMargin
+       |@check weak-trace, Pe, Mx
+       |@check weak-bisimulation, Pe, Mx
+       |
+       |@comment "More generally, weak similarity is the finest notion to relate the two:"
+       |@compareSilent Pe, Mx
+       |
+       |@comment "But if we relax the specification to be internal choice, more notions hold:"
+       |
+       |MxIC(main, x=820, y=35)
+       |MxIC = tau.ecA.lcA.MxIC + tau.ecB.lcB.MxIC
+       |@compareSilent Pe, MxIC
+       |
+       |@section "---------- below here, there's only layout information! ----------"
+       |"(lcA.setReadyAf!A1 | B2 | TurnA | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=502, y=486)
+       |"(setTurnB!A2 | lcB.setReadyBf!B1 | TurnA | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=687, y=526)
+       |"(A1 | setTurnA!B2 | TurnA | ReadyAf | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=610, y=113)
+       |"(setTurnB!A2 | B3 | TurnA | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=840, y=423)
+       |"(setTurnB!A2 | setTurnA!B2 | TurnA | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=486, y=260)
+       |"(setTurnB!A2 | B1 | TurnB | ReadyAt | ReadyBf) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=509, y=105)
+       |"(A1 | B3 | TurnA | ReadyAf | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=784, y=294)
+       |"(lcA.setReadyAf!A1 | setTurnA!B2 | TurnB | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=423, y=519)
+       |"(A2 | B1 | TurnB | ReadyAt | ReadyBf) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=413, y=238)
+       |"(A1 | B2 | TurnA | ReadyAf | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=706, y=195)
+       |"(A3 | setTurnA!B2 | TurnB | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=301, y=388)
+       |"(A1 | lcB.setReadyBf!B1 | TurnA | ReadyAf | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=951, y=444)
+       |"(A3 | B1 | TurnB | ReadyAt | ReadyBf) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=363, y=296)
+       |"(lcA.setReadyAf!A1 | B1 | TurnB | ReadyAt | ReadyBf) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=167, y=382)
+       |"(A3 | B2 | TurnA | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=407, y=352)
+       |"(A2 | lcB.setReadyBf!B1 | TurnB | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=567, y=480)
+       |"(A2 | B3 | TurnB | ReadyAt | ReadyBt) \ {readyAf,readyAt,setReadyAf,setReadyAt,readyBf,readyBt,setReadyBf,setReadyBt,turnA,turnB,setTurnA,setTurnB}"(x=733, y=385)
+       |"lcA.Mx"(x=238, y=127)
+       |"lcB.Mx"(x=376, y=125)
+       |"lcB.MxIC"(x=924, y=102)
+       |"ecA.lcA.MxIC"(x=816, y=141)
+       |"lcA.MxIC"(x=750, y=126)
+       |"ecB.lcB.MxIC"(x=863, y=141)
+       |""".  stripMargin
 
   val diverseEquivalences = """
 P1(x=400, y=150)
