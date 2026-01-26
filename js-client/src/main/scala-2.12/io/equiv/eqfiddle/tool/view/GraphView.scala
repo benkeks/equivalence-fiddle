@@ -149,16 +149,6 @@ object GraphView {
     }
 
     def updateDirAndCenter() {
-      /*if (source.nameId == target.nameId) {
-        // loop edge!
-        length = 30
-        dir = (-1,0)
-        center = (target.x.get + 20 * 1.5, target.y.get + 20 * 1.5)
-      } else {
-        length = Math.hypot(target.x.get - source.x.get, target.y.get - source.y.get)
-        dir = ((target.x.get - source.x.get) / length, (target.y.get - source.y.get) / length)
-        center = ((target.x.get + source.x.get) / 2, (target.y.get + source.y.get) / 2)
-      }*/
       srcCenter = if (sources.nonEmpty) (
         (sources.map(_.centerX).sum / sources.size),
         (sources.map(_.centerY).sum / sources.size)
@@ -207,68 +197,6 @@ object GraphView {
 
     override def hasRep(a: Any) = rep == a
   }
-
-  /*class LinkLink(
-      val kind: Symbol,
-      var source: List[GraphNode],
-      var target: LinkTrait)
-    extends LinkTrait {
-    
-    def integrate(nodes: Iterable[GraphNode], links: Iterable[LinkTrait]): Option[LinkLink] = {
-      val newSrc = source.flatMap(s => nodes.find(s.sameNode(_)))
-      for (
-        newTar <- links.find(target.sameLink(_))
-      ) yield new LinkLink(kind, newSrc, newTar)
-    }
-    
-    var srcCenter: (Double, Double) = (
-      (source.map(_.x.get).sum / source.length),
-      (source.map(_.y.get).sum / source.length)
-    )
-    
-    var center: (Double, Double) = (
-      (target.center._1 + srcCenter._1) / 2 + 10.0,
-      (target.center._2 + srcCenter._2) / 2
-    )
-    
-    updatePos()
-    
-    def updatePos() = {
-      srcCenter = (
-        (source.map(_.x.get).sum / source.length),
-        (source.map(_.y.get).sum / source.length)
-      )
-      center = (
-        (target.center._1 + srcCenter._1) / 2,
-        (target.center._2 + srcCenter._2) / 2
-      )
-      // bending of higher order arrows
-      if (graphBending) {
-        val dx = target.center._1 - srcCenter._1
-        val dy = target.center._2 - srcCenter._2
-        val lengthInv = 25.0 / Math.sqrt(dx * dx + dy * dy)
-        center = (
-          center._1 - dy * lengthInv,
-          center._2 + dx * lengthInv
-        )
-      }
-    }
-    
-    def sameLink(l: LinkTrait) = l match {
-      case o: LinkLink =>
-        (o.kind equals kind) &&
-        o.source.map(_.esEvent).toSet == source.map(_.esEvent).toSet &&
-        o.target.sameLink(target)
-      case _ =>
-        false
-    }
-    
-    def matchesRule(r: HDEventStructure.Rule): Boolean = {
-      savedRule.exists(_ == r)
-    }
-    
-    override def toString = source.toString + "-" + kind + "-" + target.toString
-  }*/
 
   class LinkViewPart(val link: NodeLink, val node: Linkable, val isEnd: Boolean = true) {
 

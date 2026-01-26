@@ -12,22 +12,22 @@ trait GameLazyDecision[GamePosition <: SimpleGame.GamePosition, P] extends Abstr
   private val computedSuccessors = collection.mutable.Map[GamePosition, Set[GamePosition]]() withDefaultValue Set()
   def computeSuccessors(gn: GamePosition): Iterable[GamePosition]
 
-  /* set for nodes that are won by the attacker with the minimal attacker victory prices */
+  /** set for nodes that are won by the attacker with the minimal attacker victory prices */
   val attackerWinningBudgets = collection.mutable.Map[GamePosition, List[P]]() withDefaultValue List()
 
   def isAttackerWinningEnergy(gn: GamePosition, p: P) = attackerWinningBudgets(gn).exists(mwp => energyIsLowerOrEq(mwp, p))
 
-  /* price p1 is strictly better than p2 for an attacker win */
+  /** price p1 is strictly better than p2 for an attacker win */
   def energyIsLower(p1: P, p2: P): Boolean
 
-  /* price p1 is better than or equivalent to p2 for an attacker win */
+  /** price p1 is better than or equivalent to p2 for an attacker win */
   def energyIsLowerOrEq(p1: P, p2: P): Boolean
 
   def showSuccessors(): String = computedSuccessors.toString
 
   def gameSize(): (Int, Int) = (discovered.size, computedSuccessors.values.map(_.size).sum)
 
-  /* output todo length (for debugging purposes) */
+  /** output todo length (for debugging purposes) */
   val printToDoLength: Boolean = false
 
   private def energyUpdate(node: GamePosition, newBudgets: Iterable[P]) = {
