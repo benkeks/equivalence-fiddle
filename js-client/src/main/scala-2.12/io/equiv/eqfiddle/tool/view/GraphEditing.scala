@@ -103,6 +103,8 @@ trait GraphEditing extends ViewComponent {
   def getSelectedNodes() = {
     nodes.filter(_.selected).toList
   }
+
+  def onHoverChange()
   
   def onDragStart(node: GraphNode, id: Double) {
     if (!node.selected) {
@@ -135,11 +137,15 @@ trait GraphEditing extends ViewComponent {
   }
   
   def onHover(node: GraphNode) {
+    node.hovered = true
     editingBehavior.onHover(node)
+    onHoverChange()
   }
   
   def onHoverEnd(node: GraphNode) {
+    node.hovered = false
     editingBehavior.onHoverEnd(node)
+    onHoverChange()
   }
   
   def onHover(link: NodeLink) {
@@ -223,6 +229,7 @@ trait GraphEditing extends ViewComponent {
       node.selected = false
     }
     onSelectionChange()
+    onHoverChange()
     editingBehavior.onSelectionChange()
   }
   

@@ -36,6 +36,7 @@ object GraphView {
     
     var selected = false
     var previouslySelected = false
+    var hovered = false
     
     x = 100 + Math.cos(GraphNode.count * 5.1) * 100
     y = 100 + Math.sin(GraphNode.count * 5.1) * 100

@@ -82,13 +82,20 @@
     }
 
     .node-label {
-      opacity: .4;
       -moz-user-select: none;
       -khtml-user-select: none;
       -webkit-user-select: none;
       -ms-user-select: none;
       user-select: none;
       pointer-events: none;
+    }
+    .node-label.hovered, .node-label.selected {
+      opacity: .6;
+      transition: opacity 0.1s ease-out;
+    }
+    .node-label {
+      opacity: .0;
+      transition: opacity 2s ease-out;
     }
     .node-label.main, .node-label.implicit-main {
       opacity: 1;

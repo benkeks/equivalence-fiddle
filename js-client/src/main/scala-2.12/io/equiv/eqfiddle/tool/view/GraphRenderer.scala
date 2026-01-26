@@ -227,7 +227,16 @@ class GraphRenderer(val main: Control)
     nodeViews.classed("selected", { n: GraphNode =>
       n.selected
     })
+    nodeLabelViews.classed("selected", { n: GraphNode =>
+      n.selected
+    })
   }
+  override def onHoverChange() {
+    nodeLabelViews.classed("hovered", { n: GraphNode =>
+      n.hovered
+    })
+  }
+  
   
   def notify(change: ModelComponent.Change) = change match {
     case Structure.StructureChange(structure, minor) =>
