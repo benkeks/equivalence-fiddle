@@ -41,6 +41,9 @@ class StrongSpectroscopy[S, A, L] (
   override def relationItemToGamePosition(p: S, q: S): GamePosition = 
     AttackerObservation(p, Set(q))
 
+  override def gamePositionIsTopLevel(gp: GamePosition): Boolean =
+    gp.isInstanceOf[AttackerObservation[_]]
+
   override def gamePositionToRelationItem(gp: GamePosition): Option[(S, S)] = gp match {
     case AttackerObservation(p, qq) if qq.size == 1 =>
       Some((p, qq.head))

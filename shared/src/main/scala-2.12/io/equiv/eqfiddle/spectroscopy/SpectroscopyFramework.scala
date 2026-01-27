@@ -29,6 +29,7 @@ trait SpectroscopyFramework[S, A, L, CF <: HML.Formula[A]]
   /** Convert between relation items on the transiton system and positions in the spectroscopy game. */
   def relationItemToGamePosition(p: S, q: S): GamePosition
   def gamePositionToRelationItem(gp: GamePosition): Option[(S, S)]
+  def gamePositionIsTopLevel(gp: GamePosition): Boolean
 
   /** Convert between notions and energy vectors. */
   def notionToEnergy(obsNotion: Notion): Energy
@@ -121,6 +122,7 @@ trait SpectroscopyFramework[S, A, L, CF <: HML.Formula[A]]
     // assemble output in spectroscopy result object.
     val spectroResults = for {
       gn <- spectroscopyGame.discovered
+      if gamePositionIsTopLevel(gn)
       (p, q) <- gamePositionToRelationItem(gn)
       (prices, preorders) <- bestPreorders.get(gn)
       distinctions = if (!config.computeFormulas) {
