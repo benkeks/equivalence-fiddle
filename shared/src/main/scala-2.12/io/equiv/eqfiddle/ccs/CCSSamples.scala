@@ -562,29 +562,34 @@ P58 = a.(tau.b + b + tau)
        |""".stripMargin
 
   val stableUnstableAbstraction =
-    """|@comment "Pte/Ptl resemble Pe/Pl with all occurrences of idle renamed to tau"
+    """|@comment "P_te/P_tl resemble P_e/P_l with all occurrences of idle renamed to tau"
        |
        |Ae = (idle.Ae + a)
        |Be = (idle.Be + b)
        |Al = (idle.Bl + idle.Al + a)
        |Bl = (idle.Al + idle.Bl + b)
        |
-       |Pe = (op.Ae + op.Be)
-       |Pl = (op.Al + op.Bl)
+       |P_e = (op.Ae + op.Be)
+       |P_l = (op.Al + op.Bl)
        |
-       |Pte = Pe \hide { idle }
-       |Ptl = Pl \hide { idle }
+       |Idle =  idle!Idle
+       |P_te = (P_e | Idle) \ {idle}
+       |P_tl = (P_l | Idle) \ {idle}
        |
-       |@compareSilent Pe, Pl
-       |@compareSilent Pte, Ptl
+       |@compareSilent P_e, P_l
+       |@compareSilent P_te, P_tl
        |
-       |@comment "Pe/Pl should be (unstable&stable) readiness equivalent"
-       |@comment "Pte/Ptl are stable, but not unstable (!) failure (and readiness) equivalent"
+       |@check weak-failure, P_e, P_l
+       |@check weak-failure, P_te, P_tl
        |
-       |Pe(x=200, y=10)
-       |Pl(x=500, y=10)
-       |Pte(x=200, y=450)
-       |Ptl(x=500, y=450)
+       |@comment "P_e/P_l are be (unstable&weakly) readiness equivalent"
+       |@comment "P_te/P_tl are stable, but not weakly (!) failure (and readiness) equivalent"
+       |
+       |P_e(main, x=200, y=50)
+       |P_l(main, x=500, y=50)
+       |P_te(main, x=200, y=450)
+       |P_tl(main, x=500, y=450)
+       |
        |""".stripMargin
 
   val namedSamples = List[Example](
