@@ -25,7 +25,6 @@ class Pipeline(val main: Control) extends ModelComponent {
   }
   
   def runPipeline() = {
-  }
   
   def stepPipeline() = {
     AlgorithmLogging.debugLog("pipeline step")
@@ -45,20 +44,15 @@ class Pipeline(val main: Control) extends ModelComponent {
       
       operation.isDefined
     }
-  }
   
   def resetPipeline() = {
     setStep(-1)
-  }
   
   def setStep(step: Int) = {
     currentStep = step
     if (currentStep >= 0) {
       broadcast(Pipeline.PipelineStatusChange(operationLines ++ List(Pipeline.CurrentLine(currentStep))))
-    } else {
       broadcast(Pipeline.PipelineStatusChange(operationLines))
-    }
-  }
   
   def runMetaRunner(meta: String, args: List[String], line: Int): Boolean = meta match {
     case "compare" =>
@@ -69,41 +63,22 @@ class Pipeline(val main: Control) extends ModelComponent {
       } else {
         throw new Exception("Need two process names as arguments. @compare proc1, proc2")
         false
-      }
     case "compareSilent" =>
-      if (args.length == 2) {
-        broadcast(Pipeline.PipelineStatusChange(operationLines ++ List(Pipeline.CurrentLine(line))))
         main.dispatchAction(Structure.StructureExamineEquivalences(NodeID(args(0)), NodeID(args(1)), silentSpectrum = true))
-        true
-      } else {
         throw new Exception("Need two process names as arguments. @compareSilent proc1, proc2")
-        false
-      }
     case "check" =>
       if (args.length == 3) {
-        broadcast(Pipeline.PipelineStatusChange(operationLines ++ List(Pipeline.CurrentLine(line))))
         main.dispatchAction(Structure.StructureCheckEquivalence(NodeID(args(1)), NodeID(args(2)), args(0)))
-        true
-      } else {
         throw new Exception("Need a notion name and two process names as arguments. @check \"notion\", proc1, proc2")
-        false
-      }
     case "minimize" =>
       if (args.length == 1) {
-        broadcast(Pipeline.PipelineStatusChange(operationLines ++ List(Pipeline.CurrentLine(line))))
         main.dispatchAction(Structure.StructureMinimize())
-        true
-      } else {
         throw new Exception("Need one argument. @minimize \"strong\"")
-        false
-      }
     case "characterize" =>
       broadcast(Pipeline.PipelineStatusChange(operationLines ++ List(Pipeline.CurrentLine(line))))
       main.dispatchAction(Structure.StructureCharacterize(NodeID(args(0).trim())))
       true
     case _ =>
-      false
-  }
 
 
   def notify(change: ModelComponent.Change) = change match {
@@ -115,10 +90,8 @@ class Pipeline(val main: Control) extends ModelComponent {
       operationLines = ast.defs.collect {
         case Syntax.MetaDeclaration(key, value, pos) if supportedOperations.contains(key) =>
           Pipeline.OperationLine(pos.line, supportedOperations(key))
-      }
       
     case _ => 
-  }
 }
 
 object Pipeline {
@@ -134,15 +107,9 @@ object Pipeline {
       case s: Pipeline => 
         implementPipeline(s)
       case _ =>
-        false
-    }
     
     def implementPipeline(pipeline: Pipeline): Boolean
-  }
   
   case class RunMetaRunner(meta: String, info: List[String], line: Int) extends PipelineAction {
     override def implementPipeline(pipeline: Pipeline) = {
       pipeline.runMetaRunner(meta, info, line)
-    }
-  }
-}

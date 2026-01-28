@@ -3,13 +3,8 @@ package io.equiv.eqfiddle.tool.view
 import scala.Left
 import scala.Right
 import scala.scalajs.js
-import scala.scalajs.js.Any.jsArrayOps
-import scala.scalajs.js.UndefOr.any2undefOrA
-import scala.scalajs.js.UndefOr.undefOr2ops
-import scala.scalajs.js.|.from
-import org.scalajs.dom.raw.HTMLInputElement
-import org.singlespaced.d3js.Ops.fromFunction1To3
-import org.singlespaced.d3js.Ops.fromFunction2To3StringPrimitive
+
+import org.scalajs.dom.HTMLInputElement
 import org.singlespaced.d3js.Selection
 import org.singlespaced.d3js.d3
 import io.equiv.eqfiddle.tool.control.Source
@@ -63,16 +58,12 @@ class GraphMoveNode(renderer: GraphEditing) extends GraphEditBehavior {
       n.px = n.px.getOrElse(0.0) + x
       n.py = n.py.getOrElse(0.0) + y
     }
-  }
   
   override def onDragEnd(node: GraphNode) {
     val updates = affectedNodes.map { n =>
       n.fixed = 1
       (n.nameId.name, Structure.NodeLabel(node.meta.act - Symbol("implicit-main"), n.px.toOption, n.py.toOption))
-    }
     renderer.triggerAction(Source.UpdateNodeAnnotationAttributes(updates))
-  }
-}
 
 class GraphEditNode(renderer: GraphEditing) extends GraphEditBehavior {
   
@@ -87,13 +78,8 @@ class GraphEditNode(renderer: GraphEditing) extends GraphEditBehavior {
     activeNode = None
     newNode = None
     nameInput.classed("active", activeNode.isDefined)
-  }
   
   override def deactivate() {
-    activeNode = None
-    newNode = None
-    nameInput.classed("active", activeNode.isDefined)
-  }
   
   override def onClick(coords: (Double, Double)) {
     if (activeNode.isDefined) {
@@ -116,21 +102,14 @@ class GraphEditNode(renderer: GraphEditing) extends GraphEditBehavior {
       inputElem.value = node.nameId.name
       inputElem.select()
       inputElem.focus()
-    }
-  }
   
-  override def onDragStart(node: GraphNode) {
     if (activeNode.exists(!_.sameRep(node))) {
-      commitName()
-    }
-    newNode = None
     activeNode = Some(node)
     nameInput
       .classed("active", activeNode.isDefined)
       .attr("value", node.nameId.name)
       .attr("style", "left: "+node.x+"px; top: "+node.y+"px;")
     inputElem.value = node.nameId.name
-  }
   
   def commitName() {
     if (newNode.isDefined) {
@@ -140,17 +119,8 @@ class GraphEditNode(renderer: GraphEditing) extends GraphEditBehavior {
 //              List((inputElem.value, Structure.EventAnnotation(n.px.toOption, n.py.toOption)))))
 //        }
       }
-    } else {
-      activeNode.foreach { n =>
 //        renderer.triggerAction(Source.RenameEvent(
 //            n.nameId.name, inputElem.value))
-      }
-    }
-    activeNode = None
-    newNode = None
-    nameInput.classed("active", activeNode.isDefined)
-  }
-}
 
 class GraphExamineNodes(renderer: GraphEditing) extends GraphEditBehavior {
   
@@ -160,6 +130,3 @@ class GraphExamineNodes(renderer: GraphEditing) extends GraphEditBehavior {
     if (selectedNodes.length == 2) {
       val names = selectedNodes.map(_.nameId)
       renderer.triggerAction(Structure.StructureExamineEquivalences(names(0), names(1)))
-    }
-  }
-}

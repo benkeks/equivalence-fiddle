@@ -10,16 +10,11 @@ abstract class Action {
 trait Undoable {
   var undo: () => Boolean
   var redo: () => Boolean
-}
 
 trait ActionUndo extends Action {
   override def implement(target: ModelComponent) = {
     target.undoLastAction()
   }
-}
 
 trait ActionRedo extends Action {
-  override def implement(target: ModelComponent) = {
     target.redoAction()
-  }
-}

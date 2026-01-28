@@ -32,28 +32,19 @@ trait ModelComponent {
           AlgorithmLogging.debugLog("Undo" + ua)
           undoDepth += 1
           return ua.undo()
-      }
-    }
     false
-  }
   
   def redoAction(): Boolean = {
     if (undoDepth > 0) {
       val undineAction = actionLog(undoDepth-1)
       undineAction match {
-        case ua: Undoable =>
           AlgorithmLogging.debugLog("Redo" + ua)
           undoDepth -= 1
           return ua.redo()
-      }
-    }
-    false
-  }
   
   def clearUndoLog() {
     actionLog.clear()
     undoDepth = 0
-  }
   
   def notify(change: ModelComponent.Change)
   
@@ -64,4 +55,3 @@ trait ModelComponent {
 
 object ModelComponent {
   trait Change
-}

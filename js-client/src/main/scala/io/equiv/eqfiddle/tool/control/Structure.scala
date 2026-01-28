@@ -2,7 +2,6 @@ package io.equiv.eqfiddle.tool.control
 
 import scala.collection.mutable.HashMap
 
-import scala.scalajs.js.Date
 import scala.scalajs.js
 
 import io.equiv.eqfiddle.tool.arch.Action
@@ -41,7 +40,6 @@ class Structure(val main: Control) extends ModelComponent {
   def registerOperation(op: StructureOperation) = {
     operations += (op.slug -> op)
     broadcast(Structure.StructureOperationsChanged(operations))
-  }
 
   override def notify(c: ModelComponent.Change) = c match {
     case Source.SourceChange(source, ast) =>
@@ -59,28 +57,23 @@ class Structure(val main: Control) extends ModelComponent {
           setStructure(is)
       }
     case _ =>
-  }
 
   def setPartition(p: Coloring[NodeID]) = {
     partition = p
     broadcast(Structure.StructurePartitionChange(partition))
-  }
 
   def setRelation(r: Relation[NodeID]): Unit = {
     val labeled = new LabeledRelation(r.tupleSet.map {case (p1, p2) => (p1, "", p2)})
     setRelation(labeled)
-  }
 
   def setRelation(r: LabeledRelation[NodeID, String]): Unit = {
     relation = r
     broadcast(Structure.StructureRelationChange(relation))
-  }
 
   def setReplay(replay: List[() => AlgorithmLogging.LogEntry[NodeID]]): Unit = {
     currentReplay = replay
     currentReplayStep = 0
     broadcast(Structure.StructureReplayChange(currentReplay))
-  }
 
   def doReplayStep(): Boolean = {
     if (currentReplayStep < currentReplay.length) {
@@ -89,34 +82,25 @@ class Structure(val main: Control) extends ModelComponent {
           broadcast(Structure.StructureCommentChange(comment))
           broadcast(Structure.StructureRelationChange(rel))
         case AlgorithmLogging.LogRichRelation(rel, comment) =>
-          broadcast(Structure.StructureCommentChange(comment))
           broadcast(Structure.StructureRichRelationChange(rel))
         case AlgorithmLogging.LogSpectrum(spectrum, preords, postords, equations, distCoordsLR, distCoordsRL, comment) =>
           broadcast(Structure.StructureSpectrumChange(spectrum, preords, postords, equations, distCoordsLR, distCoordsRL, comment))
-      }
       currentReplayStep += 1
       true
     } else if (currentReplayStep == currentReplay.length) {
       // reset everything
       //broadcast(Structure.StructureRelationChange(relation))
-      true
     } else {
       false
     }
-  }
 
   def setStructure(is: Structure.TSStructure) = {
     if (structure != null && structure.sameGraphAs(is)) {
       // only a layout change!
       structure = is
       broadcast(Structure.StructureChange(structure, minorChange = true))
-    } else {
-      structure = is
       broadcast(Structure.StructureChange(structure))
-      setPartition(Coloring.fromPartition(Set(is.nodes)))
       setRelation(Relation[NodeID]())
-    }
-  }
 }
 
 object Structure {
@@ -129,10 +113,8 @@ object Structure {
         implementStructure(s)
       case _ =>
         false
-    }
 
     def implementStructure(structure: Structure): Boolean
-  }
 
   case class StructureChange(tsStructure: TSStructure, minorChange: Boolean = false) extends ModelComponent.Change
 
@@ -157,14 +139,12 @@ object Structure {
 
   case class StructureOperationsChanged(operations: HashMap[String, StructureOperation]) extends ModelComponent.Change {
     override def toString() = operations.map(_._1).mkString
-  }
 
   case class ActionLabel(
       val act: Symbol) {
 
     def this(name: String) = {
       this(Symbol(name))
-    }
 
     val hash = act.hashCode()
 
@@ -173,36 +153,26 @@ object Structure {
     override def equals(other: Any) = other match {
       case o: ActionLabel => this.act == o.act
       case _ => false
-    }
 
     def toActString = {
       act.name
-    }
 
     override def toString() = toActString
-  }
 
   case class NodeLabel(
       val act: Set[Symbol],
       val x: Option[Double] = None,
       val y: Option[Double] = None) {
 
-    val hash = act.hashCode()
 
-    override def hashCode() = hash
 
-    override def equals(other: Any) = other match {
       case o: NodeLabel => this.act == o.act
-      case _ => false
-    }
 
     def toStringPairList = {
       act.toList.map(v => (v.name, "")) ++
       x.toList.map(v => ("x", v.round.toString)) ++
       y.toList.map(v => ("y", v.round.toString))
-    }
 
-  }
 
   val emptyLabel = NodeLabel(Set())
 
@@ -224,10 +194,8 @@ object Structure {
         Interpreting.Success(l)
       } catch {
         case e: Exception => Interpreting.Problem(e.toString(), List(nD))
-      }
     case None =>
       Interpreting.Success(emptyLabel)
-  }
 
   val actionChars: Set[Char] = Parser.idChars + '!'
 
@@ -242,10 +210,7 @@ object Structure {
         }
       } else {
         Interpreting.Problem("Invalid action name: " + name, List(aL))
-      }
-    case None =>
       Interpreting.Success(emptyActionLabel)
-  }
 
   def actionIsOutput(a: ActionLabel): Boolean = actionStrIsOutput(a.toActString)
   def actionToInput(a: ActionLabel): ActionLabel =
@@ -263,7 +228,6 @@ object Structure {
     val silentActions = Set(silentActionLabel)
     val mainNodes = (labels.collect { case (id, label) if label.act.contains('main) => id }).toSet
     (mainNodes, new WeakTransitionSystem(rel, labels, silentActions))
-  }
 
   case class StructureCallOperation(slug: String, resetReplay: Boolean = true) extends StructureAction {
     override def implementStructure(structure: Structure) = {
@@ -271,19 +235,13 @@ object Structure {
       for (o <- op) {
         if (resetReplay) {
           structure.setReplay(List())
-        }
         o applyOperation structure
-      }
       op.isDefined
-    }
-  }
 
   case class StructureExamineEquivalences(n1: NodeID, n2: NodeID, resetReplay: Boolean = true, silentSpectrum: Boolean = false) extends StructureAction {
 
-    override def implementStructure(structure: Structure) = {
       if (resetReplay) {
         structure.setReplay(List())
-      }
       
       if (structure.structure.nodes(n1) && structure.structure.nodes(n2)) {
 
@@ -293,7 +251,6 @@ object Structure {
           new WeakSpectroscopy(structure.structure)
         } else {
           new StrongSpectroscopy(structure.structure)
-        }
         AlgorithmLogging.uriEncoder = scala.scalajs.js.URIUtils.encodeURI _
 
         val result = algo.decideAll(List((n1, n2)), Spectroscopy.Config(computeFormulas = true))
@@ -304,7 +261,6 @@ object Structure {
             val Some(positionNum) = result.meta.get("game-positions")
             s"""<a href="$game" target="_blank">View game (with $positionNum positions).</a>"""
           case _ => ""
-        }
 
         val leftRightDists = result.foundDistinctionsWithCertificate(n1, n2).map(d => d._1.toString() + d._2.map(_.name).mkString(" (", ",", ")")).mkString("<br>")
         val rightLeftDists = result.foundDistinctionsWithCertificate(n2, n1).map(d => d._1.toString() + d._2.map(_.name).mkString(" (", ",", ")")).mkString("<br>")
@@ -318,33 +274,17 @@ object Structure {
           () => AlgorithmLogging.LogRelation(result.toDistinctionRelation(), s"Left-right-distinguished by:<div class='distinctions'>$leftRightDists</div>"),
           () => AlgorithmLogging.LogRelation(result.toEquivalencesRelation(), s"Equated by:<div class='equations'>${equations.mkString("<br>")}</div>"),
           () => AlgorithmLogging.LogSpectrum[NodeID, ObservationNotion](result.spectrum, preords, postords, equations, distCoordsLR, distCoordsRL, s"Show spectrum. $gameString")
-        )
         structure.setReplay(replay)
         structure.main.doAction(StructureDoReplayStep(), structure)
 
         true
-      } else {
         val unknownState = if (!structure.structure.nodes(n1)) n1 else n2
-        val replay = List(
           () => AlgorithmLogging.LogRelation(LabeledRelation[NodeID, String](), s"Unknown state ‹$unknownState›.")
-        )
-        structure.setReplay(replay)
-        structure.main.doAction(StructureDoReplayStep(), structure)
-        false
-      }
-    }
-  }
 
   case class StructureCheckEquivalence(n1: NodeID, n2: NodeID, notion: String, resetReplay: Boolean = true) extends StructureAction {
 
-    override def implementStructure(structure: Structure) = {
-      if (resetReplay) {
-        structure.setReplay(List())
-      }
       
-      if (structure.structure.nodes(n1) && structure.structure.nodes(n2)) {
 
-        val begin = Date.now
 
         val algo = 
           if (WeakObservationNotion.LTBTS.getSpectrumClass.isDefinedAt(notion)) {
@@ -358,7 +298,6 @@ object Structure {
                 WeakObservationNotion.LTBTS.getSpectrumClass.keys).mkString(", ")}")
           }
 
-        AlgorithmLogging.uriEncoder = scala.scalajs.js.URIUtils.encodeURI _
 
         val result = algo.checkIndividualPreorder(List((n1, n2), (n2, n1)), notion)
         AlgorithmLogging.debugLog("Preorder check took: " + (Date.now - begin) + "ms.", logLevel = 7)
@@ -366,7 +305,6 @@ object Structure {
         val Some(lrResult) = result.items.find(r => r.left == n1 && r.right == n2)
         val Some(rlResult) = result.items.find(r => r.left == n2 && r.right == n1)
 
-        val replay = List(
           () => AlgorithmLogging.LogRelation(
             new LabeledRelation[NodeID, String](result.relation),
             {
@@ -387,29 +325,10 @@ object Structure {
               }
             }
           )
-        )
-        structure.setReplay(replay)
-        structure.main.doAction(StructureDoReplayStep(), structure)
 
-        true
-      } else {
-        val unknownState = if (!structure.structure.nodes(n1)) n1 else n2
-        val replay = List(
-          () => AlgorithmLogging.LogRelation(LabeledRelation[NodeID, String](), s"Unknown state ‹$unknownState›.")
-        )
-        structure.setReplay(replay)
-        structure.main.doAction(StructureDoReplayStep(), structure)
-        false
-      }
-    }
-  }
 
   case class StructureMinimize(resetReplay: Boolean = true) extends StructureAction {
 
-    override def implementStructure(structure: Structure) = {
-      if (resetReplay) {
-        structure.setReplay(List())
-      }
 
       val begin = Date.now
 
@@ -444,20 +363,12 @@ object Structure {
       structure.setReplay(replay.toList)
       structure.main.doAction(StructureDoReplayStep(), structure)
 
-      true
-    }
-  }
 
   case class StructureCharacterize(node: NodeID, resetReplay: Boolean = true) extends StructureAction {
 
-    override def implementStructure(structure: Structure) = {
-      if (resetReplay) {
-        structure.setReplay(List())
-      }
 
       if (structure.structure.nodes(node)) {
 
-        val begin = Date.now
 
         val algo = new StrongSpectroscopy(structure.structure)
 
@@ -477,27 +388,14 @@ object Structure {
           val replay = List(
             () => AlgorithmLogging.LogRelation(result.toPreorderingRelation(), s"Preordered by:<div class='preorderings'>$preords</div>"),
             () => AlgorithmLogging.LogRelation(result.toDistinctionRelation(), s"Distinguished by:<div class='distinctions'>$dists</div>"),
-          )
           structure.setReplay(replay)
           structure.main.doAction(StructureDoReplayStep(), structure)
-        }
 
-        true
-      } else {
         structure.setReplay(List(
           () => AlgorithmLogging.LogRelation(LabeledRelation[NodeID, String](), s"Unknown state ‹$node›.")
         ))
-        structure.main.doAction(StructureDoReplayStep(), structure)
-        false
-      }
-    }
-  }
 
   case class StructureDoReplayStep(goToStep: Int = -1) extends StructureAction {
-    override def implementStructure(structure: Structure) = {
       if (goToStep >= 0) structure.currentReplayStep = goToStep
       structure.doReplayStep()
-    }
-  }
 
-}

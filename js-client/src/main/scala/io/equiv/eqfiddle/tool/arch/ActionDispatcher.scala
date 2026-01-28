@@ -15,7 +15,6 @@ trait ActionDispatcher {
     } catch {
       case e : Exception => dom.window.alert(e.toString)
     }
-  }
   
   def getActionTarget(action: Action): ModelComponent
 }

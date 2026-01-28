@@ -1,29 +1,21 @@
 package io.equiv.eqfiddle.tool.view
 
 import scala.scalajs.js
-import scala.scalajs.js.Function0
-import scala.scalajs.js.Any.fromFunction0
-import scala.scalajs.js.Any.fromFunction1
-import scala.scalajs.js.Any.fromInt
-import scala.scalajs.js.Any.jsArrayOps
-import scala.scalajs.js.Any.wrapArray
-import scala.scalajs.js.URIUtils
-import scala.scalajs.js.|.from
+
+
+
 import org.scalajs.jquery.jQuery
 import org.denigma.codemirror.CodeMirror
 import org.denigma.codemirror.Editor
 import org.denigma.codemirror.extensions.EditorConfig
 import org.scalajs.dom
-import org.scalajs.dom.raw.Event
-import org.scalajs.dom.raw.EventTarget
-import org.scalajs.dom.raw.HTMLElement
-import org.scalajs.dom.raw.HTMLInputElement
-import org.scalajs.dom.raw.HTMLTextAreaElement
-import org.scalajs.dom.raw.SVGSVGElement
-import org.scalajs.dom.raw.UIEvent
-import org.singlespaced.d3js.Ops.fromFunction1To2
-import org.singlespaced.d3js.Ops.fromFunction1To3
-import org.singlespaced.d3js.Ops.fromFunction2To3
+import org.scalajs.dom.Event
+import org.scalajs.dom.EventTarget
+import org.scalajs.dom.HTMLElement
+import org.scalajs.dom.HTMLInputElement
+import org.scalajs.dom.HTMLTextAreaElement
+import org.scalajs.dom.SVGSVGElement
+import org.scalajs.dom.UIEvent
 import org.singlespaced.d3js.d3
 import io.equiv.eqfiddle.tool.arch.Control
 import io.equiv.eqfiddle.tool.control.ModelComponent
@@ -58,7 +50,6 @@ class SourceEditor(val main: Control) extends ViewComponent {
         .mode("dces")
         .lineNumbers(true)
         .gutters(js.Array("CodeMirror-linenumbers", PROBLEM_GUTTER))
-    CodeMirror.fromTextArea(editorNode, cfg)
   }
   
   // document used to input the source
@@ -102,20 +93,15 @@ class SourceEditor(val main: Control) extends ViewComponent {
       if l == line
     } {
       triggerAction(new Pipeline.RunMetaRunner(meta, info, line))
-    }
-  }
 
   def onChange() {
     val newText = sourceDoc.getValue()
     if (newText != lastText) {
       lastText = newText
       triggerAction(Source.LoadDefinition(newText))
-    }
-  }
     
   def onExport(et: EventTarget) {
     
-    val newText = sourceDoc.getValue()
     val textUri = URIUtils.encodeURIComponent(newText)
     d3.select("#es-export-text")
       .attr("href", "data:text/plain;charset=utf-8,"+textUri)
@@ -150,9 +136,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
       d3.select("#es-export-csv")
         .attr("href", "data:text/plain;charset=utf-8,"+tsCsvUri)
         .attr("download", name + ".csv")
-    }
     
-  }
   
   def onLoadFile(ev: Event) {
     val fileBlob = ev.target.asInstanceOf[HTMLInputElement].files(0)
@@ -163,30 +147,17 @@ class SourceEditor(val main: Control) extends ViewComponent {
     reader.onload = (e: UIEvent) => {
       val contents = reader.result.asInstanceOf[String]
       triggerAction(Source.LoadDefinition(contents))
-    }
     
     reader.readAsText(fileBlob)
-  }
   
   def onImport(ev: Event) {
-    val fileBlob = ev.target.asInstanceOf[HTMLInputElement].files(0)
     
-    AlgorithmLogging.debugLog("reading file: " + fileBlob.name)
     
-    val reader = new dom.FileReader()
-    reader.onload = (e: UIEvent) => {
-      val contents = reader.result.asInstanceOf[String]
-      triggerAction(Source.LoadDefinition(contents))
-    }
     
-    reader.readAsText(fileBlob)
-  }
   
   def setCode(code: String) {
     if (sourceDoc.getValue() != code) {
       sourceDoc.setValue(code)
-    }
-  }
 
   def setErrors(code: String, errs: List[Source.Problem]) {
     setCode(code)
@@ -196,12 +167,9 @@ class SourceEditor(val main: Control) extends ViewComponent {
       problemNode.setAttribute("class", "es-problem")
       problemNode.setAttribute("title", s"$msg (at $col)")
       editor.setGutterMarker(line - 1, PROBLEM_GUTTER, problemNode)
-    }
-  }
 
   def setRunners(runners: List[(String, List[String], Int)]) = {
     this.runners = runners
-  }
   
   def setSamples(samples: List[Example]) {
     val list = js.Array[Example]()
@@ -216,7 +184,6 @@ class SourceEditor(val main: Control) extends ViewComponent {
         .on("click", {(s: Example, i: Int) => 
           triggerAction(Source.LoadDefinition(s.code))
         })
-  }
   
   def setOperations(ops: List[StructureOperation] ) {
     AlgorithmLogging.debugLog("set operations: " + ops)
@@ -236,11 +203,8 @@ class SourceEditor(val main: Control) extends ViewComponent {
           .on("click", {(a: (String, String, String), i: Int) => 
             triggerAction(Structure.StructureCallOperation(a._1))
           })
-    }
-  }
   
   def setPipelineStatus(entries: List[Pipeline.LineInfo]) {
-    editor.clearGutter(PROBLEM_GUTTER)
     entries foreach {
       case Pipeline.CurrentLine(line) =>
         currentPipelineLine = line
@@ -249,13 +213,8 @@ class SourceEditor(val main: Control) extends ViewComponent {
         node.setAttribute("title", "current line")
         editor.setGutterMarker(line, PROBLEM_GUTTER, node)
       case Pipeline.OperationLine(line, explanation) =>
-        currentPipelineLine = line
-        val node = dom.document.createElement("div").asInstanceOf[HTMLElement]
         node.setAttribute("class", "es-pipeline-operation")
         node.setAttribute("title", explanation)
-        editor.setGutterMarker(line, PROBLEM_GUTTER, node)
-    }
-  }
   
   def setReplay(replay: List[() => AlgorithmLogging.LogEntry[NodeID]]) {
     val node = dom.document.createElement("ul").asInstanceOf[HTMLElement]
@@ -265,9 +224,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
         case AlgorithmLogging.LogRelation(_, comment) =>
           comment
         case AlgorithmLogging.LogRichRelation(_, comment) =>
-          comment
         case AlgorithmLogging.LogSpectrum(_, _, _, _, _, _, comment) =>
-          comment
         case _ =>
           ""
       })
@@ -275,27 +232,21 @@ class SourceEditor(val main: Control) extends ViewComponent {
       jQuery(leChild).on("click", { ev: JQueryEventObject => 
         triggerAction(Structure.StructureDoReplayStep(i))
         null
-      })
       node.appendChild(leChild)
-    }
     pipelineReplayWidget foreach (_.clear())
     pipelineReplayWidget = Some(editor.addLineWidget(currentPipelineLine, node))
-  }
   
   def setStructure(ts: Structure.TSStructure) = {
     currentStructure = Some(ts)
-  }
   
   def getURLSampleSlug() = {
     dom.window.location.hash.substring(1)
-  }
   
   def notify(change: ModelComponent.Change) = change match {
     case Source.SourceChange(source, ast) =>
       setCode(source)
       setRunners(ast.defs.collect {
           case MetaDeclaration(key, value, pos) => (key, value, pos.line)
-      })
     case Source.ProblemChange(source, errs) =>
       setErrors(source, errs)
     case Source.ExamplesChange(samples) => 
@@ -309,5 +260,4 @@ class SourceEditor(val main: Control) extends ViewComponent {
     case Structure.StructureChange(tsStructure, _) =>
       setStructure(tsStructure)
     case _ => 
-  }
 }

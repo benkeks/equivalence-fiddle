@@ -4,8 +4,6 @@ import scala.scalajs.js
 import org.scalajs.dom
 import org.singlespaced.d3js.d3
 import js.JSConverters._
-import org.singlespaced.d3js.Ops.fromFunction2To3DoublePrimitive
-import org.singlespaced.d3js.Ops.fromFunction2To3StringPrimitive
 
 import io.equiv.eqfiddle.hml.ObservationNotion
 import io.equiv.eqfiddle.hml.Spectrum
@@ -35,14 +33,12 @@ class SpectrumView[+OC <: ObservationNotion](
       (15,-25),
     )
   else
-    List(
       (0,-15), // obs
       (-30,-20), // conj
       (-10,-20), // max pos conjuncts
       (-20,-30), // other pos conjuncts
       (40,-35), // neg conjuncts
       (20,-25) // negations
-    )
 
   val svg = d3.select(parentId)
     .append("svg")
@@ -76,15 +72,12 @@ class SpectrumView[+OC <: ObservationNotion](
 
   def southOfEquivalenceBoundary(oc: ObservationNotion): Boolean = {
     equations.exists(e => oc <= spectrum.getSpectrumClass(e).obsNotion)
-  }
 
   def southOfPreorderBoundary(oc: ObservationNotion): Boolean = {
     preords.exists(e => oc <= spectrum.getSpectrumClass(e).obsNotion)
-  }
 
   def southOfPostorderBoundary(oc: ObservationNotion): Boolean = {
     postords.exists(e => oc <= spectrum.getSpectrumClass(e).obsNotion)
-  }
 
   def render() = {
 
@@ -118,9 +111,7 @@ class SpectrumView[+OC <: ObservationNotion](
 
     val distinctionNeighbors = for {
       (p1, _) <- distCoordsLR ++ distCoordsRL
-      p2 <- positions
       if (p1 <= p2) && positions.forall(otherP => !(p1 < otherP) || !(otherP < p2))
-    } yield (p1, p2)
 
     val distinctionsAffect = new Relation(distinctionNeighbors.toSet)
     val distinctionRenderPos = {
@@ -136,14 +127,7 @@ class SpectrumView[+OC <: ObservationNotion](
     val distinctionLinks = svg.append("g")
       .selectAll(".eq-distinction-links")
       .data(distinctionNeighbors.toJSArray)
-      .enter()
-      .append("path")
-        .attr("d", (oc1oc2: (OC, OC), _: Int) => {
-          val (oc1, oc2) = oc1oc2
           val (x1, y1) = distinctionRenderPos(oc1)
-          val (x2, y2) = positionOfNotion(oc2)
-          s"M${x1} ${y1} L ${x2} ${y2}"
-        })
         .style("stroke", "#cc1100")
 
     // show notions
@@ -151,7 +135,6 @@ class SpectrumView[+OC <: ObservationNotion](
     val dots = svg.append("g")
       .selectAll(".eq-notion-dot")
       .data(spectrum.notions.toJSArray)
-      .enter()
       .append("circle")
         .attr("cx", (eq: Spectrum.EquivalenceNotion[OC], _: Int) => positionOfNotion(eq.obsNotion)._1 )
         .attr("cy", (eq: Spectrum.EquivalenceNotion[OC], _: Int) => positionOfNotion(eq.obsNotion)._2 )
@@ -170,33 +153,20 @@ class SpectrumView[+OC <: ObservationNotion](
     val preorderSymbs = svg.append("g")
       .selectAll(".eq-notion-preorder")
       .data(strictPreords.toJSArray)
-      .enter()
-      .append("path")
         .attr("d", (eq: Spectrum.EquivalenceNotion[OC], _: Int) => {
           val (x, y) = positionOfNotion(eq.obsNotion)
           s"M${x} ${y-4} A 1 1 0 0 0 ${x} ${y+4} Z"
-        })
         .style("fill", "#1177dd")
-        .style("stroke", "#33aaff")
         .style("pointer-events", "none")
     
     val postorderSymbs = svg.append("g")
       .selectAll(".eq-notion-postorder")
       .data(strictPostords.toJSArray)
-      .enter()
-      .append("path")
-        .attr("d", (eq: Spectrum.EquivalenceNotion[OC], _: Int) => {
-          val (x, y) = positionOfNotion(eq.obsNotion)
           s"M${x} ${y-4} A 1 1 0 0 1 ${x} ${y+4} Z"
-        })
-        .style("fill", "#1177dd")
-        .style("stroke", "#33aaff")
-        .style("pointer-events", "none")
 
     val lrDistinctions = svg.append("g")
       .selectAll(".eq-dist-lr")
       .data(distCoordsLR.toJSArray)
-      .enter()
       .append("polygon")
         .attr("points", (oc: (OC, String), _: Int) => {
           val (x, y) = distinctionRenderPos(oc._1)
@@ -208,30 +178,18 @@ class SpectrumView[+OC <: ObservationNotion](
     val rlDistinctions = svg.append("g")
       .selectAll(".eq-dist-rl")
       .data(distCoordsRL.toJSArray)
-      .enter()
-      .append("polygon")
-        .attr("points", (oc: (OC, String), _: Int) => {
-          val (x, y) = distinctionRenderPos(oc._1)
           s"${x+3},${y-4} ${x+3},${y+4} ${x-5},${y}"
-         })
         .attr("title", (oc: (OC, String), _: Int) => oc._2)
-        .style("fill", "#cc1100")
-        .html((oc: (OC, String), _: Int, _: js.UndefOr[Int]) => s"<title>${oc._2}</title>")
 
     val names = svg.append("g")
       .selectAll(".eq-notion-name")
-      .data(spectrum.notions.toJSArray)
-      .enter()
       .append("text")
         .attr("x", (eq: Spectrum.EquivalenceNotion[OC], _: Int) => {
           val pos = positionOfNotion(eq.obsNotion)._1
           if (pos < 0) pos - 5 else pos + 5
-        })
         .attr("y", (eq: Spectrum.EquivalenceNotion[OC], _: Int) => positionOfNotion(eq.obsNotion)._2 + 5 )
         .attr("text-anchor", (eq: Spectrum.EquivalenceNotion[OC], _: Int) =>
           if (positionOfNotion(eq.obsNotion)._1 < 0) "end" else "start")
         .text((eq: Spectrum.EquivalenceNotion[OC], _: Int) => eq.name)
-        .style("pointer-events", "none")
 
-  }
 }

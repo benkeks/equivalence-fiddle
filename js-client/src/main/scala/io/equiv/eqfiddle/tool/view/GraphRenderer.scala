@@ -1,22 +1,14 @@
 package io.equiv.eqfiddle.tool.view
 
 import scala.annotation.migration
-import scala.scalajs.js.Any.fromFunction1
-import scala.scalajs.js.Any.fromFunction2
-import scala.scalajs.js.Any.jsArrayOps
-import scala.scalajs.js.Any.wrapArray
-import scala.scalajs.js.Tuple2.fromScalaTuple2
-import scala.scalajs.js.UndefOr.undefOr2ops
-import scala.scalajs.js.|.from
+
+
+
+
 import org.scalajs.dom
-import org.scalajs.dom.raw.EventTarget
-import org.scalajs.dom.raw.HTMLInputElement
+import org.scalajs.dom.EventTarget
+import org.scalajs.dom.HTMLInputElement
 import org.singlespaced.d3js.Ops.asPrimitive
-import org.singlespaced.d3js.Ops.fromFunction1To2
-import org.singlespaced.d3js.Ops.fromFunction1To3
-import org.singlespaced.d3js.Ops.fromFunction2To3
-import org.singlespaced.d3js.Ops.fromFunction2To3DoublePrimitive
-import org.singlespaced.d3js.Ops.fromFunction2To3StringPrimitive
 import org.singlespaced.d3js.Selection
 import org.singlespaced.d3js.d3
 import io.equiv.eqfiddle.tool.arch.Control
@@ -100,7 +92,6 @@ class GraphRenderer(val main: Control)
     } yield new NodeLink(Symbol("relation ho"), l, en1.toSet, en2.toSet, (e1, l, e2))
 
     (nodes, nodeLinks ++ relationLinks, relationMetaLinks)
-  }
   
   def setStructure() = for { ts <- structure } {
     
@@ -158,7 +149,6 @@ class GraphRenderer(val main: Control)
     val nodeLabelUp = nodeLabelViews
         .data(nodes - GraphView.dummyNode, (_:GraphNode).nameId.name)
     nodeLabelUp.enter()
-        .append("text")
         .attr("class", ((d: GraphNode, i: Int) => "node-label " + d.meta.act.map(_.name).mkString(" ")))
         .text((_: GraphNode).nameId.name)
     nodeLabelUp.exit().remove()
@@ -185,13 +175,11 @@ class GraphRenderer(val main: Control)
     
     force.start()
     
-  }
 
   def setComment(comment: String) = {
     d3.select("#es-graph-comment")
       .html(comment)
       .classed("hidden", comment.isEmpty())
-  }
 
   def colorize(partition: Coloring[NodeID]) {
     val colorScale = d3.scale.category20()
@@ -199,14 +187,11 @@ class GraphRenderer(val main: Control)
       for (repHash <- partition.get(d.nameId)) {
         colorScale(repHash.toString)
       }
-    })
-  }
   
   def updateViews(event: dom.Event) {
     nodes.foreach(_.updatePos())
     links foreach { d: NodeLink =>
       d.updateDirAndCenter()
-    }
 
     nodeViews
       .attr("cx", ((d: GraphNode, i: Int) => d.x))
@@ -221,21 +206,14 @@ class GraphRenderer(val main: Control)
       .attr("y", (nl: NodeLink) => nl.centerY + (if (nl.isLoop) 45 else 0))
     relationViews
       .attr("d", (_: NodeLink).toSVGPathString)
-  }
   
   override def onSelectionChange() {
     nodeViews.classed("selected", { n: GraphNode =>
       n.selected
-    })
     nodeLabelViews.classed("selected", { n: GraphNode =>
-      n.selected
-    })
-  }
   override def onHoverChange() {
     nodeLabelViews.classed("hovered", { n: GraphNode =>
       n.hovered
-    })
-  }
   
   
   def notify(change: ModelComponent.Change) = change match {
@@ -245,18 +223,15 @@ class GraphRenderer(val main: Control)
         setComment("")
         relation = LabeledRelation()
         baseRelation = Set()
-      }
       setStructure()
     case Structure.StructurePartitionChange(partition) =>
       colorize(partition)
     case Structure.StructureRelationChange(relation) =>
       this.relation = LabeledRelation()
       this.baseRelation = relation.tupleSet.map(t => (Set(t._1), t._2, Set(t._3)))
-      setStructure()
     case Structure.StructureRichRelationChange(relation) =>
       this.relation = relation
       this.baseRelation = relation.lhs ++ relation.rhs
-      setStructure()
     case Structure.StructureCommentChange(comment) =>
       setComment(comment)
     case Structure.StructureSpectrumChange(spectrum, preords, postords, equations, distCoordsLR, distCoordsRL, comment) =>
@@ -264,6 +239,5 @@ class GraphRenderer(val main: Control)
       val spectrumView = new SpectrumView(spectrum, preords, postords, equations, distCoordsLR, distCoordsRL, "#es-spectrum-view")
     case _ =>
       
-  }
   
 }

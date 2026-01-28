@@ -15,9 +15,7 @@ trait Control extends ActionDispatcher {
    */
   val viewComponents = Queue[ViewComponent]()
   
-  /**
    * mutable list of registered model components
-   */
   val modelComponents = Queue[ModelComponent]()
   
   def broadcastChange(change: ModelComponent.Change) {
@@ -40,9 +38,7 @@ trait Control extends ActionDispatcher {
   
   def registerViewComponent(component: ViewComponent) {
     viewComponents.enqueue(component)
-  }
   
   def registerModelComponent(component: ModelComponent) {
     modelComponents.enqueue(component)
-  }
 }

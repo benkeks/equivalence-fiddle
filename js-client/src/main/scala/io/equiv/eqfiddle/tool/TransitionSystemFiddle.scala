@@ -1,6 +1,5 @@
 package io.equiv.eqfiddle.tool
 
-import scala.scalajs.js.annotation.{JSExportTopLevel, JSExport}
 import io.equiv.eqfiddle.tool.arch.Action
 import io.equiv.eqfiddle.tool.arch.ActionDispatcher
 import io.equiv.eqfiddle.tool.arch.Control
@@ -43,5 +42,4 @@ object TransitionSystemFiddle extends Control with ActionDispatcher {
     case _: Source.SourceAction => source
     case _: Structure.StructureAction => structure
     case _: Pipeline.PipelineAction => pipeline
-  }
 }

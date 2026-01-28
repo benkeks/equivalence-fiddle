@@ -1,9 +1,6 @@
 package io.equiv.eqfiddle.tool.view
 
 import scala.scalajs.js
-import scala.scalajs.js.UndefOr
-import scala.scalajs.js.UndefOr.any2undefOrA
-import scala.scalajs.js.UndefOr.undefOr2ops
 import org.singlespaced.d3js.Link
 import org.singlespaced.d3js.forceModule.Node
 import io.equiv.eqfiddle.tool.control.Structure
@@ -47,8 +44,8 @@ object GraphView {
     def updateMeta(metaInfo: Structure.NodeLabel, force: Boolean = false) = {
       if (meta != metaInfo || force) {
         meta = metaInfo
-        x = UndefOr.any2undefOrA(meta.x getOrElse x.get)
-        y = UndefOr.any2undefOrA(meta.y getOrElse y.get)
+        x = meta.x getOrElse x.get
+        y = meta.y getOrElse y.get
         px = x
         py = y
         fixedPermanently = meta.x.isDefined && meta.y.isDefined
@@ -65,33 +62,24 @@ object GraphView {
         } {
           val xDiff = tarX - currX
           if (Math.abs(xDiff) < 15.0) {
-            x = UndefOr.any2undefOrA(tarX)
+            x = tarX
           } else {
-            x = UndefOr.any2undefOrA(currX + 10.0 * Math.signum(xDiff))
+            x = currX + 10.0 * Math.signum(xDiff)
             fixed = 0
           }
         }
-        for {
           tarY <- positionStealTarget.map(_.centerY) orElse meta.y
           currY <- y.toOption
-        } {
           val yDiff = tarY - currY
           if (Math.abs(yDiff) < 15.0) {
-            y = UndefOr.any2undefOrA(tarY)
-          } else {
-            y = UndefOr.any2undefOrA(currY + 10.0 * Math.signum(yDiff))
-            fixed = 0
-          }
-        }
-      }
-    }
+            y = tarY
+            y = currY + 10.0 * Math.signum(yDiff)
     
     override def sameRep(a: Linkable) = a match {
       case o: GraphNode =>
         o.nameId equals nameId
       case _ =>
         false
-    }
 
     override def hasRep(a: Any) = (nameId == a)
     
@@ -101,11 +89,9 @@ object GraphView {
     override def hashCode = nameId.hashCode
     
     override def toString = id + nameId.name
-  }
   
   object GraphNode {
     var count: Double = 0.0
-  }
     
   class NodeLink(
       var kind: Symbol, 
@@ -146,7 +132,6 @@ object GraphView {
       sources.map(s => new LinkViewPart(this, s, isEnd = targets.contains(s))) ++
       targets.map(new LinkViewPart(this, _)) ++
       (if (targets.isEmpty) List(new LinkViewPart(this, dummyNode)) else List())
-    }
 
     def updateDirAndCenter() {
       srcCenter = if (sources.nonEmpty) (
@@ -159,24 +144,18 @@ object GraphView {
       tarCenter = if (targets.nonEmpty) (
         (targets.map(_.centerX).sum / targets.size),
         (targets.map(_.centerY).sum / targets.size)
-      ) else (
         srcCenter._1 + 50,
         srcCenter._2 + 50
-      )
       length = Math.hypot(tarCenter._1 - srcCenter._1, tarCenter._2 - srcCenter._2)
       dir = if (isLoop || length <= 0.0001) (
         (1,0)
-      ) else (
         (tarCenter._1 - srcCenter._1) / length,
         (tarCenter._2 - srcCenter._2) / length
-      )
-    }
 
     def integrate(nodes: Iterable[Linkable]): Option[NodeLink] = {
       val newSrc = sources.flatMap { n => nodes.find(n.sameRep(_)) }
       val newTar = targets.flatMap { n => nodes.find(n.sameRep(_)) }
       Some(new NodeLink(kind, label, newSrc, newTar, rep))
-    }
     
     def toSVGPathString = (
       ""
@@ -196,7 +175,6 @@ object GraphView {
     def sameRep(l: Linkable) = l.hasRep(rep)
 
     override def hasRep(a: Any) = rep == a
-  }
 
   class LinkViewPart(val link: NodeLink, val node: Linkable, val isEnd: Boolean = true) {
 
@@ -219,22 +197,16 @@ object GraphView {
               " C " + (link.centerX + .2 * link.length * link.dir._1) +","+ (link.centerY + .2 * link.length * link.dir._2)+
               " " + (.5 * (link.centerX + link.tarCenter._1)) +","+ (.5 * (link.centerY + link.tarCenter._2)) +
               " " + (node.centerX - endShortening * link.dir._1) +","+ (node.centerY - endShortening * link.dir._2)
-        }
       } else {
         if (link.targets.contains(node)) {
           "M"   + (link.centerX + 9) + " " + (link.centerY) +
             "A 30 30, 0, 1, 1, " + (node.centerX) + " " + (node.centerY + 9)
-        } else {
           "M " + link.centerX       +","+ link.centerY +
               " C" + (link.centerX - .3 * link.length * link.dir._1) +","+ (link.centerY - .3 * link.length * link.dir._2)+
               " " + (.5 * (link.centerX + link.srcCenter._1)) +","+ (.5 * (link.centerY + link.srcCenter._2)) +
               " " + (node.centerX + endShortening * link.dir._1)  +","+ (node.centerY + endShortening * link.dir._2)
-        }
-      }
-    }
     
     override def toString = node + "::" + link
-  }
 
   
 }
@@ -242,4 +214,3 @@ object GraphView {
 trait GraphView {
   val nodes = js.Array[GraphView.GraphNode]()
   val links = js.Array[GraphView.NodeLink]()
-}
