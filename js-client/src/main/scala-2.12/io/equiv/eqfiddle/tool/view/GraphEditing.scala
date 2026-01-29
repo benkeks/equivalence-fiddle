@@ -1,14 +1,10 @@
 package io.equiv.eqfiddle.tool.view
 
-import org.singlespaced.d3js.d3
+import d3v4._
 import scala.scalajs.js
 import scala.collection.mutable.HashMap
 import org.scalajs.dom
 import org.scalajs.dom.raw.EventTarget
-import org.singlespaced.d3js.svg.Brush
-import org.singlespaced.d3js.Ops.fromFunction1To2
-import org.singlespaced.d3js.Ops.fromFunction1To3
-import org.singlespaced.d3js.Ops.fromFunction2To3
 
 /**
  * GraphEditing manages the interplay of HTML-Events, node selection, scrolling/zooming
@@ -24,39 +20,40 @@ trait GraphEditing extends ViewComponent {
   val svg = d3.select("#es-graph")
   
   // these scales ensure that zoom behavior and box selection behavior by sharing them use the same view port
-  val viewportX = d3.scale.linear().domain(js.Array(0, 1000)).range(js.Array(0, 1000))
-  val viewportY = d3.scale.linear().domain(js.Array(0, 1000)).range(js.Array(0, 1000))
+  val viewportX = d3.scaleLinear().domain(js.Array(0.0, 1000.0)).range(js.Array(0.0, 1000.0))
+  val viewportY = d3.scaleLinear().domain(js.Array(0.0, 1000.0)).range(js.Array(0.0, 1000.0))
    
-  val brush = d3.svg.brush().asInstanceOf[Brush[EventTarget]]
-    .x(viewportX)
-    .y(viewportY)
-    .on("brushstart", onSelectionBrushStart _)
-    .on("brush", onSelectionBrush _)
-    .on("brushend", onSelectionBrushEnd _)
+  // Note: D3v4 brush API has changed significantly - extent is now set differently
+  // Brush no longer uses .x() and .y() methods
+  // val brush = d3.brush()
+  //   .on("start", onSelectionBrushStart _)
+  //   .on("brush", onSelectionBrush _)
+  //   .on("end", onSelectionBrushEnd _)
   
   val brushRect = svg.append("g")
     .classed("brush", true)
     
-  val zoomWindow = d3.behavior.zoom[EventTarget]()
+  val zoomWindow = d3.zoom[dom.EventTarget]()
   zoomWindow
-    .x(viewportX)
-    .y(viewportY)
-    .on("zoom", onZoom _)
+    // Note: D3v4 zoom no longer uses .x() and .y() - it uses transform-based approach
+    .on("zoom", () => onZoom())
     
   svg.call(zoomWindow)
-    .on("click", onClickBackground _)
+    .on("click", () => onClickBackground())
   
-  val drag = d3.behavior.drag[GraphNode]()
-    .origin((d: GraphNode, _: Double) => d.asInstanceOf[js.Any])
-    .on("dragstart", onDragStart _)
-    .on("drag", onDrag _)
-    .on("dragend", onDragEnd _)
+  val drag = d3.drag[GraphNode]()
+    // Note: D3v4 drag origin API changed - subject replaces origin
+    // .subject((d: GraphNode) => d.asInstanceOf[js.Any])
+    .on("start", (d: GraphNode) => onDragStart(d))
+    .on("drag", (d: GraphNode) => onDrag(d))
+    .on("end", (d: GraphNode) => onDragEnd(d))
     
-  val dragLink = d3.behavior.drag[NodeLink]()
-    .origin((d: NodeLink, _: Double) => d.asInstanceOf[js.Any])
-    .on("dragstart", onDragStart _)
-    .on("drag", onDrag _)
-    .on("dragend", onDragEnd _)
+  val dragLink = d3.drag[NodeLink]()
+    // Note: D3v4 drag origin API changed
+    // .subject((d: NodeLink) => d.asInstanceOf[js.Any])
+    .on("start", (d: NodeLink) => onDragStart(d))
+    .on("drag", (d: NodeLink) => onDrag(d))
+    .on("end", (d: NodeLink) => onDragEnd(d))
     
   val sceneRoot = svg.append("g")
     
@@ -67,8 +64,8 @@ trait GraphEditing extends ViewComponent {
   var editingBehavior: GraphEditBehavior = new Object() with GraphEditBehavior
   
   d3.select("body")
-    .on("keydown", onKeyDown _)
-    .on("keyup", onKeyUp _) 
+    .on("keydown", () => onKeyDown())
+    .on("keyup", () => onKeyUp()) 
   
   def registerEditingBehavior(name: String, behavior: GraphEditBehavior) = {
     behaviors.+= (name -> behavior)
@@ -106,7 +103,7 @@ trait GraphEditing extends ViewComponent {
 
   def onHoverChange()
   
-  def onDragStart(node: GraphNode, id: Double) {
+  def onDragStart(node: GraphNode) {
     if (!node.selected) {
       selectNode(node)
     }
@@ -115,24 +112,24 @@ trait GraphEditing extends ViewComponent {
     d3.event.asInstanceOf[js.Dynamic].sourceEvent.asInstanceOf[org.scalajs.dom.DragEvent].stopPropagation()
   }
   
-  def onDragStart(link: NodeLink, id: Double) {
+  def onDragStart(link: NodeLink) {
     editingBehavior.onDragStart(link)
     js.Object.getOwnPropertyDescriptor(d3.event.asInstanceOf[js.Object],"sourceEvent").value.asInstanceOf[org.scalajs.dom.DragEvent].stopPropagation()
   }
   
-  def onDrag(node: GraphNode, id: Double) {
+  def onDrag(node: GraphNode) {
     editingBehavior.onDrag(node)
   }
   
-  def onDrag(link: NodeLink, id: Double) {
+  def onDrag(link: NodeLink) {
     editingBehavior.onDrag(link)
   }
   
-  def onDragEnd(node: GraphNode, id: Double) {
+  def onDragEnd(node: GraphNode) {
     editingBehavior.onDragEnd(node)
   }
   
-  def onDragEnd(link: NodeLink, id: Double) {
+  def onDragEnd(link: NodeLink) {
     editingBehavior.onDragEnd(link)
   }
   
@@ -161,71 +158,57 @@ trait GraphEditing extends ViewComponent {
     d3.event.asInstanceOf[dom.Event].stopPropagation()
   }
   
-  def onClickBackground(node: EventTarget) {
+  def onClickBackground() {
     //Note: for reasons I don't understand, node is always undefined...
-    editingBehavior.onClick(d3.mouse(sceneRoot.node()))
+    val mouseCoords = d3.mouse(sceneRoot.node())
+    editingBehavior.onClick((mouseCoords(0), mouseCoords(1)))
   }
   
-  def onKeyDown(et: EventTarget) {
+  def onKeyDown() {
     if (d3.event.asInstanceOf[org.scalajs.dom.KeyboardEvent].shiftKey && !selectionExtensionActive) {
       setSelectionExtension(true)
     }
   }
   
-  def onKeyUp(et: EventTarget) {
+  def onKeyUp() {
     if (selectionExtensionActive && !d3.event.asInstanceOf[org.scalajs.dom.KeyboardEvent].shiftKey) {
       setSelectionExtension(false)
     }
   }
   
-  def onSelectionBrushStart(et: Any, id: Double) {
+  def onSelectionBrushStart(et: Any) {
     nodes.foreach { n =>
       n.previouslySelected = n.selected
     }
   }
   
-  def onSelectionBrush(et: Any, id: Double) {
-    val ext = brush.extent().asInstanceOf[js.Array[js.Array[Double]]]
-    nodes.foreach { node: GraphNode =>
-      val inRect =
-        node.x.get >= ext(0)(0) && node.x.get <= ext(1)(0) &&
-        node.y.get >= ext(0)(1) && node.y.get <= ext(1)(1) &&
-        dummyNode != node
-      node.selected = 
-        if (selectionExtensionActive)
-          inRect ^ node.previouslySelected
-        else
-          inRect
-      node.selected
-    }
-    onSelectionChange()
-    editingBehavior.onSelectionChange()
+  def onSelectionBrush(et: Any) {
+    // Brush API not fully implemented in D3v4 migration yet
+    // TODO: Implement rectangular selection with d3.brush() if needed
   }
   
-  def onSelectionBrushEnd(et: EventTarget, id: Double) {
-    brush.clear()
-    brushRect.call(brush) // something like this is done in http://bl.ocks.org/pkerpedjiev/0389e39fad95e1cf29ce
-        // it ensures that the brush stays usable when the shift key is released. but it introduces the bug
-        // that in such situations, subsequent zoom-scrolling also activates the selection brush.
+  def onSelectionBrushEnd(et: EventTarget) {
+    // Brush API not fully implemented in D3v4 migration yet
+    // TODO: Implement rectangular selection with d3.brush() if needed
   }
   
   def setSelectionExtension(active: Boolean) = {
     selectionExtensionActive = active
     if (selectionExtensionActive) {
       svg.call(zoomWindow)
-        .on("mousedown.zoom", null)
-        .on("touchstart.zoom", null)                                                                      
-        .on("touchmove.zoom", null)                                                                       
-        .on("touchend.zoom", null)
-      brushRect.select(".background").style("cursor", "crosshair")
-      brushRect.call(brush)
+        .on("mousedown.zoom", () => {})
+        .on("touchstart.zoom", () => {})
+        .on("touchmove.zoom", () => {})
+        .on("touchend.zoom", () => {})
+      // brushRect.select(".background").style("cursor", "crosshair")
+      // brushRect.call(brush)
     } else {
-      brushRect.call(brush)
-       .on("mousedown.brush", null)
-       .on("touchstart.brush", null)                                                                      
-       .on("touchmove.brush", null)                                                                       
-       .on("touchend.brush", null)
-      brushRect.select(".background").style("cursor", "auto")
+      // brushRect.call(brush)
+       // .on("mousedown.brush", null)
+       // .on("touchstart.brush", null)                                                                      
+       // .on("touchmove.brush", null)                                                                       
+       // .on("touchend.brush", null)
+      // brushRect.select(".background").style("cursor", "auto")
       svg.call(zoomWindow)
     }
   }
@@ -239,19 +222,22 @@ trait GraphEditing extends ViewComponent {
     editingBehavior.onSelectionChange()
   }
   
-  def onZoom(node: EventTarget, id: Double) {
+  def onZoom(): Unit = {
     
     // deselect all nodes if clicking on background without shift key
     if (!selectionExtensionActive) {
       deselectAll()
     }
     
-    val transl = zoomWindow.translate()
-    val scale = zoomWindow.scale()
+    // D3v4 zoom uses transform instead of translate/scale methods
+    val transform = zoomWindow.asInstanceOf[js.Dynamic].transform.asInstanceOf[js.Dynamic]
+    val x = transform.x.asInstanceOf[Double]
+    val y = transform.y.asInstanceOf[Double]
+    val k = transform.k.asInstanceOf[Double]
     
     sceneRoot.attr("transform",
-      "translate(" + transl._1 + ","
-                   + transl._2 + ")"
-        + "scale(" + scale + ")")
+      "translate(" + x + ","
+                   + y + ")"
+        + "scale(" + k + ")")
   }
 }

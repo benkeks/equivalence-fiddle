@@ -2,10 +2,7 @@ package io.equiv.eqfiddle.tool.view
 
 import scala.scalajs.js
 import scala.scalajs.js.UndefOr
-import scala.scalajs.js.UndefOr.any2undefOrA
-import scala.scalajs.js.UndefOr.undefOr2ops
-import org.singlespaced.d3js.Link
-import org.singlespaced.d3js.forceModule.Node
+import d3v4._
 import io.equiv.eqfiddle.tool.control.Structure
 import io.equiv.eqfiddle.tool.model.NodeID
 
@@ -26,7 +23,7 @@ object GraphView {
       var nameId: NodeID,
       var meta: Structure.NodeLabel,
       var positionStealTarget: Option[Linkable] = None)
-    extends Node with Linkable {
+    extends SimulationNodeImpl with Linkable {
     
     GraphNode.count = GraphNode.count + 1
     
@@ -40,35 +37,37 @@ object GraphView {
     
     x = 100 + Math.cos(GraphNode.count * 5.1) * 100
     y = 100 + Math.sin(GraphNode.count * 5.1) * 100
-    weight = 1.0
+    // weight = 1.0  // Not used in d3v4
     
     updateMeta(meta, true)
     
     def updateMeta(metaInfo: Structure.NodeLabel, force: Boolean = false) = {
       if (meta != metaInfo || force) {
         meta = metaInfo
-        x = UndefOr.any2undefOrA(meta.x getOrElse x.get)
-        y = UndefOr.any2undefOrA(meta.y getOrElse y.get)
-        px = x
-        py = y
+        val newX = meta.x.map(_.asInstanceOf[Double]).getOrElse(x.getOrElse(0.0))
+        val newY = meta.y.map(_.asInstanceOf[Double]).getOrElse(y.getOrElse(0.0))
+        x = newX
+        y = newY
+        // fx and fy replaces px, py in d3v4 - these fix node positions
         fixedPermanently = meta.x.isDefined && meta.y.isDefined
-        fixed = if (fixedPermanently) 1 else 0
+        fx = if (fixedPermanently) newX else js.undefined
+        fy = if (fixedPermanently) newY else js.undefined
       }
     }
     
     def updatePos() = {
-      if ((fixedPermanently || positionStealTarget.nonEmpty) && fixed.get <= 1.5) {
-        fixed = 1
+      if ((fixedPermanently || positionStealTarget.nonEmpty)) {
         for {
           tarX <- positionStealTarget.map(_.centerX) orElse meta.x
           currX <- x.toOption
         } {
           val xDiff = tarX - currX
           if (Math.abs(xDiff) < 15.0) {
-            x = UndefOr.any2undefOrA(tarX)
+            x = tarX
+            fx = tarX
           } else {
-            x = UndefOr.any2undefOrA(currX + 10.0 * Math.signum(xDiff))
-            fixed = 0
+            x = currX + 10.0 * Math.signum(xDiff)
+            fx = js.undefined
           }
         }
         for {
@@ -77,10 +76,11 @@ object GraphView {
         } {
           val yDiff = tarY - currY
           if (Math.abs(yDiff) < 15.0) {
-            y = UndefOr.any2undefOrA(tarY)
+            y = tarY
+            fy = tarY
           } else {
-            y = UndefOr.any2undefOrA(currY + 10.0 * Math.signum(yDiff))
-            fixed = 0
+            y = currY + 10.0 * Math.signum(yDiff)
+            fy = js.undefined
           }
         }
       }
@@ -113,11 +113,11 @@ object GraphView {
       var sources: Set[Linkable],
       var targets: Set[Linkable],
       var rep: Any)
-    extends Link[GraphNode] with Linkable {
+    extends SimulationLinkImpl[GraphNode, GraphNode] with Linkable {
     
-    val source = sources.collect { case gn: GraphNode => gn }.headOption.getOrElse(dummyNode)
+    var source = sources.collect { case gn: GraphNode => gn }.headOption.getOrElse(dummyNode)
 
-    val target = targets.collect { case gn: GraphNode => gn }.headOption.getOrElse(dummyNode)
+    var target = targets.collect { case gn: GraphNode => gn }.headOption.getOrElse(dummyNode)
 
     var length: Double = 0
     

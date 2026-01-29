@@ -4,14 +4,10 @@ import scala.Left
 import scala.Right
 import scala.scalajs.js
 import scala.scalajs.js.Any.jsArrayOps
-import scala.scalajs.js.UndefOr.any2undefOrA
-import scala.scalajs.js.UndefOr.undefOr2ops
 import scala.scalajs.js.|.from
+import org.scalajs.dom
 import org.scalajs.dom.raw.HTMLInputElement
-import org.singlespaced.d3js.Ops.fromFunction1To3
-import org.singlespaced.d3js.Ops.fromFunction2To3StringPrimitive
-import org.singlespaced.d3js.Selection
-import org.singlespaced.d3js.d3
+import d3v4._
 import io.equiv.eqfiddle.tool.control.Source
 import io.equiv.eqfiddle.tool.control.Structure
 import io.equiv.eqfiddle.tool.view.GraphView.NodeLink
@@ -52,7 +48,7 @@ class GraphMoveNode(renderer: GraphEditing) extends GraphEditBehavior {
   
   override def onDragStart(node: GraphNode) {
     affectedNodes = renderer.getSelectedNodes()
-    affectedNodes.foreach { n => n.fixed = 2 }
+    affectedNodes.foreach { n => n.fx = n.x; n.fy = n.y }
   }
   
   override def onDrag(node: GraphNode) {
@@ -60,15 +56,16 @@ class GraphMoveNode(renderer: GraphEditing) extends GraphEditBehavior {
     val y = js.Object.getOwnPropertyDescriptor(d3.event.asInstanceOf[js.Object],"dy").value.asInstanceOf[Double]
     
     affectedNodes.map { n =>
-      n.px = n.px.getOrElse(0.0) + x
-      n.py = n.py.getOrElse(0.0) + y
+      n.x = n.x.getOrElse(0.0) + x
+      n.y = n.y.getOrElse(0.0) + y
     }
   }
   
   override def onDragEnd(node: GraphNode) {
     val updates = affectedNodes.map { n =>
-      n.fixed = 1
-      (n.nameId.name, Structure.NodeLabel(node.meta.act - Symbol("implicit-main"), n.px.toOption, n.py.toOption))
+      n.fx = js.undefined
+      n.fy = js.undefined
+      (n.nameId.name, Structure.NodeLabel(node.meta.act - Symbol("implicit-main"), n.x.toOption, n.y.toOption))
     }
     renderer.triggerAction(Source.UpdateNodeAnnotationAttributes(updates))
   }
@@ -104,9 +101,7 @@ class GraphEditNode(renderer: GraphEditing) extends GraphEditBehavior {
       val (x,y) = coords
       val node = new GraphNode(NodeID("newEvent"), Structure.emptyLabel)
       node.x = x
-      node.px = x
       node.y = y
-      node.py = y
       newNode = Some(node)
       activeNode = newNode
       nameInput

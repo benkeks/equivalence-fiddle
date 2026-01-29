@@ -6,19 +6,12 @@ import scala.scalajs.js.Any.fromFunction2
 import scala.scalajs.js.Any.jsArrayOps
 import scala.scalajs.js.Any.wrapArray
 import scala.scalajs.js.Tuple2.fromScalaTuple2
-import scala.scalajs.js.UndefOr.undefOr2ops
 import scala.scalajs.js.|.from
 import org.scalajs.dom
 import org.scalajs.dom.raw.EventTarget
 import org.scalajs.dom.raw.HTMLInputElement
-import org.singlespaced.d3js.Ops.asPrimitive
-import org.singlespaced.d3js.Ops.fromFunction1To2
-import org.singlespaced.d3js.Ops.fromFunction1To3
-import org.singlespaced.d3js.Ops.fromFunction2To3
-import org.singlespaced.d3js.Ops.fromFunction2To3DoublePrimitive
-import org.singlespaced.d3js.Ops.fromFunction2To3StringPrimitive
-import org.singlespaced.d3js.Selection
-import org.singlespaced.d3js.d3
+import d3v4._
+import d3v4.d3selection.Selection
 import io.equiv.eqfiddle.tool.arch.Control
 import io.equiv.eqfiddle.tool.control.ModelComponent
 import io.equiv.eqfiddle.tool.control.Structure
@@ -42,19 +35,19 @@ class GraphRenderer(val main: Control)
   registerEditingBehavior("es-graph-examine", new GraphExamineNodes(this))
   
   behaviors.foreach{ case (n: String, b: GraphEditBehavior) =>
-    d3.select("#"+n).on("click", {_: EventTarget => setEditingBehavior(n)})
+    d3.select("#"+n).on("click", () => setEditingBehavior(n))
   }
   
   setEditingBehavior("es-graph-move")
   
-  val force = d3.layout.force[GraphNode, NodeLink] ()
-      .charge(-100.0)
-      .chargeDistance(150.0)
-      .linkStrength(0.3)
-      .size((700.0, 700.0))
-      .gravity(.02)
-      .nodes(nodes)
-      .links(links)
+  // D3v4: Force layout API changed significantly
+  // d3.layout.force() -> d3.forceSimulation()
+  // Forces are now separate and added via .force()
+  val force = d3.forceSimulation[GraphNode](nodes)
+      .force("charge", d3.forceManyBody[GraphNode]().strength(-100.0))
+      .force("link", d3.forceLink[GraphNode, NodeLink](links).strength(0.3))
+      .force("center", d3.forceCenter[GraphNode](350.0, 350.0))
+      .alphaDecay(0.02)
   
   val layerNodes = sceneRoot.append("g").classed("layer-nodes", true)
   val layerLinks = sceneRoot.append("g").classed("layer-links", true)
@@ -127,8 +120,8 @@ class GraphRenderer(val main: Control)
     val linkUp = linkPartViews.data(links.flatMap(_.viewParts), (_: LinkViewPart).toString)
     linkUp.enter()
         .append("path")
-        .attr("class", (d: LinkViewPart, i: Int) => "link " + d.link.kind.name + " " + d.link.label)
-        .attr("marker-end", (d: LinkViewPart, i: Int) => if (d.isEnd) "url(#" + d.link.kind.name.split(" ")(0) + ")" else "none")
+        .attr("class", (d: LinkViewPart) => "link " + d.link.kind.name + " " + d.link.label)
+        .attr("marker-end", (d: LinkViewPart) => if (d.isEnd) "url(#" + d.link.kind.name.split(" ")(0) + ")" else "none")
 
     linkUp.exit().remove()
     linkPartViews = layerLinks.selectAll(".link")
@@ -136,7 +129,7 @@ class GraphRenderer(val main: Control)
     val linkLabelUp = linkLabelViews.data(links, (_: NodeLink).toString)
     linkLabelUp.enter()
         .append("text")
-        .attr("class", (d: NodeLink, i: Int) => "link-label " + d.kind.name + " " + d.label)
+        .attr("class", (d: NodeLink) => "link-label " + d.kind.name + " " + d.label)
         .text((_: NodeLink).label)
     linkLabelUp.exit().remove()
     linkLabelViews = layerMeta.selectAll(".link-label")
@@ -144,14 +137,14 @@ class GraphRenderer(val main: Control)
     val nodeUp = nodeViews.data(nodes - GraphView.dummyNode, (_:GraphNode).nameId.name)
     nodeUp.enter()
         .append("circle")
-        .attr("cx", ((d: GraphNode, i: Int) => d.x))
-        .attr("cy", ((d: GraphNode, i: Int) => d.y))
+        .attr("cx", ((d: GraphNode) => d.x))
+        .attr("cy", ((d: GraphNode) => d.y))
         .attr("r", 7)
-        .on("mousemove", onHover _)
-        .on("mouseout", onHoverEnd _)
-        .on("click", onClick _)
+        .on("mousemove", (d: GraphNode) => onHover(d))
+        .on("mouseout", (d: GraphNode) => onHoverEnd(d))
+        .on("click", (d: GraphNode) => onClick(d))
         .call(drag)
-    nodeUp.attr("class", ((d: GraphNode, i: Int) => "node " + d.meta.act.map(_.name).mkString(" ")))
+    nodeUp.attr("class", ((d: GraphNode) => "node " + d.meta.act.map(_.name).mkString(" ")))
     nodeUp.exit().remove()
     nodeViews = layerNodes.selectAll(".node")
         
@@ -159,7 +152,7 @@ class GraphRenderer(val main: Control)
         .data(nodes - GraphView.dummyNode, (_:GraphNode).nameId.name)
     nodeLabelUp.enter()
         .append("text")
-        .attr("class", ((d: GraphNode, i: Int) => "node-label " + d.meta.act.map(_.name).mkString(" ")))
+        .attr("class", ((d: GraphNode) => "node-label " + d.meta.act.map(_.name).mkString(" ")))
         .text((_: GraphNode).nameId.name)
     nodeLabelUp.exit().remove()
     nodeLabelViews = layerMeta.selectAll(".node-label")
@@ -176,14 +169,16 @@ class GraphRenderer(val main: Control)
       n2.positionStealTarget = Some(n1)
     }
 
-    force.linkDistance((l: NodeLink, d: Double) => l.kind match {
+    // D3v4: linkDistance is now set on the link force itself
+    force.force("link").asInstanceOf[d3force.Link[GraphNode, NodeLink]].distance((l: NodeLink) => l.kind match {
       case _ => 80.0
     })
     force.alpha(1)
 
-    force.on("tick", updateViews _)
+    force.on("tick", () => updateViews(null))
     
-    force.start()
+    // D3v4: .start() is replaced by .restart() or setting .alpha()
+    force.restart()
     
   }
 
@@ -194,8 +189,10 @@ class GraphRenderer(val main: Control)
   }
 
   def colorize(partition: Coloring[NodeID]) {
-    val colorScale = d3.scale.category20()
-    nodeViews.style("stroke", { (d: GraphNode, i: Int) =>
+    // D3v4: d3.scale.category20() is now d3.schemeCategory20 (array of colors) 
+    // or use d3.scaleOrdinal with schemeCategory20
+    val colorScale = d3.scaleOrdinal(d3.schemeCategory20)
+    nodeViews.style("stroke", { (d: GraphNode) =>
       for (repHash <- partition.get(d.nameId)) {
         colorScale(repHash.toString)
       }
@@ -209,11 +206,11 @@ class GraphRenderer(val main: Control)
     }
 
     nodeViews
-      .attr("cx", ((d: GraphNode, i: Int) => d.x))
-      .attr("cy", ((d: GraphNode, i: Int) => d.y))
+      .attr("cx", ((d: GraphNode) => d.x))
+      .attr("cy", ((d: GraphNode) => d.y))
     nodeLabelViews
-      .attr("x", ((d: GraphNode, i: Int) => d.x.get + 4))
-      .attr("y", ((d: GraphNode, i: Int) => d.y.get - 10))
+      .attr("x", ((d: GraphNode) => d.x.get + 4))
+      .attr("y", ((d: GraphNode) => d.y.get - 10))
     linkPartViews
       .attr("d", (_: LinkViewPart).toSVGPathString)
     linkLabelViews

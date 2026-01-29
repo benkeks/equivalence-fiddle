@@ -9,7 +9,6 @@ import scala.scalajs.js.Any.jsArrayOps
 import scala.scalajs.js.Any.wrapArray
 import scala.scalajs.js.URIUtils
 import scala.scalajs.js.|.from
-import org.scalajs.jquery.jQuery
 import org.denigma.codemirror.CodeMirror
 import org.denigma.codemirror.Editor
 import org.denigma.codemirror.extensions.EditorConfig
@@ -19,19 +18,14 @@ import org.scalajs.dom.raw.EventTarget
 import org.scalajs.dom.raw.HTMLElement
 import org.scalajs.dom.raw.HTMLInputElement
 import org.scalajs.dom.raw.HTMLTextAreaElement
-import org.scalajs.dom.raw.SVGSVGElement
 import org.scalajs.dom.raw.UIEvent
-import org.singlespaced.d3js.Ops.fromFunction1To2
-import org.singlespaced.d3js.Ops.fromFunction1To3
-import org.singlespaced.d3js.Ops.fromFunction2To3
-import org.singlespaced.d3js.d3
+import d3v4._
 import io.equiv.eqfiddle.tool.arch.Control
 import io.equiv.eqfiddle.tool.control.ModelComponent
 import io.equiv.eqfiddle.ccs.Example
 import io.equiv.eqfiddle.tool.control.Source
 import io.equiv.eqfiddle.tool.control.Structure
 import io.equiv.eqfiddle.tool.control.StructureOperation
-import org.scalajs.jquery.JQueryEventObject
 import io.equiv.eqfiddle.tool.control.Pipeline
 import io.equiv.eqfiddle.algo.AlgorithmLogging
 import io.equiv.eqfiddle.tool.model.NodeID
@@ -58,6 +52,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
         .mode("dces")
         .lineNumbers(true)
         .gutters(js.Array("CodeMirror-linenumbers", PROBLEM_GUTTER))
+        .result
     CodeMirror.fromTextArea(editorNode, cfg)
   }
   
@@ -85,16 +80,15 @@ class SourceEditor(val main: Control) extends ViewComponent {
     triggerLineAction(line)
   }: js.Function2[Editor, Int, Unit])
 
-  d3.select("#es-load-file").node().asInstanceOf[HTMLInputElement].onchange = onLoadFile _
+  d3.select("#es-load-file").node().asInstanceOf[HTMLInputElement].onchange = (_: dom.Event) => onLoadFile()
   
   d3.select("#es-export")
-    .on("click", onExport _)
-    
-  val sourceButton = jQuery("#es-graph-mode-edit")
+    .on("click", () => onExport())
   
-  sourceButton.on("click", { ev: JQueryEventObject => 
+  val sourceButton = d3.select("#es-graph-mode-edit")
+  
+  sourceButton.on("click", () => {
     editor.swapDoc(sourceDoc)
-    null
   })
   def triggerLineAction(line: Int) = {
     for {
@@ -112,8 +106,8 @@ class SourceEditor(val main: Control) extends ViewComponent {
       triggerAction(Source.LoadDefinition(newText))
     }
   }
-    
-  def onExport(et: EventTarget) {
+  
+  def onExport() {
     
     val newText = sourceDoc.getValue()
     val textUri = URIUtils.encodeURIComponent(newText)
@@ -121,17 +115,15 @@ class SourceEditor(val main: Control) extends ViewComponent {
       .attr("href", "data:text/plain;charset=utf-8,"+textUri)
       .attr("download", name + ".txt")
       
-    val svg = dom.document.getElementById("es-graph").asInstanceOf[SVGSVGElement]
-    val svgMutator = d3.select(svg)
-    val sel = svgMutator.selectAll[dom.raw.Element]("path")(0).foreach { e: EventTarget =>
-        if (js.isUndefined(e)) {
-          "a"
-        } else {
+    val svg = dom.document.getElementById("es-graph")
+    val svgMutator = d3.select(svg.asInstanceOf[Any].asInstanceOf[String])
+    svgMutator.selectAll("path").each{ (e: Any, i: Int) =>
+        if (!js.isUndefined(e)) {
           val el = e.asInstanceOf[dom.raw.Element]
           el.setAttribute("stroke-dasharray",
               dom.window.getComputedStyle(el, "").strokeDasharray)
-         
-        } }
+        }
+    }
     val style = dom.document.getElementById("es-graph-style").innerHTML
     val svgUri = URIUtils.encodeURIComponent(
       "<svg>\n" +
@@ -154,13 +146,13 @@ class SourceEditor(val main: Control) extends ViewComponent {
     
   }
   
-  def onLoadFile(ev: Event) {
-    val fileBlob = ev.target.asInstanceOf[HTMLInputElement].files(0)
+  def onLoadFile() {
+    val fileBlob = dom.document.getElementById("es-load-file").asInstanceOf[HTMLInputElement].files(0)
     
     AlgorithmLogging.debugLog("reading file: " + fileBlob.name)
     
     val reader = new dom.FileReader()
-    reader.onload = (e: UIEvent) => {
+    reader.onload = (_: dom.raw.UIEvent) => {
       val contents = reader.result.asInstanceOf[String]
       triggerAction(Source.LoadDefinition(contents))
     }
@@ -174,7 +166,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
     AlgorithmLogging.debugLog("reading file: " + fileBlob.name)
     
     val reader = new dom.FileReader()
-    reader.onload = (e: UIEvent) => {
+    reader.onload = (_: dom.raw.UIEvent) => {
       val contents = reader.result.asInstanceOf[String]
       triggerAction(Source.LoadDefinition(contents))
     }
@@ -211,9 +203,9 @@ class SourceEditor(val main: Control) extends ViewComponent {
       .enter()
         .append("li")
         .classed("es-load-example", true)
-        .classed("divider", (s: Example, i: Int) => s.slug == "diamond")
-        .html((s: Example, i: Int) => "<a href=\"#" + s.slug + "\">" + s.name + "</a>")
-        .on("click", {(s: Example, i: Int) => 
+        .classed("divider", (s: Example) => s.slug == "diamond")
+        .html((s: Example) => "<a href=\"#" + s.slug + "\">" + s.name + "</a>")
+        .on("click", {(s: Example) => 
           triggerAction(Source.LoadDefinition(s.code))
         })
   }
@@ -232,8 +224,8 @@ class SourceEditor(val main: Control) extends ViewComponent {
         .enter()
           .append("li")
           .classed("es-apply-analyzer", true)
-          .html((a: (String, String, String), i: Int) => "<a href=\"#" + a._1 + "\" title=\""+ a._3 + "\">" + a._2 + "</a>")
-          .on("click", {(a: (String, String, String), i: Int) => 
+          .html((a: (String, String, String)) => "<a href=\"#" + a._1 + "\" title=\""+ a._3 + "\">" + a._2 + "</a>")
+          .on("click", {(a: (String, String, String)) => 
             triggerAction(Structure.StructureCallOperation(a._1))
           })
     }
@@ -272,9 +264,8 @@ class SourceEditor(val main: Control) extends ViewComponent {
           ""
       })
       leChild.setAttribute("class", "es-pipeline-replay-step")
-      jQuery(leChild).on("click", { ev: JQueryEventObject => 
+      d3.select(leChild.asInstanceOf[Any].asInstanceOf[String]).on("click", () => {
         triggerAction(Structure.StructureDoReplayStep(i))
-        null
       })
       node.appendChild(leChild)
     }
