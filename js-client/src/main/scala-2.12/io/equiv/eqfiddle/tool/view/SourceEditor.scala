@@ -278,7 +278,8 @@ class SourceEditor(val main: Control) extends ViewComponent {
   }
   
   def getURLSampleSlug() = {
-    dom.window.location.hash.substring(1)
+    val hash = dom.window.location.hash
+    if (hash == null || hash.length <= 1) "" else hash.substring(1)
   }
   
   def notify(change: ModelComponent.Change) = change match {

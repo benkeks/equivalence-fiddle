@@ -1,6 +1,7 @@
 package io.equiv.eqfiddle.tool
 
-import scala.scalajs.js.annotation.{JSExportTopLevel, JSExport}
+import scala.scalajs.js
+import scala.scalajs.js.annotation.{JSImport, JSExportTopLevel, JSExport}
 import io.equiv.eqfiddle.tool.arch.Action
 import io.equiv.eqfiddle.tool.arch.ActionDispatcher
 import io.equiv.eqfiddle.tool.arch.Control
@@ -18,11 +19,12 @@ object TransitionSystemFiddle extends Control with ActionDispatcher {
   val structure = new Structure(this)
   val pipeline = new Pipeline(this)
   
-  val renderer = new GraphRenderer(this)
-  val editor = new SourceEditor(this)
+  lazy val renderer = new GraphRenderer(this)
+  lazy val editor = new SourceEditor(this)
 
   @JSExport
   def main(): Unit = {
+    JSImportGlobals.ensureGlobals()
     source.init()
     structure.init()
     val initialCodeParameter = editor.getURLSampleSlug()
@@ -43,5 +45,27 @@ object TransitionSystemFiddle extends Control with ActionDispatcher {
     case _: Source.SourceAction => source
     case _: Structure.StructureAction => structure
     case _: Pipeline.PipelineAction => pipeline
+  }
+}
+
+private object JSImportGlobals {
+  @JSImport("d3", JSImport.Namespace)
+  @js.native object D3Module extends js.Object
+
+  @JSImport("jquery", JSImport.Default)
+  @js.native object JQueryModule extends js.Object
+
+  @JSImport("codemirror", JSImport.Default)
+  @js.native object CodeMirrorModule extends js.Object
+
+  @JSImport("bootstrap", JSImport.Namespace)
+  @js.native object BootstrapModule extends js.Object
+
+  def ensureGlobals(): Unit = {
+    js.Dynamic.global.d3 = D3Module
+    js.Dynamic.global.jQuery = JQueryModule
+    js.Dynamic.global.$ = JQueryModule
+    js.Dynamic.global.CodeMirror = CodeMirrorModule
+    val _ = BootstrapModule
   }
 }

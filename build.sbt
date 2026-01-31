@@ -25,9 +25,8 @@ lazy val web = (project in file("web")).settings(
   scalaVersion := scVersion,
   scalaJSProjects := Seq(jsClient),
   Assets / pipelineStages := Seq(scalaJSPipeline),
-  Compile / compile := ((Compile / compile) dependsOn scalaJSPipeline dependsOn (jsClient / Compile / packageJSDependencies)).value,
-  Assets / unmanagedResources += (jsClient / Compile / fastLinkJS / artifactPath).value,
-  Assets / unmanagedResources += (jsClient / Compile / packageJSDependencies / artifactPath).value
+  Compile / compile := ((Compile / compile) dependsOn (jsClient / Compile / fastOptJS / webpack)).value,
+  Assets / unmanagedResources ++= (jsClient / Compile / fastOptJS / webpack).value.map(_.data)
 ).enablePlugins(SbtWeb)
 
 lazy val shared = (project in file("shared")).settings(
@@ -50,7 +49,7 @@ lazy val jsClient = (project in file("js-client")).settings(
   scalacOptions ++= scalacOpts,
   scalaJSLinkerConfig := {
     scalaJSLinkerConfig.value
-      .withModuleKind(ModuleKind.ESModule)
+      .withModuleKind(ModuleKind.CommonJSModule)
       .withOutputPatterns(OutputPatterns.fromJSFile("eqfiddle-client.js"))
   },
   resolvers += "jitpack" at "https://jitpack.io",
@@ -60,22 +59,29 @@ lazy val jsClient = (project in file("js-client")).settings(
     "com.github.karasiq" %%% "scalajs-bootstrap" % "2.4.2",
     "org.scala-js" %%% "scalajs-dom" % "1.0.0"
   ),
+  Compile / npmDependencies ++= Seq(
+    "d3" -> "5.9.2",
+    "jquery" -> "3.4.1",
+    "bootstrap" -> "^3.4.1",
+    "codemirror" -> "5.13.0"
+  ),
+  Compile / npmResolutions ++= Map(
+    "d3" -> "5.9.2",
+    "jquery" -> "3.4.1",
+    "bootstrap" -> "^3.4.1"
+  ),
+  Compile / fastOptJS / webpackConfigFile := Some(baseDirectory.value / "webpack.config.js"),
+  Compile / fullOptJS / webpackConfigFile := Some(baseDirectory.value / "webpack.config.js"),
+  webpack / version := "5.88.2",
+  webpackCliVersion := "5.1.4",
+  startWebpackDevServer / version := "4.15.1",
   dependencyOverrides += "org.scala-js" %%% "scalajs-dom" % "1.0.0",
   Compile / fastLinkJS / artifactPath :=
       ((Compile / classDirectory).value / "app" / ((fastLinkJS / moduleName).value + ".js")),
   Compile / fullOptJS / artifactPath := (Compile / fastLinkJS / artifactPath).value,
-  jsDependencies ++= Seq(
-    "org.webjars" % "d3js" % "5.9.1" / "d3.min.js",
-    "org.webjars" % "codemirror" % "5.13" / "codemirror.js",
-    "org.webjars" % "jquery" % "2.1.3" / "jquery.js",
-    "org.webjars" % "bootstrap" % "3.4.1" / "bootstrap.min.js"
-  ),
-  packageJSDependencies / skip := false,
-  Compile / packageJSDependencies / artifactPath := ((Compile / classDirectory).value / "app" / ((fastLinkJS / moduleName).value + "-jsdeps.js")),
-  Global / excludeLintKeys += Compile / packageJSDependencies / artifactPath,
   Compile / unmanagedSourceDirectories +=
       baseDirectory.value / ".." / "shared" / "src" / "main" / "scala-2.12"
-).aggregate(shared).dependsOn(shared).enablePlugins(ScalaJSPlugin, ScalaJSWeb, JSDependenciesPlugin)
+).aggregate(shared).dependsOn(shared).enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin, ScalaJSWeb)
 
 lazy val jsApi = (project in file("js-api")).settings(
   scalaVersion := scVersion,

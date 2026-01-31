@@ -4,18 +4,6 @@
 <head>
   <meta charset="UTF-8">
   <title>Linear-Time–Branching-Time Spectroscope</title>
-  <script type="importmap">
-  {
-    "imports": {
-      "d3": "./eqfiddle-client-jsdeps.js",
-      "d3-drag": "./eqfiddle-client-jsdeps.js",
-      "d3-force": "./eqfiddle-client-jsdeps.js",
-      "d3-scale": "./eqfiddle-client-jsdeps.js",
-      "d3-selection": "./eqfiddle-client-jsdeps.js",
-      "d3-zoom": "./eqfiddle-client-jsdeps.js"
-    }
-  }
-  </script>
   <link rel="stylesheet" href="lib/codemirror/lib/codemirror.css">
   <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css">
   <link rel="stylesheet" href="css/syntax.css">
@@ -429,14 +417,10 @@
     </div>
   </div>
 
-  <!-- Load jsdeps to set up global d3 and other libraries -->
-  <script src="./eqfiddle-client-jsdeps.js"></script>
-  <script src="./js/cm_transitionsystem_mode.js"></script>
-  <script src="./eqfiddle-client-fastopt/eqfiddle-client.js" type="module"></script>
-  <!-- Load the app as an ES6 module -->
-  <script type="module">
+    <script src="./eqfiddle-client-fastopt-bundle.js"></script>
+    <script>
       TransitionSystemFiddle.main();
-  </script>
+    </script>
 
 </body>
 
