@@ -6,7 +6,7 @@ import io.equiv.eqfiddle.tool.control.ModelComponent
 trait ViewComponent {
   val main: Control
   
-  def notify(change: ModelComponent.Change)
+  def notify(change: ModelComponent.Change): Unit
   
   final def triggerAction = main.dispatchAction(_)
   

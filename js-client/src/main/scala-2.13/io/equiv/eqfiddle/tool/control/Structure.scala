@@ -34,7 +34,7 @@ class Structure(val main: Control) extends ModelComponent {
 
   val operations = HashMap[String, StructureOperation]()
 
-  def init() {
+  def init(): Unit = {
 
   }
 
@@ -45,17 +45,17 @@ class Structure(val main: Control) extends ModelComponent {
 
   override def notify(c: ModelComponent.Change) = c match {
     case Source.SourceChange(source, ast) =>
-      val beginInterpret = Date.now
+      val beginInterpret = Date.now()
       val interpretationResult =
         new Interpreter(ast, NodeID(_), Structure.arrowAnnotator, Structure.nodeAnnotator, Structure.actionToInput, Structure.actionIsOutput, divergenceMarker = Some(Structure.divergenceActionLabel))
         .result(Structure.transitionSystemConstructor(_, _))
 
       interpretationResult match {
         case p: Interpreting.Problem =>
-          AlgorithmLogging.debugLog("Interpretation failed after: " + (Date.now - beginInterpret) + "ms.", logLevel = 6)
+          AlgorithmLogging.debugLog("Interpretation failed after: " + (Date.now() - beginInterpret) + "ms.", logLevel = 6)
           broadcast(Structure.StructureChangeFailed(p))
         case Interpreting.Success(is: Structure.TSStructure) =>
-          AlgorithmLogging.debugLog("Interpretation took: " + (Date.now - beginInterpret) + "ms.", logLevel = 8)
+          AlgorithmLogging.debugLog("Interpretation took: " + (Date.now() - beginInterpret) + "ms.", logLevel = 8)
           setStructure(is)
       }
     case _ =>
@@ -261,7 +261,7 @@ object Structure {
     : (Set[NodeID], WeakTransitionSystem[NodeID,ActionLabel,NodeLabel]) = {
 
     val silentActions = Set(silentActionLabel)
-    val mainNodes = (labels.collect { case (id, label) if label.act.contains('main) => id }).toSet
+    val mainNodes = (labels.collect { case (id, label) if label.act.contains(Symbol("main")) => id }).toSet
     (mainNodes, new WeakTransitionSystem(rel, labels, silentActions))
   }
 
@@ -287,7 +287,7 @@ object Structure {
       
       if (structure.structure.nodes(n1) && structure.structure.nodes(n2)) {
 
-        val begin = Date.now
+        val begin = Date.now()
 
         val algo = if (silentSpectrum) {
           new WeakSpectroscopy(structure.structure)
@@ -297,7 +297,7 @@ object Structure {
         AlgorithmLogging.uriEncoder = scala.scalajs.js.URIUtils.encodeURI _
 
         val result = algo.decideAll(List((n1, n2)), Spectroscopy.Config(computeFormulas = true))
-        AlgorithmLogging.debugLog("Spectroscopy took: " + (Date.now - begin) + "ms.", logLevel = 7)
+        AlgorithmLogging.debugLog("Spectroscopy took: " + (Date.now() - begin) + "ms.", logLevel = 7)
 
         val gameString = result.meta.get("game") match {
           case Some(game) if game != "" =>
@@ -344,7 +344,7 @@ object Structure {
       
       if (structure.structure.nodes(n1) && structure.structure.nodes(n2)) {
 
-        val begin = Date.now
+        val begin = Date.now()
 
         val algo = 
           if (WeakObservationNotion.LTBTS.getSpectrumClass.isDefinedAt(notion)) {
@@ -361,7 +361,7 @@ object Structure {
         AlgorithmLogging.uriEncoder = scala.scalajs.js.URIUtils.encodeURI _
 
         val result = algo.checkIndividualPreorder(List((n1, n2), (n2, n1)), notion)
-        AlgorithmLogging.debugLog("Preorder check took: " + (Date.now - begin) + "ms.", logLevel = 7)
+        AlgorithmLogging.debugLog("Preorder check took: " + (Date.now() - begin) + "ms.", logLevel = 7)
 
         val Some(lrResult) = result.items.find(r => r.left == n1 && r.right == n2)
         val Some(rlResult) = result.items.find(r => r.left == n2 && r.right == n1)
@@ -411,7 +411,7 @@ object Structure {
         structure.setReplay(List())
       }
 
-      val begin = Date.now
+      val begin = Date.now()
 
       val states = structure.structure.nodes.toList
 
@@ -423,7 +423,7 @@ object Structure {
       } yield (states(n1i), states(n2j))
 
       val result = algo.decideAll(comparedPairs, Spectroscopy.Config(computeFormulas = false, energyCap = 3))
-      AlgorithmLogging.debugLog("Minimization Spectroscopy took: " + (Date.now - begin) + "ms.", logLevel = 7)
+      AlgorithmLogging.debugLog("Minimization Spectroscopy took: " + (Date.now() - begin) + "ms.", logLevel = 7)
 
       val distRel = result.toDistancesRelation()
       val lubDists = distRel.tupleSet
@@ -457,7 +457,7 @@ object Structure {
 
       if (structure.structure.nodes(node)) {
 
-        val begin = Date.now
+        val begin = Date.now()
 
         val algo = new StrongSpectroscopy(structure.structure)
 
@@ -466,7 +466,7 @@ object Structure {
         } yield (node, n2)
 
         val result = algo.decideAll(comparedPairs, Spectroscopy.Config(computeFormulas = false, energyCap = 3))
-        AlgorithmLogging.debugLog("Characterization Spectroscopy took: " + (Date.now - begin) + "ms.", logLevel = 7)
+        AlgorithmLogging.debugLog("Characterization Spectroscopy took: " + (Date.now() - begin) + "ms.", logLevel = 7)
 
         for {
           res <- result.relationItems

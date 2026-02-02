@@ -20,7 +20,7 @@ class Source(val main: Control) extends ModelComponent {
   
   private val samples = CCSSamples.namedSamples
   
-  def init() {
+  def init(): Unit = {
     broadcast(Source.ExamplesChange(samples))
   }
   
@@ -28,12 +28,12 @@ class Source(val main: Control) extends ModelComponent {
     source = code
     problems = List()
     
-    val beginParse = Date.now
+    val beginParse = Date.now()
     val parser = new ccs.Parser(code)
 
     parser.parse match {
       case parser.ParseSuccess(ccsDef, _) =>
-        AlgorithmLogging.debugLog("Parsing took: " + (Date.now - beginParse) + "ms.", logLevel = 8)
+        AlgorithmLogging.debugLog("Parsing took: " + (Date.now() - beginParse) + "ms.", logLevel = 8)
         broadcast(Source.ProblemChange(source, List()))
         setAst(ccsDef, updateSource = false)
         
@@ -93,7 +93,7 @@ class Source(val main: Control) extends ModelComponent {
     true
   }
   
-  def setAst(newAst: Syntax.Definition, updateSource: Boolean = true) {
+  def setAst(newAst: Syntax.Definition, updateSource: Boolean = true): Unit = {
     ast = newAst
     if (updateSource) {
       source = new ccs.PrettyPrinter().showDefinition(newAst).toString

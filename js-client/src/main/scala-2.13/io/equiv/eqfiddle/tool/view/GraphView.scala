@@ -148,7 +148,7 @@ object GraphView {
       (if (targets.isEmpty) List(new LinkViewPart(this, dummyNode)) else List())
     }
 
-    def updateDirAndCenter() {
+    def updateDirAndCenter(): Unit = {
       srcCenter = if (sources.nonEmpty) (
         (sources.map(_.centerX).sum / sources.size),
         (sources.map(_.centerY).sum / sources.size)

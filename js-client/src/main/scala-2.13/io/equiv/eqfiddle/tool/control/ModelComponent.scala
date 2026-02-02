@@ -13,7 +13,7 @@ trait ModelComponent {
   val actionLog = ListBuffer[Action]()
   var undoDepth = 0
   
-  def implementAction(a: Action) {
+  def implementAction(a: Action): Unit = {
     if (a.implement(this) && a.isInstanceOf[Undoable]) {
       if (undoDepth > 0) {
         // delete detached potential redos
@@ -50,12 +50,12 @@ trait ModelComponent {
     false
   }
   
-  def clearUndoLog() {
+  def clearUndoLog(): Unit = {
     actionLog.clear()
     undoDepth = 0
   }
   
-  def notify(change: ModelComponent.Change)
+  def notify(change: ModelComponent.Change): Unit
   
   final def broadcast = main.broadcastChange(_)
   

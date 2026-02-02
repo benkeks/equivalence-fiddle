@@ -20,7 +20,7 @@ trait Control extends ActionDispatcher {
    */
   val modelComponents = Queue[ModelComponent]()
   
-  def broadcastChange(change: ModelComponent.Change) {
+  def broadcastChange(change: ModelComponent.Change): Unit = {
     pendingChanges.enqueue(change)
     
     if (!changeDeliveryRunning) {
@@ -38,11 +38,11 @@ trait Control extends ActionDispatcher {
     }
   }
   
-  def registerViewComponent(component: ViewComponent) {
+  def registerViewComponent(component: ViewComponent): Unit = {
     viewComponents.enqueue(component)
   }
   
-  def registerModelComponent(component: ModelComponent) {
+  def registerModelComponent(component: ModelComponent): Unit = {
     modelComponents.enqueue(component)
   }
 }

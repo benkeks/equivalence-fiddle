@@ -188,7 +188,7 @@ class GraphRenderer(val main: Control)
       .classed("hidden", comment.isEmpty())
   }
 
-  def colorize(partition: Coloring[NodeID]) {
+  def colorize(partition: Coloring[NodeID]): Unit = {
     // D3v4: d3.scale.category20() is now d3.schemeCategory20 (array of colors) 
     // or use d3.scaleOrdinal with schemeCategory20
     val colorScale = d3.scaleOrdinal(d3.schemeCategory20)
@@ -199,7 +199,7 @@ class GraphRenderer(val main: Control)
     })
   }
   
-  def updateViews(event: dom.Event) {
+  def updateViews(event: dom.Event): Unit = {
     nodes.foreach(_.updatePos())
     links foreach { d: NodeLink =>
       d.updateDirAndCenter()
@@ -220,7 +220,7 @@ class GraphRenderer(val main: Control)
       .attr("d", (_: NodeLink).toSVGPathString)
   }
   
-  override def onSelectionChange() {
+  override def onSelectionChange(): Unit = {
     nodeViews.classed("selected", { n: GraphNode =>
       n.selected
     })
@@ -228,7 +228,7 @@ class GraphRenderer(val main: Control)
       n.selected
     })
   }
-  override def onHoverChange() {
+  override def onHoverChange(): Unit = {
     nodeLabelViews.classed("hovered", { n: GraphNode =>
       n.hovered
     })

@@ -5,7 +5,7 @@ import io.equiv.eqfiddle.tool.control.ModelComponent
 
 trait ActionDispatcher {
   
-  final def dispatchAction(action: Action) {
+  final def dispatchAction(action: Action): Unit = {
     doAction(action, getActionTarget(action))
   }
   

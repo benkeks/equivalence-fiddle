@@ -37,7 +37,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
   
   var name = "transition_system"
   
-  val editorNode = d3.select("#es-definition").node match {
+  val editorNode = d3.select("#es-definition").node() match {
       case el: HTMLTextAreaElement =>
         el
       case _ =>
@@ -57,7 +57,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
   }
   
   // document used to input the source
-  val sourceDoc = editor.getDoc
+  val sourceDoc = editor.getDoc()
   sourceDoc.setValue("")
   
   var lastText = ""
@@ -99,7 +99,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
     }
   }
 
-  def onChange() {
+  def onChange(): Unit = {
     val newText = sourceDoc.getValue()
     if (newText != lastText) {
       lastText = newText
@@ -107,7 +107,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
     }
   }
   
-  def onExport() {
+  def onExport(): Unit = {
     
     val newText = sourceDoc.getValue()
     val textUri = URIUtils.encodeURIComponent(newText)
@@ -146,7 +146,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
     
   }
   
-  def onLoadFile() {
+  def onLoadFile(): Unit = {
     val fileBlob = dom.document.getElementById("es-load-file").asInstanceOf[HTMLInputElement].files(0)
     
     AlgorithmLogging.debugLog("reading file: " + fileBlob.name)
@@ -160,7 +160,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
     reader.readAsText(fileBlob)
   }
   
-  def onImport(ev: Event) {
+  def onImport(ev: Event): Unit = {
     val fileBlob = ev.target.asInstanceOf[HTMLInputElement].files(0)
     
     AlgorithmLogging.debugLog("reading file: " + fileBlob.name)
@@ -174,13 +174,13 @@ class SourceEditor(val main: Control) extends ViewComponent {
     reader.readAsText(fileBlob)
   }
   
-  def setCode(code: String) {
+  def setCode(code: String): Unit = {
     if (sourceDoc.getValue() != code) {
       sourceDoc.setValue(code)
     }
   }
 
-  def setErrors(code: String, errs: List[Source.Problem]) {
+  def setErrors(code: String, errs: List[Source.Problem]): Unit = {
     setCode(code)
     editor.clearGutter(PROBLEM_GUTTER)
     for (Source.Problem(msg, line, col) <- errs) {
@@ -195,7 +195,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
     this.runners = runners
   }
   
-  def setSamples(samples: List[Example]) {
+  def setSamples(samples: List[Example]): Unit = {
     val list = js.Array[Example]()
     list.appendAll(samples)
     d3.select("#es-load .dropdown-menu").selectAll(".es-load-example")
@@ -210,7 +210,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
         })
   }
   
-  def setOperations(ops: List[StructureOperation] ) {
+  def setOperations(ops: List[StructureOperation] ): Unit = {
     AlgorithmLogging.debugLog("set operations: " + ops)
     val groupedOps = ops.groupBy(_.category)
     
@@ -231,7 +231,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
     }
   }
   
-  def setPipelineStatus(entries: List[Pipeline.LineInfo]) {
+  def setPipelineStatus(entries: List[Pipeline.LineInfo]): Unit = {
     editor.clearGutter(PROBLEM_GUTTER)
     entries foreach {
       case Pipeline.CurrentLine(line) =>
@@ -249,7 +249,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
     }
   }
   
-  def setReplay(replay: List[() => AlgorithmLogging.LogEntry[NodeID]]) {
+  def setReplay(replay: List[() => AlgorithmLogging.LogEntry[NodeID]]): Unit = {
     val node = dom.document.createElement("ul").asInstanceOf[HTMLElement]
     for ((le, i) <- replay.zipWithIndex) {
       val leChild = dom.document.createElement("li").asInstanceOf[HTMLElement]

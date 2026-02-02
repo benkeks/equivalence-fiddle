@@ -82,7 +82,7 @@ trait GraphEditing extends ViewComponent {
     editingBehavior.activate()
   }
   
-  def selectNode(node: GraphNode) {
+  def selectNode(node: GraphNode): Unit = {
     nodes foreach { 
        n: GraphNode =>
         n.selected = 
@@ -95,15 +95,15 @@ trait GraphEditing extends ViewComponent {
     editingBehavior.onSelectionChange()
   }
   
-  def onSelectionChange()
+  def onSelectionChange(): Unit
   
   def getSelectedNodes() = {
     nodes.filter(_.selected).toList
   }
 
-  def onHoverChange()
+  def onHoverChange(): Unit
   
-  def onDragStart(node: GraphNode) {
+  def onDragStart(node: GraphNode): Unit = {
     if (!node.selected) {
       selectNode(node)
     }
@@ -112,82 +112,82 @@ trait GraphEditing extends ViewComponent {
     d3.event.asInstanceOf[js.Dynamic].sourceEvent.asInstanceOf[org.scalajs.dom.DragEvent].stopPropagation()
   }
   
-  def onDragStart(link: NodeLink) {
+  def onDragStart(link: NodeLink): Unit = {
     editingBehavior.onDragStart(link)
     js.Object.getOwnPropertyDescriptor(d3.event.asInstanceOf[js.Object],"sourceEvent").value.asInstanceOf[org.scalajs.dom.DragEvent].stopPropagation()
   }
   
-  def onDrag(node: GraphNode) {
+  def onDrag(node: GraphNode): Unit = {
     editingBehavior.onDrag(node)
   }
   
-  def onDrag(link: NodeLink) {
+  def onDrag(link: NodeLink): Unit = {
     editingBehavior.onDrag(link)
   }
   
-  def onDragEnd(node: GraphNode) {
+  def onDragEnd(node: GraphNode): Unit = {
     editingBehavior.onDragEnd(node)
   }
   
-  def onDragEnd(link: NodeLink) {
+  def onDragEnd(link: NodeLink): Unit = {
     editingBehavior.onDragEnd(link)
   }
   
-  def onHover(node: GraphNode) {
+  def onHover(node: GraphNode): Unit = {
     node.hovered = true
     editingBehavior.onHover(node)
     onHoverChange()
   }
   
-  def onHoverEnd(node: GraphNode) {
+  def onHoverEnd(node: GraphNode): Unit = {
     node.hovered = false
     editingBehavior.onHoverEnd(node)
     onHoverChange()
   }
   
-  def onHover(link: NodeLink) {
+  def onHover(link: NodeLink): Unit = {
     editingBehavior.onHover(link)
   }
   
-  def onHoverEnd(link: NodeLink) {
+  def onHoverEnd(link: NodeLink): Unit = {
     editingBehavior.onHoverEnd(link)
   }
   
-  def onClick(node: GraphNode) {
+  def onClick(node: GraphNode): Unit = {
     editingBehavior.onClick(node)
     d3.event.asInstanceOf[dom.Event].stopPropagation()
   }
   
-  def onClickBackground() {
+  def onClickBackground(): Unit = {
     //Note: for reasons I don't understand, node is always undefined...
     val mouseCoords = d3.mouse(sceneRoot.node())
     editingBehavior.onClick((mouseCoords(0), mouseCoords(1)))
   }
   
-  def onKeyDown() {
+  def onKeyDown(): Unit = {
     if (d3.event.asInstanceOf[org.scalajs.dom.KeyboardEvent].shiftKey && !selectionExtensionActive) {
       setSelectionExtension(true)
     }
   }
   
-  def onKeyUp() {
+  def onKeyUp(): Unit = {
     if (selectionExtensionActive && !d3.event.asInstanceOf[org.scalajs.dom.KeyboardEvent].shiftKey) {
       setSelectionExtension(false)
     }
   }
   
-  def onSelectionBrushStart(et: Any) {
+  def onSelectionBrushStart(et: Any): Unit = {
     nodes.foreach { n =>
       n.previouslySelected = n.selected
     }
   }
   
-  def onSelectionBrush(et: Any) {
+  def onSelectionBrush(et: Any): Unit = {
     // Brush API not fully implemented in D3v4 migration yet
     // TODO: Implement rectangular selection with d3.brush() if needed
   }
   
-  def onSelectionBrushEnd(et: EventTarget) {
+  def onSelectionBrushEnd(et: EventTarget): Unit = {
     // Brush API not fully implemented in D3v4 migration yet
     // TODO: Implement rectangular selection with d3.brush() if needed
   }
@@ -213,7 +213,7 @@ trait GraphEditing extends ViewComponent {
     }
   }
   
-  def deselectAll() {
+  def deselectAll(): Unit = {
     nodes.foreach { node: GraphNode =>
       node.selected = false
     }

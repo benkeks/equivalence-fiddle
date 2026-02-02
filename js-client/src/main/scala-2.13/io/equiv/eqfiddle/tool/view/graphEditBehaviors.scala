@@ -16,29 +16,29 @@ import io.equiv.eqfiddle.tool.model.NodeID
 
 trait GraphEditBehavior {
   
-  def activate() {}
+  def activate(): Unit = {}
   
-  def deactivate() {}
+  def deactivate(): Unit = {}
   
-  def onClick(coords: (Double, Double)) {}
-  def onClick(node: GraphNode) {}
+  def onClick(coords: (Double, Double)): Unit = {}
+  def onClick(node: GraphNode): Unit = {}
   
-  def onHover(node: GraphNode) {}
-  def onHover(node: NodeLink) {}
+  def onHover(node: GraphNode): Unit = {}
+  def onHover(node: NodeLink): Unit = {}
   
-  def onHoverEnd(node: GraphNode) {}
-  def onHoverEnd(node: NodeLink) {}
+  def onHoverEnd(node: GraphNode): Unit = {}
+  def onHoverEnd(node: NodeLink): Unit = {}
   
-  def onDragStart(node: GraphNode) {}
-  def onDragStart(link: NodeLink) {}
+  def onDragStart(node: GraphNode): Unit = {}
+  def onDragStart(link: NodeLink): Unit = {}
   
-  def onDrag(node: GraphNode) {}
-  def onDrag(link: NodeLink) {}
+  def onDrag(node: GraphNode): Unit = {}
+  def onDrag(link: NodeLink): Unit = {}
   
-  def onDragEnd(node: GraphNode) {}
-  def onDragEnd(link: NodeLink) {}
+  def onDragEnd(node: GraphNode): Unit = {}
+  def onDragEnd(link: NodeLink): Unit = {}
   
-  def onSelectionChange() {}
+  def onSelectionChange(): Unit = {}
 }
 
 class GraphMoveNode(renderer: GraphEditing) extends GraphEditBehavior {
@@ -46,12 +46,12 @@ class GraphMoveNode(renderer: GraphEditing) extends GraphEditBehavior {
   var affectedNodes = List[GraphNode]()
   var initialXY = (0.0, 0.0)
   
-  override def onDragStart(node: GraphNode) {
+  override def onDragStart(node: GraphNode): Unit = {
     affectedNodes = renderer.getSelectedNodes()
     affectedNodes.foreach { n => n.fx = n.x; n.fy = n.y }
   }
   
-  override def onDrag(node: GraphNode) {
+  override def onDrag(node: GraphNode): Unit = {
     val x = js.Object.getOwnPropertyDescriptor(d3.event.asInstanceOf[js.Object],"dx").value.asInstanceOf[Double]
     val y = js.Object.getOwnPropertyDescriptor(d3.event.asInstanceOf[js.Object],"dy").value.asInstanceOf[Double]
     
@@ -61,7 +61,7 @@ class GraphMoveNode(renderer: GraphEditing) extends GraphEditBehavior {
     }
   }
   
-  override def onDragEnd(node: GraphNode) {
+  override def onDragEnd(node: GraphNode): Unit = {
     val updates = affectedNodes.map { n =>
       n.fx = js.undefined
       n.fy = js.undefined
@@ -75,24 +75,24 @@ class GraphEditNode(renderer: GraphEditing) extends GraphEditBehavior {
   
   val nameInput = d3.select("#es-node-name")
   
-  val inputElem = nameInput.node.asInstanceOf[HTMLInputElement]
+val inputElem = nameInput.node().asInstanceOf[HTMLInputElement]
   
   var activeNode: Option[GraphNode] = None
   var newNode: Option[GraphNode] = None
   
-  override def activate() {
+  override def activate(): Unit = {
     activeNode = None
     newNode = None
     nameInput.classed("active", activeNode.isDefined)
   }
   
-  override def deactivate() {
+  override def deactivate(): Unit = {
     activeNode = None
     newNode = None
     nameInput.classed("active", activeNode.isDefined)
   }
   
-  override def onClick(coords: (Double, Double)) {
+  override def onClick(coords: (Double, Double)): Unit = {
     if (activeNode.isDefined) {
       commitName()
       activeNode = None
@@ -114,7 +114,7 @@ class GraphEditNode(renderer: GraphEditing) extends GraphEditBehavior {
     }
   }
   
-  override def onDragStart(node: GraphNode) {
+  override def onDragStart(node: GraphNode): Unit = {
     if (activeNode.exists(!_.sameRep(node))) {
       commitName()
     }
@@ -127,7 +127,7 @@ class GraphEditNode(renderer: GraphEditing) extends GraphEditBehavior {
     inputElem.value = node.nameId.name
   }
   
-  def commitName() {
+  def commitName(): Unit = {
     if (newNode.isDefined) {
       activeNode.foreach { n =>
 //        if (inputElem.value != "newEvent") {
@@ -149,7 +149,7 @@ class GraphEditNode(renderer: GraphEditing) extends GraphEditBehavior {
 
 class GraphExamineNodes(renderer: GraphEditing) extends GraphEditBehavior {
   
-  override def onSelectionChange() {
+  override def onSelectionChange(): Unit = {
     val selectedNodes = renderer.getSelectedNodes()
     
     if (selectedNodes.length == 2) {
