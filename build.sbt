@@ -26,7 +26,79 @@ lazy val web = (project in file("web")).settings(
   scalaJSProjects := Seq(jsClient),
   Assets / pipelineStages := Seq(scalaJSPipeline),
   Compile / compile := ((Compile / compile) dependsOn (jsClient / Compile / fastOptJS / webpack)).value,
-  Assets / unmanagedResources ++= (jsClient / Compile / fastOptJS / webpack).value.map(_.data)
+  Assets / unmanagedResources ++= (jsClient / Compile / fastOptJS / webpack).value.map(_.data),
+  // Also include webpack bundle source map
+  Assets / unmanagedResources += {
+    val bundlePath = (jsClient / Compile / fastOptJS / webpack).value.head.data
+    new File(bundlePath.getAbsolutePath + ".map")
+  },
+  // Include the intermediate Scala.js source map so the bundle map can reference it
+  Assets / unmanagedResources += {
+    val jsFile = (jsClient / Compile / fastOptJS).value.data
+    new File(jsFile.getAbsolutePath + ".map")
+  },
+  // Include the intermediate Scala.js output and its source map for webpack to reference
+  // Webpack's source-map-loader will include these in the bundle map
+  Assets / unmanagedResources ++= {
+    val jsFile = (jsClient / Compile / fastOptJS).value.data
+    Seq(jsFile, new File(jsFile.getAbsolutePath + ".map"))
+  },
+    // Copy CSS files from bundler node_modules into managed assets (preserves lib/ paths)
+    Assets / resourceGenerators += Def.task {
+      val npmDir = (jsClient / Compile / fastOptJS).value.data.getParentFile / "node_modules"
+      val outDir = (Assets / resourceManaged).value / "lib"
+
+      val cmCss = npmDir / "codemirror" / "lib" / "codemirror.css"
+      val bsCss = npmDir / "bootstrap" / "dist" / "css" / "bootstrap.min.css"
+
+      val mappings = Seq(
+        cmCss -> (outDir / "codemirror" / "lib" / "codemirror.css"),
+        bsCss -> (outDir / "bootstrap" / "css" / "bootstrap.min.css")
+      )
+
+      mappings.flatMap { case (src, dest) =>
+        if (src.exists) {
+          IO.createDirectory(dest.getParentFile)
+          IO.copyFile(src, dest)
+          Seq(dest)
+        } else Seq.empty
+      }
+    }.taskValue,
+  // Ensure CSS are included in assets
+  Assets / unmanagedResources ++= {
+    val libDir = baseDirectory.value / "src" / "main" / "assets" / "lib"
+    (libDir.globRecursive("*.css").get ++ libDir.globRecursive("*.min.css").get).distinct
+  },
+  // Copy Scala source files to web stage so source maps can reference them via HTTP
+  Assets / resourceGenerators += Def.task {
+    val sharedSrcDir = (jsClient / baseDirectory).value / ".." / "shared" / "src" / "main" / "scala-2.12"
+    val jsSrcDir = (jsClient / baseDirectory).value / "src" / "main" / "scala-2.12"
+    val outDir = (Assets / resourceManaged).value / "scala"
+    
+    val sharedFiles = sharedSrcDir.globRecursive("*.scala").get
+    val jsFiles = jsSrcDir.globRecursive("*.scala").get
+    
+    // Also look for Scala source files in the bundler temp directory (includes hash directory structure)
+    val bundlerDir = (jsClient / Compile / fastOptJS).value.data.getParentFile
+    val bundlerSrcFiles = (bundlerDir / "scala").globRecursive("*.scala").get
+    
+    (sharedFiles ++ jsFiles ++ bundlerSrcFiles).flatMap { srcFile =>
+      // Preserve the full relative path including hash directories
+      val relativePath = if (srcFile.toString.contains("scala")) {
+        // For bundler files, keep the path after "scala/" (e.g., "0c915f/io/equiv/...")
+        val parts = srcFile.toString.split("scala" + java.io.File.separator)
+        if (parts.length > 1) parts(1) else srcFile.getName
+      } else if (srcFile.toString.contains("shared/src/main/scala-2.12")) {
+        IO.relativize(sharedSrcDir, srcFile).getOrElse(srcFile.getName)
+      } else {
+        IO.relativize(jsSrcDir, srcFile).getOrElse(srcFile.getName)
+      }
+      val destFile = outDir / relativePath
+      IO.createDirectory(destFile.getParentFile)
+      IO.copyFile(srcFile, destFile)
+      Seq(destFile)
+    }
+  }.taskValue
 ).enablePlugins(SbtWeb)
 
 lazy val shared = (project in file("shared")).settings(
@@ -48,9 +120,12 @@ lazy val jsClient = (project in file("js-client")).settings(
   ThisBuild / parallelExecution := false,
   scalacOptions ++= scalacOpts,
   scalaJSLinkerConfig := {
-    scalaJSLinkerConfig.value
+    val baseConfig = scalaJSLinkerConfig.value
       .withModuleKind(ModuleKind.CommonJSModule)
       .withOutputPatterns(OutputPatterns.fromJSFile("eqfiddle-client.js"))
+      .withSourceMap(true)
+    // Use relative source map paths so the chain works when bundled and deployed
+    baseConfig.withRelativizeSourceMapBase(Some(new java.net.URI(".")))
   },
   resolvers += "jitpack" at "https://jitpack.io",
   libraryDependencies ++= Seq(
@@ -72,6 +147,8 @@ lazy val jsClient = (project in file("js-client")).settings(
   ),
   Compile / fastOptJS / webpackConfigFile := Some(baseDirectory.value / "webpack.config.js"),
   Compile / fullOptJS / webpackConfigFile := Some(baseDirectory.value / "webpack.config.js"),
+  Compile / fastOptJS / webpackEmitSourceMaps := true,
+  Compile / fullOptJS / webpackEmitSourceMaps := true,
   webpack / version := "5.88.2",
   webpackCliVersion := "5.1.4",
   startWebpackDevServer / version := "4.15.1",

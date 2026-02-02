@@ -116,8 +116,8 @@ class SourceEditor(val main: Control) extends ViewComponent {
       .attr("download", name + ".txt")
       
     val svg = dom.document.getElementById("es-graph")
-    val svgMutator = d3.select(svg.asInstanceOf[Any].asInstanceOf[String])
-    svgMutator.selectAll("path").each{ (e: Any, i: Int) =>
+    val svgMutator = d3.select(svg.asInstanceOf[EventTarget])
+    svgMutator.selectAll("path").each{ (e: Any) =>
         if (!js.isUndefined(e)) {
           val el = e.asInstanceOf[dom.raw.Element]
           el.setAttribute("stroke-dasharray",
@@ -264,7 +264,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
           ""
       })
       leChild.setAttribute("class", "es-pipeline-replay-step")
-      d3.select(leChild.asInstanceOf[Any].asInstanceOf[String]).on("click", () => {
+      d3.select(leChild.asInstanceOf[EventTarget]).on("click", () => {
         triggerAction(Structure.StructureDoReplayStep(i))
       })
       node.appendChild(leChild)
