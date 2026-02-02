@@ -118,6 +118,7 @@ lazy val jsClient = (project in file("js-client")).settings(
   Compile / fastLinkJS / moduleName := "eqfiddle-client",
   ThisBuild / parallelExecution := false,
   scalacOptions ++= scalacOpts,
+  scalacOptions += "-P:scalajs:nowarnGlobalExecutionContext",
   scalaJSLinkerConfig := {
     val baseConfig = scalaJSLinkerConfig.value
       .withModuleKind(ModuleKind.CommonJSModule)

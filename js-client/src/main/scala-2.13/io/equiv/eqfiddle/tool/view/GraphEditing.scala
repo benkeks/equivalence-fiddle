@@ -4,7 +4,7 @@ import d3v4._
 import scala.scalajs.js
 import scala.collection.mutable.HashMap
 import org.scalajs.dom
-import org.scalajs.dom.raw.EventTarget
+import org.scalajs.dom.EventTarget
 
 /**
  * GraphEditing manages the interplay of HTML-Events, node selection, scrolling/zooming

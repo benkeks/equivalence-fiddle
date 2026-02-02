@@ -13,11 +13,7 @@ import org.denigma.codemirror.CodeMirror
 import org.denigma.codemirror.Editor
 import org.denigma.codemirror.extensions.EditorConfig
 import org.scalajs.dom
-import org.scalajs.dom.raw.Event
-import org.scalajs.dom.raw.EventTarget
-import org.scalajs.dom.raw.HTMLElement
-import org.scalajs.dom.raw.HTMLInputElement
-import org.scalajs.dom.raw.HTMLTextAreaElement
+import org.scalajs.dom.{Event, EventTarget, HTMLElement, HTMLInputElement, HTMLTextAreaElement, Element}
 import org.scalajs.dom.raw.UIEvent
 import d3v4._
 import io.equiv.eqfiddle.tool.arch.Control
@@ -119,7 +115,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
     val svgMutator = d3.select(svg.asInstanceOf[EventTarget])
     svgMutator.selectAll("path").each{ (e: Any) =>
         if (!js.isUndefined(e)) {
-          val el = e.asInstanceOf[dom.raw.Element]
+          val el = e.asInstanceOf[Element]
           el.setAttribute("stroke-dasharray",
               dom.window.getComputedStyle(el, "").strokeDasharray)
         }

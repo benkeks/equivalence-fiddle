@@ -100,7 +100,7 @@ object GraphView {
 
     override def hashCode = nameId.hashCode
     
-    override def toString = id + nameId.name
+    override def toString = s"$id${nameId.name}"
   }
   
   object GraphNode {
@@ -233,7 +233,7 @@ object GraphView {
       }
     }
     
-    override def toString = node + "::" + link
+    override def toString = s"$node::$link"
   }
 
   

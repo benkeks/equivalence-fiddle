@@ -6,7 +6,7 @@ import scala.scalajs.js
 import scala.scalajs.js.Any.jsArrayOps
 import scala.scalajs.js.|.from
 import org.scalajs.dom
-import org.scalajs.dom.raw.HTMLInputElement
+import org.scalajs.dom.HTMLInputElement
 import d3v4._
 import io.equiv.eqfiddle.tool.control.Source
 import io.equiv.eqfiddle.tool.control.Structure
