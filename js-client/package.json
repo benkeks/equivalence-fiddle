@@ -2,9 +2,9 @@
   "name": "eqfiddle-client",
   "private": true,
   "dependencies": {
-    "bootstrap": "^3.4.1",
+    "bootstrap": "5.3.3",
     "codemirror": "5.13.0",
     "d3": "5.9.2",
-    "jquery": "3.4.1"
+    "jquery": "3.7.1"
   }
 }

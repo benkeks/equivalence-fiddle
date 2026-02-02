@@ -41,6 +41,14 @@ if (config.module && config.module.rules) {
   });
 }
 
+// Suppress source-map-loader warnings about missing source files
+config.ignoreWarnings = [
+  {
+    module: /source-map-loader/,
+  },
+  /Failed to parse source map/,
+];
+
 config.plugins = (config.plugins || []).concat([
   new webpack.ProvidePlugin({
     $: "jquery",

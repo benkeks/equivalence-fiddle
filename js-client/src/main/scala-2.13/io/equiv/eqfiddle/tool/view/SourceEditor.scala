@@ -76,8 +76,8 @@ class SourceEditor(val main: Control) extends ViewComponent {
     triggerLineAction(line)
   }: js.Function2[Editor, Int, Unit])
 
-  d3.select("#es-load-file").node().asInstanceOf[HTMLInputElement].onchange = (_: dom.Event) => onLoadFile()
-  
+  d3.select("#es-load-file").on("change", () => onLoadFile())
+
   d3.select("#es-export")
     .on("click", () => onExport())
   
@@ -199,11 +199,11 @@ class SourceEditor(val main: Control) extends ViewComponent {
       .enter()
         .append("li")
         .classed("es-load-example", true)
-        .classed("divider", (s: Example) => s.slug == "diamond")
-        .html((s: Example) => "<a href=\"#" + s.slug + "\">" + s.name + "</a>")
+        .html((s: Example) => "<a href=\"#" + s.slug + "\" class=\"dropdown-item\">" + s.name + "</a>")
         .on("click", {(s: Example) => 
-          triggerAction(Source.LoadDefinition(s.code))
-        })
+            triggerAction(Source.LoadDefinition(s.code))
+          }
+        )
   }
   
   def setOperations(ops: List[StructureOperation] ): Unit = {

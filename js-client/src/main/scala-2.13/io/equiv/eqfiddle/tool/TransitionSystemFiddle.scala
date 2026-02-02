@@ -20,7 +20,7 @@ object TransitionSystemFiddle extends Control with ActionDispatcher {
   val pipeline = new Pipeline(this)
   
   lazy val renderer = new GraphRenderer(this)
-  lazy val editor = new SourceEditor(this)
+  val editor = new SourceEditor(this)
 
   @JSExport
   def main(): Unit = {

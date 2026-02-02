@@ -136,14 +136,14 @@ lazy val jsClient = (project in file("js-client")).settings(
   ),
   Compile / npmDependencies ++= Seq(
     "d3" -> "5.9.2",
-    "jquery" -> "3.4.1",
-    "bootstrap" -> "^3.4.1",
+    "jquery" -> "3.7.1",
+    "bootstrap" -> "5.3.3",
     "codemirror" -> "5.13.0"
   ),
   Compile / npmResolutions ++= Map(
     "d3" -> "5.9.2",
-    "jquery" -> "3.4.1",
-    "bootstrap" -> "^3.4.1"
+    "jquery" -> "3.7.1",
+    "bootstrap" -> "5.3.3"
   ),
   Compile / fastOptJS / webpackConfigFile := Some(baseDirectory.value / "webpack.config.js"),
   Compile / fullOptJS / webpackConfigFile := Some(baseDirectory.value / "webpack.config.js"),

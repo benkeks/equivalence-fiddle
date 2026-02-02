@@ -311,25 +311,24 @@
 
   <div class="btn-group">
     <div class="btn-group" id="es-load">
-      <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+      <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
         Load <span class="caret"></span>
       </button>
       <ul class="dropdown-menu">
         <li>
-          <input id="es-load-file" type="file" />
+          <input id="es-load-file" type="file" class="dropdown-item" />
         </li>
-        <li class="dropdown-header">Examples</li>
+        <li><span class="dropdown-header">Examples</span></li>
       </ul>
     </div>
     <div class="btn-group">
-      <button id="es-export" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+      <button id="es-export" class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
         Export <span class="caret"></span>
       </button>
       <ul class="dropdown-menu">
-        <!-- <li><i class="fa fa-spinner fa-spin" style="font-size:24px"></i></li> -->
-        <li><a id="es-export-text" href="#">Textual Definition</a></li>
-        <li><a id="es-export-csv" href="#">Transitions as CSV</a></li>
-        <li><a id="es-export-svg" href="#">SVG Picture</a></li>
+        <li><a class="dropdown-item" id="es-export-text" href="#">Textual Definition</a></li>
+        <li><a class="dropdown-item" id="es-export-csv" href="#">Transitions as CSV</a></li>
+        <li><a class="dropdown-item" id="es-export-svg" href="#">SVG Picture</a></li>
       </ul>
     </div>
     <!-- <div class="btn-group" id="es-transform">
@@ -355,16 +354,16 @@
       </ul>
     </div> -->
     <div class="btn-group">
-      <button id="es-background" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+      <button id="es-background" class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
         Background<span class="caret"></span>
       </button>
       <ul class="dropdown-menu">
-        <li><a href="https://generalized-equivalence-checking.equiv.io/" target="_blank">PhD Thesis: Generalized Equivalence Checking of Concurrent Programs</a></li>
-        <li><a href="https://doi.org/10.1007/978-3-031-37706-8_5" target="_blank">Paper: Process Equivalence Problems as Energy Games (CAV 2023)</a></li>
-        <li><a href="https://doi.org/10.4204/EPTCS.412.6" target="_blank">Paper: One Energy Game for the Spectrum between Branching Bisimilarity and Weak Trace Semantics (EXPRESS/SOS 2024)</a></li>
-        <li><a href="https://concurrency-theory.org/ltbt-spectroscope/code/">Source code (Scala.js)</a></li>
-        <li class="divider"></li>
-        <li><a id="es-tool-about" data-toggle="modal" data-target="#es-about" href="#">About the LTBT Spectroscope</a>
+        <li><a class="dropdown-item" href="https://generalized-equivalence-checking.equiv.io/" target="_blank">PhD Thesis: Generalized Equivalence Checking of Concurrent Programs</a></li>
+        <li><a class="dropdown-item" href="https://doi.org/10.1007/978-3-031-37706-8_5" target="_blank">Paper: Process Equivalence Problems as Energy Games (CAV 2023)</a></li>
+        <li><a class="dropdown-item" href="https://doi.org/10.4204/EPTCS.412.6" target="_blank">Paper: One Energy Game for the Spectrum between Branching Bisimilarity and Weak Trace Semantics (EXPRESS/SOS 2024)</a></li>
+        <li><a class="dropdown-item" href="https://concurrency-theory.org/ltbt-spectroscope/code/">Source code (Scala.js)</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" id="es-tool-about" data-bs-toggle="modal" data-bs-target="#es-about" href="#">About the LTBT Spectroscope</a>
         </li>
       </ul>
     </div>
@@ -397,8 +396,8 @@
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
           <h4 class="modal-title">About the Linear-time–Branching-time Spectroscope</h4>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
           <p>This is a tool for finding the best ways of distinguishing finite process models.</p>
@@ -411,7 +410,7 @@
           </ul>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Cool!</button>
+          <button type="button" class="btn btn-default" data-bs-dismiss="modal">Cool!</button>
         </div>
       </div>
     </div>
