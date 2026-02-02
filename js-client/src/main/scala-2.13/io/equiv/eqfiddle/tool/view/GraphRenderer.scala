@@ -134,7 +134,7 @@ class GraphRenderer(val main: Control)
     linkLabelUp.exit().remove()
     linkLabelViews = layerMeta.selectAll(".link-label")
     
-    val nodeUp = nodeViews.data(nodes - GraphView.dummyNode, (_:GraphNode).nameId.name)
+    val nodeUp = nodeViews.data(nodes.subtractOne(GraphView.dummyNode), (_:GraphNode).nameId.name)
     nodeUp.enter()
         .append("circle")
         .attr("cx", ((d: GraphNode) => d.x))
@@ -149,7 +149,7 @@ class GraphRenderer(val main: Control)
     nodeViews = layerNodes.selectAll(".node")
         
     val nodeLabelUp = nodeLabelViews
-        .data(nodes - GraphView.dummyNode, (_:GraphNode).nameId.name)
+        .data(nodes.subtractOne(GraphView.dummyNode), (_:GraphNode).nameId.name)
     nodeLabelUp.enter()
         .append("text")
         .attr("class", ((d: GraphNode) => "node-label " + d.meta.act.map(_.name).mkString(" ")))

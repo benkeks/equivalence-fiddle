@@ -35,7 +35,7 @@ case class TransitionSystem[S, A, L](
     
   def pre(ss: Set[S]): Map[A, Set[S]] = {
     for { s <- ss; sp <- pre(s) toList } yield sp
-  }.groupBy(_._1).mapValues(_.flatMap(_._2))
+  }.groupBy(_._1).mapValues(_.flatMap(_._2)).toMap
   
   def enabled(s: S) = post(s).keySet
   
@@ -44,7 +44,7 @@ case class TransitionSystem[S, A, L](
   val nodes = nodeLabeling.keySet
   
   val nodesByLabel =
-    nodeLabeling.groupBy(_._2).mapValues(_.keySet)
+    nodeLabeling.groupBy(_._2).mapValues(_.keySet).toMap
     
   val actions = step.labels
     

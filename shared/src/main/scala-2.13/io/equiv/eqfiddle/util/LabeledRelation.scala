@@ -10,7 +10,7 @@ class LabeledRelation[E, L](val rep: Map[E, Map[L, Set[E]]]) {
  
   /*{(1,1,3), {1,1,1}} ~> {(1 |-> 1 |-> {1,3})}*/
   def this(tuples: Set[(E, L ,E)]) {
-    this(tuples.groupBy(_._1).mapValues(_.groupBy(_._2).mapValues(_.map(_._3))))
+    this(tuples.groupBy(_._1).mapValues(_.groupBy(_._2).mapValues(_.map(_._3)).toMap).toMap)
   }
   
   def size = rep.values.map(_.values.map(_.size).sum).sum
@@ -57,7 +57,7 @@ class LabeledRelation[E, L](val rep: Map[E, Map[L, Set[E]]]) {
   
   lazy val inverseRep = {
     val invTuples = tupleSet.map { case (e1, l, e2) => (e2, l, e1) }
-    invTuples.groupBy(_._1).mapValues(_.groupBy(_._2).mapValues(_.map(_._3)))
+    invTuples.groupBy(_._1).mapValues(_.groupBy(_._2).mapValues(_.map(_._3)).toMap).toMap
   }
   
   lazy val lhs = rep.keySet
@@ -82,7 +82,7 @@ class LabeledRelation[E, L](val rep: Map[E, Map[L, Set[E]]]) {
       (e1, lee2) <- rep
     } yield {
       val succs = for {
-        (l, ee2) <-lee2.to
+        (l, ee2) <- lee2.toList
         e2 <- ee2
       } yield (l, e2)
       val (lP, e2P) = pick(succs)

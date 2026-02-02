@@ -5,7 +5,7 @@ import org.scalajs.linker.interface.OutputPatterns
 name := "EquivalenceFiddle"
 version := "0.1.0"
 
-val scVersion = "2.12.13"
+val scVersion = "2.13.13"
 
 scalaVersion := scVersion
 
@@ -13,7 +13,6 @@ scalaVersion := scVersion
 ThisBuild / evictionErrorLevel := Level.Info
 
 val scalacOpts = Seq(
-  "-Xmax-classfile-name", "140",
   "-feature",
   "-language:implicitConversions",
   "-language:postfixOps",
@@ -71,8 +70,8 @@ lazy val web = (project in file("web")).settings(
   },
   // Copy Scala source files to web stage so source maps can reference them via HTTP
   Assets / resourceGenerators += Def.task {
-    val sharedSrcDir = (jsClient / baseDirectory).value / ".." / "shared" / "src" / "main" / "scala-2.12"
-    val jsSrcDir = (jsClient / baseDirectory).value / "src" / "main" / "scala-2.12"
+    val sharedSrcDir = (jsClient / baseDirectory).value / ".." / "shared" / "src" / "main" / "scala-2.13"
+    val jsSrcDir = (jsClient / baseDirectory).value / "src" / "main" / "scala-2.13"
     val outDir = (Assets / resourceManaged).value / "scala"
     
     val sharedFiles = sharedSrcDir.globRecursive("*.scala").get
@@ -88,7 +87,7 @@ lazy val web = (project in file("web")).settings(
         // For bundler files, keep the path after "scala/" (e.g., "0c915f/io/equiv/...")
         val parts = srcFile.toString.split("scala" + java.io.File.separator)
         if (parts.length > 1) parts(1) else srcFile.getName
-      } else if (srcFile.toString.contains("shared/src/main/scala-2.12")) {
+      } else if (srcFile.toString.contains("shared/src/main/scala-2.13")) {
         IO.relativize(sharedSrcDir, srcFile).getOrElse(srcFile.getName)
       } else {
         IO.relativize(jsSrcDir, srcFile).getOrElse(srcFile.getName)
@@ -156,7 +155,7 @@ lazy val jsClient = (project in file("js-client")).settings(
       ((Compile / classDirectory).value / "app" / ((fastLinkJS / moduleName).value + ".js")),
   Compile / fullOptJS / artifactPath := (Compile / fastLinkJS / artifactPath).value,
   Compile / unmanagedSourceDirectories +=
-      baseDirectory.value / ".." / "shared" / "src" / "main" / "scala-2.12"
+      baseDirectory.value / ".." / "shared" / "src" / "main" / "scala-2.13"
 ).aggregate(shared).dependsOn(shared).enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin, ScalaJSWeb)
 
 lazy val jsApi = (project in file("js-api")).settings(
@@ -170,7 +169,7 @@ lazy val jsApi = (project in file("js-api")).settings(
         ((fastLinkJS / moduleName).value + ".js")),
   Compile / fullOptJS / artifactPath := (Compile / fastLinkJS / artifactPath).value,
   Compile / unmanagedSourceDirectories +=
-      baseDirectory.value / ".." / "shared" / "src" / "main" / "scala-2.12"
+      baseDirectory.value / ".." / "shared" / "src" / "main" / "scala-2.13"
 ).aggregate(shared).dependsOn(shared).enablePlugins(ScalaJSPlugin)
 
 lazy val root = project.in(file(".")).settings(

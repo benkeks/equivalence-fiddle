@@ -2,7 +2,6 @@ package io.equiv.eqfiddle.ts
 
 import io.equiv.eqfiddle.util.LabeledRelation
 import io.equiv.eqfiddle.util.Relation
-import scala.collection.mutable.LinkedList
 import scala.collection.mutable.Seq
 import scala.collection.mutable.Queue
 
@@ -143,7 +142,7 @@ class WeakTransitionSystem[S, A, L](
 
   def weakPre(ss: Set[S]): Map[A, Set[S]] = {
     for { s <- ss; sp <- weakPre(s) toList } yield sp
-  }.groupBy(_._1).mapValues(_.flatMap(_._2))
+  }.groupBy(_._1).mapValues(_.flatMap(_._2)).toMap
 
   def isStable(s: S): Boolean = {
     !enabled(s).exists(silentActions(_))

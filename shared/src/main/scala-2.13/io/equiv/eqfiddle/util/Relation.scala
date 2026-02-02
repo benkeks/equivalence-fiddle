@@ -10,9 +10,8 @@ import scalaz.Scalaz._
 class Relation[E](val rep: Map[E, Set[E]]) {
 
   /*{(1,2), {1,1}} ~> {(1 |-> {1,2})}*/
-  def this(tuples: Set[(E, E)]) {
-    this(tuples.groupBy(_._1).mapValues(_.map(_._2)))
-  }
+  def this(tuples: Set[(E, E)]) =
+    this(tuples.groupBy(_._1).mapValues(_.map(_._2)).toMap)
 
   def size = rep.values.map(_.size).sum
 
@@ -44,7 +43,7 @@ class Relation[E](val rep: Map[E, Set[E]]) {
     case (l, rr) => rr.map((l, _))
   }
 
-  lazy val inverseRep = tupleSet.map(_.swap).groupBy(_._1).mapValues(_.map(_._2))
+  lazy val inverseRep = tupleSet.map(_.swap).groupBy(_._1).mapValues(_.map(_._2)).toMap
 
   lazy val lhs = rep.keySet
   lazy val rhs = rep.values.flatten.toSet
@@ -71,7 +70,7 @@ class Relation[E](val rep: Map[E, Set[E]]) {
       { rel =>
         rel.mapValues {
           r => r ++ r.flatMap(rel.getOrElse(_, Set()))
-        }
+        }.toMap
       },
       { case (a, b) => a == b })
 
@@ -147,7 +146,7 @@ class Relation[E](val rep: Map[E, Set[E]]) {
       if ve.isEmpty || ve == Set(e)
     } yield e
 
-    val newRep = rep.mapValues(_ filter maxElements)
+    val newRep = rep.mapValues(_ filter maxElements).toMap
 
     new Relation(newRep)
   }

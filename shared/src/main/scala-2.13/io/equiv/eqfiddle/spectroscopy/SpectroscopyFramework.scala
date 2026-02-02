@@ -117,7 +117,7 @@ trait SpectroscopyFramework[S, A, L, CF <: HML.Formula[A]]
       spectroscopyGame.attackerWinningBudgets.toMap.mapValues { energies =>
       val fcs = energies.toSet[Energy].map(energyToNotion(_))
       (fcs, spectrum.getStrongestPreorderClassFromClass(fcs))
-    }
+    }.toMap
 
     // assemble output in spectroscopy result object.
     val spectroResults = for {
