@@ -152,7 +152,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
     AlgorithmLogging.debugLog("reading file: " + fileBlob.name)
     
     val reader = new dom.FileReader()
-    reader.onload = (_: dom.raw.UIEvent) => {
+    reader.onload = (_: dom.ProgressEvent) => {
       val contents = reader.result.asInstanceOf[String]
       triggerAction(Source.LoadDefinition(contents))
     }
@@ -166,7 +166,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
     AlgorithmLogging.debugLog("reading file: " + fileBlob.name)
     
     val reader = new dom.FileReader()
-    reader.onload = (_: dom.raw.UIEvent) => {
+    reader.onload = (_: dom.ProgressEvent) => {
       val contents = reader.result.asInstanceOf[String]
       triggerAction(Source.LoadDefinition(contents))
     }

@@ -132,7 +132,7 @@ lazy val jsClient = (project in file("js-client")).settings(
     "org.scalaz" %%% "scalaz-core" % "7.3.8",
     "com.github.fdietze.scala-js-d3v4" %%% "scala-js-d3v4" % "ac063410c6e8e556fbd371fe5608cc12786aa9ab",
     "com.github.karasiq" %%% "scalajs-bootstrap" % "2.4.2",
-    "org.scala-js" %%% "scalajs-dom" % "1.0.0"
+    "org.scala-js" %%% "scalajs-dom" % "2.3.0"
   ),
   Compile / npmDependencies ++= Seq(
     "d3" -> "5.9.2",
@@ -152,7 +152,6 @@ lazy val jsClient = (project in file("js-client")).settings(
   webpack / version := "5.88.2",
   webpackCliVersion := "5.1.4",
   startWebpackDevServer / version := "4.15.1",
-  dependencyOverrides += "org.scala-js" %%% "scalajs-dom" % "1.0.0",
   Compile / fastLinkJS / artifactPath :=
       ((Compile / classDirectory).value / "app" / ((fastLinkJS / moduleName).value + ".js")),
   Compile / fullOptJS / artifactPath := (Compile / fastLinkJS / artifactPath).value,
