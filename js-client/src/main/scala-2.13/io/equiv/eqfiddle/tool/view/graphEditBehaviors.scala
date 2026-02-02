@@ -52,12 +52,14 @@ class GraphMoveNode(renderer: GraphEditing) extends GraphEditBehavior {
   }
   
   override def onDrag(node: GraphNode): Unit = {
-    val x = js.Object.getOwnPropertyDescriptor(d3.event.asInstanceOf[js.Object],"dx").value.asInstanceOf[Double]
-    val y = js.Object.getOwnPropertyDescriptor(d3.event.asInstanceOf[js.Object],"dy").value.asInstanceOf[Double]
+    val dx = js.Object.getOwnPropertyDescriptor(d3.event.asInstanceOf[js.Object],"dx").value.asInstanceOf[Double]
+    val dy = js.Object.getOwnPropertyDescriptor(d3.event.asInstanceOf[js.Object],"dy").value.asInstanceOf[Double]
     
     affectedNodes.map { n =>
-      n.x = n.x.getOrElse(0.0) + x
-      n.y = n.y.getOrElse(0.0) + y
+      n.x = n.x.getOrElse(0.0) + dx
+      n.y = n.y.getOrElse(0.0) + dy
+      n.fx = n.x
+      n.fy = n.y
     }
   }
   

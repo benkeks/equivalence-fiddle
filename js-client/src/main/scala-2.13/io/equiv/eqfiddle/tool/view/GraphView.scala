@@ -48,7 +48,6 @@ object GraphView {
         val newY: Double = meta.y.getOrElse(y.getOrElse(0.0))
         x = newX
         y = newY
-        println(s"GraphNode $nameId updated position to: ($newX,$newY)")
         fixedPermanently = meta.x.isDefined && meta.y.isDefined
         fx = if (fixedPermanently) newX else js.undefined
         fy = if (fixedPermanently) newY else js.undefined
@@ -56,7 +55,7 @@ object GraphView {
     }
     
     def updatePos() = {
-      if ((fixedPermanently || positionStealTarget.nonEmpty)) {
+      if (positionStealTarget.nonEmpty) {
         for {
           tarX <- positionStealTarget.map(_.centerX) orElse meta.x
           currX <- x.toOption

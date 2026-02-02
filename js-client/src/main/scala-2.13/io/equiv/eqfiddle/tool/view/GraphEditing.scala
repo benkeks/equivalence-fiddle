@@ -41,18 +41,9 @@ trait GraphEditing extends ViewComponent {
     .on("click", () => onClickBackground())
   
   val drag = d3.drag[GraphNode]()
-    // Note: D3v4 drag origin API changed - subject replaces origin
-    // .subject((d: GraphNode) => d.asInstanceOf[js.Any])
     .on("start", (d: GraphNode) => onDragStart(d))
     .on("drag", (d: GraphNode) => onDrag(d))
     .on("end", (d: GraphNode) => onDragEnd(d))
-    
-  val dragLink = d3.drag[NodeLink]()
-    // Note: D3v4 drag origin API changed
-    // .subject((d: NodeLink) => d.asInstanceOf[js.Any])
-    .on("start", (d: NodeLink) => onDragStart(d))
-    .on("drag", (d: NodeLink) => onDrag(d))
-    .on("end", (d: NodeLink) => onDragEnd(d))
     
   val sceneRoot = svg.append("g")
     
@@ -111,25 +102,12 @@ trait GraphEditing extends ViewComponent {
     d3.event.asInstanceOf[js.Dynamic].sourceEvent.asInstanceOf[org.scalajs.dom.DragEvent].stopPropagation()
   }
   
-  def onDragStart(link: NodeLink): Unit = {
-    editingBehavior.onDragStart(link)
-    js.Object.getOwnPropertyDescriptor(d3.event.asInstanceOf[js.Object],"sourceEvent").value.asInstanceOf[org.scalajs.dom.DragEvent].stopPropagation()
-  }
-  
   def onDrag(node: GraphNode): Unit = {
     editingBehavior.onDrag(node)
   }
   
-  def onDrag(link: NodeLink): Unit = {
-    editingBehavior.onDrag(link)
-  }
-  
   def onDragEnd(node: GraphNode): Unit = {
     editingBehavior.onDragEnd(node)
-  }
-  
-  def onDragEnd(link: NodeLink): Unit = {
-    editingBehavior.onDragEnd(link)
   }
   
   def onHover(node: GraphNode): Unit = {
@@ -142,14 +120,6 @@ trait GraphEditing extends ViewComponent {
     node.hovered = false
     editingBehavior.onHoverEnd(node)
     onHoverChange()
-  }
-  
-  def onHover(link: NodeLink): Unit = {
-    editingBehavior.onHover(link)
-  }
-  
-  def onHoverEnd(link: NodeLink): Unit = {
-    editingBehavior.onHoverEnd(link)
   }
   
   def onClick(node: GraphNode): Unit = {

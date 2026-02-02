@@ -40,14 +40,13 @@ class GraphRenderer(val main: Control)
   
   setEditingBehavior("es-graph-move")
   
-  // D3v4: Force layout API changed significantly
-  // d3.layout.force() -> d3.forceSimulation()
-  // Forces are now separate and added via .force()
   val force = d3.forceSimulation[GraphNode](nodes)
-      // .force("charge", d3.forceManyBody[GraphNode]().strength(-100.0))
-      // .force("link", d3.forceLink[GraphNode, NodeLink](links).strength(0.3))
-      // .force("center", d3.forceCenter[GraphNode](350.0, 350.0))
-      // .alphaDecay(0.02)
+      .force("charge", d3.forceManyBody[GraphNode]().strength(-10.0))
+      .force("link", d3.forceLink[GraphNode, NodeLink](links)
+        .strength(0.3)
+        .distance((l: NodeLink) => 50.0))
+      .alphaDecay(0.02)
+      .on("tick", () => updateViews(null))
   
   val layerNodes = sceneRoot.append("g").classed("layer-nodes", true)
   val layerLinks = sceneRoot.append("g").classed("layer-links", true)
@@ -169,18 +168,11 @@ class GraphRenderer(val main: Control)
       n2.positionStealTarget = Some(n1)
     }
 
-    // D3v4: linkDistance is now set on the link force itself
-    // force.force("link").asInstanceOf[d3force.Link[GraphNode, NodeLink]].distance((l: NodeLink) => l.kind match {
-    //   case _ => 80.0
-    // })
-
-    force.on("tick", () => updateViews(null))
-    
-    // D3v4: .start() is replaced by .restart() or setting .alpha()
-    force.alpha(1)
     updateViews(null)
-    // force.restart()
-    
+    force
+      .nodes(nodes)
+      .alpha(1)
+      .restart()    
   }
 
   def setComment(comment: String) = {
