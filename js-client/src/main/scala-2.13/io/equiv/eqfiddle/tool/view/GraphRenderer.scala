@@ -134,22 +134,22 @@ class GraphRenderer(val main: Control)
     linkLabelUp.exit().remove()
     linkLabelViews = layerMeta.selectAll(".link-label")
     
-    val nodeUp = nodeViews.data(nodes.subtractOne(GraphView.dummyNode), (_:GraphNode).nameId.name)
+    val nodeUp = nodeViews.data(nodes.subtractOne(GraphView.dummyNode), (_: GraphNode).nameId.name)
     nodeUp.enter()
         .append("circle")
         .attr("cx", ((d: GraphNode) => d.x.getOrElse(0.0)))
         .attr("cy", ((d: GraphNode) => d.y.getOrElse(0.0)))
         .attr("r", 7)
+        .attr("class", ((d: GraphNode) => "node " + d.meta.act.map(_.name).mkString(" ")))
         .on("mousemove", (d: GraphNode) => onHover(d))
         .on("mouseout", (d: GraphNode) => onHoverEnd(d))
         .on("click", (d: GraphNode) => onClick(d))
         .call(drag)
-    nodeUp.attr("class", ((d: GraphNode) => "node " + d.meta.act.map(_.name).mkString(" ")))
     nodeUp.exit().remove()
     nodeViews = layerNodes.selectAll(".node")
         
     val nodeLabelUp = nodeLabelViews
-        .data(nodes.subtractOne(GraphView.dummyNode), (_:GraphNode).nameId.name)
+        .data(nodes.subtractOne(GraphView.dummyNode), (_: GraphNode).nameId.name)
     nodeLabelUp.enter()
         .append("text")
         .attr("class", ((d: GraphNode) => "node-label " + d.meta.act.map(_.name).mkString(" ")))
@@ -178,6 +178,7 @@ class GraphRenderer(val main: Control)
     
     // D3v4: .start() is replaced by .restart() or setting .alpha()
     force.alpha(1)
+    updateViews(null)
     // force.restart()
     
   }
@@ -205,8 +206,8 @@ class GraphRenderer(val main: Control)
     }
 
     nodeViews
-      .attr("cx", ((d: GraphNode) => d.x))
-      .attr("cy", ((d: GraphNode) => d.y))
+      .attr("cx", ((d: GraphNode) => d.x.get))
+      .attr("cy", ((d: GraphNode) => d.y.get))
     nodeLabelViews
       .attr("x", ((d: GraphNode) => d.x.get + 4))
       .attr("y", ((d: GraphNode) => d.y.get - 10))
