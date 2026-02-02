@@ -35,9 +35,8 @@ trait GraphEditing extends ViewComponent {
     
   val zoomWindow = d3.zoom[dom.EventTarget]()
   zoomWindow
-    // Note: D3v4 zoom no longer uses .x() and .y() - it uses transform-based approach
     .on("zoom", () => onZoom())
-    
+
   svg.call(zoomWindow)
     .on("click", () => onClickBackground())
   
@@ -223,21 +222,11 @@ trait GraphEditing extends ViewComponent {
   }
   
   def onZoom(): Unit = {
-    
     // deselect all nodes if clicking on background without shift key
     if (!selectionExtensionActive) {
       deselectAll()
     }
-    
-    // D3v4 zoom uses transform instead of translate/scale methods
-    val transform = zoomWindow.asInstanceOf[js.Dynamic].transform.asInstanceOf[js.Dynamic]
-    val x = transform.x.asInstanceOf[Double]
-    val y = transform.y.asInstanceOf[Double]
-    val k = transform.k.asInstanceOf[Double]
-    
-    sceneRoot.attr("transform",
-      "translate(" + x + ","
-                   + y + ")"
-        + "scale(" + k + ")")
+   
+    sceneRoot.attr("transform", d3.event.asInstanceOf[d3.ZoomEvent].transform.toString())
   }
 }

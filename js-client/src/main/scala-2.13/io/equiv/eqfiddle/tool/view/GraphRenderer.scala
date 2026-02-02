@@ -44,10 +44,10 @@ class GraphRenderer(val main: Control)
   // d3.layout.force() -> d3.forceSimulation()
   // Forces are now separate and added via .force()
   val force = d3.forceSimulation[GraphNode](nodes)
-      .force("charge", d3.forceManyBody[GraphNode]().strength(-100.0))
-      .force("link", d3.forceLink[GraphNode, NodeLink](links).strength(0.3))
-      .force("center", d3.forceCenter[GraphNode](350.0, 350.0))
-      .alphaDecay(0.02)
+      // .force("charge", d3.forceManyBody[GraphNode]().strength(-100.0))
+      // .force("link", d3.forceLink[GraphNode, NodeLink](links).strength(0.3))
+      // .force("center", d3.forceCenter[GraphNode](350.0, 350.0))
+      // .alphaDecay(0.02)
   
   val layerNodes = sceneRoot.append("g").classed("layer-nodes", true)
   val layerLinks = sceneRoot.append("g").classed("layer-links", true)
@@ -137,8 +137,8 @@ class GraphRenderer(val main: Control)
     val nodeUp = nodeViews.data(nodes.subtractOne(GraphView.dummyNode), (_:GraphNode).nameId.name)
     nodeUp.enter()
         .append("circle")
-        .attr("cx", ((d: GraphNode) => d.x))
-        .attr("cy", ((d: GraphNode) => d.y))
+        .attr("cx", ((d: GraphNode) => d.x.getOrElse(0.0)))
+        .attr("cy", ((d: GraphNode) => d.y.getOrElse(0.0)))
         .attr("r", 7)
         .on("mousemove", (d: GraphNode) => onHover(d))
         .on("mouseout", (d: GraphNode) => onHoverEnd(d))
@@ -170,15 +170,15 @@ class GraphRenderer(val main: Control)
     }
 
     // D3v4: linkDistance is now set on the link force itself
-    force.force("link").asInstanceOf[d3force.Link[GraphNode, NodeLink]].distance((l: NodeLink) => l.kind match {
-      case _ => 80.0
-    })
-    force.alpha(1)
+    // force.force("link").asInstanceOf[d3force.Link[GraphNode, NodeLink]].distance((l: NodeLink) => l.kind match {
+    //   case _ => 80.0
+    // })
 
     force.on("tick", () => updateViews(null))
     
     // D3v4: .start() is replaced by .restart() or setting .alpha()
-    force.restart()
+    force.alpha(1)
+    // force.restart()
     
   }
 
@@ -189,14 +189,13 @@ class GraphRenderer(val main: Control)
   }
 
   def colorize(partition: Coloring[NodeID]): Unit = {
-    // D3v4: d3.scale.category20() is now d3.schemeCategory20 (array of colors) 
-    // or use d3.scaleOrdinal with schemeCategory20
-    val colorScale = d3.scaleOrdinal(d3.schemeCategory20)
-    nodeViews.style("stroke", { (d: GraphNode) =>
-      for (repHash <- partition.get(d.nameId)) {
-        colorScale(repHash.toString)
-      }
-    })
+    // remove hte coloring feature
+    // val colorScale = d3.scaleOrdinal(d3scale.schemeCategory20)
+    // nodeViews.style("stroke", { (d: GraphNode) =>
+    //   for (repHash <- partition.get(d.nameId)) {
+    //     colorScale(repHash.toString)
+    //   }
+    // })
   }
   
   def updateViews(event: dom.Event): Unit = {

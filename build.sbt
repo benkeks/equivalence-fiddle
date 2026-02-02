@@ -9,9 +9,6 @@ val scVersion = "2.13.13"
 
 scalaVersion := scVersion
 
-// Allow version eviction for scalajs-dom (needed for d3v4 compatibility)
-ThisBuild / evictionErrorLevel := Level.Info
-
 val scalacOpts = Seq(
   "-feature",
   "-language:implicitConversions",
@@ -130,7 +127,7 @@ lazy val jsClient = (project in file("js-client")).settings(
   resolvers += "jitpack" at "https://jitpack.io",
   libraryDependencies ++= Seq(
     "org.scalaz" %%% "scalaz-core" % "7.3.8",
-    "com.github.fdietze.scala-js-d3v4" %%% "scala-js-d3v4" % "ac063410c6e8e556fbd371fe5608cc12786aa9ab",
+    "com.github.fdietze.scala-js-d3v4" %%% "scala-js-d3v4" % "64a2cca057",
     "com.github.karasiq" %%% "scalajs-bootstrap" % "2.4.2",
     "org.scala-js" %%% "scalajs-dom" % "2.3.0"
   ),

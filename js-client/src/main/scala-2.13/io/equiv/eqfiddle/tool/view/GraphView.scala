@@ -19,6 +19,7 @@ object GraphView {
 
     def hasRep(a: Any): Boolean
   }
+
   class GraphNode(
       var nameId: NodeID,
       var meta: Structure.NodeLabel,
@@ -37,18 +38,17 @@ object GraphView {
     
     x = 100 + Math.cos(GraphNode.count * 5.1) * 100
     y = 100 + Math.sin(GraphNode.count * 5.1) * 100
-    // weight = 1.0  // Not used in d3v4
     
     updateMeta(meta, true)
     
     def updateMeta(metaInfo: Structure.NodeLabel, force: Boolean = false) = {
       if (meta != metaInfo || force) {
         meta = metaInfo
-        val newX = meta.x.map(_.asInstanceOf[Double]).getOrElse(x.getOrElse(0.0))
-        val newY = meta.y.map(_.asInstanceOf[Double]).getOrElse(y.getOrElse(0.0))
+        val newX: Double = meta.x.getOrElse(x.getOrElse(0.0))
+        val newY: Double = meta.y.getOrElse(y.getOrElse(0.0))
         x = newX
         y = newY
-        // fx and fy replaces px, py in d3v4 - these fix node positions
+        println(s"GraphNode $nameId updated position to: ($newX,$newY)")
         fixedPermanently = meta.x.isDefined && meta.y.isDefined
         fx = if (fixedPermanently) newX else js.undefined
         fy = if (fixedPermanently) newY else js.undefined
@@ -119,9 +119,9 @@ object GraphView {
 
     var target = targets.collect { case gn: GraphNode => gn }.headOption.getOrElse(dummyNode)
 
-    var length: Double = 0
+    var length: Double = 0.1
     
-    var dir: (Double, Double) = (0,0)
+    var dir: (Double, Double) = (0.0, 0.0)
 
     val isLoop = sources == targets
 
@@ -132,12 +132,12 @@ object GraphView {
     var srcCenter: (Double, Double) = if (sources.nonEmpty) (
       (sources.map(_.centerX).sum / sources.size),
       (sources.map(_.centerY).sum / sources.size)
-    ) else (0, 0)
+    ) else (0.0, 0.0)
 
     var tarCenter: (Double, Double) = if (targets.nonEmpty) (
       (targets.map(_.centerX).sum / targets.size),
       (targets.map(_.centerY).sum / targets.size)
-    ) else (srcCenter._1 + 50, srcCenter._2 + 50)
+    ) else (srcCenter._1 + 50.0, srcCenter._2 + 50.0)
     
     override def centerX = (tarCenter._1 * (.5 - .02 * bend) + srcCenter._1 * (.5 + .02 * bend)) - 10 * (bend + 0.00001 * length * length) * dir._2
     override def centerY = (tarCenter._2 * (.5 - .02 * bend) + srcCenter._2 * (.5 + .02 * bend)) + 10 * (bend + 0.00001 * length * length) * dir._1
@@ -165,7 +165,7 @@ object GraphView {
       )
       length = Math.hypot(tarCenter._1 - srcCenter._1, tarCenter._2 - srcCenter._2)
       dir = if (isLoop || length <= 0.0001) (
-        (1,0)
+        (1.0, 0.0)
       ) else (
         (tarCenter._1 - srcCenter._1) / length,
         (tarCenter._2 - srcCenter._2) / length
