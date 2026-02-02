@@ -180,16 +180,6 @@ class GraphRenderer(val main: Control)
       .html(comment)
       .classed("hidden", comment.isEmpty())
   }
-
-  def colorize(partition: Coloring[NodeID]): Unit = {
-    // remove hte coloring feature
-    // val colorScale = d3.scaleOrdinal(d3scale.schemeCategory20)
-    // nodeViews.style("stroke", { (d: GraphNode) =>
-    //   for (repHash <- partition.get(d.nameId)) {
-    //     colorScale(repHash.toString)
-    //   }
-    // })
-  }
   
   def updateViews(event: dom.Event): Unit = {
     nodes.foreach(_.updatePos())
@@ -236,8 +226,6 @@ class GraphRenderer(val main: Control)
         baseRelation = Set()
       }
       setStructure()
-    case Structure.StructurePartitionChange(partition) =>
-      colorize(partition)
     case Structure.StructureRelationChange(relation) =>
       this.relation = LabeledRelation()
       this.baseRelation = relation.tupleSet.map(t => (Set(t._1), t._2, Set(t._3)))

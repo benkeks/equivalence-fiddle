@@ -61,11 +61,6 @@ class Structure(val main: Control) extends ModelComponent {
     case _ =>
   }
 
-  def setPartition(p: Coloring[NodeID]) = {
-    partition = p
-    broadcast(Structure.StructurePartitionChange(partition))
-  }
-
   def setRelation(r: Relation[NodeID]): Unit = {
     val labeled = new LabeledRelation(r.tupleSet.map {case (p1, p2) => (p1, "", p2)})
     setRelation(labeled)
@@ -113,7 +108,6 @@ class Structure(val main: Control) extends ModelComponent {
     } else {
       structure = is
       broadcast(Structure.StructureChange(structure))
-      setPartition(Coloring.fromPartition(Set(is.nodes)))
       setRelation(Relation[NodeID]())
     }
   }
