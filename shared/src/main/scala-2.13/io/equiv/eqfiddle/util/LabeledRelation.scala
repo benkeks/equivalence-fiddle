@@ -9,8 +9,8 @@ import scala.collection.immutable.Set
 class LabeledRelation[E, L](val rep: Map[E, Map[L, Set[E]]]) {
  
   /*{(1,1,3), {1,1,1}} ~> {(1 |-> 1 |-> {1,3})}*/
-  def this(tuples: Set[(E, L ,E)]) {
-    this(tuples.groupBy(_._1).mapValues(_.groupBy(_._2).mapValues(_.map(_._3)).toMap).toMap)
+  def this(tuples: Set[(E, L ,E)]) = {
+    this(tuples.groupBy(_._1).view.mapValues(_.groupBy(_._2).view.mapValues(_.map(_._3)).toMap).toMap)
   }
   
   def size = rep.values.map(_.values.map(_.size).sum).sum
@@ -57,7 +57,7 @@ class LabeledRelation[E, L](val rep: Map[E, Map[L, Set[E]]]) {
   
   lazy val inverseRep = {
     val invTuples = tupleSet.map { case (e1, l, e2) => (e2, l, e1) }
-    invTuples.groupBy(_._1).mapValues(_.groupBy(_._2).mapValues(_.map(_._3)).toMap).toMap
+    invTuples.groupBy(_._1).view.mapValues(_.groupBy(_._2).view.mapValues(_.map(_._3)).toMap).toMap
   }
   
   lazy val lhs = rep.keySet

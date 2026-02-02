@@ -9,7 +9,7 @@ case class Coloring[E](val colors: Map[E, Coloring.Color] = Map()) {
   def universeSize() = universe.size
   
   lazy val partitions = 
-    colors.toSet[(E, Coloring.Color)].groupBy(_._2).mapValues(_.map(_._1)).toMap
+    colors.toSet[(E, Coloring.Color)].groupBy(_._2).view.mapValues(_.map(_._1)).toMap
   
   def freshColor() = universe.max + 1
   
@@ -33,7 +33,7 @@ case class Coloring[E](val colors: Map[E, Coloring.Color] = Map()) {
   }
   
   def filter(f: E => Boolean) = {
-    Coloring(colors.filterKeys(f).toMap)
+    Coloring(colors.view.filterKeys(f).toMap)
   }
   
   def split(otherPart: Set[E]) = {
@@ -84,14 +84,14 @@ case class Coloring[E](val colors: Map[E, Coloring.Color] = Map()) {
   def normalize()(implicit cmp: Ordering[E]) = {
     
     val colorMap = partitions.toList.sortBy(_._2.max).map(_._1).zipWithIndex.toMap
-    Coloring(colors.mapValues(colorMap).toMap)
+    Coloring(colors.view.mapValues(colorMap).toMap)
   }
   
   /** normalizes the color space to 0..n-1 for n colors, where the color order is the old color order*/
   def normalizeReturnMap() = {
     
     val colorMap = partitions.toList.sortBy(_._1).map(_._1).zipWithIndex.toMap
-    (Coloring(colors.mapValues(colorMap).toMap), colorMap)
+    (Coloring(colors.view.mapValues(colorMap).toMap), colorMap)
   }
   
   def toStringPretty()(implicit cmp: Ordering[E]) = {

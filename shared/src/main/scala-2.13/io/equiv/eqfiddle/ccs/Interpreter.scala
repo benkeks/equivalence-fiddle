@@ -48,8 +48,8 @@ class Interpreter[S, A, L](
     } toMap;
 
     // Check for unguarded recursion (up to level 4)
-    val unguarded = procEnv.mapValues(_.unguardedNames).toMap.withDefaultValue(Set[String]())
-    val unguarded4 = unguarded.mapValues(_.flatMap(unguarded(_))).toMap.mapValues(_.flatMap(unguarded(_))).toMap.mapValues(_.flatMap(unguarded(_))).toMap
+    val unguarded = procEnv.mapValues(_.unguardedNames()).toMap.withDefaultValue(Set[String]())
+    val unguarded4 = unguarded.view.mapValues(_.flatMap(unguarded(_))).toMap.view.mapValues(_.flatMap(unguarded(_))).toMap.view.mapValues(_.flatMap(unguarded(_))).toMap
     val unguardedRecursion = for {
       (name, unguardedNames) <- unguarded4
       if unguardedNames contains name
@@ -241,8 +241,8 @@ class Interpreter[S, A, L](
       val newSyncSteps = for {
         (initsA, iA) <- initialStepsGrouped
         (initsB, iB) <- initialStepsGrouped.filterNot(_._2 == iA)
-        bOutputs = initsB.filterKeys(_._2)
-        ((actionA, _), succA) <- initsA.filterKeys(k => !k._2).toList
+        bOutputs = initsB.view.filterKeys(_._2).toMap
+        ((actionA, _), succA) <- initsA.view.filterKeys(k => !k._2).toMap.toList
         pA <- succA
         pB <- bOutputs.getOrElse((actionA, true), Nil)
       } yield {

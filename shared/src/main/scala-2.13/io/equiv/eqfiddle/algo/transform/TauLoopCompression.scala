@@ -33,7 +33,7 @@ class TauLoopCompression[S, A, L] (
     val rep = new HashMap[S, Int]()
     val onStack = new HashSet[S]()
     
-    def colorComponents(s: S) {
+    def colorComponents(s: S): Unit = {
       index(s) = currentIndex
       rep(s) = currentIndex
       stack = s::stack

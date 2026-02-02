@@ -144,7 +144,7 @@ class VeryLargeTransitionSystems(
     val exampleNumbers = if (includeHardExamples) easyExamples ++ hardExamples else easyExamples
     val orderedExamples = if (shuffleExamples) Random.shuffle(exampleNumbers) else exampleNumbers
     for (i <-orderedExamples) {
-      val cancelPromise = Promise[Unit]
+      val cancelPromise = Promise[Unit]()
       val run = Future firstCompletedOf Seq(
         Future[Unit](listMinimizations(vltsSamplesMedium(i), outputMinimizationSizes)),
         cancelPromise.future

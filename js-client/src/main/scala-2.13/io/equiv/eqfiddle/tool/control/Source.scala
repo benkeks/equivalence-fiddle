@@ -61,7 +61,7 @@ class Source(val main: Control) extends ModelComponent {
     }
     
     // group by oldDecls and project them away
-    val newVsOldDecls = newDecls.groupBy(_._1).mapValues(_.map(_._2))
+    val newVsOldDecls = newDecls.groupBy(_._1).view.mapValues(_.map(_._2)).toMap
     
     val defsUpdatedOld = {
       affectedAst.defs.map {

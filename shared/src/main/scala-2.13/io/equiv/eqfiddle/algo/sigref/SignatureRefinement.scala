@@ -41,7 +41,7 @@ abstract class SignatureRefinement[S, A, L] (
         sig = signature(s)
       } yield (sig, s)
       
-      val blocks = signatures.groupBy(_._1).mapValues(_.map(_._2)).toMap
+      val blocks = signatures.groupBy(_._1).view.mapValues(_.map(_._2)).toMap
       
       val colorMap = blocks.keys.zipWithIndex.toMap
       

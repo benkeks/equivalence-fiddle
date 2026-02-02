@@ -14,7 +14,7 @@ trait WinningRegionComputation[GamePosition <: SimpleGame.GamePosition] {
     
     // this procedure is called every time we are sure that a specific
     // game node is won by the attacker.
-    def propagateAttackerWin(gn: GamePosition) {
+    def propagateAttackerWin(gn: GamePosition): Unit = {
       if (!win(gn)) {
         win += gn
         for (pred <- predecessors(gn)) {

@@ -113,13 +113,13 @@ object EnergyGame {
 
     override def equals(that: Any): Boolean = that match {
       case that: Energy =>
-        this.dim == that.dim && indices.forall(i => this.vector(i) == that.vector(i))
+        this.dim() == that.dim() && indices.forall(i => this.vector(i) == that.vector(i))
       case _ =>
         false
     }
 
     def lub(that: Energy): Energy = {
-      val newEnergy = new Array[Int](dim)
+      val newEnergy = new Array[Int](dim())
       indices.foreach { i => newEnergy(i) = Math.max(this.vector(i), that.vector(i)) }
       Energy(newEnergy)
     }

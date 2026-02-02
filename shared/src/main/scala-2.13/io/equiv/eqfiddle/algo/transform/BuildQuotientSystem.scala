@@ -21,7 +21,7 @@ class BuildQuotientSystem[S, A, L] (
   
   def build() = {
     val partitions = coloring.partitions
-    val reps = partitions.mapValues(partition => partition.find(protectedNodes).getOrElse(partition.head)).toMap
+    val reps = partitions.view.mapValues(partition => partition.find(protectedNodes).getOrElse(partition.head)).toMap
     
     val transitions = for {
       (color, partition) <- partitions.toList

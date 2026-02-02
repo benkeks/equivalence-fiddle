@@ -7,7 +7,7 @@ import io.equiv.eqfiddle.util.Parsing.Pos0
 object Syntax {
   
   abstract sealed class Expression (val position: Pos) extends Parsing.AbstractExpression {
-    def this() {
+    def this() = {
       this(Pos(0, 0))
     }
     
@@ -147,7 +147,7 @@ object Syntax {
     }
   }
 
-  implicit def intPairToPos(pos: (Int, Int)) = Pos(pos._1, pos._2)
+  implicit def intPairToPos(pos: (Int, Int)): Pos = Pos(pos._1, pos._2)
   
   /** replaces all Pos0 by the position of the previous expression */
   def fillInPos(ex: List[Expression]): List[Expression] = ex match {

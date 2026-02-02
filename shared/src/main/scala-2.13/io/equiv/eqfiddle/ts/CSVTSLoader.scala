@@ -16,7 +16,7 @@ class CSVTSLoader(
 
     val relationTuples = new Queue[(Int, Symbol, Int)]()
     val bufferedSource = scala.io.Source.fromFile(tsFileName)
-    for (line <- bufferedSource.getLines) {
+    for (line <- bufferedSource.getLines()) {
       val firstComma = line.indexWhere(_ == ',', 0)
       val secondComma = line.indexWhere(_ == ',', firstComma + 1)
       val start = line.slice(0, firstComma).trim

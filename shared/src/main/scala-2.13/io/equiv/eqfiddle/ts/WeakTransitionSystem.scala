@@ -12,7 +12,7 @@ class WeakTransitionSystem[S, A, L](
   extends TransitionSystem[S, A, L](step, nodeLabeling)
     with SilentActions[A] {
 
-  def this(ts: TransitionSystem[S, A, L], silentActions: Set[A]) {
+  def this(ts: TransitionSystem[S, A, L], silentActions: Set[A]) = {
     this(ts.step, ts.nodeLabeling, silentActions)
   }
 
@@ -142,7 +142,7 @@ class WeakTransitionSystem[S, A, L](
 
   def weakPre(ss: Set[S]): Map[A, Set[S]] = {
     for { s <- ss; sp <- weakPre(s) toList } yield sp
-  }.groupBy(_._1).mapValues(_.flatMap(_._2)).toMap
+  }.groupBy(_._1).view.mapValues(_.flatMap(_._2)).toMap
 
   def isStable(s: S): Boolean = {
     !enabled(s).exists(silentActions(_))
