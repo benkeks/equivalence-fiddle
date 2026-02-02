@@ -333,7 +333,7 @@ class WeakSpectroscopy[S, A, L] (
       case _ =>
         "ERROR"
     }
-    str.replaceAllLiterally(".0", "").replaceAllLiterally("\\", "\\\\")
+    str.replace(".0", "").replace("\\", "\\\\")
   }
 
   def positionToType(gn: GamePosition): String = gn match {

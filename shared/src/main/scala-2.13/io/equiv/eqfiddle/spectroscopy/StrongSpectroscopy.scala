@@ -131,7 +131,7 @@ class StrongSpectroscopy[S, A, L] (
         s"$p, $qqSString, $qqRString"
       case _ => "ERROR"
     }
-    str.replaceAllLiterally(".0", "").replaceAllLiterally("\\", "\\\\")
+    str.replace(".0", "").replace("\\", "\\\\")
   }
 
   override def gamePositionToID(gn: GamePosition): String =

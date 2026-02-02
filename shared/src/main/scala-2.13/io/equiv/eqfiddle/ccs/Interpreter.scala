@@ -48,7 +48,7 @@ class Interpreter[S, A, L](
     } toMap;
 
     // Check for unguarded recursion (up to level 4)
-    val unguarded = procEnv.mapValues(_.unguardedNames()).toMap.withDefaultValue(Set[String]())
+    val unguarded = procEnv.view.mapValues(_.unguardedNames()).toMap.withDefaultValue(Set[String]())
     val unguarded4 = unguarded.view.mapValues(_.flatMap(unguarded(_))).toMap.view.mapValues(_.flatMap(unguarded(_))).toMap.view.mapValues(_.flatMap(unguarded(_))).toMap
     val unguardedRecursion = for {
       (name, unguardedNames) <- unguarded4

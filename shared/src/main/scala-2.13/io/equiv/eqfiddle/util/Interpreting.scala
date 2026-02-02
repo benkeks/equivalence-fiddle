@@ -60,7 +60,7 @@ object Interpreting {
       case _ => this
     }
     
-    override def toString: String = pos.line + "." + pos.col + ": " + msg
+    override def toString: String = s"${pos.line}.${pos.col}: $msg"
   }
   
   case class Success[+E](result: E) extends Result[E] {

@@ -164,7 +164,7 @@ class LabeledRelation[E, L](val rep: Map[E, Map[L, Set[E]]]) {
     val idFor = list.indices.map(i => (list(i), i)).toMap
     tupleSet.map { case (e1, l, e2) =>
       val label = l.toString()
-      idFor(e1) + "->" + idFor(e2) + (if (label != "") "[label=\"" + label + "\"]" else "")
+      s"${idFor(e1)}->${idFor(e2)}${if (label != "") s"[label=\"$label\"]" else ""}"
     }.mkString("digraph rel{\n  ", ";\n  ", "}")
   }
   
@@ -173,16 +173,16 @@ class LabeledRelation[E, L](val rep: Map[E, Map[L, Set[E]]]) {
     val idFor = list.indices.map(i => (list(i), i)).toMap
     tupleSet.map { case (e1, l, e2) =>
       val label = l.toString()
-      idFor(e1) + "," + idFor(e2) + "," + label
+      s"${idFor(e1)},${idFor(e2)},$label"
     }.mkString("", "\n", "")
   }
   
   override def toString = tupleSet.mkString("{", ",", "}")
   
-  override def equals(that: Any) = that match {
-    case t: LabeledRelation[E, L] => rep == t.rep
+  override def equals(that: Any) = (that match {
+    case t: LabeledRelation[E, L] @unchecked => rep == t.rep
     case _ => false
-  }
+  })
 
   override def hashCode = rep.hashCode
 }

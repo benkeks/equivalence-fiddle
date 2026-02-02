@@ -111,9 +111,9 @@ trait EquivalenceChecking[S, A, L, CF <: HML.Formula[A]]
 
       def positionToString(gn: MaterializedPosition): String = gn match {
         case MaterializedAttackerPosition(bgn, e) =>
-          gamePositionToString(bgn) + "\\n" + e.toString().replaceAllLiterally(maxIntString, "∞")
+          gamePositionToString(bgn) + "\\n" + e.toString().replace(maxIntString, "∞")
         case MaterializedDefenderPosition(bgn, e) =>
-          gamePositionToString(bgn) + "\\n" + e.toString().replaceAllLiterally(maxIntString, "∞")
+          gamePositionToString(bgn) + "\\n" + e.toString().replace(maxIntString, "∞")
       }
 
       def moveToLabel(gn1: MaterializedPosition, gn2: MaterializedPosition) = {

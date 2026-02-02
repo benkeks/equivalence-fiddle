@@ -184,7 +184,7 @@ trait SpectroscopyFramework[S, A, L, CF <: HML.Formula[A]]
 
       def positionToString(gn: GamePosition): String = {
         val budgetString = attackerWinningBudgets.getOrElse(gn,Set()).map(_.vector.mkString("(",",",")")).mkString(" / ")
-        val formulaString = formulas.getOrElse(gn,Set()).mkString("\\n").replaceAllLiterally("⟩⊤","⟩")
+        val formulaString = formulas.getOrElse(gn,Set()).mkString("\\n").replace("⟩⊤","⟩")
         gamePositionToString(gn) +
          (if (budgetString != "") s"\\n------\\n$budgetString" else "") +
          (if (formulaString != "") s"\\n------\\n$formulaString" else "")

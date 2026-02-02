@@ -157,16 +157,16 @@ class Relation[E](val rep: Map[E, Set[E]]) {
     tupleSet.map {
       case (l, r) =>
         val label = edgeLabeling(l, r)
-        idFor(l) + "->" + idFor(r) + (if (label != "") "[label=\"" + label + "\"]" else "")
+        s"${idFor(l)}->${idFor(r)}${if (label != "") s"[label=\"$label\"]" else ""}"
     }.mkString("digraph rel{\n  ", ";\n  ", "}")
   }
 
   override def toString = tupleSet.mkString("{", ",", "}")
 
-  override def equals(that: Any) = that match {
-    case t: Relation[E] => rep == t.rep
+  override def equals(that: Any) = (that match {
+    case t: Relation[E] @unchecked => rep == t.rep
     case _              => false
-  }
+  })
 
   override def hashCode = rep.hashCode
 }

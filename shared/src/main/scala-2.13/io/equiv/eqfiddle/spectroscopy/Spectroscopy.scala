@@ -59,7 +59,7 @@ object Spectroscopy {
         (f, price, eqs) <- distinctions
       } yield mapConstructor(Map(
         ("formula", f.toString()),
-        ("price", listConstructor(price.toTuple.productIterator.toIterable)),
+        ("price", listConstructor(price.toTuple.productIterator.iterator.to(Iterable))),
         ("inequivalences", listConstructor(eqs.map(_.name))))
       )
       mapConstructor(Map(
