@@ -55,7 +55,6 @@ config.plugins = (config.plugins || []).concat([
     jQuery: "jquery",
     "window.jQuery": "jquery",
     CodeMirror: "codemirror",
-    "window.CodeMirror": "codemirror",
     d3: "d3"
   }),
   // Plugin to rewrite source map references to use HTTP paths that DevTools can load

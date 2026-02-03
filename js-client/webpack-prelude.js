@@ -8,6 +8,7 @@ window.$ = $;
 window.CodeMirror = CodeMirror;
 
 require("bootstrap");
+
 require("./cm_transitionsystem_mode.js");
 
 try {
