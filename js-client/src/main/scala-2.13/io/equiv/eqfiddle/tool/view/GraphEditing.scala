@@ -126,11 +126,13 @@ trait GraphEditing extends ViewComponent {
   }
   
   def onClick(node: GraphNode): Unit = {
+    if (d3.event.asInstanceOf[org.scalajs.dom.MouseEvent].button != 0) return
     editingBehavior.onClick(node)
     d3.event.asInstanceOf[dom.Event].stopPropagation()
   }
   
   def onClickBackground(): Unit = {
+    if (d3.event.asInstanceOf[org.scalajs.dom.MouseEvent].button != 0) return
     val mouseCoords = d3.mouse(sceneRoot.node())
     val x = mouseCoords(0)
     val y = mouseCoords(1)
@@ -244,17 +246,6 @@ trait GraphEditing extends ViewComponent {
   }
   
   def onZoom(): Unit = {
-    // deselect all nodes if clicking on background without shift key
-    if (!selectionExtensionActive) {
-      deselectAll()
-    } else {
-      // if shift key is pressed, zooming should not deselect nodes, but we still want to update the selection rectangle
-      val mouseCoords = d3.mouse(sceneRoot.node())
-      selectionCurrentX = mouseCoords(0)
-      selectionCurrentY = mouseCoords(1)
-      updateSelectionRect()
-    }
-   
     sceneRoot.attr("transform", d3.event.asInstanceOf[d3.ZoomEvent].transform.toString())
   }
 }

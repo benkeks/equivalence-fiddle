@@ -104,8 +104,8 @@ lazy val shared = (project in file("shared")).settings(
   assembly / test := {},
   libraryDependencies ++= Seq(
     "org.scalaz" %%% "scalaz-core" % "7.3.8",
-    "org.scalactic" %% "scalactic" % "3.2.0",
-    "org.scalatest" %% "scalatest" % "3.2.0" % "test"
+    "org.scalactic" %% "scalactic" % "3.2.19",
+    "org.scalatest" %% "scalatest" % "3.2.19" % "test"
   )
 )
 
@@ -128,27 +128,25 @@ lazy val jsClient = (project in file("js-client")).settings(
   libraryDependencies ++= Seq(
     "org.scalaz" %%% "scalaz-core" % "7.3.8",
     "com.github.fdietze.scala-js-d3v4" %%% "scala-js-d3v4" % "64a2cca057",
-    "com.github.karasiq" %%% "scalajs-bootstrap" % "2.4.2",
     "org.scala-js" %%% "scalajs-dom" % "2.3.0"
   ),
   Compile / npmDependencies ++= Seq(
-    "d3" -> "5.9.2",
+    "d3" -> "7.9.0",
     "jquery" -> "3.7.1",
-    "bootstrap" -> "5.3.3",
-    "codemirror" -> "5.13.0"
+    "bootstrap" -> " 5.3.8",
+    "codemirror" -> "5.65.20"
   ),
   Compile / npmResolutions ++= Map(
-    "d3" -> "5.9.2",
+    "d3" -> "7.9.0",
     "jquery" -> "3.7.1",
-    "bootstrap" -> "5.3.3"
   ),
   Compile / fastOptJS / webpackConfigFile := Some(baseDirectory.value / "webpack.config.js"),
   Compile / fullOptJS / webpackConfigFile := Some(baseDirectory.value / "webpack.config.js"),
   Compile / fastOptJS / webpackEmitSourceMaps := true,
   Compile / fullOptJS / webpackEmitSourceMaps := true,
-  webpack / version := "5.88.2",
+  webpack / version := "5.105.0",
   webpackCliVersion := "5.1.4",
-  startWebpackDevServer / version := "4.15.1",
+  startWebpackDevServer / version := "5.2.3",
   Compile / fastLinkJS / artifactPath :=
       ((Compile / classDirectory).value / "app" / ((fastLinkJS / moduleName).value + ".js")),
   Compile / fullOptJS / artifactPath := (Compile / fastLinkJS / artifactPath).value,
