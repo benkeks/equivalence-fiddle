@@ -13,11 +13,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Create code archive
       run: zip -r code.zip doc js-api js-client project shared web .sbtopts build.sbt README.md
     - name: Set up JDK 17
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v5
       with:
         java-version: '17'
         distribution: 'temurin'
@@ -32,7 +32,7 @@ jobs:
     - name: Add code archive to web deployment
       run: mv code.zip web/target/web/stage/
     - name: Deploy CI
-      uses: burnett01/rsync-deployments@7.0.1
+      uses: burnett01/rsync-deployments@v8
       with:
         switches: -avzr --delete
         path: web/target/web/stage/
@@ -43,13 +43,13 @@ jobs:
     - name: Remove code archive from artifact
       run: rm web/target/web/stage/code.zip
     - name: Archive production webclient artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: equivio-webclient
         path: |
           web/target/web/stage
     - name: Archive production JS api artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: equivio-js-api
         path: |
