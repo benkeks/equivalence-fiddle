@@ -52,9 +52,6 @@ object JSImportGlobals {
   @JSImport("d3", JSImport.Namespace)
   @js.native object D3Module extends js.Object
 
-  @JSImport("d3-brush", JSImport.Namespace)
-  @js.native object D3BrushModule extends js.Object
-
   @JSImport("jquery", JSImport.Default)
   @js.native object JQueryModule extends js.Object
 

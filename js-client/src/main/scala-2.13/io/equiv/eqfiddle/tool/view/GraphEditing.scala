@@ -2,7 +2,6 @@ package io.equiv.eqfiddle.tool.view
 
 import d3v4._
 import scala.scalajs.js
-import scala.scalajs.js.annotation.JSImport
 import scala.collection.mutable.HashMap
 import org.scalajs.dom
 import org.scalajs.dom.EventTarget
@@ -11,11 +10,6 @@ import org.scalajs.dom.EventTarget
  * GraphEditing manages the interplay of HTML-Events, node selection, scrolling/zooming
  * and graph editing behaviors.
  */
-object GraphEditing {
-  @JSImport("d3-brush", JSImport.Namespace)
-  @js.native object D3BrushModule extends js.Object
-}
-
 trait GraphEditing extends ViewComponent {
   self: GraphView =>
     
@@ -29,28 +23,33 @@ trait GraphEditing extends ViewComponent {
   val viewportX = d3.scaleLinear().domain(js.Array(0.0, 1000.0)).range(js.Array(0.0, 1000.0))
   val viewportY = d3.scaleLinear().domain(js.Array(0.0, 1000.0)).range(js.Array(0.0, 1000.0))
    
-  val brush = GraphEditing.D3BrushModule.asInstanceOf[js.Dynamic].brush()
-    .on("start", (_: Any) => onSelectionBrushStart())
-    .on("brush", (_: Any) => onSelectionBrush())
-    .on("end", (_: Any) => onSelectionBrushEnd())
-  
-  val brushRect = svg.append("g")
-    .classed("brush", true)
+  // Manual selection rectangle state
+  var selectionRectActive = false
+  var selectionStartX = 0.0
+  var selectionStartY = 0.0
+  var selectionCurrentX = 0.0
+  var selectionCurrentY = 0.0
     
   val zoomWindow = d3.zoom[dom.EventTarget]()
   zoomWindow
     .on("zoom", () => onZoom())
 
   svg.call(zoomWindow)
-    .on("click", () => onClickBackground())
-  
+    .on("mousedown", () => onClickBackground())
+    .on("mousemove", () => onMouseMove())
+    .on("mouseup", () => onEndSelection())
+
   val drag = d3.drag[GraphNode]()
     .on("start", (d: GraphNode) => onDragStart(d))
     .on("drag", (d: GraphNode) => onDrag(d))
     .on("end", (d: GraphNode) => onDragEnd(d))
     
   val sceneRoot = svg.append("g")
-    
+  
+  val selectionRect = sceneRoot.append("rect")
+    .classed("brush-selection", true)
+    .style("display", "none")
+
   val behaviors = HashMap[String, GraphEditBehavior]()
   
   var selectionExtensionActive = false
@@ -132,9 +131,79 @@ trait GraphEditing extends ViewComponent {
   }
   
   def onClickBackground(): Unit = {
-    //Note: for reasons I don't understand, node is always undefined...
     val mouseCoords = d3.mouse(sceneRoot.node())
-    editingBehavior.onClick((mouseCoords(0), mouseCoords(1)))
+    val x = mouseCoords(0)
+    val y = mouseCoords(1)
+    
+    // Start selection rectangle if shift is pressed
+    if (selectionExtensionActive) {
+      selectionRectActive = true
+      selectionStartX = x
+      selectionStartY = y
+      selectionCurrentX = x
+      selectionCurrentY = y
+      
+      // Save previous selection state
+      nodes.foreach { n =>
+        n.previouslySelected = n.selected
+      }
+      
+      updateSelectionRect()
+      d3.event.asInstanceOf[dom.Event].stopPropagation()
+    } else {
+      deselectAll()
+      editingBehavior.onClick((x, y))
+    }
+  }
+  
+  def onMouseMove(): Unit = {
+    if (selectionRectActive) {
+      val mouseCoords = d3.mouse(sceneRoot.node())
+      selectionCurrentX = mouseCoords(0)
+      selectionCurrentY = mouseCoords(1)
+      updateSelectionRect()
+      updateNodeSelection()
+    }
+  }
+  
+  def onEndSelection(): Unit = {
+    selectionRectActive = false
+    selectionRect.style("display", "none")
+  }
+  
+  def updateSelectionRect(): Unit = {
+    val x = Math.min(selectionStartX, selectionCurrentX)
+    val y = Math.min(selectionStartY, selectionCurrentY)
+    val width = Math.abs(selectionCurrentX - selectionStartX)
+    val height = Math.abs(selectionCurrentY - selectionStartY)
+    
+    selectionRect
+      .attr("x", x)
+      .attr("y", y)
+      .attr("width", width)
+      .attr("height", height)
+      .style("display", if (width > 2 || height > 2) "block" else "none")
+  }
+  
+  def updateNodeSelection(): Unit = {
+    val minX = Math.min(selectionStartX, selectionCurrentX)
+    val maxX = Math.max(selectionStartX, selectionCurrentX)
+    val minY = Math.min(selectionStartY, selectionCurrentY)
+    val maxY = Math.max(selectionStartY, selectionCurrentY)
+    
+    nodes.foreach { node: GraphNode =>
+      val inRect =
+        node.x.get >= minX && node.x.get <= maxX &&
+        node.y.get >= minY && node.y.get <= maxY &&
+        dummyNode != node
+      node.selected =
+        if (selectionExtensionActive)
+          inRect ^ node.previouslySelected
+        else
+          inRect
+    }
+    onSelectionChange()
+    editingBehavior.onSelectionChange()
   }
   
   def onKeyDown(): Unit = {
@@ -149,38 +218,6 @@ trait GraphEditing extends ViewComponent {
     }
   }
   
-  def onSelectionBrushStart(): Unit = {
-    nodes.foreach { n =>
-      n.previouslySelected = n.selected
-    }
-  }
-  
-  def onSelectionBrush(): Unit = {
-    val selection = d3.event.asInstanceOf[js.Dynamic].selection
-    if (js.isUndefined(selection) || selection == null) {
-      return
-    }
-    val ext = selection.asInstanceOf[js.Array[js.Array[Double]]]
-    nodes.foreach { node: GraphNode =>
-      val inRect =
-        node.x.get >= ext(0)(0) && node.x.get <= ext(1)(0) &&
-        node.y.get >= ext(0)(1) && node.y.get <= ext(1)(1) &&
-        dummyNode != node
-      node.selected =
-        if (selectionExtensionActive)
-          inRect ^ node.previouslySelected
-        else
-          inRect
-      node.selected
-    }
-    onSelectionChange()
-    editingBehavior.onSelectionChange()
-  }
-  
-  def onSelectionBrushEnd(): Unit = {
-    brushRect.call(brush.asInstanceOf[js.Dynamic].move.asInstanceOf[js.Function], null)
-  }
-  
   def setSelectionExtension(active: Boolean) = {
     selectionExtensionActive = active
     if (selectionExtensionActive) {
@@ -189,17 +226,12 @@ trait GraphEditing extends ViewComponent {
         .on("touchstart.zoom", () => {})
         .on("touchmove.zoom", () => {})
         .on("touchend.zoom", () => {})
-      brushRect.select(".background").style("cursor", "crosshair")
-      brushRect.call(brush.asInstanceOf[js.Function])
+      svg.style("cursor", "crosshair")
     } else {
-      brushRect.call(brush.asInstanceOf[js.Function])
-        .on("mousedown.brush", null.asInstanceOf[js.Function1[org.scalajs.dom.EventTarget, Unit]])
-        .on("touchstart.brush", null.asInstanceOf[js.Function1[org.scalajs.dom.EventTarget, Unit]])
-        .on("touchmove.brush", null.asInstanceOf[js.Function1[org.scalajs.dom.EventTarget, Unit]])
-        .on("touchend.brush", null.asInstanceOf[js.Function1[org.scalajs.dom.EventTarget, Unit]])
-      brushRect.select(".background").style("cursor", "auto")
       svg.call(zoomWindow)
+      svg.style("cursor", "auto")
     }
+    onEndSelection()
   }
   
   def deselectAll(): Unit = {
@@ -215,6 +247,12 @@ trait GraphEditing extends ViewComponent {
     // deselect all nodes if clicking on background without shift key
     if (!selectionExtensionActive) {
       deselectAll()
+    } else {
+      // if shift key is pressed, zooming should not deselect nodes, but we still want to update the selection rectangle
+      val mouseCoords = d3.mouse(sceneRoot.node())
+      selectionCurrentX = mouseCoords(0)
+      selectionCurrentY = mouseCoords(1)
+      updateSelectionRect()
     }
    
     sceneRoot.attr("transform", d3.event.asInstanceOf[d3.ZoomEvent].transform.toString())
