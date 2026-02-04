@@ -40,7 +40,7 @@ object Benchmark extends App {
       |""".stripMargin
 
   val about =
-    """The Linear-Time--Branching-Time Spectroscope is being developed by Benjamin Bisping at TU Berlin
+    """equiv.io, the Linear-Time--Branching-Time Spectroscope, is being developed by Benjamin Bisping at TU Berlin
       |More info: https://equiv.io/
       |Source:    https://github.com/benkeks/equivalence-fiddle
       |""".stripMargin

@@ -1,7 +1,7 @@
 import org.scalajs.linker.interface.OutputPatterns
 
-name := "EquivalenceFiddle"
-version := "0.1.0"
+name := "equiv.io"
+version := "0.4.0"
 
 val scVersion = "2.13.18"
 

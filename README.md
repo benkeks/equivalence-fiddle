@@ -1,6 +1,6 @@
-# Linear-Time–Branching-Time Spectroscope
+# equiv.io – The Linear-Time–Branching-Time Spectroscope
 
-The “Linear-time–Branching-time Spectroscope” is a web app to find all preorders, equivalences and inequivalences from the linear-time–branching-time spectrum for small processes as described in [Bisping, CAV 2023](https://doi.org/10.1007/978-3-031-37706-8_5) and [Bisping & Jansen, EXPRESS/SOS 2024](https://doi.org/10.4204/EPTCS.412.6).
+**equiv.io** is a web app to find all preorders, equivalences and inequivalences from the linear-time–branching-time spectrum for small processes as described in [Bisping, CAV 2023](https://doi.org/10.1007/978-3-031-37706-8_5) and [Bisping & Jansen, EXPRESS/SOS 2024](https://doi.org/10.4204/EPTCS.412.6).
 
 It runs online on https://equiv.io/ .
 
@@ -59,6 +59,6 @@ The algorithm uses a generalization of the bisimulation game to find all relevan
 
 ## Developed by
 
-The LTBT Spectroscope is developed at [MTV TU Berlin](https://www.mtv.tu-berlin.de) by [Benjamin Bisping](https://bbisping.de) (benjamin.bisping@tu-berlin.de).
+equiv.io is developed at [MTV TU Berlin](https://www.mtv.tu-berlin.de) by [Benjamin Bisping](https://bbisping.de) (benjamin.bisping@tu-berlin.de).
 
 The code is subject to the MIT License to be found in `LICENSE`. The full source can be obtained from <https://concurrency-theory.org/ltbt-spectroscope/code/> and via [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6726494.svg)](https://doi.org/10.5281/zenodo.6726494).
