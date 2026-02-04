@@ -5,7 +5,7 @@ import org.scalajs.linker.interface.OutputPatterns
 name := "EquivalenceFiddle"
 version := "0.1.0"
 
-val scVersion = "2.13.13"
+val scVersion = "2.13.18"
 
 scalaVersion := scVersion
 
@@ -128,7 +128,7 @@ lazy val jsClient = (project in file("js-client")).settings(
   libraryDependencies ++= Seq(
     "org.scalaz" %%% "scalaz-core" % "7.3.8",
     "com.github.fdietze.scala-js-d3v4" %%% "scala-js-d3v4" % "64a2cca057",
-    "org.scala-js" %%% "scalajs-dom" % "2.3.0"
+    "org.scala-js" %%% "scalajs-dom" % "2.8.1"
   ),
   Compile / npmDependencies ++= Seq(
     "d3" -> "7.9.0",
