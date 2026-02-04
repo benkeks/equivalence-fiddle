@@ -27,7 +27,7 @@ object EquivalenceSpectroscopeAPI {
 
     private def cytoNodes() = {
       val nodeStrings = for {
-        (id, label) <- nodeLabeling.toIterable
+        (id, label) <- nodeLabeling
       } yield s"{ data: { id: '$id', name: '$label'} }"
       nodeStrings.mkString("[", ",", "]")
     }
@@ -48,7 +48,7 @@ object EquivalenceSpectroscopeAPI {
     val states = stateEntries.keys
 
     val transitions = for {
-      (s, obj) <- stateEntries
+      (s, obj) <- stateEntries.toSeq
       trans <- obj("transitions").asInstanceOf[js.Array[js.Dynamic]]
     } yield
       (s.asInstanceOf[String],
@@ -57,7 +57,7 @@ object EquivalenceSpectroscopeAPI {
     val step = new LabeledRelation(transitions.toSet)
   
     val nodeLabeling = (for {
-      (s, obj) <- stateEntries
+      (s, obj) <- stateEntries.toSeq
       proc = obj("ccs").asInstanceOf[String]
     } yield (s, proc)).toMap
 
@@ -82,7 +82,7 @@ object EquivalenceSpectroscopeAPI {
   def LTBTS() = {
     val classes = for {
       Spectrum.EquivalenceNotion(name, obsNotion) <- StrongObservationNotion.LTBTS.notions
-    } yield (name, obsNotion.toTuple.productIterator.toIterable.toJSArray)
+    } yield (name, obsNotion.toTuple.productIterator.toSeq.toJSArray)
     classes.toMap.toJSDictionary
   }
 }
