@@ -120,13 +120,13 @@ lazy val jsClient = (project in file("js-client")).settings(
     "org.scala-js" %%% "scalajs-dom" % "2.8.1"
   ),
   Compile / npmDependencies ++= Seq(
-    "d3" -> "7.9.0",
+    "d3" -> "5.16.0",
     "jquery" -> "3.7.1",
     "bootstrap" -> " 5.3.8",
     "codemirror" -> "5.65.20"
   ),
   Compile / npmResolutions ++= Map(
-    "d3" -> "7.9.0",
+    "d3" -> "5.16.0",
     "jquery" -> "3.7.1"
   ),
   Compile / fastOptJS / webpackConfigFile := Some(baseDirectory.value / "webpack.config.js"),
