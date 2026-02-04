@@ -1,5 +1,3 @@
-name := "EquivalenceFiddle"
-
 import org.scalajs.linker.interface.OutputPatterns
 
 name := "EquivalenceFiddle"
@@ -17,42 +15,36 @@ val scalacOpts = Seq(
   "-deprecation"
 )
 
-lazy val web = (project in file("web")).settings(
+// Common settings for Scala.js projects
+lazy val commonSettings = Seq(
   scalaVersion := scVersion,
+  scalacOptions ++= scalacOpts
+)
+
+lazy val web = (project in file("web")).settings(
+  commonSettings,
   scalaJSProjects := Seq(jsClient),
   Assets / pipelineStages := Seq(scalaJSPipeline),
   Compile / compile := ((Compile / compile) dependsOn (jsClient / Compile / fastOptJS / webpack)).value,
-  Assets / unmanagedResources ++= (jsClient / Compile / fastOptJS / webpack).value.map(_.data),
-  // Also include webpack bundle source map
-  Assets / unmanagedResources += {
-    val bundlePath = (jsClient / Compile / fastOptJS / webpack).value.head.data
-    new File(bundlePath.getAbsolutePath + ".map")
-  },
-  // Include the intermediate Scala.js source map so the bundle map can reference it
-  Assets / unmanagedResources += {
-    val jsFile = (jsClient / Compile / fastOptJS).value.data
-    new File(jsFile.getAbsolutePath + ".map")
-  },
-  // Include the intermediate Scala.js output and its source map for webpack to reference
-  // Webpack's source-map-loader will include these in the bundle map
+  // Bundle webpack outputs and source maps as assets
   Assets / unmanagedResources ++= {
+    val bundle = (jsClient / Compile / fastOptJS / webpack).value.head.data
+    val bundleMap = new File(bundle.getAbsolutePath + ".map")
     val jsFile = (jsClient / Compile / fastOptJS).value.data
-    Seq(jsFile, new File(jsFile.getAbsolutePath + ".map"))
+    val jsMap = new File(jsFile.getAbsolutePath + ".map")
+    Seq(bundle, bundleMap, jsFile, jsMap)
   },
-    // Copy CSS files from bundler node_modules into managed assets (preserves lib/ paths)
+    // Copy CSS files from bundler node_modules into managed assets
     Assets / resourceGenerators += Def.task {
       val npmDir = (jsClient / Compile / fastOptJS).value.data.getParentFile / "node_modules"
       val outDir = (Assets / resourceManaged).value / "lib"
 
-      val cmCss = npmDir / "codemirror" / "lib" / "codemirror.css"
-      val bsCss = npmDir / "bootstrap" / "dist" / "css" / "bootstrap.min.css"
-
-      val mappings = Seq(
-        cmCss -> (outDir / "codemirror" / "lib" / "codemirror.css"),
-        bsCss -> (outDir / "bootstrap" / "css" / "bootstrap.min.css")
+      val cssFiles = Seq(
+        npmDir / "codemirror" / "lib" / "codemirror.css" -> outDir / "codemirror" / "lib" / "codemirror.css",
+        npmDir / "bootstrap" / "dist" / "css" / "bootstrap.min.css" -> outDir / "bootstrap" / "css" / "bootstrap.min.css"
       )
 
-      mappings.flatMap { case (src, dest) =>
+      cssFiles.flatMap { case (src, dest) =>
         if (src.exists) {
           IO.createDirectory(dest.getParentFile)
           IO.copyFile(src, dest)
@@ -65,7 +57,7 @@ lazy val web = (project in file("web")).settings(
     val libDir = baseDirectory.value / "src" / "main" / "assets" / "lib"
     (libDir.globRecursive("*.css").get ++ libDir.globRecursive("*.min.css").get).distinct
   },
-  // Copy Scala source files to web stage so source maps can reference them via HTTP
+  // Copy Scala source files to web stage for source map resolution
   Assets / resourceGenerators += Def.task {
     val sharedSrcDir = (jsClient / baseDirectory).value / ".." / "shared" / "src" / "main" / "scala-2.13"
     val jsSrcDir = (jsClient / baseDirectory).value / "src" / "main" / "scala-2.13"
@@ -98,9 +90,8 @@ lazy val web = (project in file("web")).settings(
 ).enablePlugins(SbtWeb)
 
 lazy val shared = (project in file("shared")).settings(
-  scalaVersion := scVersion,
+  commonSettings,
   name := "shared",
-  scalacOptions ++= scalacOpts,
   assembly / test := {},
   libraryDependencies ++= Seq(
     "org.scalaz" %%% "scalaz-core" % "7.3.8",
@@ -110,19 +101,17 @@ lazy val shared = (project in file("shared")).settings(
 )
 
 lazy val jsClient = (project in file("js-client")).settings(
-  scalaVersion := scVersion,
+  commonSettings,
   name := "eqfiddle-client",
   Compile / fastLinkJS / moduleName := "eqfiddle-client",
   ThisBuild / parallelExecution := false,
-  scalacOptions ++= scalacOpts,
   scalacOptions += "-P:scalajs:nowarnGlobalExecutionContext",
   scalaJSLinkerConfig := {
-    val baseConfig = scalaJSLinkerConfig.value
+    scalaJSLinkerConfig.value
       .withModuleKind(ModuleKind.CommonJSModule)
       .withOutputPatterns(OutputPatterns.fromJSFile("eqfiddle-client.js"))
       .withSourceMap(true)
-    // Use relative source map paths so the chain works when bundled and deployed
-    baseConfig.withRelativizeSourceMapBase(Some(new java.net.URI(".")))
+      .withRelativizeSourceMapBase(Some(new java.net.URI(".")))
   },
   resolvers += "jitpack" at "https://jitpack.io",
   libraryDependencies ++= Seq(
@@ -138,7 +127,7 @@ lazy val jsClient = (project in file("js-client")).settings(
   ),
   Compile / npmResolutions ++= Map(
     "d3" -> "7.9.0",
-    "jquery" -> "3.7.1",
+    "jquery" -> "3.7.1"
   ),
   Compile / fastOptJS / webpackConfigFile := Some(baseDirectory.value / "webpack.config.js"),
   Compile / fullOptJS / webpackConfigFile := Some(baseDirectory.value / "webpack.config.js"),
@@ -155,11 +144,13 @@ lazy val jsClient = (project in file("js-client")).settings(
 ).aggregate(shared).dependsOn(shared).enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin, ScalaJSWeb)
 
 lazy val jsApi = (project in file("js-api")).settings(
-  scalaVersion := scVersion,
+  commonSettings,
   name := "eqfiddle-api",
   ThisBuild / parallelExecution := false,
-  scalacOptions ++= scalacOpts,
-  scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule).withOutputPatterns(OutputPatterns.fromJSFile("%s.js")) },
+  scalaJSLinkerConfig ~= { 
+    _.withModuleKind(ModuleKind.CommonJSModule)
+     .withOutputPatterns(OutputPatterns.fromJSFile("%s.js")) 
+  },
   Compile / fastLinkJS / artifactPath :=
       ((fastLinkJS / target).value /
         ((fastLinkJS / moduleName).value + ".js")),
@@ -170,5 +161,5 @@ lazy val jsApi = (project in file("js-api")).settings(
 
 lazy val root = project.in(file(".")).settings(
   name := "eqfiddle"
-  ).aggregate(shared, jsClient, jsApi, web)
-   .dependsOn(jsClient, web)
+).aggregate(shared, jsClient, jsApi, web)
+ .dependsOn(jsClient, web)
