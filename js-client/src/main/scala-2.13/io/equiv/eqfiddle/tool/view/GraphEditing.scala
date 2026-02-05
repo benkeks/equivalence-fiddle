@@ -284,7 +284,7 @@ trait GraphEditing extends ViewComponent {
     val translateY = padding - minY * scale + (height - (maxY - minY) * scale) / 2
     
     val transform = d3.zoomIdentity.translate(translateX, translateY).scale(scale)
-    zoomWindow.transform(d3.transition().duration(400), transform)
-    svg.call(zoomWindow)
+    
+    zoomWindow.transform(svg.transition().duration(400), transform)
   }
 }
