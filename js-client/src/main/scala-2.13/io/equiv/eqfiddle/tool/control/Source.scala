@@ -24,7 +24,7 @@ class Source(val main: Control) extends ModelComponent {
     broadcast(Source.ExamplesChange(samples))
   }
   
-  def changeCode(code: String) = {
+  def changeCode(code: String, isLoadingDefinition: Boolean = false) = {
     source = code
     problems = List()
     
@@ -35,7 +35,7 @@ class Source(val main: Control) extends ModelComponent {
       case parser.ParseSuccess(ccsDef, _) =>
         AlgorithmLogging.debugLog("Parsing took: " + (Date.now() - beginParse) + "ms.", logLevel = 8)
         broadcast(Source.ProblemChange(source, List()))
-        setAst(ccsDef, updateSource = false)
+        setAst(ccsDef, updateSource = false, fromLoadDefinition = isLoadingDefinition)
         
       case fail @ parser.ParseFail(msg, rest) =>
         val idx = fail.position
@@ -87,18 +87,17 @@ class Source(val main: Control) extends ModelComponent {
       astBefore ::: newVsOldDecls.getOrElse(None, List()) ::: astAfter
     }
     
-    val newAst = Syntax.Definition(
-        Syntax.fillInPos(newDefs))
+    val newAst = Syntax.Definition(Syntax.fillInPos(newDefs))
     setAst(newAst)
     true
   }
   
-  def setAst(newAst: Syntax.Definition, updateSource: Boolean = true): Unit = {
+  def setAst(newAst: Syntax.Definition, updateSource: Boolean = true, fromLoadDefinition: Boolean = false): Unit = {
     ast = newAst
     if (updateSource) {
       source = new ccs.PrettyPrinter().showDefinition(newAst).toString
     }
-    broadcast(Source.SourceChange(source, ast))
+    broadcast(Source.SourceChange(source, ast, fromLoadDefinition))
   }
   
   override def notify(c: ModelComponent.Change) = c match {
@@ -127,7 +126,14 @@ object Source {
   
   case class LoadDefinition(code: String) extends SourceAction {
     override def implementSource(source: Source) = {
-      source.changeCode(code)
+      source.changeCode(code, isLoadingDefinition = true)
+      true
+    }
+  }
+  
+  case class ChangeDefinition(code: String) extends SourceAction {
+    override def implementSource(source: Source) = {
+      source.changeCode(code, isLoadingDefinition = false)
       true
     }
   }
@@ -138,7 +144,7 @@ object Source {
     }
   }
   
-  case class SourceChange(source: String, ast: Syntax.Definition) extends ModelComponent.Change {  
+  case class SourceChange(source: String, ast: Syntax.Definition, fromLoadDefinition: Boolean = false) extends ModelComponent.Change {  
     override def toString() = "SourceChange( ... )" 
   }
   

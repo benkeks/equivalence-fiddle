@@ -99,7 +99,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
     val newText = sourceDoc.getValue()
     if (newText != lastText) {
       lastText = newText
-      triggerAction(Source.LoadDefinition(newText))
+      triggerAction(Source.ChangeDefinition(newText))
     }
   }
   
@@ -279,7 +279,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
   }
   
   def notify(change: ModelComponent.Change) = change match {
-    case Source.SourceChange(source, ast) =>
+    case Source.SourceChange(source, ast, _) =>
       setCode(source)
       setRunners(ast.defs.collect {
           case MetaDeclaration(key, value, pos) => (key, value, pos.line)
@@ -294,7 +294,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
       setOperations(ops.values.toList)
     case Structure.StructureReplayChange(replay) =>
       setReplay(replay)
-    case Structure.StructureChange(tsStructure, _) =>
+    case Structure.StructureChange(tsStructure, _, _) =>
       setStructure(tsStructure)
     case _ => 
   }

@@ -109,9 +109,9 @@ class Pipeline(val main: Control) extends ModelComponent {
   def notify(change: ModelComponent.Change) = change match {
     case Structure.StructureOperationsChanged(ops) =>
       operations = ops toMap
-    case Structure.StructureChange(_, _) =>
+    case Structure.StructureChange(_, _, _) =>
       resetPipeline()
-    case Source.SourceChange(_, ast) =>
+    case Source.SourceChange(_, ast, _) =>
       operationLines = ast.defs.collect {
         case Syntax.MetaDeclaration(key, value, pos) if supportedOperations.contains(key) =>
           Pipeline.OperationLine(pos.line, supportedOperations(key))

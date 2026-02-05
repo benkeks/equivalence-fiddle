@@ -44,7 +44,7 @@ class Structure(val main: Control) extends ModelComponent {
   }
 
   override def notify(c: ModelComponent.Change) = c match {
-    case Source.SourceChange(source, ast) =>
+    case Source.SourceChange(source, ast, fromLoadDefinition) =>
       val beginInterpret = Date.now()
       val interpretationResult =
         new Interpreter(ast, NodeID(_), Structure.arrowAnnotator, Structure.nodeAnnotator, Structure.actionToInput, Structure.actionIsOutput, divergenceMarker = Some(Structure.divergenceActionLabel))
@@ -56,7 +56,7 @@ class Structure(val main: Control) extends ModelComponent {
           broadcast(Structure.StructureChangeFailed(p))
         case Interpreting.Success(is: Structure.TSStructure) =>
           AlgorithmLogging.debugLog("Interpretation took: " + (Date.now() - beginInterpret) + "ms.", logLevel = 8)
-          setStructure(is)
+          setStructure(is, fromLoadDefinition = fromLoadDefinition)
       }
     case _ =>
   }
@@ -100,14 +100,14 @@ class Structure(val main: Control) extends ModelComponent {
     }
   }
 
-  def setStructure(is: Structure.TSStructure) = {
+  def setStructure(is: Structure.TSStructure, fromLoadDefinition: Boolean = false) = {
     if (structure != null && structure.sameGraphAs(is)) {
       // only a layout change!
       structure = is
-      broadcast(Structure.StructureChange(structure, minorChange = true))
+      broadcast(Structure.StructureChange(structure, minorChange = true, fromLoadDefinition = fromLoadDefinition))
     } else {
       structure = is
-      broadcast(Structure.StructureChange(structure))
+      broadcast(Structure.StructureChange(structure, minorChange = false, fromLoadDefinition = fromLoadDefinition))
       setRelation(Relation[NodeID]())
     }
   }
@@ -128,7 +128,7 @@ object Structure {
     def implementStructure(structure: Structure): Boolean
   }
 
-  case class StructureChange(tsStructure: TSStructure, minorChange: Boolean = false) extends ModelComponent.Change
+  case class StructureChange(tsStructure: TSStructure, minorChange: Boolean = false, fromLoadDefinition: Boolean = false) extends ModelComponent.Change
 
   case class StructureChangeFailed(problem: Interpreting.Problem) extends ModelComponent.Change
 

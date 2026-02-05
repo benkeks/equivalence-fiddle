@@ -220,7 +220,7 @@ class GraphRenderer(val main: Control)
   
   
   def notify(change: ModelComponent.Change) = change match {
-    case Structure.StructureChange(structure, minor) =>
+    case Structure.StructureChange(structure, minor, fromLoadDefinition) =>
       this.structure = Some(structure)
       if (!minor) {
         setComment("")
@@ -228,6 +228,7 @@ class GraphRenderer(val main: Control)
         baseRelation = Set()
       }
       setStructure()
+      if (!minor && fromLoadDefinition) zoomToFitAll()
     case Structure.StructureRelationChange(relation) =>
       this.relation = LabeledRelation()
       this.baseRelation = relation.tupleSet.map(t => (Set(t._1), t._2, Set(t._3)))

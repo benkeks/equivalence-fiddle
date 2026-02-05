@@ -30,9 +30,9 @@ trait GraphEditing extends ViewComponent {
   var selectionCurrentX = 0.0
   var selectionCurrentY = 0.0
     
-  val zoomWindow = d3.zoom[dom.EventTarget]()
-  zoomWindow
-    .on("zoom", () => onZoom())
+  val zoomWindow: d3.ZoomBehavior[dom.EventTarget] =
+    d3.zoom[dom.EventTarget]()
+      .on("zoom", () => onZoom())
 
   svg.call(zoomWindow)
     .on("mousedown", () => onClickBackground())
@@ -247,5 +247,40 @@ trait GraphEditing extends ViewComponent {
   
   def onZoom(): Unit = {
     sceneRoot.attr("transform", d3.event.asInstanceOf[d3.ZoomEvent].transform.toString())
+  }
+  
+  def zoomToFitAll(): Unit = {    
+    val nodeSpacing = 50.0
+    val padding = 40.0
+
+    val (minX, maxX, minY, maxY) = nodes
+      .filter(_ != dummyNode)
+      .foldLeft((Double.MaxValue, Double.MinValue, Double.MaxValue, Double.MinValue)) {
+      case ((minX, maxX, minY, maxY), node) =>
+        (
+          Math.min(minX, node.x.get - nodeSpacing),
+          Math.max(maxX, node.x.get + nodeSpacing),
+          Math.min(minY, node.y.get - nodeSpacing),
+          Math.max(maxY, node.y.get + nodeSpacing)
+        )
+      }
+    
+    val svgElement = svg.node().asInstanceOf[dom.SVGElement]
+    val width = svgElement.clientWidth
+    val height = svgElement.clientHeight
+    
+    val graphWidth = maxX - minX
+    val graphHeight = maxY - minY
+    if (graphWidth <= 0 || graphHeight <= 0) return
+    
+    val scaleX = (width - 2 * padding) / graphWidth
+    val scaleY = (height - 2 * padding) / graphHeight
+    val scale = Math.min(scaleX, scaleY)
+    
+    val translateX = padding - minX * scale + (width - (maxX - minX) * scale) / 2
+    val translateY = padding - minY * scale + (height - (maxY - minY) * scale) / 2
+    
+    val transform = d3.zoomIdentity.translate(translateX, translateY).scale(scale)
+    zoomWindow.transform(d3.transition().duration(400), transform)
   }
 }
