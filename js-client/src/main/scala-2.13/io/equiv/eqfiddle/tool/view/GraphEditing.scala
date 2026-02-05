@@ -38,6 +38,9 @@ trait GraphEditing extends ViewComponent {
     .on("mousedown", () => onClickBackground())
     .on("mousemove", () => onMouseMove())
     .on("mouseup", () => onEndSelection())
+  
+  d3.select("#es-zoom-fit")
+    .on("click", () => zoomToFitAll())
 
   val drag = d3.drag[GraphNode]()
     .on("start", (d: GraphNode) => onDragStart(d))
@@ -282,5 +285,6 @@ trait GraphEditing extends ViewComponent {
     
     val transform = d3.zoomIdentity.translate(translateX, translateY).scale(scale)
     zoomWindow.transform(d3.transition().duration(400), transform)
+    svg.call(zoomWindow)
   }
 }
