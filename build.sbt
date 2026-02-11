@@ -116,7 +116,7 @@ lazy val jsClient = (project in file("js-client")).settings(
   resolvers += "jitpack" at "https://jitpack.io",
   libraryDependencies ++= Seq(
     "org.scalaz" %%% "scalaz-core" % "7.3.8",
-    "com.github.fdietze.scala-js-d3v4" %%% "scala-js-d3v4" % "64a2cca057",
+    "com.github.fdietze.scala-js-d3v4" %%% "scala-js-d3v4" % "d5f63d1849",
     "org.scala-js" %%% "scalajs-dom" % "2.8.1"
   ),
   Compile / npmDependencies ++= Seq(
