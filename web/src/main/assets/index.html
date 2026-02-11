@@ -3,9 +3,9 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Linear-Time–Branching-Time Spectroscope</title>
-  <link rel="stylesheet" href="lib/codemirror/lib/codemirror.css">
-  <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css">
+  <title>equiv.io — The Linear-Time–Branching-Time Spectroscope</title>
+  <link rel="stylesheet" href="codemirror.css">
+  <link rel="stylesheet" href="bootstrap.min.css">
   <link rel="stylesheet" href="css/syntax.css">
   <style id="es-graph-style">
     .link {
@@ -123,6 +123,7 @@
 
     .link-label {
       pointer-events: none;
+      user-select: none;
     }
 
     .link-label.relation {
@@ -249,7 +250,7 @@
       display: inline;
     }
 
-    .brush .extent {
+    .brush-selection {
       fill-opacity: .1;
       stroke: #fff;
       shape-rendering: crispEdges;
@@ -311,60 +312,38 @@
 
   <div class="btn-group">
     <div class="btn-group" id="es-load">
-      <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+      <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
         Load <span class="caret"></span>
       </button>
       <ul class="dropdown-menu">
         <li>
-          <input id="es-load-file" type="file" />
+          <input id="es-load-file" type="file" class="dropdown-item" />
         </li>
-        <li class="dropdown-header">Examples</li>
+        <li><span class="dropdown-header">Examples</span></li>
       </ul>
     </div>
     <div class="btn-group">
-      <button id="es-export" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+      <button id="es-export" class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
         Export <span class="caret"></span>
       </button>
       <ul class="dropdown-menu">
-        <!-- <li><i class="fa fa-spinner fa-spin" style="font-size:24px"></i></li> -->
-        <li><a id="es-export-text" href="#">Textual Definition</a></li>
-        <li><a id="es-export-csv" href="#">Transitions as CSV</a></li>
-        <li><a id="es-export-svg" href="#">SVG Picture</a></li>
+        <li><a class="dropdown-item" id="es-export-text" href="#">Textual Definition</a></li>
+        <li><a class="dropdown-item" id="es-export-csv" href="#">Transitions as CSV</a></li>
+        <li><a class="dropdown-item" id="es-export-svg" href="#">SVG Picture</a></li>
       </ul>
     </div>
-    <!-- <div class="btn-group" id="es-transform">
-      <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
-        Compute <span class="caret"></span>
-      </button>
-      <ul class="dropdown-menu multi-level default" role="menu" aria-labelledby="dropdownMenu">
-         <li class="dropdown-submenu">
-                  <a tabindex="-1" href="#">Closures</a>
-                  <ul class="dropdown-menu Closures">
-                  </ul>
-                </li>
-                <li class="dropdown-submenu">
-                  <a tabindex="-1" href="#">Compressions</a>
-                  <ul class="dropdown-menu Compressions">
-                  </ul>
-                </li>
-                <li class="dropdown-submenu">
-                  <a tabindex="-1" href="#">(Bi-)Similarity</a>
-                  <ul class="dropdown-menu SimBisim">
-                  </ul>
-                </li>
-      </ul>
-    </div> -->
+    <button id="es-zoom-fit" class="btn btn-primary" title="Zoom to fit">↔️</button>
     <div class="btn-group">
-      <button id="es-background" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+      <button id="es-background" class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
         Background<span class="caret"></span>
       </button>
       <ul class="dropdown-menu">
-        <li><a href="https://generalized-equivalence-checking.equiv.io/" target="_blank">PhD Thesis: Generalized Equivalence Checking of Concurrent Programs</a></li>
-        <li><a href="https://doi.org/10.1007/978-3-031-37706-8_5" target="_blank">Paper: Process Equivalence Problems as Energy Games (CAV 2023)</a></li>
-        <li><a href="https://doi.org/10.4204/EPTCS.412.6" target="_blank">Paper: One Energy Game for the Spectrum between Branching Bisimilarity and Weak Trace Semantics (EXPRESS/SOS 2024)</a></li>
-        <li><a href="https://concurrency-theory.org/ltbt-spectroscope/code/">Source code (Scala.js)</a></li>
-        <li class="divider"></li>
-        <li><a id="es-tool-about" data-toggle="modal" data-target="#es-about" href="#">About the LTBT Spectroscope</a>
+        <li><a class="dropdown-item" href="https://generalized-equivalence-checking.equiv.io/" target="_blank">PhD Thesis: Generalized Equivalence Checking of Concurrent Programs</a></li>
+        <li><a class="dropdown-item" href="https://doi.org/10.1007/978-3-031-37706-8_5" target="_blank">Paper: Process Equivalence Problems as Energy Games (CAV 2023)</a></li>
+        <li><a class="dropdown-item" href="https://doi.org/10.4204/EPTCS.412.6" target="_blank">Paper: One Energy Game for the Spectrum between Branching Bisimilarity and Weak Trace Semantics (EXPRESS/SOS 2024)</a></li>
+        <li><a class="dropdown-item" href="https://concurrency-theory.org/ltbt-spectroscope/code/">Source code (Scala.js)</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" id="es-tool-about" data-bs-toggle="modal" data-bs-target="#es-about" href="#">About the equiv.io</a>
         </li>
       </ul>
     </div>
@@ -397,30 +376,30 @@
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
-          <h4 class="modal-title">About the Linear-time–Branching-time Spectroscope</h4>
+          <h4 class="modal-title">About equiv.io – The Linear-Time–Branching-Time Spectroscope</h4>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
           <p>This is a tool for finding the best ways of distinguishing finite process models.</p>
 
           <p>For the theoretical background, check out <a href="https://generalized-equivalence-checking.equiv.io/">Bisping (2025): Generalized Equivalence Checking of Concurrent Programs</a></p>
 
-          <p>The LTBT Spectroscope is developed at <a href="https://www.mtv.tu-berlin.de">MTV TU Berlin</a> by:</p>
+          <p>equiv.io was developed at <a href="https://www.mtv.tu-berlin.de">MTV TU Berlin</a> by:</p>
           <ul>
             <li><a href="https://bbisping.de" target="_blank">Benjamin Bisping</a> (<a href="mailto:benjamin.bisping@tu-berlin.de">benjamin.bisping@tu-berlin.de</a>)</li>
           </ul>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Cool!</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cool!</button>
         </div>
       </div>
     </div>
   </div>
 
-  <script type="text/javascript" src="eqfiddle-client-jsdeps.js"></script>
-  <script type="text/javascript" src="js/cm_transitionsystem_mode.js"></script>
-  <script type="text/javascript" src="eqfiddle-client.js"></script>
-  <script type="text/javascript">TransitionSystemFiddle.main();</script>
+    <script src="./eqfiddle-client-fastopt-bundle.js"></script>
+    <script>
+      TransitionSystemFiddle.main();
+    </script>
 
 </body>
 

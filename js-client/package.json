@@ -1,0 +1,10 @@
+{
+  "name": "eqfiddle-client",
+  "private": true,
+  "dependencies": {
+    "bootstrap": " 5.3.8",
+    "codemirror": " 5.65.20",
+    "d3": "5.16.0",
+    "jquery": "3.7.1"
+  }
+}
