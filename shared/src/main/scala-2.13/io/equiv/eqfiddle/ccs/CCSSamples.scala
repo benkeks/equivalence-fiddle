@@ -592,6 +592,38 @@ P58 = a.(tau.b + b + tau)
        |
        |""".stripMargin
 
+  val parallelizingExampe =
+    """|Compute = compute1!Compute + compute2!Compute
+       |
+       |P = (
+       |    Compute 
+       |  | compute1.print0!print1!
+       |    + compute2.print0!print2!
+       |) \ {compute1, compute2}
+       |
+       |Q = (
+       |    Compute
+       |  | print0!join!
+       |  | compute1.join.print1!
+       |    + compute2.join.print2!
+       |) \ {compute1, compute2, join}
+       |
+       |
+       |@compareSilent P, Q
+       |
+       |Q(x=360, y=98, main)
+       |P(x=190, y=107, main)
+       |"(Compute | 0) \ {compute1,compute2}"(x=183, y=347)
+       |"(Compute | 0 | 0) \ {compute1,compute2,join}"(x=402, y=362)
+       |"(Compute | print0!print1!0) \ {compute1,compute2}"(x=130, y=193)
+       |"(Compute | print1!0) \ {compute1,compute2}"(x=111, y=275)
+       |"(Compute | print0!join!0 | join.print1!0) \ {compute1,compute2,join}"(x=314, y=190)
+       |"(Compute | 0 | print1!0) \ {compute1,compute2,join}"(x=323, y=316)
+       |"(Compute | 0 | print2!0) \ {compute1,compute2,join}"(x=436, y=307)
+       |"(Compute | print0!join!0 | join.print2!0) \ {compute1,compute2,join}"(x=416, y=179)
+       |"(Compute | join!0 | compute1.join.print1!0 + compute2.join.print2!0) \ {compute1,compute2,join}"(x=372, y=226)
+       |""".stripMargin
+
   val namedSamples = List[Example](
     Example("ltbts1",
       "Linear Time Branching Time Spectrum 1",
@@ -631,7 +663,10 @@ P58 = a.(tau.b + b + tau)
       petersonMutex),
     Example("peterson-mutex-silent",
       "Peterson Mutual exclusion, silent-step version",
-      petersonMutexSilent)
+      petersonMutexSilent),
+    Example("parallelizing-example",
+      "Parallelizing example (Bell 2013)",
+      parallelizingExampe)
   )
 
   def getExample(slug: String) = {
