@@ -113,7 +113,7 @@ class Pipeline(val main: Control) extends ModelComponent {
       resetPipeline()
     case Source.SourceChange(_, ast, _) =>
       operationLines = ast.defs.collect {
-        case Syntax.MetaDeclaration(key, value, pos) if supportedOperations.contains(key) =>
+        case Syntax.MetaDeclaration(key, value, _, pos) if supportedOperations.contains(key) =>
           Pipeline.OperationLine(pos.line, supportedOperations(key))
       }
       

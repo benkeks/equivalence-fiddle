@@ -42,7 +42,7 @@ class Interpreter[S, A, L](
   def result(factory: (LabeledRelation[S, A], Map[S, L]) => (Set[S], WeakTransitionSystem[S, A, L]) = defaultFactory _): Result[WeakTransitionSystem[S, A, L]] = {
    
     val procEnv = ccsDef.defs collect {
-      case d@Syntax.ProcessDefinition(name, proc, _) =>
+      case d@Syntax.ProcessDefinition(name, proc, _, _) =>
         scheduleConversion(Syntax.ProcessName(Syntax.Label(name)))
         (name, proc)
     } toMap;
@@ -125,7 +125,7 @@ class Interpreter[S, A, L](
 
       val metaSettings = for {
         (name, attribsNested) <- ccsDef.defs collect {
-          case Syntax.MetaDeclaration(name, attribs, _) => (name, attribs) 
+          case Syntax.MetaDeclaration(name, attribs, _, _) => (name, attribs) 
         } groupBy(_._1)
         attribs = attribsNested.map(_._2).flatten
       } yield {
@@ -195,7 +195,7 @@ class Interpreter[S, A, L](
             ts = new BuildQuotientSystem[S, A, L](ts, bisimColoring, protectedNodes = mainConcreteNodes, tauCyclesOn = Some(divergenceInfo)).build()
           case _ =>
             val problematicMeta = ccsDef.defs.filter {
-              case Syntax.MetaDeclaration("preprocessing", attribs, _) => attribs.contains(method)
+              case Syntax.MetaDeclaration("preprocessing", attribs, _, _) => attribs.contains(method)
               case _ => false
             }
             return Problem(s"Unknown preprocessing method: ‹$method›.\n\n" +

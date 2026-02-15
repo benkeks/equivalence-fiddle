@@ -1,17 +1,12 @@
 package io.equiv.eqfiddle.ccs
 
 import io.equiv.eqfiddle.util.Parsing
+import io.equiv.eqfiddle.util.Parsing.Pos
 import io.equiv.eqfiddle.ccs.Syntax._
 
 object Parser {
   /** characters that may appear in identifiers */
   val idChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789τ-".toSet
-}
-
-class Parser(val input: String) extends Parsing {
-  
-  import Parsing._
-  import Parser._
   
   abstract sealed class Token(val position: Pos)
   case class Identifier(name: String, pos: Pos) extends Token(pos)
@@ -36,6 +31,67 @@ class Parser(val input: String) extends Parsing {
   case class Dot(pos: Pos) extends Token(pos)
   case class MetaSign(pos: Pos) extends Token(pos)
   case class ErrorToken(msg: String, pos: Pos) extends Token(pos)
+  
+  def tokenToString(token: Token): String = token match {
+    case Identifier(name, _) => name
+    case LiteralNumber(num, _) => num
+    case LiteralString(string, _) => "\"" + string + "\""
+    case RoundBracketOpen(_) => "("
+    case RoundBracketClose(_) => ")"
+    case CurlyBracketOpen(_) => "{"
+    case CurlyBracketClose(_) => "}"
+    case Comma(_) => ","
+    case Equals(_) => "="
+    case RelationArrow(_) => "-->"
+    case RelationArrowBegin(_) => "|-"
+    case RelationArrowEnd(_) => "->"
+    case Star(_) => "*"
+    case Percent(_) => "%"
+    case Plus(_) => "+"
+    case Backslash(_) => "\\"
+    case Bang(_) => "!"
+    case Colon(_) => ":"
+    case Pipe(_) => "|"
+    case Dot(_) => "."
+    case MetaSign(_) => "@"
+    case ErrorToken(msg, _) => s"[ERROR: $msg]"
+  }
+  
+  def detokenize(tokens: List[Token]): String = {
+    if (tokens.isEmpty) return ""
+    
+    val result = new StringBuilder
+    var currentLine = tokens.head.position.line
+    var currentCol = 0
+    
+    tokens.foreach { token =>
+      val tokenPos = token.position
+      val tokenStr = tokenToString(token)
+      
+      while (currentLine < tokenPos.line) {
+        result.append('\n')
+        currentLine += 1
+        currentCol = 0
+      }      
+      while (currentCol < tokenPos.col) {
+        result.append(' ')
+        currentCol += 1
+      }
+      
+      result.append(tokenStr)
+      currentCol += tokenStr.length
+    }
+    
+    result.toString
+  }
+}
+
+class Parser(val input: String) extends Parsing {
+  
+  type Token = Parser.Token
+  
+  import Parsing._
+  import Parser._
   
   override def getTokenPosition(token: Token) = token.position
   
@@ -245,12 +301,19 @@ class Parser(val input: String) extends Parsing {
   }
   
   def processDeclaration(in: List[Token]): Parsed[ProcessDefinition] = {
+    val inputTokens = in
     node(in) flatMap { (processName, in2) =>
       in2 match {
         case Equals(_) :: in3 =>
           if (processName.name.forall(Parser.idChars) && !reservedNames.contains(processName.name)) {
             process(in3) flatMap { (e2, rt) =>
-              ParseSuccess(ProcessDefinition(processName.name, e2, processName.pos), rt)
+              val consumedTokens = inputTokens.take(inputTokens.length - rt.length)
+              val pos = if (consumedTokens.nonEmpty) {
+                consumedTokens.head.position.merge(consumedTokens.last.position)
+              } else {
+                processName.pos
+              }
+              ParseSuccess(ProcessDefinition(processName.name, e2, consumedTokens, pos), rt)
             }
           } else {
             ParseFail(s"Illegal process identifier: ‹${processName.name}›", in2)
@@ -286,13 +349,22 @@ class Parser(val input: String) extends Parsing {
     }
   }
   
-  def metaDeclaration(in: List[Token]): Parsed[MetaDeclaration] = in match {
-    case MetaSign(p) :: Identifier(n, _) :: rest =>
-      metaArgumentList(rest, List()) flatMap { (args, in2) =>
-        ParseSuccess(MetaDeclaration(n, args, p), in2)
-      }
-    case other =>
-      ParseFail("Expected meta declaration.", other)
+  def metaDeclaration(in: List[Token]): Parsed[MetaDeclaration] = {
+    val inputTokens = in
+    in match {
+      case MetaSign(p) :: Identifier(n, _) :: rest =>
+        metaArgumentList(rest, List()) flatMap { (args, in2) =>
+          val consumedTokens = inputTokens.take(inputTokens.length - in2.length)
+          val pos = if (consumedTokens.nonEmpty) {
+            consumedTokens.head.position.merge(consumedTokens.last.position)
+          } else {
+            p
+          }
+          ParseSuccess(MetaDeclaration(n, args, consumedTokens, pos), in2)
+        }
+      case other =>
+        ParseFail("Expected meta declaration.", other)
+    }
   }
 
   def metaArgumentList(in: List[Token], list: List[String]): Parsed[List[String]] = {

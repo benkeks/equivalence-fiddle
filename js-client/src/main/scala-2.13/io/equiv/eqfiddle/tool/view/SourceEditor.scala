@@ -282,7 +282,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
     case Source.SourceChange(source, ast, _) =>
       setCode(source)
       setRunners(ast.defs.collect {
-          case MetaDeclaration(key, value, pos) => (key, value, pos.line)
+          case MetaDeclaration(key, value, _, pos) => (key, value, pos.line)
       })
     case Source.ProblemChange(source, errs) =>
       setErrors(source, errs)

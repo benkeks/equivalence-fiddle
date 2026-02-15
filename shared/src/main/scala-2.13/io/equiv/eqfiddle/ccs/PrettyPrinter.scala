@@ -20,12 +20,16 @@ class PrettyPrinter {
   }
   
   def show(e: Expression): String = e match {
-    case MetaDeclaration(k, v, p0) =>
-      val args = for {
-        a <- v
-        str = renderStringAtom(a)
-      } yield str 
-      "@" + k + " " + args.mkString(", ")
+    case MetaDeclaration(k, v, tokens, p0) =>
+      if (tokens.nonEmpty) {
+        Parser.detokenize(tokens)
+      } else {
+        val args = for {
+          a <- v
+          str = renderStringAtom(a)
+        } yield str 
+        "@" + k + " " + args.mkString(", ")
+      }
     case NodeAnnotation(n, aa, p0) =>
       val name = renderStringAtom(n)
       if (aa.isEmpty) {
@@ -33,8 +37,12 @@ class PrettyPrinter {
       } else {
         name + aa.map(showAttribute).mkString("(", ", ", ")")
       }
-    case ProcessDefinition(name, proc, p0) =>
-      name + " = " + show(proc)
+    case ProcessDefinition(name, proc, tokens, p0) =>
+      if (tokens.nonEmpty) {
+        Parser.detokenize(tokens)
+      } else {
+        name + " = " + show(proc)
+      }
     case Prefix(l, Choice(Nil, pos), p0) if l.isOutput =>
       show(l.toInput) + "!"
     case Prefix(l, proc, p0) if l.isOutput =>

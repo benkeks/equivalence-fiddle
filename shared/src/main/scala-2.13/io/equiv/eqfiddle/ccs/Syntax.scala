@@ -15,8 +15,8 @@ object Syntax {
       withPos(Pos(line, col))
     
     def withPos(pos: Pos): this.type = (this match {
-      case MetaDeclaration(k, v, p0) => MetaDeclaration(k, v, pos)
-      case ProcessDefinition(n, process, p0) => ProcessDefinition(n, process, pos)
+      case MetaDeclaration(k, v, toks, p0) => MetaDeclaration(k, v, toks, pos)
+      case ProcessDefinition(n, process, toks, p0) => ProcessDefinition(n, process, toks, pos)
       case NodeAnnotation(n, aa, p0) => NodeAnnotation(n, aa, pos)
       case Label(n, p0) => Label(n, pos)
       case Prefix(l, proc, p0) => Prefix(l, proc, pos)
@@ -30,8 +30,8 @@ object Syntax {
     
     def prunePos: this.type = {
       (this match {
-        case MetaDeclaration(k, v, p0) => MetaDeclaration(k, v, Pos0)
-        case ProcessDefinition(n, process, p0) => ProcessDefinition(n, process, Pos0)
+        case MetaDeclaration(k, v, toks, p0) => MetaDeclaration(k, v, Nil, Pos0)
+        case ProcessDefinition(n, process, toks, p0) => ProcessDefinition(n, process, Nil, Pos0)
         case NodeAnnotation(n, aa, p0) => NodeAnnotation(n, aa, Pos0)
         case Label(n, p0) => Label(n, Pos0)
         case Prefix(l, proc, p0) => Prefix(l, proc.prunePos, Pos0)
@@ -56,7 +56,7 @@ object Syntax {
     
   }
     
-  case class ProcessDefinition(name: String, process: ProcessExpression, pos: Pos = Pos0) extends Expression(pos) {
+  case class ProcessDefinition(name: String, process: ProcessExpression, tokens: List[io.equiv.eqfiddle.ccs.Parser.Token] = Nil, pos: Pos = Pos0) extends Expression(pos) {
     override def toString() = name + " = " + process.toString()
   }
   
@@ -135,7 +135,7 @@ object Syntax {
   }
 
   
-  case class MetaDeclaration(key: String, value: List[String], pos: Pos = Pos0) extends Expression(pos) {
+  case class MetaDeclaration(key: String, value: List[String], tokens: List[io.equiv.eqfiddle.ccs.Parser.Token] = Nil, pos: Pos = Pos0) extends Expression(pos) {
   }
   
   case class Definition(val defs: List[Expression]) extends Expression(Pos0) {
@@ -143,7 +143,7 @@ object Syntax {
     val metaInfo = defs.collect { case md: MetaDeclaration => md }.groupBy(_.key)
     
     def getDeclaration(processID: String): Option[ProcessDefinition] = defs.collectFirst {
-      case pd @ ProcessDefinition(n, _, _) if n == processID => pd
+      case pd @ ProcessDefinition(n, _, _, _) if n == processID => pd
     }
   }
 
