@@ -173,34 +173,17 @@ object WeakObservationNotion {
           case _ => false
         }
 
-        // if (allClasses.isEmpty || negativeDeep.nonEmpty || positiveDeep.size > 1) {
-          WeakObservationNotion(
-            observationHeight = allClasses.map(_.observationHeight).max,
-            branchingConjunctionLevels = allClasses.map(_.branchingConjunctionLevels).max + (if (isBranchingObs > 0) 1 else 0),
-            unstableConjunctionLevels = allClasses.map(_.unstableConjunctionLevels).max + (if (stabilityChecks.nonEmpty) 0 else 1),
-            stableConjunctionLevels = allClasses.map(_.stableConjunctionLevels).max + (if (stabilityChecks.nonEmpty) 1 else 0),
-            immediateConjunctionLevels = allClasses.map(_.immediateConjunctionLevels).max + 1,
-            positiveConjHeight = (allClasses.map(_.positiveConjHeight) :+ positiveMaxHeight).max,
-            positiveConjSecondaryHeight = (allClasses.map(_.positiveConjSecondaryHeight) :+ positiveHeightSecondary).max,
-            negativeConjHeight = (allClasses.map(_.negativeConjHeight) ++ negativeClasses.map(_.observationHeight)).max,
-            negationLevels = (allClasses.map(_.negationLevels)).max,
-          )
-        // } else {
-        //   // this conjunction can be understood as a local observation
-        //   val revivalDepth = (positiveDeep.headOption orElse positiveFlat.headOption).map(_.observationHeight).getOrElse(0)
-        //   WeakObservationNotion(
-        //     observationHeight = allClasses.map(_.observationHeight).max,
-        //     branchingObservations = allClasses.map(_.branchingObservations).max,
-        //     conjunctionLevels = allClasses.map(_.conjunctionLevels).max + 1,
-        //     immediateConjunctions = allClasses.map(_.immediateConjunctions).max + 1,
-        //     revivalHeight = Integer.max(revivalDepth, allClasses.map(_.revivalHeight).max),
-        //     positiveConjHeight =
-        //       if (positiveFlat.nonEmpty) Integer.max(1, allClasses.map(_.positiveConjHeight).max) else allClasses.map(_.positiveConjHeight).max,
-        //     negativeConjHeight =
-        //       if (negativeFlat.nonEmpty) Integer.max(1, allClasses.map(_.negativeConjHeight).max) else allClasses.map(_.negativeConjHeight).max,
-        //     negationLevels = allClasses.map(_.negationLevels).max,
-        //   )
-        //}
+        WeakObservationNotion(
+          observationHeight = allClasses.map(_.observationHeight).max,
+          branchingConjunctionLevels = allClasses.map(_.branchingConjunctionLevels).max + (if (isBranchingObs > 0) 1 else 0),
+          unstableConjunctionLevels = allClasses.map(_.unstableConjunctionLevels).max + (if (stabilityChecks.nonEmpty) 0 else 1),
+          stableConjunctionLevels = allClasses.map(_.stableConjunctionLevels).max + (if (stabilityChecks.nonEmpty) 1 else 0),
+          immediateConjunctionLevels = allClasses.map(_.immediateConjunctionLevels).max + 1,
+          positiveConjHeight = (allClasses.map(_.positiveConjHeight) :+ positiveMaxHeight).max,
+          positiveConjSecondaryHeight = (allClasses.map(_.positiveConjSecondaryHeight) :+ positiveHeightSecondary).max,
+          negativeConjHeight = (allClasses.map(_.negativeConjHeight) ++ negativeClasses.map(_.observationHeight)).max,
+          negationLevels = (allClasses.map(_.negationLevels)).max,
+        )
       }
     case HML.Negate(andThen) =>
       val andThenClass = formulaObsNotion(andThen)
