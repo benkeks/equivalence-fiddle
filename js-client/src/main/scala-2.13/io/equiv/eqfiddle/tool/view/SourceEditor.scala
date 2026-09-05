@@ -134,7 +134,11 @@ class SourceEditor(val main: Control) extends ViewComponent {
       .attr("download", name + ".svg")
     
     for (ts <- currentStructure) {
-      val tsCsvUri = URIUtils.encodeURIComponent(ts.step.toCsvString())
+      val nodeLabels = ts.nodeLabeling.toList.flatMap { case (e, l) =>
+        l.act.map { le => (e, le.name) }
+      }
+      val csv = ts.step.toCsvString(nodeLabels)
+      val tsCsvUri = URIUtils.encodeURIComponent(csv)
       d3.select("#es-export-csv")
         .attr("href", "data:text/plain;charset=utf-8,"+tsCsvUri)
         .attr("download", name + ".csv")
