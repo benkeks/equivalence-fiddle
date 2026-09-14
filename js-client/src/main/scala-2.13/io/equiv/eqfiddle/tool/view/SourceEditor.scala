@@ -135,7 +135,7 @@ class SourceEditor(val main: Control) extends ViewComponent {
     
     for (ts <- currentStructure) {
       val nodeLabels = ts.nodeLabeling.toList.flatMap { case (e, l) =>
-        l.act.map { le => (e, le.name) }
+        l.act.map { le => (e, e.name, le.name) }
       }
       val csv = ts.step.toCsvString(nodeLabels)
       val tsCsvUri = URIUtils.encodeURIComponent(csv)

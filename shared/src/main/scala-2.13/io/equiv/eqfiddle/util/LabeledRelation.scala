@@ -168,15 +168,15 @@ class LabeledRelation[E, L](val rep: Map[E, Map[L, Set[E]]]) {
     }.mkString("digraph rel{\n  ", ";\n  ", "}")
   }
   
-  def toCsvString(labeling: Iterable[(E, String)] = List()) = {
+  def toCsvString(labeling: Iterable[(E, String, String)] = List()) = {
     val list = nodes.toIndexedSeq
     val idFor = list.indices.map(i => (list(i), i)).toMap
     val edgeList = tupleSet.map { case (e1, l, e2) =>
       val label = l.toString()
       s"${idFor(e1)},${idFor(e2)},$label"
     }.mkString("", "\n", "")
-    val nodeList = labeling.map { case (e, l) =>
-      s"${idFor(e)},$l"
+    val nodeList = labeling.map { case (e, n, l) =>
+      s"${idFor(e)},$n,$l"
     }.mkString("", "\n", "")
     edgeList + "\n" + nodeList
   }
