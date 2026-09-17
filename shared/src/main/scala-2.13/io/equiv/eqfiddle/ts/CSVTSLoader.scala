@@ -10,11 +10,12 @@ class CSVTSLoader(
     tsFileName: String
   ) {
   
-  val silentActions = Set(Symbol("tau"), Symbol("i"))
+  val silentActions = Set(Symbol("tau"), Symbol("i"), Symbol("τ"))
   
-  def result(): Option[WeakTransitionSystem[Int, Symbol, Unit]] = {
+  def result(): Option[WeakTransitionSystem[Int, Symbol, String]] = {
 
     val relationTuples = new Queue[(Int, Symbol, Int)]()
+    val labelingTuples = new Queue[(Int, String)]()
     val bufferedSource = scala.io.Source.fromFile(tsFileName)
     for (line <- bufferedSource.getLines()) {
       val firstComma = line.indexWhere(_ == ',', 0)
@@ -26,12 +27,19 @@ class CSVTSLoader(
         // remove enclosing quotes
         label = label.substring(1, label.length - 1)
       }
-      relationTuples += (( start.toInt, Symbol(label), end.toInt ))
+      end.toIntOption match {
+        case Some(tarId) =>
+          relationTuples += (( start.toInt, Symbol(label), end.toInt ))
+        case None => // second parameter is a label, not a node id
+          // collect node names, but drop additional node meta info (third parameter)
+          labelingTuples += (( start.toInt, end ))
+      }
     }
     bufferedSource.close
 
     val relation = new LabeledRelation(relationTuples.toSet)
-    val nodeLabeling = (relation.lhs ++ relation.rhs).map((_, ())).toMap
+    val tempNodeLabeling = labelingTuples.toMap
+    val nodeLabeling = (relation.lhs ++ relation.rhs).map(id => (id, tempNodeLabeling(id))).toMap
 
     Some(new WeakTransitionSystem(relation, nodeLabeling, silentActions))
   }

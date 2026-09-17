@@ -51,7 +51,7 @@ object Benchmark extends App {
     useSymmetryPruning = true
   )
 
-  val algoVLTS: (WeakTransitionSystem[Int,Symbol,Unit]) => Spectroscopy[Int,Symbol,Unit,HML.Formula[Symbol]] =
+  val algoVLTS: (WeakTransitionSystem[Int,Symbol,String]) => Spectroscopy[Int,Symbol,String,HML.Formula[Symbol]] =
     if (args.contains("--strong-game")) {
       new StrongSpectroscopy(_)
     } else {

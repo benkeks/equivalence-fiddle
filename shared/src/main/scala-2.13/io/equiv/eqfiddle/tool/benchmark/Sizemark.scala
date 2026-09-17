@@ -14,7 +14,7 @@ import scala.concurrent.duration._
 import io.equiv.eqfiddle.hml.HML
 
 class Sizemark(
-  algorithm: (WeakTransitionSystem[Int,Symbol,Unit]) => Spectroscopy[Int,Symbol,Unit,HML.Formula[Symbol]]
+  algorithm: (WeakTransitionSystem[Int,Symbol,String]) => Spectroscopy[Int,Symbol,String,HML.Formula[Symbol]]
 ) {
 
   val configs = Seq(
