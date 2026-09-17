@@ -39,7 +39,7 @@ class CSVTSLoader(
 
     val relation = new LabeledRelation(relationTuples.toSet)
     val tempNodeLabeling = labelingTuples.toMap
-    val nodeLabeling = (relation.lhs ++ relation.rhs).map(id => (id, tempNodeLabeling(id))).toMap
+    val nodeLabeling = (relation.lhs ++ relation.rhs).map(id => (id, tempNodeLabeling.get(id).getOrElse(""))).toMap
 
     Some(new WeakTransitionSystem(relation, nodeLabeling, silentActions))
   }
