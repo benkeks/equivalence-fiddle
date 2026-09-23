@@ -13,6 +13,7 @@ import io.equiv.eqfiddle.spectroscopy.StrongSpectroscopy
 import io.equiv.eqfiddle.spectroscopy.WeakSpectroscopy
 import io.equiv.eqfiddle.hml.HML
 import io.equiv.eqfiddle.tool.benchmark.Sizemark
+import io.equiv.eqfiddle.tool.benchmark.Comparator
 
 object Benchmark extends App {
 
@@ -27,6 +28,7 @@ object Benchmark extends App {
       |  eqchecks   Check each individual notion of the strong spectrum on the LTBTS examples
       |  benchmark  Run benchmarks on VLTS
       |  sizemark   Compare sizes of spectroscopy games
+      |  compare    Compare two states in a CSV transition system
       |
       |General options:
       | --unclever-spectroscopy  Use the exponentially-branching energy game (instead of the clever energy game)
@@ -117,6 +119,13 @@ object Benchmark extends App {
       new Sizemark(algoVLTS).run(
         timeoutTime = timeout
       )
+    case Some("compare") =>
+      args.toList match {
+        case _ :: fileName :: leftState :: rightState :: Nil =>
+          new Comparator().run(fileName, leftState, rightState)
+        case _ =>
+          throw new IllegalArgumentException("Usage: compare <csv-file> <left-state> <right-state>")
+      }
     case _ =>
       println("Usage: [COMMAND] [OPTIONS]\n  Run `help` for details.")
   }
