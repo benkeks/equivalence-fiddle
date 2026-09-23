@@ -2,19 +2,25 @@ package io.equiv.eqfiddle.tool.benchmark
 
 import io.equiv.eqfiddle.hml.HML
 import io.equiv.eqfiddle.spectroscopy.Spectroscopy
-import io.equiv.eqfiddle.spectroscopy.StrongSpectroscopy
 import io.equiv.eqfiddle.ts.CSVTSLoader
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 
-class Comparator {
+class Comparator(
+  algorithm: (WeakTransitionSystem[Int, Symbol, String]) => Spectroscopy[Int, Symbol, String, HML.Formula[Symbol]]
+) {
 
-  def run(fileName: String, leftInput: String, rightInput: String): Unit = {
+  def run(
+      fileName: String,
+      leftInput: String,
+      rightInput: String,
+      config: Spectroscopy.Config
+    ): Unit = {
     val system = new CSVTSLoader(fileName).result().getOrElse(
       throw new IllegalArgumentException(s"Could not load transition system from '$fileName'.")
     )
     val left = resolveState(system, leftInput)
     val right = resolveState(system, rightInput)
-    val result = new StrongSpectroscopy(system).decideAll(Seq((left, right)))
+    val result = algorithm(system).decideAll(Seq((left, right)), config)
 
     println(result.foundPreorders(left, right).map(_.name).mkString(", "))
   }

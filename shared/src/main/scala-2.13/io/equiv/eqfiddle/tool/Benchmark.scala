@@ -120,11 +120,11 @@ object Benchmark extends App {
         timeoutTime = timeout
       )
     case Some("compare") =>
-      args.toList match {
-        case _ :: fileName :: leftState :: rightState :: Nil =>
-          new Comparator().run(fileName, leftState, rightState)
+      args.tail.filterNot(Set("--strong-game", "--unclever-spectroscopy")) match {
+        case Array(fileName, leftState, rightState) =>
+          new Comparator(algoVLTS).run(fileName, leftState, rightState, baseConfig)
         case _ =>
-          throw new IllegalArgumentException("Usage: compare <csv-file> <left-state> <right-state>")
+          throw new IllegalArgumentException("Usage: compare <csv-file> <left-state> <right-state> [--strong-game] [--unclever-spectroscopy]")
       }
     case _ =>
       println("Usage: [COMMAND] [OPTIONS]\n  Run `help` for details.")
