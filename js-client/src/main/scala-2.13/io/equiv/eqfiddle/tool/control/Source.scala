@@ -8,7 +8,7 @@ import io.equiv.eqfiddle.ccs.Syntax
 import io.equiv.eqfiddle.ccs
 import io.equiv.eqfiddle.ccs.CCSSamples
 import io.equiv.eqfiddle.ccs.Example
-import io.equiv.eqfiddle.tool.control.Structure.NodeLabel
+import io.equiv.eqfiddle.ccs.CCSModel.NodeLabel
 import io.equiv.eqfiddle.util.Parsing
 import io.equiv.eqfiddle.algo.AlgorithmLogging
 

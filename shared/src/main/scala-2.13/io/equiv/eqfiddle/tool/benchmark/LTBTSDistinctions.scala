@@ -1,14 +1,10 @@
 package io.equiv.eqfiddle.tool.benchmark
 
 import io.equiv.eqfiddle.ccs.CCSSamples
-import io.equiv.eqfiddle.ccs.Parser
-import io.equiv.eqfiddle.ccs.Interpreter
-import io.equiv.eqfiddle.ccs.Syntax
-import io.equiv.eqfiddle.util.Interpreting
 import io.equiv.eqfiddle.tool.model.NodeID
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 import io.equiv.eqfiddle.spectroscopy.Spectroscopy
-import io.equiv.eqfiddle.spectroscopy.StrongSpectroscopy
+import io.equiv.eqfiddle.spectroscopy.CCSSpectroscopy
 import io.equiv.eqfiddle.hml.HML
 
 
@@ -33,22 +29,12 @@ class LTBTSDistinctions(
     ("L50", "R50")
   )
 
-  def arrowLabeling(o: Option[Syntax.Label]) = {
-    Interpreting.fromOption(o.map(_.name) orElse(Some("")))
-  }
-  def nodeLabeling(o: Option[Syntax.NodeAnnotation]) = {
-    Interpreting.fromOption(o.map(_.name) orElse(Some("")))
-  }
-  def actionIsOutput(a: String) = a.endsWith("!")
-  def actionToInput(a: String): String = if (actionIsOutput(a)) actionToInput(a.dropRight(1)) else a
-
   def run(): Unit = {
 
-    val parser: Parser = new Parser(CCSSamples.ltbts1)
-    val parser.ParseSuccess(esDef, _) = parser.parse
-    val interpreter = new Interpreter(esDef, NodeID(_), arrowLabeling, nodeLabeling, actionToInput, actionIsOutput)
-    val Interpreting.Success(is) = interpreter.result()
-    val ltbtsSystem = is.asInstanceOf[WeakTransitionSystem[NodeID, String, String]]
+    val esDef = CCSSpectroscopy.parse(CCSSamples.ltbts1)
+      .fold(error => throw new IllegalArgumentException(error.toString), identity)
+    val ltbtsSystem = CCSSpectroscopy.loadLTS(esDef)
+      .fold(error => throw new IllegalArgumentException(error.toString), identity)
 
     for ((n1s, n2s) <- examplePairs) {
       val n1 = NodeID(n1s)

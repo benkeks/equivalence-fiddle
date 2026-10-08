@@ -10,6 +10,8 @@ Just input CCS-style processes, give the two processes you want to compare with 
 
 It's also possible to enter processes with internal behavior, either by `tau.P` actions or due to communication, `(a.0 | a!0) \ {a}`. To compare with respect to the weak spectrum, use `@compareSilent P1, P2`.
 
+The browser exposes `window.equiv` for JavaScript spectroscopy and individual notion checks, and accepts serialized requests in URL fragments. Everything runs locally in the browser. See [browser API usage](doc/browser-api.md) and [request/result objects](doc/js-api.md).
+
 ## How to build
 
 The project can be built using [`sbt`](https://www.scala-sbt.org/download/) on Java 17 by:

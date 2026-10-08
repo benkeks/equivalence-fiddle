@@ -140,7 +140,9 @@ lazy val jsClient = (project in file("js-client")).settings(
       ((Compile / classDirectory).value / "app" / ((fastLinkJS / moduleName).value + ".js")),
   Compile / fullOptJS / artifactPath := (Compile / fastLinkJS / artifactPath).value,
   Compile / unmanagedSourceDirectories +=
-      baseDirectory.value / ".." / "shared" / "src" / "main" / "scala-2.13"
+      baseDirectory.value / ".." / "shared" / "src" / "main" / "scala-2.13",
+    Compile / unmanagedSourceDirectories +=
+      baseDirectory.value / ".." / "js-api" / "src" / "main" / "scala-2.13" / "io" / "equiv" / "eqfiddle" / "browser"
 ).aggregate(shared).dependsOn(shared).enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin, ScalaJSWeb)
 
 lazy val jsApi = (project in file("js-api")).settings(

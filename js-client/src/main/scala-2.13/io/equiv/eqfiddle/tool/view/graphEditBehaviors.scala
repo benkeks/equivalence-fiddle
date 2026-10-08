@@ -10,6 +10,7 @@ import org.scalajs.dom.HTMLInputElement
 import d3v4._
 import io.equiv.eqfiddle.tool.control.Source
 import io.equiv.eqfiddle.tool.control.Structure
+import io.equiv.eqfiddle.ccs.CCSModel
 import io.equiv.eqfiddle.tool.view.GraphView.NodeLink
 import io.equiv.eqfiddle.tool.view.GraphView.GraphNode
 import io.equiv.eqfiddle.tool.model.NodeID
@@ -67,7 +68,7 @@ class GraphMoveNode(renderer: GraphEditing) extends GraphEditBehavior {
     val updates = affectedNodes.map { n =>
       n.fx = js.undefined
       n.fy = js.undefined
-      (n.nameId.name, Structure.NodeLabel(node.meta.act - Symbol("implicit-main"), n.x.toOption, n.y.toOption))
+      (n.nameId.name, CCSModel.NodeLabel(node.meta.act - Symbol("implicit-main"), n.x.toOption, n.y.toOption))
     }
     renderer.triggerAction(Source.UpdateNodeAnnotationAttributes(updates))
   }
@@ -101,7 +102,7 @@ val inputElem = nameInput.node().asInstanceOf[HTMLInputElement]
       newNode = None
     } else {
       val (x,y) = coords
-      val node = new GraphNode(NodeID("newEvent"), Structure.emptyLabel)
+      val node = new GraphNode(NodeID("newEvent"), CCSModel.emptyLabel)
       node.x = x
       node.y = y
       newNode = Some(node)

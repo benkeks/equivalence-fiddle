@@ -15,6 +15,7 @@ import d3v4.d3selection.Selection
 import io.equiv.eqfiddle.tool.arch.Control
 import io.equiv.eqfiddle.tool.control.ModelComponent
 import io.equiv.eqfiddle.tool.control.Structure
+import io.equiv.eqfiddle.ccs.CCSModel
 import io.equiv.eqfiddle.util.Partition
 import io.equiv.eqfiddle.tool.model.NodeID
 import io.equiv.eqfiddle.util.Coloring
@@ -69,7 +70,7 @@ class GraphRenderer(val main: Control)
   def buildGraph(ts: Structure.TSStructure) = {
     
     val nodes = ts.nodes.map { e =>
-      (e, new GraphNode(e, ts.nodeLabeling.getOrElse(e, Structure.emptyLabel)))
+      (e, new GraphNode(e, ts.nodeLabeling.getOrElse(e, CCSModel.emptyLabel)))
     }.toMap + (GraphView.dummyNode.nameId -> GraphView.dummyNode)
     
     val nodeLinks = for {
@@ -106,7 +107,7 @@ class GraphRenderer(val main: Control)
     val deletedNodes = nodes.filter(n => !sysNodes.isDefinedAt(n.nameId))
     deletedNodes.foreach(n => nodes.remove(nodes.indexOf(n)))
     newNodes.foreach(nodes.push(_))
-    nodes.foreach { n => n.updateMeta(ts.nodeLabeling.getOrElse(n.nameId, Structure.emptyLabel), force = true)}
+    nodes.foreach { n => n.updateMeta(ts.nodeLabeling.getOrElse(n.nameId, CCSModel.emptyLabel), force = true)}
     
     val nodesAndLinks = nodes ++ links
     val newLinks = nodeLinks.flatMap(_.integrate(nodesAndLinks)).filter(l => !links.exists(l.sameRep(_)))

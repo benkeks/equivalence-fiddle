@@ -8,9 +8,7 @@ import scala.scalajs.js
 import io.equiv.eqfiddle.tool.arch.Action
 import io.equiv.eqfiddle.tool.arch.Control
 import io.equiv.eqfiddle.tool.model.NodeID
-import io.equiv.eqfiddle.ccs.Interpreter
-import io.equiv.eqfiddle.ccs.Syntax
-import io.equiv.eqfiddle.ccs.Parser
+import io.equiv.eqfiddle.ccs.CCSModel
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 import io.equiv.eqfiddle.util.Coloring
 import io.equiv.eqfiddle.util.Interpreting
@@ -47,8 +45,7 @@ class Structure(val main: Control) extends ModelComponent {
     case Source.SourceChange(source, ast, fromLoadDefinition) =>
       val beginInterpret = Date.now()
       val interpretationResult =
-        new Interpreter(ast, NodeID(_), Structure.arrowAnnotator, Structure.nodeAnnotator, Structure.actionToInput, Structure.actionIsOutput, divergenceMarker = Some(Structure.divergenceActionLabel))
-        .result(Structure.transitionSystemConstructor(_, _))
+        CCSModel.interpret(ast)
 
       interpretationResult match {
         case p: Interpreting.Problem =>
@@ -115,7 +112,7 @@ class Structure(val main: Control) extends ModelComponent {
 
 object Structure {
 
-  type TSStructure = WeakTransitionSystem[NodeID, ActionLabel, NodeLabel]
+  type TSStructure = CCSModel.TS
 
   abstract sealed class StructureAction extends Action {
     override def implement(target: ModelComponent): Boolean = target match {
@@ -153,112 +150,6 @@ object Structure {
     override def toString() = operations.map(_._1).mkString
   }
 
-  case class ActionLabel(
-      val act: Symbol) {
-
-    def this(name: String) = {
-      this(Symbol(name))
-    }
-
-    val hash = act.hashCode()
-
-    override def hashCode() = hash
-
-    override def equals(other: Any) = other match {
-      case o: ActionLabel => this.act == o.act
-      case _ => false
-    }
-
-    def toActString = {
-      act.name
-    }
-
-    override def toString() = toActString
-  }
-
-  case class NodeLabel(
-      val act: Set[Symbol],
-      val x: Option[Double] = None,
-      val y: Option[Double] = None) {
-
-    val hash = act.hashCode()
-
-    override def hashCode() = hash
-
-    override def equals(other: Any) = other match {
-      case o: NodeLabel => this.act == o.act
-      case _ => false
-    }
-
-    def toStringPairList = {
-      act.toList.map(v => (v.name, "")) ++
-      x.toList.map(v => ("x", v.round.toString)) ++
-      y.toList.map(v => ("y", v.round.toString))
-    }
-
-  }
-
-  val emptyLabel = NodeLabel(Set())
-
-  val emptyActionLabel = new ActionLabel("")
-
-  val silentActionLabel = ActionLabel(Symbol("τ"))
-
-  val divergenceActionLabel = ActionLabel(Symbol("δ"))
-
-  def nodeAnnotator(nodeDecl: Option[Syntax.NodeAnnotation]): Interpreting.Result[NodeLabel] = nodeDecl match {
-    case Some(nD @ Syntax.NodeAnnotation(name, attribs, pos)) =>
-      val labels = attribs collect { case (k, _) if k != "x" && k != "y" => Symbol(k) }
-      try {
-        val l = NodeLabel(
-            act = labels.toSet,
-            x = attribs.find(_._1 == "x").map(_._2.toDouble),
-            y = attribs.find(_._1 == "y").map(_._2.toDouble)
-        )
-        Interpreting.Success(l)
-      } catch {
-        case e: Exception => Interpreting.Problem(e.toString(), List(nD))
-      }
-    case None =>
-      Interpreting.Success(emptyLabel)
-  }
-
-  val actionChars: Set[Char] = Parser.idChars + '!'
-
-  def arrowAnnotator(arrowLabel: Option[Syntax.Label]): Interpreting.Result[ActionLabel] = arrowLabel match {
-    case Some(aL @ Syntax.Label(name, pos)) =>
-      if (name.forall(actionChars)) {
-        try {
-          val l = if (name == "tau" || name == "τ") silentActionLabel else ActionLabel(Symbol(name))
-          Interpreting.Success(l)
-        } catch {
-          case e: Exception => Interpreting.Problem(e.toString(), List(aL))
-        }
-      } else {
-        Interpreting.Problem("Invalid action name: " + name, List(aL))
-      }
-    case None =>
-      Interpreting.Success(emptyActionLabel)
-  }
-
-  def actionIsOutput(a: ActionLabel): Boolean = actionStrIsOutput(a.toActString)
-  def actionToInput(a: ActionLabel): ActionLabel =
-    if (actionIsOutput(a)) ActionLabel(Symbol(actionStrToInput(a.toActString))) else a
-
-  def actionStrIsOutput(a: String) = a.endsWith("!")
-  def actionStrToInput(a: String): String = if (actionStrIsOutput(a)) actionStrToInput(a.dropRight(1)) else a
-
-  def transitionSystemConstructor(
-      rel: LabeledRelation[NodeID, ActionLabel],
-      labels: Map[NodeID, Structure.NodeLabel],
-      oldTs: Option[Structure.TSStructure] = None)
-    : (Set[NodeID], WeakTransitionSystem[NodeID,ActionLabel,NodeLabel]) = {
-
-    val silentActions = Set(silentActionLabel)
-    val mainNodes = (labels.collect { case (id, label) if label.act.contains(Symbol("main")) => id }).toSet
-    (mainNodes, new WeakTransitionSystem(rel, labels, silentActions))
-  }
-
   case class StructureCallOperation(slug: String, resetReplay: Boolean = true) extends StructureAction {
     override def implementStructure(structure: Structure) = {
       val op = structure.operations.get(slug)
@@ -283,14 +174,10 @@ object Structure {
 
         val begin = Date.now()
 
-        val algo = if (silentSpectrum) {
-          new WeakSpectroscopy(structure.structure)
-        } else {
-          new StrongSpectroscopy(structure.structure)
-        }
         AlgorithmLogging.uriEncoder = scala.scalajs.js.URIUtils.encodeURI _
 
-        val result = algo.decideAll(List((n1, n2)), Spectroscopy.Config(computeFormulas = true))
+        val result = Spectroscopy.compare(structure.structure, n1, n2, silentSpectrum,
+          Spectroscopy.Config(computeFormulas = true))
         AlgorithmLogging.debugLog("Spectroscopy took: " + (Date.now() - begin) + "ms.", logLevel = 7)
 
         val gameString = result.meta.get("game") match {
@@ -340,21 +227,9 @@ object Structure {
 
         val begin = Date.now()
 
-        val algo = 
-          if (WeakObservationNotion.LTBTS.getSpectrumClass.isDefinedAt(notion)) {
-            new WeakSpectroscopy(structure.structure)
-          } else if (StrongObservationNotion.LTBTS.getSpectrumClass.isDefinedAt(notion)) {
-            new StrongSpectroscopy(structure.structure)
-          } else {
-            throw new Exception(
-              s"Notion ‹$notion› is not defined.\n\nPossible names would be:\n ${(
-                StrongObservationNotion.LTBTS.getSpectrumClass.keys ++
-                WeakObservationNotion.LTBTS.getSpectrumClass.keys).mkString(", ")}")
-          }
-
         AlgorithmLogging.uriEncoder = scala.scalajs.js.URIUtils.encodeURI _
 
-        val result = algo.checkIndividualPreorder(List((n1, n2), (n2, n1)), notion)
+        val result = Spectroscopy.check(structure.structure, n1, n2, notion)
         AlgorithmLogging.debugLog("Preorder check took: " + (Date.now() - begin) + "ms.", logLevel = 7)
 
         val Some(lrResult) = result.items.find(r => r.left == n1 && r.right == n2)

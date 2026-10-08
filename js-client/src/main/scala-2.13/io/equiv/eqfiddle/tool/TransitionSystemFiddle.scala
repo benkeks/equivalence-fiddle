@@ -2,6 +2,8 @@ package io.equiv.eqfiddle.tool
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.{JSImport, JSExportTopLevel, JSExport}
+import org.scalajs.dom
+import io.equiv.eqfiddle.browser.BrowserSpectroscopyAPI
 import io.equiv.eqfiddle.tool.arch.Action
 import io.equiv.eqfiddle.tool.arch.ActionDispatcher
 import io.equiv.eqfiddle.tool.arch.Control
@@ -15,18 +17,45 @@ import io.equiv.eqfiddle.tool.control.Pipeline
 @JSExportTopLevel("TransitionSystemFiddle")
 object TransitionSystemFiddle extends Control with ActionDispatcher {
 
-  val source = new Source(this)
-  val structure = new Structure(this)
-  val pipeline = new Pipeline(this)
+  lazy val source = new Source(this)
+  lazy val structure = new Structure(this)
+  lazy val pipeline = new Pipeline(this)
   
-  val renderer = new GraphRenderer(this)
-  val editor = new SourceEditor(this)
+  lazy val renderer = new GraphRenderer(this)
+  lazy val editor = new SourceEditor(this)
 
   @JSExport
   def main(): Unit = {
     JSImportGlobals.ensureGlobals()
-    source.init()
-    structure.init()
+    if (!runURLRequest()) {
+      source
+      structure
+        pipeline
+      renderer
+      editor
+      source.init()
+      structure.init()
+      loadFromURL()
+    }
+    dom.window.addEventListener("hashchange", (_: dom.Event) => {
+      runURLRequest()
+    })
+  }
+
+  private def runURLRequest(): Boolean = {
+    BrowserSpectroscopyAPI.runFragment(dom.window.location.hash).toOption match {
+      case Some(response) =>
+        val json = js.JSON.stringify(response, space = 2)
+        dom.console.log(json)
+        dom.document.body.textContent = json
+        dom.document.body.style.whiteSpace = "pre-wrap"
+        dom.document.body.style.fontFamily = "monospace"
+        true
+      case None => false
+    }
+  }
+
+  private def loadFromURL(): Unit = {
     val initialCodeParameter = editor.getURLSampleSlug()
     val initialCode =
       CCSSamples.getExample(initialCodeParameter)

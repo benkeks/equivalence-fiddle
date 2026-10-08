@@ -6,6 +6,7 @@ import io.equiv.eqfiddle.util.Coloring
 import io.equiv.eqfiddle.hml.HML
 import io.equiv.eqfiddle.hml.ObservationNotion
 import io.equiv.eqfiddle.hml.Spectrum
+import io.equiv.eqfiddle.hml.{StrongObservationNotion, WeakObservationNotion}
 
 import io.equiv.eqfiddle.ts.WeakTransitionSystem
 
@@ -35,6 +36,35 @@ trait Spectroscopy[S, A, L, CF <: HML.Formula[A]] {
 }
 
 object Spectroscopy {
+
+  def checkNotions: Set[String] =
+    StrongObservationNotion.LTBTS.notionNames ++ WeakObservationNotion.LTBTS.notionNames
+
+  def isWeakNotion(notion: String): Boolean = WeakObservationNotion.LTBTS.notionNames(notion)
+
+  def check[S, A, L](
+      ts: WeakTransitionSystem[S, A, L],
+      left: S,
+      right: S,
+      notion: String,
+      config: Config = Config()
+  ): IndividualNotionResult[S] = {
+    require(checkNotions(notion), "Unknown notion: " + notion)
+    val pairs = List((left, right), (right, left)).distinct
+    if (isWeakNotion(notion)) new WeakSpectroscopy(ts).checkIndividualPreorder(pairs, notion, config)
+    else new StrongSpectroscopy(ts).checkIndividualPreorder(pairs, notion, config)
+  }
+
+  def compare[S, A, L](
+      ts: WeakTransitionSystem[S, A, L],
+      left: S,
+      right: S,
+      weak: Boolean = false,
+      config: Config = Config()
+  ): Result[S, A, ObservationNotion, HML.Formula[A]] = {
+    if (weak) new WeakSpectroscopy(ts).decideAll(List((left, right)), config)
+    else new StrongSpectroscopy(ts).decideAll(List((left, right)), config)
+  }
 
   case class Config(
     val useCleverSpectroscopyGame: Boolean = true,

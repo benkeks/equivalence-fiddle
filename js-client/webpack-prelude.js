@@ -16,6 +16,9 @@ try {
   if (app && app.TransitionSystemFiddle) {
     window.TransitionSystemFiddle = app.TransitionSystemFiddle;
   }
+  if (app && app.equiv) {
+    window.equiv = app.equiv;
+  }
 } catch (err) {
   // noop: entry will still run via webpack if needed
 }

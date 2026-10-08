@@ -4,12 +4,13 @@ import scala.scalajs.js
 import scala.scalajs.js.UndefOr
 import d3v4._
 import io.equiv.eqfiddle.tool.control.Structure
+import io.equiv.eqfiddle.ccs.CCSModel.NodeLabel
 import io.equiv.eqfiddle.tool.model.NodeID
 
 object GraphView {
   var graphBending = false
   
-  val dummyNode = new GraphNode(NodeID("#dummy#"), Structure.NodeLabel(Set(), Option(0), Option(0)))
+  val dummyNode = new GraphNode(NodeID("#dummy#"), NodeLabel(Set(), Option(0), Option(0)))
 
   trait Linkable {
     def centerX: Double
@@ -22,7 +23,7 @@ object GraphView {
 
   class GraphNode(
       var nameId: NodeID,
-      var meta: Structure.NodeLabel,
+      var meta: NodeLabel,
       var positionStealTarget: Option[Linkable] = None)
     extends SimulationNodeImpl with Linkable {
     
@@ -41,7 +42,7 @@ object GraphView {
     
     updateMeta(meta, true)
     
-    def updateMeta(metaInfo: Structure.NodeLabel, force: Boolean = false) = {
+    def updateMeta(metaInfo: NodeLabel, force: Boolean = false) = {
       if (meta != metaInfo || force) {
         meta = metaInfo
         val newX: Double = meta.x.getOrElse(x.getOrElse(0.0))
