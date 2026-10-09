@@ -34,6 +34,10 @@ object Benchmark extends App {
       | --unclever-spectroscopy  Use the exponentially-branching energy game (instead of the clever energy game)
       | --strong-game  Use the strong spectroscopy game (instead of the weak variant)
       |
+      |Compare options:
+      | compare <csv-file> <left-state> <right-state> [OPTIONS]
+      | --divergences  Compress tau loops and mark them with visible delta transitions (requires a deadlock state)
+      |
       |Benchmark options:
       | --shuffle        Perform benchmarks in random order
       | --include-hard   Also include hard cases (will take long / timeout on some examples)
@@ -120,11 +124,14 @@ object Benchmark extends App {
         timeoutTime = timeout
       )
     case Some("compare") =>
-      args.tail.filterNot(Set("--strong-game", "--unclever-spectroscopy")) match {
+      args.tail.filterNot(Set("--strong-game", "--unclever-spectroscopy", "--divergences")) match {
         case Array(fileName, leftState, rightState) =>
-          new Comparator(algoVLTS).run(fileName, leftState, rightState, baseConfig)
+          if (args.contains("--divergences") && args.contains("--strong-game")) {
+            Console.err.println("Warning: --divergences compresses tau loops and may change strong equivalences; combining it with --strong-game does not make much sense.")
+          }
+          new Comparator(algoVLTS).run(fileName, leftState, rightState, baseConfig, divergences = args.contains("--divergences"))
         case _ =>
-          throw new IllegalArgumentException("Usage: compare <csv-file> <left-state> <right-state> [--strong-game] [--unclever-spectroscopy]")
+          throw new IllegalArgumentException("Usage: compare <csv-file> <left-state> <right-state> [--strong-game] [--unclever-spectroscopy] [--divergences]")
       }
     case _ =>
       println("Usage: [COMMAND] [OPTIONS]\n  Run `help` for details.")

@@ -34,6 +34,12 @@ To perform benchmarks, run:
 sbt "shared/run benchmark"
 ```
 
+To compare two states (by numeric ID or unique label) in a CSV transition system, run:
+
+```
+sbt "shared/run compare system.csv left-state right-state"
+```
+
 ## Docker image
 
 To build a docker image that bundles the Scala dependencies and the fiddle (and export it to tgz), run:
