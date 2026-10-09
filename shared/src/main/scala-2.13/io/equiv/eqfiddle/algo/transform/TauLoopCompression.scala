@@ -51,9 +51,10 @@ class TauLoopCompression[S, A, L] (
       
       if (rep(s) == index(s)) {
         stack = stack.dropWhile { t =>
+          rep(t) = index(s)
           onStack -= t
           t != s
-        }
+        }.drop(1)
       }
     }
     

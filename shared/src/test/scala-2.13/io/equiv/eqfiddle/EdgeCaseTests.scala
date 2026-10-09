@@ -6,6 +6,9 @@ import io.equiv.eqfiddle.hml.StrongObservationNotion
 import io.equiv.eqfiddle.hml.HML
 import io.equiv.eqfiddle.spectroscopy.{Spectroscopy, WeakSpectroscopy}
 import io.equiv.eqfiddle.tool.benchmark.Comparator
+import io.equiv.eqfiddle.algo.transform.TauLoopCompression
+import io.equiv.eqfiddle.ts.WeakTransitionSystem
+import io.equiv.eqfiddle.util.LabeledRelation
 
 class EdgeCaseTests extends CSSSampleTests[StrongObservationNotion, HML.Formula[String]] {
   override val spectrum = StrongObservationNotion.LTBTS
@@ -18,6 +21,46 @@ class EdgeCaseTests extends CSSSampleTests[StrongObservationNotion, HML.Formula[
   )
 
   runTest(reviewSystem, sampleNames, new StrongSpectroscopy(_), "(energy-labeled)")
+
+  describe("Tau-loop compression") {
+    it("assigns one colour to a component whose DFS lowlinks differ") {
+      val transitions = Set(
+        (0, "tau", 1), (1, "tau", 2), (2, "tau", 1),
+        (1, "tau", 3), (3, "tau", 0), (0, "a", 4))
+      val system = new WeakTransitionSystem(
+        new LabeledRelation(transitions), (0 to 4).map(state => state -> "").toMap, Set("tau"))
+      val compression = new TauLoopCompression(system, protectedNodes = Set(0))
+
+      compression.computeColoring().partitions.values.toSet shouldBe Set(Set(0, 1, 2, 3), Set(4))
+      val compressed = compression.compute()
+      compressed.nodes shouldBe Set(0, 4)
+      compressed.step.tupleSet shouldBe Set((0, "tau", 0), (0, "a", 4))
+    }
+
+    it("matches mutual silent reachability on every three-state silent graph") {
+      val states = (0 until 3).toSet
+      val possibleTransitions = (for {
+        source <- 0 until 3
+        target <- 0 until 3
+      } yield (source, "tau", target)).toVector
+
+      for (mask <- 0 until (1 << possibleTransitions.size)) {
+        val transitions = possibleTransitions.indices.collect {
+          case index if (mask & (1 << index)) != 0 => possibleTransitions(index)
+        }.toSet
+        val system = new WeakTransitionSystem(
+          new LabeledRelation(transitions), states.map(state => state -> "").toMap, Set("tau"))
+        val coloring = new TauLoopCompression(system).computeColoring()
+
+        for (left <- states; right <- states) {
+          withClue(s"graph $mask, states ($left, $right): ") {
+            (coloring(left) == coloring(right)) shouldBe
+              (system.silentReachable(left)(right) && system.silentReachable(right)(left))
+          }
+        }
+      }
+    }
+  }
 
   describe("CSV comparison with divergence marking") {
     def compare(csv: String, left: String, right: String, divergences: Boolean): String = {
